@@ -993,11 +993,19 @@ change what the package promises, so each needs a decision-log entry when taken.
    overstate or understate. `views_graph: partial` is the precedent: `partial` warns
    rather than refuses. Extend `none|partial|complete` to `direct_rel_triples` and
    `rdf_reifies`.
-3. **`requires:` drifts from what a template renders.** The suite checks that declared
-   roles exist; nothing checks the converse, so a template can read membership,
-   provenance or label roles it never declared. The mirror test — every role, graph role
-   and membership directive a template renders must be declared — catches the whole class
-   at once instead of one omission at a time.
+3. ~~**`requires:` drifts from what a template renders.**~~ **Done.** The suite checked
+   that declared roles exist but not the converse, so a template could read roles it
+   never declared. The mirror tests found it in **24 of 38 templates**: 22 undeclared
+   roles, three undeclared `provenance` scopes, and two undeclared membership walks —
+   which is what a class-level check buys over fixing instances. Since `expand_role`
+   raises on a null binding, each was a `RenderError` from inside rendering waiting for
+   the first profile honest enough to say a role is absent; they are now refusals that
+   name the role. No bundled profile changed behaviour, because all the roles involved
+   are bound in every one.
+
+   Worth noting what the fix did **not** do: `core/coverage-gaps`, `core/elements-by-type`,
+   `core/lifecycle`, `core/orphans` and `core/views` now honestly declare `part_of`,
+   which makes item 5 below visible in the catalogue rather than resolved.
 4. **Verification proves occurrence, not fit.** Roles are probed by occurrence anywhere,
    a fallback role passes when any alternative occurs, and a graph role passes when a
    suffix matches a non-empty graph. Nothing probes notation identifiers, scheme

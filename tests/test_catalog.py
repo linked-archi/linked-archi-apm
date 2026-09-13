@@ -7,7 +7,9 @@ file with no entry is invisible and untested. Both kinds of drift are silent.
 
 from __future__ import annotations
 
+import tempfile
 import unittest
+from pathlib import Path
 
 import support
 
@@ -19,6 +21,13 @@ from linked_archi_query.catalog import (
     CatalogError,
     Requirement,
 )
+
+# The renderer's own placeholder grammar and role normalisation, imported rather than
+# restated: a second copy would drift, and a check that disagrees with the renderer
+# about what a template uses is worse than no check.
+from linked_archi_query.render import _PLACEHOLDER as PLACEHOLDER
+from linked_archi_query.render import _base_role as base_role
+from linked_archi_query.validate import split_comments
 load_profile = support.load_resolved_profile
 
 
@@ -176,6 +185,87 @@ class TestCatalogueIntegrity(unittest.TestCase):
                 with self.subTest(f"{entry.name}:{role}"):
                     self.assertTrue(profile.graphs.has_role(role))
 
+    def test_every_role_a_template_renders_is_declared(self):
+        """The mirror of the test above, and the direction that actually bites.
+
+        That one catches a `requires` block naming a role nobody binds - a typo. This
+        catches the opposite and more expensive drift: a template *using* a role it
+        never declared. `expand_role` raises on a role bound to null, so an undeclared
+        role is not a soft omission - it is a hard render failure the moment a profile
+        legitimately says "this dataset does not represent that". Declaring it turns a
+        crash into the refusal-with-an-alternative the gate exists to give, and it is
+        why `OPTIONAL { ?x {{ROLE:definition}} ?d }` still has to declare `definition`.
+
+        Read from the rendered body with comments stripped, because a template header
+        names its own placeholders as documentation.
+        """
+        for entry in self.catalog:
+            code = "".join(
+                "" if is_comment else chunk
+                for is_comment, chunk in split_comments(entry.path.read_text())
+            )
+            declared = set(entry.requires.roles)
+            used = {
+                match.group(2)
+                for match in PLACEHOLDER.finditer(code)
+                if match.group(1) in {"ROLE", "ROLES", "PATH"}
+            }
+            with self.subTest(entry.name):
+                self.assertEqual(
+                    sorted(used - declared), [],
+                    f"{entry.name} renders these roles without declaring them under "
+                    "requires.roles",
+                )
+
+    def test_every_graph_role_a_template_scopes_to_is_declared(self):
+        """Same drift, one level up: an undeclared scope is an unrefusable query.
+
+        A scope naming a graph role the profile has no binding for raises at render
+        time; declared, it is refused with the roles the dataset does have. The `any`
+        role is exempt because it deliberately constrains nothing - the orientation
+        templates use it to report which graphs exist - and a trailing digit is an
+        independent scope on the same role, so `semantic2` declares `semantic`.
+        """
+        for entry in self.catalog:
+            code = "".join(
+                "" if is_comment else chunk
+                for is_comment, chunk in split_comments(entry.path.read_text())
+            )
+            declared = set(entry.requires.graph_roles)
+            used = {
+                base_role(match.group(2))
+                for match in PLACEHOLDER.finditer(code)
+                if match.group(1) in {"GRAPH_OPEN", "GRAPH_VAR"}
+            } - {"any"}
+            with self.subTest(entry.name):
+                self.assertEqual(
+                    sorted(used - declared), [],
+                    f"{entry.name} scopes to these graph roles without declaring them "
+                    "under requires.graph_roles",
+                )
+
+    def test_membership_is_declared_by_every_template_that_walks_it(self):
+        """`requires.membership` is what refuses a profile that cannot express it.
+
+        Undeclared, the directive still renders - and under co-location without named
+        graphs it degenerates into a join against every model in the dataset, which
+        answers wrongly instead of refusing.
+        """
+        for entry in self.catalog:
+            code = "".join(
+                "" if is_comment else chunk
+                for is_comment, chunk in split_comments(entry.path.read_text())
+            )
+            walks = any(
+                match.group(1) == "MEMBERSHIP" for match in PLACEHOLDER.finditer(code)
+            )
+            with self.subTest(entry.name):
+                self.assertEqual(
+                    walks, entry.requires.membership,
+                    f"{entry.name} uses {{{{MEMBERSHIP}}}}={walks} but declares "
+                    f"requires.membership={entry.requires.membership}",
+                )
+
     def test_notation_templates_live_under_their_notation(self):
         for entry in self.catalog:
             if entry.notation:
@@ -263,6 +353,35 @@ class TestGating(unittest.TestCase):
     def test_requirement_rejects_unknown_keys(self):
         with self.assertRaises(CatalogError):
             Requirement.from_json({"rolez": ["label"]})
+
+    def test_a_role_the_dataset_lacks_refuses_instead_of_crashing(self):
+        """What declaring a rendered role actually buys, as behaviour.
+
+        `expand_role` raises on a role bound to null, so while `core/views` used
+        `conforms_to_viewpoint` without declaring it, a legitimate profile statement -
+        "the views in this dataset declare no viewpoint conformance" - produced
+        `RenderError: binds role 'conforms_to_viewpoint' to null` from inside
+        rendering. Nothing about that tells a caller which template to reach for
+        instead. Declared, the same profile gets a refusal that names the role.
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "no-viewpoints.yaml"
+            path.write_text(
+                "extends: linked-archi-default.yaml\n"
+                "profile: no-viewpoints\n"
+                "version: 1\n"
+                "description: A dataset whose views declare no viewpoint conformance.\n"
+                "roles:\n"
+                "  conforms_to_viewpoint: null\n"
+            )
+            profile = load_profile(str(path))
+            verdict = self.catalog.get("core/views").check(profile)
+
+        self.assertFalse(verdict.ok)
+        self.assertTrue(
+            any("conforms_to_viewpoint" in reason for reason in verdict.unmet),
+            f"the refusal must name the missing role, got: {verdict.unmet}",
+        )
 
     def test_listing_marks_refusals(self):
         profile = load_profile("linked-archi-default")

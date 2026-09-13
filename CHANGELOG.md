@@ -9,6 +9,23 @@ A section here is not optional at release time: `make release-notes` reads it, a
 workflow publishes exactly this text, so what is written here is what a consumer reads.
 
 ## [Unreleased]
+### Added
+- **The catalogue now has to declare every role, graph role and membership walk its
+  templates actually render.** Four tests enforce it: three static mirrors of the
+  existing "declared roles exist" check, plus one behavioural test. The direction
+  matters because `expand_role` raises on a role bound to null, so a template using a
+  role it never declared turned a legitimate profile statement — "this dataset does not
+  represent that" — into a `RenderError` from inside rendering, with nothing to tell a
+  caller which template to use instead. Declared, the same profile gets a refusal
+  naming the role.
+
+### Changed
+- **24 templates now declare what they render.** 22 gained role declarations, three
+  gained the `provenance` graph role, and `core/inventory-summary` and `core/provenance`
+  now declare the model membership they walk. No bundled profile changes behaviour —
+  the roles involved are all bound in every one — so this closes a silent-failure path
+  for custom profiles rather than altering current results.
+
 ### Fixed
 - **`linked-archi-default` now names the LeanIX metamodel the converters actually
   emit** — `leanix/metamodel#LeanIXv4`, not `#LeanIX`, which no ontology declares and
