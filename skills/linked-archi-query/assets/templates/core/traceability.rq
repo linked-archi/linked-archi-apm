@@ -16,11 +16,32 @@
 #
 # Both directions are followed, because cross-layer relationship direction is a
 # modelling convention that differs between notations and even between models.
-# ?direction says which way the path actually ran.
+# ?direction says which way the path actually ran: "source-to-target" or
+# "target-to-source" at one hop, and at two hops the orientation of each hop in
+# order - "source-to-mid, mid-to-target", "source-to-mid, target-to-mid",
+# "mid-to-source, mid-to-target" or "mid-to-source, target-to-mid".
+#
+# EVERY HOP is followed in both directions, including the second. This once claimed
+# both directions while the two-hop branch matched source->mid->target only, so a
+# pair joined through a shared intermediate was reported as unconnected - and this
+# template's whole purpose is deciding whether two kinds of thing connect. The three
+# missing orientations are not exotic: source->mid<-target is two things written to
+# the same store, and source<-mid->target is one component serving both. Measured on
+# fixtures/base.trig, restoring them adds 19 reachable FactSheet pairs that the
+# forward-only form denied.
+#
+# Written as two two-branch unions rather than four full branches, because a hop is
+# independently forward or reverse: joining {hop1 either way} with {hop2 either way}
+# is the same four combinations with a quarter of the duplication, and each hop
+# reports its own orientation.
+#
+# ?relType names the first hop and ?relType2 the second, so a two-hop row says what
+# both edges were. ?relType2 is unbound at one hop, which is the absence of a second
+# edge rather than a missing value.
 #
 # Parameters: SOURCE_TYPE, TARGET_TYPE, LIMIT
 {{PREFIXES}}
-SELECT DISTINCT ?source ?sourceLabel ?direction ?hops ?target ?targetLabel ?relType
+SELECT DISTINCT ?source ?sourceLabel ?direction ?hops ?target ?targetLabel ?relType ?relType2
 WHERE {
   {{GRAPH_OPEN:semantic}}
     ?source a {{SOURCE_TYPE}} .
@@ -42,14 +63,34 @@ WHERE {
     }
     UNION
     {
-      ?rel a {{ROLE:relationship_class}} ;
-           {{ROLE:rel_source}} ?source ;
-           {{ROLE:rel_target}} ?mid .
-      ?rel2 a {{ROLE:relationship_class}} ;
-            {{ROLE:rel_source}} ?mid ;
-            {{ROLE:rel_target}} ?target .
-      FILTER(?mid != ?source && ?mid != ?target)
-      BIND("source-to-target" AS ?direction)
+      {
+        ?rel {{ROLE:rel_source}} ?source ;
+             {{ROLE:rel_target}} ?mid .
+        BIND("source-to-mid" AS ?firstHop)
+      }
+      UNION
+      {
+        ?rel {{ROLE:rel_source}} ?mid ;
+             {{ROLE:rel_target}} ?source .
+        BIND("mid-to-source" AS ?firstHop)
+      }
+      {
+        ?rel2 {{ROLE:rel_source}} ?mid ;
+              {{ROLE:rel_target}} ?target .
+        BIND("mid-to-target" AS ?secondHop)
+      }
+      UNION
+      {
+        ?rel2 {{ROLE:rel_source}} ?target ;
+              {{ROLE:rel_target}} ?mid .
+        BIND("target-to-mid" AS ?secondHop)
+      }
+      ?rel a {{ROLE:relationship_class}} .
+      ?rel2 a {{ROLE:relationship_class}} .
+      ?rel2 a ?relType2 .
+      FILTER(?relType2 != {{ROLE:relationship_class}} && ?relType2 != {{ROLE:concept_class}})
+      FILTER(?mid != ?source && ?mid != ?target && ?rel != ?rel2)
+      BIND(CONCAT(?firstHop, ", ", ?secondHop) AS ?direction)
       BIND(2 AS ?hops)
     }
     ?rel a ?relType .

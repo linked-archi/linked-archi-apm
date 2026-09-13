@@ -8,6 +8,7 @@ when it should not is how a wrong binding reaches a graph.
 from __future__ import annotations
 
 import json
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -343,6 +344,30 @@ class TestTermResolution(unittest.TestCase):
             "bpmn",
         )
         self.assertIsNone(self.profile.notation_for_metamodel("https://e/unknown"))
+
+    def test_every_metamodel_the_fixtures_assert_is_recognised(self):
+        """Checked against converter output, because a near-miss here is silent.
+
+        `notation_for_metamodel` compares the profile's string to the dataset's, so a
+        profile naming `leanix/metamodel#LeanIX` where every converter writes
+        `#LeanIXv4` answers None: the notation is simply never detected, with no error
+        and no empty result to notice. Verifying one notation by hand is how that
+        survived, so this asserts over every metamodel the committed fixtures actually
+        declare rather than over a chosen example.
+        """
+        pattern = re.compile(r"modelConformsToMetamodel\s+<([^>]+)>")
+        asserted = set()
+        for fixture in (BASE, AUGMENTED, FLAT, CONVERTER_13):
+            asserted |= set(pattern.findall(fixture.read_text()))
+        self.assertTrue(asserted, "no metamodel assertions found in the fixtures")
+        unrecognised = sorted(
+            iri for iri in asserted
+            if self.profile.notation_for_metamodel(iri) is None
+        )
+        self.assertEqual(
+            unrecognised, [],
+            "linked-archi-default declares no notation for: " + ", ".join(unrecognised),
+        )
 
     def test_archimate_notation_slug_is_model(self):
         """Not `archimate`: the converter's --path-model defaults to `model`."""

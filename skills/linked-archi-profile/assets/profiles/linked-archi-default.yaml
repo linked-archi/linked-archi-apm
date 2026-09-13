@@ -416,7 +416,14 @@ notations:
     element_lifecycle: bs:lifecycleState
   leanix:
     label: LeanIX
-    metamodel: https://meta.linked.archi/leanix/metamodel#LeanIX
+    # Versioned in the fragment, and the version is load-bearing: the published
+    # metamodel declares :LeanIXv4 (with :LeanIXv3 alongside it in leanix/v3/), and
+    # Conformance.kt emits `metamodel#LeanIXv4`. This said `#LeanIX`, which no
+    # ontology declares and no converter writes, so `notation_for_metamodel` — an
+    # exact string match — answered None for every LeanIX model and the notation
+    # went undetected. A metamodel IRI is matched, never parsed, so a near-miss
+    # here is invisible rather than loud.
+    metamodel: https://meta.linked.archi/leanix/metamodel#LeanIXv4
     namespace: lmm
     native_id: skos:notation
     element_lifecycle: lmm:factSheetStatus

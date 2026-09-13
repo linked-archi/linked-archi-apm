@@ -899,3 +899,151 @@ class.
 **A12. Prefixes are not stable.** The converters emit both `archvis:` and
 `arch-vis:` for `https://meta.linked.archi/core-vis#` depending on which emitter ran.
 Nothing keys on a prefix.
+
+---
+
+## Appendix B: profile and template audit
+
+An end-to-end audit of the bundled profiles and all catalogued templates, cross-checked
+against three authorities rather than against this package's own documentation: the
+published ontologies and SHACL shapes in `linked-archi-meta`, the converter emitters in
+`tools/converters/linked-archi-converters`, and a large multi-notation aggregate export
+produced by those converters.
+
+**That export was a private third-party dataset and is deliberately not part of this
+repository** — no identifiers, hosts, IRIs, model names or digests from it appear here or
+in the fixtures. Everything recorded below is either a property of a shipped asset, a
+property of the converters, or a measurement reproducible against `fixtures/`. Where a
+finding was only observable at scale it says so, because that is a limit on the evidence
+rather than a detail to omit.
+
+The audit's own framing: **findings that describe a customer's profile configuration are
+that customer's, not this package's**, and were discarded. What follows is only what is
+wrong, or unproven, in what this package ships.
+
+### B1–B3: corrected, with regression tests
+
+**B1. A metamodel IRI was a near-miss, and near-misses here are silent.**
+`linked-archi-default` bound the LeanIX notation to `leanix/metamodel#LeanIX`. No
+ontology declares that term and no converter writes it: the published metamodel declares
+`:LeanIXv4`, and `Conformance.kt` emits `metamodel#LeanIXv4`. `notation_for_metamodel`
+is an exact string comparison, so every LeanIX model went undetected — no error, no empty
+result, nothing to notice. The profile's own comment calls metamodel conformance the
+reliable way to detect a notation, which is what made the miss expensive.
+
+The pre-existing test checked one notation by hand, which is how this survived. The
+replacement asserts over **every** metamodel the committed fixtures declare, so adding a
+notation without binding it now fails:
+`test_profiles.py::test_every_metamodel_the_fixtures_assert_is_recognised`.
+
+**B2. A projected variable nothing binds.** `core/resolve-element` selected `?g` while
+the scope binds one variable per graph role — `?g_semantic` here. SPARQL projects an
+unbound variable without complaint, so the template advertised "the graph they came from"
+and returned that column empty on every row of every result. Now projected through
+`{{GRAPH_VAR:semantic}}`, like every other graph-reporting template.
+`test_templates.py::test_resolve_element_reports_the_graph_it_matched_in`.
+
+**B3. `core/traceability` claimed both directions and followed one.** Its header stated
+that direction is a modelling convention and that both are followed; the two-hop branch
+matched `source->mid->target` only. Three of the four orientations were missing, and they
+are not exotic shapes: `source->mid<-target` is two things written to the same store,
+`source<-mid->target` is one component serving both. The result was a confident "no path"
+for genuinely connected pairs, which is the one answer this template exists to give.
+
+Measured on `fixtures/base.trig`, restoring the orientations adds 19 reachable FactSheet
+pairs the forward-only form denied. Written as two two-branch unions — a hop is
+independently forward or reverse — so each hop reports its own orientation and the four
+combinations cost a quarter of the duplication. `?relType2` was added because a two-hop
+row previously named only the first edge.
+`test_templates.py::test_traceability_follows_the_second_hop_in_both_directions` and
+`::test_traceability_names_the_type_of_each_hop`.
+
+### B4: investigated and found correct
+
+Recorded so they are not re-litigated. Each looked like a defect and is not.
+
+- **Taxonomy scheme IRIs omit the trailing `#`.** Deliberate: `_prefix_for_graph`
+  documents that a SKOS scheme is conventionally written `.../tax` while the prefix
+  covering its concepts is `.../tax#`, and comparison strips the separator on both sides.
+  No template joins on the scheme value; `core/classified-by` walks `skos:broader` from a
+  concept parameter instead.
+- **`notations.bpmn.native_id: bpmn:id`.** Accurate for the output it describes — see
+  **A5**, where BPMN's `skos:notation` count is 0 — and the role-level chain covers both
+  spellings. Newer output carries `skos:notation` instead, because `emitSkosNotation`
+  defaults on, so both shapes are real. The per-notation entry is also not consumed by the
+  runtime; only `metamodel` is.
+- **`notation/c4/containers` and direct relationship triples.** It uses
+  `c4:hasContainer` / `c4:hasComponent` / `arch:hasPart`, which the Structurizr emitter
+  writes unconditionally, outside the `emitDirectRelTriples` branch. No capability gate is
+  owed.
+
+### B5: open findings, in priority order
+
+Not fixed. Each is a package-level defect with a named mechanism, and the first four
+change what the package promises, so each needs a decision-log entry when taken.
+
+1. **The `notation` field is declared but never enforced.** The catalogue carries
+   `"notation"` on notation-specific templates, and nothing refuses one when the profile
+   or dataset has no such notation. That turns "unsupported" into "zero rows", which is
+   the failure the refusal mechanism exists to prevent. The gate already exists for
+   capabilities; this needs wiring, and B1 shows detection itself must be trustworthy first.
+2. **Relationship-form capabilities are Booleans describing a per-notation reality.**
+   Each converter emits direct triples and the `rdf:reifies` bridge only under its own
+   `--emit-direct-rel-triples`, so a mixed estate is normal and one `true`/`false` must
+   overstate or understate. `views_graph: partial` is the precedent: `partial` warns
+   rather than refuses. Extend `none|partial|complete` to `direct_rel_triples` and
+   `rdf_reifies`.
+3. **`requires:` drifts from what a template renders.** The suite checks that declared
+   roles exist; nothing checks the converse, so a template can read membership,
+   provenance or label roles it never declared. The mirror test — every role, graph role
+   and membership directive a template renders must be declared — catches the whole class
+   at once instead of one omission at a time.
+4. **Verification proves occurrence, not fit.** Roles are probed by occurrence anywhere,
+   a fallback role passes when any alternative occurs, and a graph role passes when a
+   suffix matches a non-empty graph. Nothing probes notation identifiers, scheme
+   resolvability, base-IRI fit, or whether the configured membership mode returns
+   anything — the four checks that would have caught B1. A warning-only run still leaves a
+   marker that reads as semantic verification.
+5. **Model membership is bypassed where it is meant.** `{{MEMBERSHIP}}` exists;
+   `core/elements-by-type`, `core/lifecycle`, `core/orphans`, `core/views` and
+   `core/coverage-gaps` reach for `dct:isPartOf` directly, which **A7** records as
+   reaching the model for some notations and stopping short for others.
+6. **Negative tests and cross-role scope.** Since the 1.3 layout, `arch:Model` lives in
+   `graph/model` and the semantic graph is partitioned per input. `core/coverage-gaps`
+   searches only semantic graphs, so a model-level resource type is invisible to it and it
+   reports clean — a false negative on a completeness question. Negative existence needs
+   an explicit scope rather than inheriting whichever partition it entered.
+7. **Row multiplicity from optional projections.** `core/orphans` returned 1,530 rows for
+   1,009 distinct elements on a large export, and `core/models`, `core/identity-audit` and
+   `notation/leanix/factsheets` duplicate the same way. A count read as a population is
+   wrong by whatever the optional columns multiply.
+8. **`core/discover-predicates` can describe a tuple that never existed**, because its
+   subject, object and graph are independent `SAMPLE`s.
+9. **Qualified classes are not unqualified predicates.**
+   `core/discover-relationship-types` returns relationship *classes*, while
+   `core/dependents-direct` asks for the *predicates* its `PREDICATE_PATH` follows, and
+   the catalogue points callers from one to the other.
+10. **Cost.** Several templates sort or cross-join globally before `LIMIT`; at scale
+    `core/define-term`, `core/dependents-qualified` and `core/traceability` exceeded a
+    3-minute wall clock or a 3.6 GB ceiling on an aggregate export. Correctness came first
+    here (B3 adds branches); the structural work needs a large synthetic fixture and a
+    time budget in CI, neither of which exists yet.
+11. **Smaller, verified:** `core/views` documents unbound node counts where `COUNT`
+    returns `0`; `core/label-collisions` normalises ASCII only, so non-Latin labels are
+    compared unnormalised; `core/view-diff` compares element sets and loses repeated
+    placements of one element; the BPMN component whitelist is hand-maintained against an
+    ontology that can grow; and `README.md` says 36 tested templates where the catalogue
+    has 38.
+
+### B6: method and limits
+
+Read-only throughout: during the audit no RDF was mutated, no bundled profile was edited
+to make a failing query succeed, and no execution ceiling was raised to obtain a result.
+Guardrail failures are recorded as failures rather than retried at a higher limit, which
+is why item 10 above is an open cost finding and not a completed fix.
+
+Two limits worth stating. Endpoint-coincident direct predicates without an
+`rdf:reifies` bridge are evidence that two elements share an edge, not proof that the
+predicate is the relationship's intended unqualified form. And truncated results are
+floors, never totals — a capped count says "at least", and no finding here treats one as a
+population.

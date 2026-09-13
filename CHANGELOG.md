@@ -9,6 +9,29 @@ A section here is not optional at release time: `make release-notes` reads it, a
 workflow publishes exactly this text, so what is written here is what a consumer reads.
 
 ## [Unreleased]
+### Fixed
+- **`linked-archi-default` now names the LeanIX metamodel the converters actually
+  emit** — `leanix/metamodel#LeanIXv4`, not `#LeanIX`, which no ontology declares and
+  no converter writes. Notation detection is an exact match on this IRI, so every
+  LeanIX model went undetected with no error and no empty result to notice. The
+  regression test asserts over every metamodel the committed fixtures declare rather
+  than one checked by hand.
+- **`core/traceability` follows every hop in both directions.** The header promised
+  both directions while the two-hop branch matched `source->mid->target` only, so a
+  pair joined through a shared intermediate — one component serving both, or two
+  things written to the same store — was reported as unconnected. Restoring the three
+  missing orientations adds 19 reachable pairs on `fixtures/base.trig`. Two-hop rows
+  now also report the second hop's relationship type as `?relType2`; `?direction`
+  names the orientation of each hop.
+- **`core/resolve-element` reports the graph it matched in.** It projected a
+  hand-spelled `?g` while the scope binds `?g_semantic`, and SPARQL projects an
+  unbound variable without complaint, so the promised column was empty on every row.
+
+### Changed
+- `PROPOSAL.md` gains **Appendix B**, an audit of the bundled profiles and the whole
+  template catalogue against the published ontologies, the converter emitters and a
+  large multi-notation export: what was corrected, what was investigated and found
+  correct, and the open findings in priority order.
 
 ## [0.1.0] - 2026-09-13
 

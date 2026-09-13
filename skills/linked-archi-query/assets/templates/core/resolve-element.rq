@@ -22,6 +22,14 @@
 # no scoring arithmetic anyone has to trust. Carried from core/resolve-model,
 # which needed the same thing for the same reason.
 #
+# The graph column is projected through {{GRAPH_VAR:semantic}}, not a hand-spelled
+# ?g. The scope binds one variable per graph role - ?g_semantic here - so a literal
+# ?g is bound by nothing, and SPARQL projects an unbound variable without
+# complaining. This template promised "the graph they came from" and returned that
+# column empty on every row against a TriG dataset. Under a flattened profile the
+# variable is genuinely unbound, because there is no graph to name; that is the
+# documented caveat every graph-reporting template carries there.
+#
 # The numbering is not cosmetic. This template ORDERED BY the role name alone, and
 # unnumbered names sort alphabetically: altLabel, nativeId, prefLabel. So a name
 # match sorted BELOW an id match, and LIMIT discarded names first. Measured on
@@ -32,7 +40,7 @@
 #
 # Parameters: TERM, LIMIT
 {{PREFIXES}}
-SELECT ?rank ?matched ?value ?element ?type ?g
+SELECT ?rank ?matched ?value ?element ?type {{GRAPH_VAR:semantic}}
 WHERE {
   {{GRAPH_OPEN:semantic}}
     {

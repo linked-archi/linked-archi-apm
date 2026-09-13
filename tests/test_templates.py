@@ -25,6 +25,8 @@ load_profile = support.load_resolved_profile
 BPMN_TASK = support.BPMN_TASK
 CORE = support.CORE
 SKOS = support.SKOS
+BPMN = "https://meta.linked.archi/bpmn/onto#"
+LEANIX = "https://meta.linked.archi/leanix/onto#"
 
 #: template -> (parameters, minimum rows against fixtures/augmented.trig)
 CASES: dict[str, tuple[dict, int]] = {
@@ -154,6 +156,67 @@ class TestAgainstAugmentedFixture(unittest.TestCase):
         for row in envelope.rows:
             self.assertEqual(
                 row["relType"], "https://meta.linked.archi/bpmn/onto#SequenceFlow"
+            )
+
+    def _traceability(self, source_type, target_type):
+        rendered = render("core/traceability", self.profile,
+                          {"SOURCE_TYPE": source_type, "TARGET_TYPE": target_type},
+                          catalog=self.catalog)
+        return self.adapter.execute(
+            rendered.query, template="core/traceability", profile_id=self.profile.name,
+            profile_version=self.profile.profile_version, limit=200,
+        )
+
+    def test_traceability_follows_the_second_hop_in_both_directions(self):
+        """A pair joined through a shared intermediate is connected, not unconnected.
+
+        The two-hop branch once matched source->mid->target only, while the header
+        claimed both directions. In this fixture these two types have no direct
+        relationship and no forward-forward path: their ONLY connection is one
+        IT component that both requires and supports, so `source<-mid->target`. The
+        forward-only formulation returned nothing here and that read as "no path
+        exists", which is the one answer this template must never get wrong.
+        """
+        envelope = self._traceability(f"{LEANIX}ITComponent", f"{LEANIX}BusinessCapability")
+        self.assertTrue(
+            envelope.rows,
+            "no path found: the second hop is not being followed in both directions",
+        )
+        for row in envelope.rows:
+            self.assertEqual(row["hops"], "2")
+            self.assertEqual(row["direction"], "mid-to-source, mid-to-target")
+            self.assertTrue(
+                row["relType2"], "a two-hop row must name the second hop's type"
+            )
+
+    def test_traceability_names_the_type_of_each_hop(self):
+        """Two hops, two relationship types. One column described half the path."""
+        envelope = self._traceability(f"{BPMN}UserTask", f"{BPMN}ServiceTask")
+        two_hop = [row for row in envelope.rows if row["hops"] == "2"]
+        self.assertTrue(two_hop, "the forward-forward path must still be found")
+        for row in two_hop:
+            self.assertEqual(row["direction"], "source-to-mid, mid-to-target")
+            self.assertEqual(row["relType"], f"{BPMN}SequenceFlow")
+            self.assertEqual(row["relType2"], f"{BPMN}SequenceFlow")
+
+    def test_resolve_element_reports_the_graph_it_matched_in(self):
+        """The promised graph column has to be the variable the scope binds.
+
+        This projected a hand-spelled ?g while the scope binds ?g_semantic. SPARQL
+        projects an unbound variable without complaint, so the template advertised
+        "the graph they came from" and returned that column empty on every row.
+        """
+        rendered = render("core/resolve-element", self.profile,
+                          {"TERM": "order"}, catalog=self.catalog)
+        envelope = self.adapter.execute(
+            rendered.query, template="core/resolve-element", profile_id=self.profile.name,
+            profile_version=self.profile.profile_version, limit=200,
+        )
+        self.assertIn("g_semantic", envelope.variables)
+        self.assertTrue(envelope.rows)
+        for row in envelope.rows:
+            self.assertTrue(
+                row["g_semantic"], f"no graph reported for {row['element']}"
             )
 
     def test_provenance_names_the_source_and_the_converter(self):
