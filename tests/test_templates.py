@@ -199,6 +199,29 @@ class TestAgainstAugmentedFixture(unittest.TestCase):
             self.assertEqual(row["relType"], f"{BPMN}SequenceFlow")
             self.assertEqual(row["relType2"], f"{BPMN}SequenceFlow")
 
+    def test_coverage_gaps_sees_a_type_outside_the_semantic_graph(self):
+        """The count here tells three implementations apart, which is why it is exact.
+
+        Five models in this fixture are typed in `graph/model`; four carry `dct:source`
+        in `graph/provenance` and one carries it nowhere. So a semantic-scoped query
+        returns 0 and calls that perfect coverage, a query that widens the type search
+        but keeps the absence test graph-local returns 5 and calls four recorded
+        sources a gap, and only a dataset-wide reading of both returns the 1 real gap.
+        """
+        rendered = render("core/coverage-gaps", self.profile,
+                          {"RESOURCE_TYPE": f"{CORE}Model",
+                           "EXPECTED_PREDICATE": "http://purl.org/dc/terms/source"},
+                          catalog=self.catalog)
+        envelope = self.adapter.execute(
+            rendered.query, template="core/coverage-gaps", profile_id=self.profile.name,
+            profile_version=self.profile.profile_version, limit=200,
+        )
+        self.assertEqual(
+            [row["element"] for row in envelope.rows],
+            ["https://example.org/la/model/archisurance"],
+            "expected exactly the one model with no dct:source anywhere",
+        )
+
     def test_resolve_element_reports_the_graph_it_matched_in(self):
         """The promised graph column has to be the variable the scope binds.
 

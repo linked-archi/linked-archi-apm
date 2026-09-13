@@ -1016,11 +1016,24 @@ change what the package promises, so each needs a decision-log entry when taken.
    `core/elements-by-type`, `core/lifecycle`, `core/orphans`, `core/views` and
    `core/coverage-gaps` reach for `dct:isPartOf` directly, which **A7** records as
    reaching the model for some notations and stopping short for others.
-6. **Negative tests and cross-role scope.** Since the 1.3 layout, `arch:Model` lives in
-   `graph/model` and the semantic graph is partitioned per input. `core/coverage-gaps`
-   searches only semantic graphs, so a model-level resource type is invisible to it and it
-   reports clean — a false negative on a completeness question. Negative existence needs
-   an explicit scope rather than inheriting whichever partition it entered.
+6. ~~**Negative tests and cross-role scope.**~~ **Done for `core/coverage-gaps`.** It
+   scoped both the type search and the absence test to the semantic graph, and each was
+   wrong in the opposite direction. `arch:Model` has lived in `graph/model` since the 1.3
+   layout, so the type search found nothing and the template answered "no gaps" — the
+   shape of answer that reads as perfect coverage. Meanwhile a graph-local absence test
+   only establishes that a property is missing from the graph the type happened to be
+   asserted in, and model provenance lives in `graph/provenance`.
+
+   Both are now dataset-wide, which is the only reading under which absence is evidence
+   that nobody recorded the property. The regression test pins an exact count because
+   the count discriminates: on `fixtures/base.trig` the old form returns 0, widening only
+   the type search returns 5, and the correct reading returns the 1 real gap.
+
+   `core/orphans` and `core/reifies-audit` carry the same graph-local negative test and
+   are not yet converted. Their scope question is harder: an orphan is defined by the
+   absence of a relationship, and in a partitioned semantic graph the relationship may
+   legitimately live in a sibling partition — so the fix needs a decision about whether
+   "no relationship" means none in the dataset or none in the model, and those differ.
 7. **Row multiplicity from optional projections.** `core/orphans` returned 1,530 rows for
    1,009 distinct elements on a large export, and `core/models`, `core/identity-audit` and
    `notation/leanix/factsheets` duplicate the same way. A count read as a population is

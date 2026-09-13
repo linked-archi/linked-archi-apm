@@ -27,6 +27,16 @@ workflow publishes exactly this text, so what is written here is what a consumer
   for custom profiles rather than altering current results.
 
 ### Fixed
+- **`core/coverage-gaps` is dataset-wide, in both directions.** It scoped the type
+  search and the absence test to the semantic graph, which was wrong two opposite ways:
+  since the 1.3 layout `arch:Model` lives in `graph/model`, so asking which models lack
+  a source found no models at all and reported zero gaps — "perfect coverage" for a type
+  it never looked at; and a graph-local absence test only proves the property is missing
+  from the graph the type was asserted in, so a model carrying `dct:source` in
+  `graph/provenance` counted as a gap. On `fixtures/base.trig` the old form returned 0 of
+  1 real gap, and widening only the type search would have returned 5. Now `DISTINCT`,
+  with independent scopes for the label and membership columns so neither silently
+  arrives empty. `requires.graph_roles` no longer claims `semantic`.
 - **`linked-archi-default` now names the LeanIX metamodel the converters actually
   emit** — `leanix/metamodel#LeanIXv4`, not `#LeanIX`, which no ontology declares and
   no converter writes. Notation detection is an exact match on this IRI, so every

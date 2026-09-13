@@ -57,9 +57,6 @@
         "roles": [
           "label",
           "part_of"
-        ],
-        "graph_roles": [
-          "semantic"
         ]
       }
     },

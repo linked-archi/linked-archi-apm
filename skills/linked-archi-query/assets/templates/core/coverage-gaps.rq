@@ -13,16 +13,53 @@
 # element you know carries it. And which models are in scope, since a gap
 # concentrated in one model is usually a partial export, not an ownership problem.
 #
+# THIS QUERY IS DATASET-WIDE, both when finding instances and when deciding that a
+# property is absent, and neither is a stylistic choice. This template used to scope
+# both to the semantic graph, which was wrong in two opposite directions at once:
+#
+#   Nothing found. Since the 1.3 layout `arch:Model` lives in `graph/model`, so a
+#   semantic-only scope cannot see a single model. Asked which models lack a source,
+#   it reported zero gaps - the answer that means "perfect coverage" for a type it
+#   never looked at. That is the exact failure the first paragraph warns about,
+#   produced by the query rather than by the reader.
+#
+#   Gaps that are not gaps. A graph-local negative test only proves the property is
+#   absent from the graph the type happened to be asserted in. Model provenance lives
+#   in `graph/provenance`, so in fixtures/base.trig four of five models carry
+#   `dct:source` there while being typed in `graph/model`: scoping the absence test
+#   would have called all five a gap, and only one of them is.
+#
+# So "no value" here means no value anywhere in the dataset, which is the only reading
+# under which absence is evidence that nobody recorded it. The independent scopes -
+# `any2`, `any3`, `any4` - matter for the same reason: sharing one graph variable would
+# require the label, the membership edge and the type assertion to sit in the same
+# graph, and where they do not the column silently arrives empty.
+#
+# DISTINCT because a type assertion repeated in more than one graph is one resource,
+# not two, and a duplicated row inflates a count that reads as a population.
+#
 # Parameters: RESOURCE_TYPE, EXPECTED_PREDICATE, LIMIT
 {{PREFIXES}}
-SELECT ?element ?label ?model
+SELECT DISTINCT ?element ?label ?model
 WHERE {
-  {{GRAPH_OPEN:semantic}}
+  {{GRAPH_OPEN:any}}
     ?element a {{RESOURCE_TYPE}} .
-    FILTER NOT EXISTS { ?element {{EXPECTED_PREDICATE}} ?anyValue }
-    OPTIONAL { ?element {{PATH:label}} ?label }
-    OPTIONAL { ?element {{ROLE:part_of}} ?model }
   {{GRAPH_CLOSE}}
+  FILTER NOT EXISTS {
+    {{GRAPH_OPEN:any2}}
+      ?element {{EXPECTED_PREDICATE}} ?anyValue .
+    {{GRAPH_CLOSE}}
+  }
+  OPTIONAL {
+    {{GRAPH_OPEN:any3}}
+      ?element {{PATH:label}} ?label .
+    {{GRAPH_CLOSE}}
+  }
+  OPTIONAL {
+    {{GRAPH_OPEN:any4}}
+      ?element {{ROLE:part_of}} ?model .
+    {{GRAPH_CLOSE}}
+  }
 }
 ORDER BY ?model ?label ?element
 LIMIT {{LIMIT}}
