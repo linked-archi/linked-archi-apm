@@ -137,11 +137,30 @@ apm install linked-archi/linked-archi-apm#v0.1.0
 apm install .                    # from a local clone
 ```
 
+Name the harnesses yourself when the project has no signal to detect, or when you want
+the skills somewhere other than the current project:
+
+```bash
+apm install . --target claude,codex,kiro   # or -t all
+apm install . --root /tmp/apm-out          # redirect every write under a directory
+apm install . -g --target kiro             # user scope (~/.apm/)
+```
+
+`apm targets` shows what auto-detection resolves to before you commit to it. Full flag
+set in [`apm install`](https://microsoft.github.io/apm/reference/cli/install/), deploy
+paths in the [targets
+matrix](https://microsoft.github.io/apm/reference/targets-matrix/), and per-harness skill
+locations in [USAGE.md](USAGE.md#choosing-targets).
+
 `pyoxigraph` is needed only for local file execution, and `PyYAML` for profiles:
 
 ```bash
 pip install PyYAML pyoxigraph
 ```
+
+To upgrade or remove it later — `apm update`, `apm uninstall`, `make uninstall-local`, or by
+hand for a copy — see [Upgrading and removing
+it](USAGE.md#upgrading-and-removing-it).
 
 **Without APM**, copy the skill directories into whatever your client reads:
 

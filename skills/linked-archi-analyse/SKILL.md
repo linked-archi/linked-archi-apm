@@ -2,7 +2,7 @@
 name: linked-archi-analyse
 description: Investigate an architecture question over a knowledge graph and answer it as a traceable evidence bundle rather than a paragraph. Use for impact, dependency, traceability, coverage, portfolio, governance, decision or model-completeness questions that need more than one query and a judgement about what the results support. For SHACL conformance or an existing validation report, use linked-archi-validate instead. Plans an ordered investigation with la-analyse plan, routes to an analysis pattern, has linked-archi-query execute each read-only step, then bundles the resulting envelopes into one reviewable artifact that separates graph facts from inference from unknowns. Do not use for mutation, or for a question a single supplied document answers without graph evidence.
 license: Apache-2.0
-compatibility: Needs Python 3.11 or newer and no third-party package. Owns planning and bundling only: every query is executed by linked-archi-query, which uses linked-archi-profile and linked-archi-connect, so install those three alongside it. linked-archi-validate is needed for SHACL conformance and linked-archi-source for remote artifacts. Planning and bundling work with query absent, unannotated and reduced.
+compatibility: Needs Python 3.11 or newer and no third-party package. Owns planning and bundling only; every query is executed by linked-archi-query, which uses linked-archi-profile and linked-archi-connect, so install those three alongside it. linked-archi-validate is needed for SHACL conformance and linked-archi-source for remote artifacts. Planning and bundling work with query absent, unannotated and reduced.
 metadata:
   author: linked-archi
   version: "0.1.0"

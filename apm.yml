@@ -31,9 +31,11 @@ description: >-
   forking templates.
 author: Kalin Maldzhanski
 license: Apache-2.0
-# No `type:` field. It is not in APM's documented manifest schema - the package layout
-# is what declares the kind, and `skills/<name>/SKILL.md` at the root already means
-# "many skills in one repo".
+# No `type:` field. The schema pinned above defines one - `instructions`, `skill`, `hybrid`
+# or `prompts` - and does not require it, and the package layout is what declares the kind:
+# `skills/<name>/SKILL.md` at the root already means "many skills in one repo". Setting
+# `type: skill` would add a second statement of the same fact and a second place for it to
+# go stale.
 #
 # No `targets:` either, deliberately, so resolution falls through to APM's auto-detect from
 # the consumer's filesystem signals.

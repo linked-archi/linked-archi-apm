@@ -189,18 +189,25 @@ class TestCachedMode(StoreCacheTestCase):
         self.assertEqual(second.graph_names, first.graph_names)
 
     def test_it_refuses_rather_than_falling_back(self):
-        """So a caller told they got a cached store did in fact get one."""
-        unwritable = Path(self._tmp.name) / "denied"
-        unwritable.mkdir()
-        unwritable.chmod(0o500)
-        os.environ[self.store_cache.ENV_CACHE] = str(unwritable / "stores")
-        try:
-            with self.assertRaises(self.store_cache.StoreCacheError) as caught:
-                self.store_cache.load(self.sources(), lenient=False, mode="cached")
-        finally:
-            unwritable.chmod(0o700)
+        """So a caller told they got a cached store did in fact get one.
+
+        The cache root is made unusable by putting a plain file where its parent
+        directory would go, not by clearing a write bit. Permissions are the obvious
+        way and the wrong one: root ignores a missing write bit, and CI runs this
+        suite as root inside `python:3.12-slim`, so the mkdir would succeed and the
+        refusal under test would never fire - the assertion would hold on a developer
+        machine and fail only in the container. ENOTDIR is not a permission check, so
+        it blocks every user alike.
+        """
+        blocked = Path(self._tmp.name) / "not-a-directory"
+        blocked.write_text("", encoding="utf-8")
+        os.environ[self.store_cache.ENV_CACHE] = str(blocked / "stores")
+        with self.assertRaises(self.store_cache.StoreCacheError) as caught:
+            self.store_cache.load(self.sources(), lenient=False, mode="cached")
         # A refusal that does not say how to proceed is just an obstacle.
         self.assertIn("memory", str(caught.exception))
+        # And a refusal that wrote something anyway would not be one.
+        self.assertTrue(blocked.is_file())
 
 
 class TestReadonlyMode(StoreCacheTestCase):

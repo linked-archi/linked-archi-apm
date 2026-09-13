@@ -60,6 +60,7 @@ Two routes. They are not equivalent, and the difference is worth thirty seconds.
 | Gets you | `la-kg`, the fixtures, the tests, the Makefile — everything | The six skill directories, deployed into your agent's skills path |
 | Needs | `git`, Python 3.11+, `make` | `apm`, and the package published to a git remote |
 | Build step | None | None |
+| Undo | `make uninstall-local` | `apm uninstall linked-archi/linked-archi-apm` |
 | Verified | Yes — every command below has been run | Packaging layout is covered by isolated-copy tests |
 
 If you only want to *use* the skills in an editor and are not sure which, clone and run
@@ -103,7 +104,8 @@ The second command should print six rows and a citation line naming the template
 dataset, profile and row count. That citation line is how you know a result came from
 this package rather than from a model's recollection.
 
-To undo: `make uninstall-local`, `make unlink-cli BIN_DIR=...`.
+To undo: `make uninstall-local`, `make unlink-cli BIN_DIR=...`. See [Upgrading and removing
+it](#upgrading-and-removing-it) for the other routes and for keeping it current.
 
 ### With APM
 
@@ -113,6 +115,72 @@ not generate or copy a shared payload.
 
 ```bash
 apm install .
+apm install linked-archi/linked-archi-apm#v0.1.0
+```
+
+That is the whole happy path. The rest of this section is for when the default is not
+what you want.
+
+#### Choosing targets
+
+This package declares no `targets:`, so APM auto-detects your harness from filesystem
+signals — `.kiro/`, `.claude/` or `CLAUDE.md`, `.cursor/`, `.codex/`, `.github/`, and so
+on. Name them yourself when the project carries no signal, carries a misleading one, or
+you want several harnesses at once:
+
+```bash
+apm install . --target kiro
+apm install . --target claude,codex,kiro     # -t is the short form
+apm install . --target all                   # every auto-detectable harness
+apm install . --target all,agent-skills      # plus the shared .agents/skills/ tree
+```
+
+Resolution order is `--target`, then `targets:` in *your* `apm.yml`, then
+`apm config set target`, then auto-detection. Both of these answer "what would happen"
+without writing anything:
+
+```bash
+apm targets              # every harness, active or not, and the signal that decided it
+apm install . --dry-run
+```
+
+One consequence worth stating for this package: because it declares no `targets:`, a
+project with no harness signal gets `apm install` exit code 2 and a teaching message
+rather than a silent no-op. Pass `--target`, or declare `targets:` in your own manifest.
+
+Where the six skills land is the harness's decision, not ours. Claude Code, Kiro and
+Grok Build keep native skill directories; the rest converge on a shared tree.
+
+| Target | Skills land in |
+|---|---|
+| `kiro` | `.kiro/skills/<name>/` |
+| `claude` | `.claude/skills/<name>/` |
+| `grok-build` | `.grok/skills/<name>/` |
+| `copilot`, `cursor`, `codex`, `gemini`, `opencode`, `windsurf`, `agent-skills` | `.agents/skills/<name>/` |
+
+`--legacy-skill-paths` restores the pre-convergence per-harness layout
+(`.github/skills/`, `.cursor/skills/`, …) if your client has not caught up.
+
+#### Installing outside the current project
+
+```bash
+apm install . --root /tmp/apm-out         # redirect every write under a directory
+apm install . -g --target kiro,claude     # user scope (~/.apm/) rather than a project
+```
+
+`--root` mirrors `pip install --target`: `apm.yml`, `.apm/` and local-path dependencies
+still resolve from the working directory, while `apm_modules/`, `apm.lock.yaml` and the
+harness files are written under `DIR`. It cannot be combined with `--global`.
+
+`--global` deploys only to harnesses that have a user scope, among them Kiro, Claude Code,
+Copilot CLI, Codex, Gemini, Antigravity, Windsurf and Hermes; a mixed selection skips the
+workspace-only ones with a warning. A selection containing no global-capable target exits
+2 before changing the user manifest, lockfile or any runtime config, so a typo costs you
+nothing.
+
+#### Installing a subset
+
+```bash
 apm install . --skill linked-archi-query
 ```
 
@@ -123,6 +191,17 @@ companion skills for operations that need them: query rendering needs
 `linked-archi-connect`; and profile verification needs connect plus the query-owned
 read-only check. Analysis delegates to those three. Missing companions fail with the
 exact required skill name.
+
+#### The authoritative reference
+
+Flags, target names and deploy paths belong to APM rather than to this package, and they
+move faster than this document. When the two disagree, APM is right:
+
+- [`apm install`](https://microsoft.github.io/apm/reference/cli/install/) — every flag used above, and the exit codes
+- [`apm targets`](https://microsoft.github.io/apm/reference/cli/targets/) — detection signals and the resolved-target table
+- [Targets matrix](https://microsoft.github.io/apm/reference/targets-matrix/) — per-harness deploy directories and which primitives each supports
+- [Install packages](https://microsoft.github.io/apm/consumer/install-packages/) — task-oriented walkthrough
+- [Manifest schema](https://microsoft.github.io/apm/reference/manifest-schema/) — `apm.yml` fields, including `targets:` for pinning your own project
 
 ### Skills versus custom agents
 
@@ -174,6 +253,133 @@ catalog/lint work from isolated owner copies. Operations requiring another skill
 discover installed siblings or `$LINKED_ARCHI_SKILLS_DIR` and exchange
 `schema_version=1` JSON over stdin/stdout. They never import or copy a companion's
 Python runtime.
+
+### Upgrading and removing it
+
+Undo and upgrade go through the route you installed by. Crossing routes is what leaves
+orphaned copies behind — an `apm uninstall` will not remove folders you copied by hand, and
+`make uninstall-local` will not touch what APM deployed.
+
+**With APM.** Several commands sound like they do the same thing. What separates them is
+which files they touch, and for a skills-only package that is the whole question — whether
+the six skill directories actually leave your harness or merely stop being cached.
+
+| Goal | Command | Removes the deployed skills? |
+|---|---|---|
+| See what is installed | `apm deps list`, `apm deps tree` | no |
+| Check for a newer release | `apm outdated` | no |
+| Move to a newer release | `apm update` | replaces them |
+| Remove this package | `apm uninstall linked-archi/linked-archi-apm` | yes |
+| Remove what is no longer declared | `apm prune` | orphans only |
+| Delete the downloaded tree | `apm deps clean` | **no** |
+| Delete the network cache | `apm cache clean` | no |
+
+Start by looking. All of these are read-only:
+
+```bash
+apm deps list                    # project scope
+apm deps list -g                 # user scope (~/.apm/)
+apm deps list --all              # both scopes at once
+apm deps tree                    # the graph, transitive nodes included
+apm deps why <package>           # why something is installed at all
+apm outdated                     # which dependencies have newer refs
+```
+
+[`apm update`](https://microsoft.github.io/apm/reference/cli/update/) re-resolves what your
+`apm.yml` allows, prints an added / updated / removed / unchanged plan, and prompts before
+writing anything. The prompt defaults to *No*, so a non-interactive run needs `--yes`:
+
+```bash
+apm update --dry-run             # the plan, without the prompt and without writes
+apm update linked-archi-apm      # this package only
+apm update -g                    # user-scope dependencies
+apm update --yes                 # CI and scripts
+```
+
+A pinned ref does not move on its own: `apm install linked-archi/linked-archi-apm#v0.1.0`
+means v0.1.0 until you change the ref in your own manifest and install again. In CI prefer
+[`apm install --frozen`](https://microsoft.github.io/apm/reference/cli/install/), which
+deploys exactly what `apm.lock.yaml` records and fails on drift rather than quietly moving.
+`apm update` refreshes dependencies, not the APM binary — that is `apm self-update` or your
+package manager.
+
+Removal names the package:
+
+```bash
+apm uninstall linked-archi/linked-archi-apm
+apm uninstall linked-archi/linked-archi-apm --dry-run
+apm uninstall -g linked-archi/linked-archi-apm      # if you installed with -g
+```
+
+[`apm uninstall`](https://microsoft.github.io/apm/reference/cli/uninstall/) removes the six
+skill directories from every harness it deployed them to, the declaration in your `apm.yml`,
+and the lockfile rows. It deletes only paths the lockfile records as deployed, so a profile
+or steering file you wrote next to them survives. Nothing else of ours needs unpicking: this
+package contributes no hooks and no MCP server, which is the reason that guarantee is worth
+anything.
+
+[`apm prune`](https://microsoft.github.io/apm/reference/cli/prune/) is the other half of
+removal, for when you edited `apm.yml` by hand rather than running `apm uninstall`. It
+removes packages that are neither declared nor retained as transitive nodes, along with the
+files they deployed:
+
+```bash
+# having deleted the dependency from apm.yml by hand
+apm install                      # deploy the newly declared state
+apm prune --dry-run              # list orphans without touching them
+apm prune                        # remove them and their deployed files
+```
+
+It takes no scope flag; it reconciles the project it runs in.
+
+Two commands read like an uninstall and are not. Both are worth knowing *before* you reach
+for one expecting the skills to disappear:
+
+```bash
+apm deps clean --dry-run         # what would go
+apm deps clean --yes             # delete apm_modules/, no prompt
+apm cache clean --yes            # delete the git and HTTP caches
+```
+
+`apm deps clean` deletes `apm_modules/` and nothing else — not `apm.yml`, not
+`apm.lock.yaml`, and **not** the skill directories already deployed into `.kiro/skills/`,
+`.claude/skills/` or `.agents/skills/`. Those stay, and your agent keeps loading them. It is
+a re-download switch rather than an uninstall, and `apm install` puts the tree back. Note
+also that it has no `-g`: it is project-scope only, so a user-scope install comes out with
+`apm uninstall -g` instead. [`apm cache clean`](https://microsoft.github.io/apm/reference/cli/cache/)
+is one step further out — a pure performance cache whose removal can never change what is
+installed, only what has to be fetched again.
+
+**From a clone.** The skills are symlinks into the checkout, so upgrading is a pull and a
+client reload:
+
+```bash
+git pull && make check     # confirm the new revision passes before trusting it
+```
+
+Re-run `make install-local` after a pull that adds a skill, or the new one is never linked.
+A skill *removed* upstream leaves a dangling link, because both make targets iterate the
+checkout rather than the install directory — delete that one by hand. To undo entirely:
+
+```bash
+make uninstall-local
+make unlink-cli BIN_DIR=/opt/homebrew/bin
+```
+
+`make uninstall-local` removes symlinks only and skips a real directory of the same name, so
+it cannot eat a copy you made on purpose.
+
+**If you copied the folders.** Nothing is tracking what you copied, so both directions are
+manual:
+
+```bash
+rm -rf ~/.kiro/skills/linked-archi-{source,profile,connect,query,analyse,validate}
+```
+
+Remove first, then copy — copying a new version over an old one keeps every file the new
+version no longer ships, and a stale script beside a current `SKILL.md` fails in ways that
+look like a bug in the package. That asymmetry is the cost of the copy route and the reason
+APM or `make install-local` is the better default.
 
 ### Testing it locally, before you publish anything
 

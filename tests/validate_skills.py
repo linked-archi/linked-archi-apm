@@ -7,6 +7,8 @@ load a skill, and a skill that does not load fails silently rather than loudly.
 Checks:
 
 * frontmatter starts at byte 0 and is closed;
+* frontmatter parses as a YAML mapping - every client reads it with a YAML parser,
+  and so does GitHub when it renders the file;
 * only spec-defined keys - a non-spec key fails validation in strict clients;
 * ``name`` matches the parent directory exactly, and is 1-64 lowercase
   alphanumeric characters with single internal hyphens;
@@ -42,6 +44,11 @@ MIN_USEFUL_DESCRIPTION = 40
 
 _LINK = re.compile(r"\[[^\]]*\]\(([^)#][^)]*)\)")
 
+#: A colon followed by whitespace or end of line. Inside an unquoted value this opens a
+#: nested mapping rather than continuing the sentence, which is the one YAML rule long
+#: prose in `description` and `compatibility` walks into.
+_PLAIN_COLON = re.compile(r":(?:\s|$)")
+
 
 def parse_frontmatter(text: str) -> tuple[dict[str, str] | None, str, str | None]:
     """Return ``(keys, body, error)``.
@@ -71,6 +78,75 @@ def parse_frontmatter(text: str) -> tuple[dict[str, str] | None, str, str | None
     return keys, body, None
 
 
+def frontmatter_body(text: str) -> str:
+    """The text between the fences, starting at the first key line.
+
+    Line 1 of the result is line 1 of the frontmatter as GitHub numbers it in a render
+    error, which is the report a maintainer is most likely to be holding.
+    """
+    raw = text[3:text.find("\n---", 3)]
+    return raw[1:] if raw.startswith("\n") else raw
+
+
+def yaml_problems(folder: str, frontmatter: str) -> list[str]:
+    """Frontmatter that does not parse is frontmatter no client reads.
+
+    The checks above deliberately avoid a YAML parse, so that a key a lenient parser
+    would tolerate is still reported. That leaves the opposite gap, and this closes it:
+    frontmatter this validator reads happily and a real parser rejects. One skill
+    shipped exactly that - a ``: `` inside an unquoted ``compatibility`` sentence, which
+    YAML reads as a nested mapping. Every check here passed, GitHub refused to render
+    the file, and a strict client would have refused to load the skill.
+
+    The scan runs first and alone when it finds something, because it names the key and
+    the fix where a parser reports only the position at which the grammar broke.
+    """
+    problems: list[str] = []
+    for number, line in enumerate(frontmatter.splitlines(), start=1):
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        key, separator, value = line.partition(":")
+        if not separator or not value.strip():
+            continue
+        # Quoted and block scalars carry a colon safely. That is the documented escape.
+        if value.strip()[0] in "\"'|>":
+            continue
+        found = _PLAIN_COLON.search(value)
+        if found:
+            problems.append(
+                f"{folder}: frontmatter line {number} column "
+                f"{len(key) + found.start() + 2}: the unquoted {key.strip()!r} value "
+                "contains ': ', which YAML reads as a nested mapping. Use ';' instead, "
+                "or quote the whole value"
+            )
+    if problems:
+        return problems
+
+    try:
+        import yaml
+    except ImportError:
+        # PyYAML is not a dependency of this validator, and the scan above covers the
+        # failure that has occurred. CI installs it, so the parse does run there.
+        return problems
+
+    try:
+        parsed = yaml.safe_load(frontmatter)
+    except yaml.YAMLError as error:
+        mark = getattr(error, "problem_mark", None)
+        where = f" at line {mark.line + 1} column {mark.column + 1}" if mark else ""
+        problems.append(
+            f"{folder}: frontmatter is not valid YAML{where}: "
+            f"{getattr(error, 'problem', error)}"
+        )
+    else:
+        if not isinstance(parsed, dict):
+            problems.append(
+                f"{folder}: frontmatter must be a YAML mapping, not "
+                f"{type(parsed).__name__}"
+            )
+    return problems
+
+
 def check_skill(skill_md: Path) -> tuple[list[str], list[str], dict[str, int]]:
     folder = skill_md.parent.name
     text = skill_md.read_text(encoding="utf-8")
@@ -80,6 +156,8 @@ def check_skill(skill_md: Path) -> tuple[list[str], list[str], dict[str, int]]:
     keys, body, error = parse_frontmatter(text)
     if error or keys is None:
         return [f"{folder}: {error}"], [], {}
+
+    problems += yaml_problems(folder, frontmatter_body(text))
 
     unexpected = set(keys) - SPEC_KEYS
     if unexpected:
