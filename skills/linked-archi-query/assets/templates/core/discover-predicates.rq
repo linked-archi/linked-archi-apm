@@ -1,0 +1,26 @@
+# core/discover-predicates - Which predicates are in use, and on what?
+#
+# Answers: every predicate in the chosen graph role, its frequency, and whether
+# its objects are IRIs or literals.
+#
+# Does NOT prove: that a predicate means what its local name suggests. Read the
+# published ontology for that.
+#
+# Two uses. First, finding the property that holds something the profile has no
+# role for - a house field promoted through the converter's extension route lands
+# here and nowhere else. Second, catching near-duplicate spellings: two casings of
+# the same key are two predicates, and this is where that shows up as two rows
+# with suspiciously split counts.
+#
+# Parameters: LIMIT
+{{PREFIXES}}
+SELECT ?predicate (COUNT(*) AS ?uses) (SAMPLE(?kind) AS ?objectKind) (SAMPLE(?object) AS ?example)
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    ?s ?predicate ?object .
+    BIND(IF(isIRI(?object), "iri", IF(isBlank(?object), "blank", "literal")) AS ?kind)
+  {{GRAPH_CLOSE}}
+}
+GROUP BY ?predicate
+ORDER BY DESC(?uses) ?predicate
+LIMIT {{LIMIT}}

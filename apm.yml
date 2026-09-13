@@ -1,0 +1,87 @@
+# APM manifest - https://microsoft.github.io/apm/
+#
+# Pinned to normative OpenAPM v0.1 rather than tracking APM's working draft. A published
+# package should not change meaning when the draft moves; an unknown schema identity fails
+# closed, which is the safe direction for a consumer.
+$schema: https://microsoft.github.io/apm/specs/schemas/manifest-v0.1.schema.json
+#
+# Every included skill is directly installable from the committed tree. Runtime code
+# and assets live only in the Agent Skill that owns them; installation performs no
+# generation, copying, or bundling. Companion operations use versioned JSON subprocess
+# contracts between sibling installed skills.
+#
+# The six skills form an explicit pipeline when remote acquisition is needed:
+# source -> connect -> profile -> query -> analyse. Every one of them owns a runtime, and
+# exactly one of them executes queries: analyse plans and bundles, query executes. Validate
+# is independent of that chain: it runs SHACL in-process and reads existing reports, and is
+# invoked only when validation is explicitly asked for.
+name: linked-archi-apm
+# Quoted, per the authoring spec: an unquoted version can be parsed as a YAML number.
+version: "0.1.0"
+description: >-
+  Ontology-guided, evidence-grounded acquisition, querying and analysis of
+  architecture knowledge graphs built with the Linked.Archi converters against
+  the meta.linked.archi ontologies. Ships verified HTTPS and Git source
+  acquisition, plus an optional two-phase handoff that verifies what an agent's
+  own read-only GitLab MCP returns; graph profiles that bind
+  vocabulary decisions; a profile-resolved SPARQL template library with
+  capability gating; read-only query safety; local and endpoint execution; and
+  an investigation planner and evidence bundler with an explicit evidence model.
+  Adapts to custom ontologies and taxonomies by deriving a profile rather than
+  forking templates.
+author: Kalin Maldzhanski
+license: Apache-2.0
+# No `type:` field. It is not in APM's documented manifest schema - the package layout
+# is what declares the kind, and `skills/<name>/SKILL.md` at the root already means
+# "many skills in one repo".
+#
+# No `targets:` either, deliberately, so resolution falls through to APM's auto-detect from
+# the consumer's filesystem signals.
+#
+# A package-authored `targets:` RESTRICTS installation to the names listed, and nothing here
+# is target-specific - no hooks, no target-scoped frontmatter, no `bin/` for Claude Code - so
+# restricting could only exclude a runtime that would otherwise work. Naming a subset would
+# silently install nothing for anyone outside it. A consumer who wants to narrow it passes
+# `--target` or sets per-dependency `targets:`, which is where that decision belongs.
+keywords:
+  - enterprise-architecture
+  - knowledge-graph
+  - sparql
+  - rdf
+  - shacl
+  - ontology
+  - archimate
+  - bpmn
+  - c4
+  - backstage
+  - leanix
+  - gitlab
+  - linked-archi
+# Skill directories are the complete package. Source acquisition, profile assets,
+# query templates, transport, and SHACL validation each have one owner. Executable
+# Python lives only in the five runtime-owning skills; analyse is instructions-only.
+includes:
+  - skills/linked-archi-source/
+  - skills/linked-archi-profile/
+  - skills/linked-archi-connect/
+  - skills/linked-archi-query/
+  - skills/linked-archi-analyse/
+  - skills/linked-archi-validate/
+dependencies:
+  apm: []
+  # No mandatory MCP server. URL and Git acquisition work without one; GitLab MCP
+  # is an optional agent-mediated provider. A deployment that wants it adds its
+  # trusted server to the consuming project rather than giving every installation
+  # repository credentials.
+  mcp: []
+# No `scripts:` block.
+#
+# `apm run` executes in the *consumer's* project, where this package exists only as
+# installed skill directories. The previous entries here pointed at `profiles/…`,
+# `fixtures/…` and `tests/` - paths that exist in this repository and nowhere else - so
+# every one of them would have failed for a consumer. Shipping a broken script is worse
+# than shipping none, because `apm list` advertises it.
+#
+# The equivalents for working on this package are Makefile targets, which is where they
+# belong: `make check`, `make catalog`, `make profile`, `make verify`, `make fixtures`.
+# See USAGE.md "Choosing how to install".

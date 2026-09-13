@@ -1,0 +1,31 @@
+# core/lifecycle - What state are elements in?
+#
+# Answers: elements carrying an element-level lifecycle status, grouped with their
+# label and model.
+#
+# Does NOT prove: coverage. Lifecycle is sparse and notation-specific, so the
+# elements NOT listed here are overwhelmingly ones nobody recorded a status for,
+# not ones in a healthy state.
+#
+# REQUIRES capabilities.element_lifecycle. There is no core lifecycle predicate:
+# Backstage spells it bs:lifecycleState, LeanIX lmm:factSheetStatus, and ArchiMate
+# output carries none at all. The profile binds whichever apply as a chain, and
+# {{ROLES:element_lifecycle}} covers a mixed dataset.
+#
+# Do not confuse this with the model-level adms:status in the provenance graph,
+# which describes the conversion, not the architecture. "Completed" there means the
+# converter finished.
+#
+# Parameters: LIMIT
+{{PREFIXES}}
+SELECT ?element ?label ?statusPredicate ?status ?model
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    VALUES ?statusPredicate { {{ROLES:element_lifecycle}} }
+    ?element ?statusPredicate ?status .
+    OPTIONAL { ?element {{PATH:label}} ?label }
+    OPTIONAL { ?element {{ROLE:part_of}} ?model }
+  {{GRAPH_CLOSE}}
+}
+ORDER BY ?status ?label ?element
+LIMIT {{LIMIT}}

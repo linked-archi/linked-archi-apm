@@ -1,0 +1,68 @@
+# A curated store that has been enriched beyond raw conversion.
+#
+# This is the profile for `fixtures/augmented.trig`, and the shape a publishing
+# pipeline reaches once it does more than convert: authored cross-source identity
+# in a reconciliation graph, direct relationship triples emitted for traversal,
+# and the SHACL report loaded alongside the data instead of left as a file.
+#
+# It exists partly to be testable. Three templates - core/dependents-direct,
+# core/identity-audit and core/validation-summary - are correctly refused against
+# raw converter output, so without a profile and fixture that enable them they
+# could never be exercised. A gated template with no test for its enabled path is
+# a template nobody has run.
+extends: ../linked-archi-merged.yaml
+
+profile: curated-store
+version: 1
+description: >-
+  Enriched store: reconciliation graph, direct relationship triples, and a SHACL
+  report loaded as a named graph. The profile fixtures/augmented.trig is built for.
+
+graphs:
+  layout: per-model-triple
+  named_graphs: true
+  roles:
+    semantic: graph/semantic
+    views: graph/views
+    provenance: graph/provenance
+    reconciliation: graphs/reconciliation
+    # Only meaningful because this pipeline chooses to load its report. The
+    # converters do not: `validate` writes a document to stdout or -r <file>.
+    # Binding it here does not make it true of anyone else's dataset.
+    validation: graphs/validation
+
+capabilities:
+  direct_rel_triples: true
+  identity_assertions: true
+  validation_in_graph: true
+  # This pipeline adds the RDF 1.2 bridge, so the unqualified predicate is
+  # recoverable from the data instead of only from the ontology. Setting this true
+  # is also a claim about the *engine*: `<<( s p o )>>` is a parse error on a
+  # SPARQL 1.1 endpoint, so leave it false unless the store speaks 1.2.
+  #
+  # The bridge here is incomplete on purpose, and honestly so: it covers only the
+  # relationship classes whose ontology declares an arch:unqualifiedForm, which
+  # excludes bpmn:SequenceFlow and am:UsedBy. core/reifies-audit reports those as
+  # `missing-term`, which is a true finding about the ontologies rather than a
+  # planted defect.
+  rdf_reifies: true
+
+# Membership stays co-location even here, and that is a measured decision rather than
+# a default left untouched: in the fixture this profile is verified against,
+# dct:isPartOf reaches a model for 33 ArchiMate elements and for **no** BPMN element
+# at all. Declaring `bounded-folder-tree` would therefore find part of the store and
+# silently miss the rest - a profile claim that is false about its own dataset is the
+# exact failure `verify` exists to catch.
+#
+# examples/cloudplatform illustrates the folder-tree mode for a store that authors
+# the chain end to end.
+navigation:
+  model_membership:
+    # Inherited from the parent, and stated here because this profile used to override
+    # it with `same-graph-colocation`. That override became wrong when model resources
+    # moved to their own graph: co-location looks for arch:Model inside the semantic
+    # graph, so it now matches nothing and every membership template returns no rows.
+    #
+    # A curated store built from older converter output should set it back.
+    mode: direct-predicate
+    max_depth: 3

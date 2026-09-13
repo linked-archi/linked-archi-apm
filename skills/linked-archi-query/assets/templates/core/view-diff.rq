@@ -1,0 +1,78 @@
+# core/view-diff - What is on one diagram and not the other?
+#
+# Answers: the set difference between two views, by placed element, with which side
+# each element is on. DIRECTION selects a-only, b-only, or symmetric (both
+# directions, which is the default).
+#
+# Does NOT prove: that a difference between diagrams is a difference in the
+# architecture. Views are editorial. An element missing from B may have been
+# removed, may never have been drawn, or may sit on a third diagram nobody named -
+# and an element added to B may be a relabelling of something already in A.
+#
+# Elements present on BOTH views never appear. That is what a difference is; run
+# core/view-contents on either view to see everything it places.
+#
+# Why this exists as a template: the same question was once answered by running
+# core/view-usage over a handful of hand-picked candidate elements. That is
+# selection-biased by construction - it can only find what somebody already
+# suspected - while this is mechanically complete over both views.
+#
+# The two sides are scoped INDEPENDENTLY ({{GRAPH_OPEN:views}} and views2, views3,
+# views4). Sharing one graph scope would silently require both views to live in the
+# same views graph, and comparing a baseline model's view with a target model's view
+# - the most valuable case - would then report every element of A as a-only.
+#
+# REQUIRES the views graph, emitted only where the source carried diagrams.
+# Backstage and LeanIX output has none at all, so under a profile where views_graph
+# is partial an empty result may mean "this notation has no diagrams" rather than
+# "these views are identical".
+#
+# STR() around ?type is load-bearing: GROUP_CONCAT over IRIs is a type error, and an
+# erroring aggregate yields unbound rather than failing, so without it every row
+# arrives with an empty types column while the row count still looks right.
+#
+# Get both view IRIs from core/views rather than constructing them.
+#
+# Parameters: VIEW_A_IRI, VIEW_B_IRI, DIRECTION, LIMIT
+{{PREFIXES}}
+SELECT ?side ?element ?label (GROUP_CONCAT(DISTINCT STR(?type); separator=", ") AS ?types) ?nativeId
+WHERE {
+  {
+    {{GRAPH_OPEN:views}}
+      ?nodeA {{ROLE:view_ref}} {{VIEW_A_IRI}} ;
+             {{ROLE:node_element}} ?element .
+    {{GRAPH_CLOSE}}
+    FILTER NOT EXISTS {
+      {{GRAPH_OPEN:views2}}
+        ?nodeB {{ROLE:view_ref}} {{VIEW_B_IRI}} ;
+               {{ROLE:node_element}} ?element .
+      {{GRAPH_CLOSE}}
+    }
+    BIND("a-only" AS ?side)
+  }
+  UNION
+  {
+    {{GRAPH_OPEN:views3}}
+      ?nodeB {{ROLE:view_ref}} {{VIEW_B_IRI}} ;
+             {{ROLE:node_element}} ?element .
+    {{GRAPH_CLOSE}}
+    FILTER NOT EXISTS {
+      {{GRAPH_OPEN:views4}}
+        ?nodeA {{ROLE:view_ref}} {{VIEW_A_IRI}} ;
+               {{ROLE:node_element}} ?element .
+      {{GRAPH_CLOSE}}
+    }
+    BIND("b-only" AS ?side)
+  }
+  FILTER(?side = {{DIRECTION}} || {{DIRECTION}} = "symmetric")
+  OPTIONAL {
+    {{GRAPH_OPEN:semantic}}
+      ?element a ?type .
+      OPTIONAL { ?element {{PATH:label}} ?label }
+      OPTIONAL { ?element {{PATH:native_id}} ?nativeId }
+    {{GRAPH_CLOSE}}
+  }
+}
+GROUP BY ?side ?element ?label ?nativeId
+ORDER BY ?side ?label ?element
+LIMIT {{LIMIT}}

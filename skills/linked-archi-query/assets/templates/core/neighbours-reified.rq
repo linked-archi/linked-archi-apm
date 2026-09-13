@@ -1,0 +1,47 @@
+# core/neighbours-reified - What relates to this element, and by which predicate?
+#
+# Answers: every relationship touching the focus element, in both directions, with
+# both the qualified class (am:Serving) and the unqualified predicate the triple
+# term names (am:serves).
+#
+# Does NOT prove: runtime dependency, traffic or criticality. Same caveat as every
+# traversal template - a modelled relationship is a design-time statement.
+#
+# Prefer core/neighbours-qualified unless you specifically need the predicate.
+# That one answers the same question about the same relationships, works on any
+# SPARQL 1.1 engine, and does not depend on a bridge the converters do not yet
+# emit. This template is for datasets whose author added the RDF 1.2 bridge and
+# who need the predicate to report or to compare against an ontology.
+#
+# One hop only, deliberately. Chaining reified edges means an explicit self-join
+# per hop: `<<( ?a ?p1 ?b )>>` then `<<( ?b ?p2 ?c )>>`. A property path cannot
+# do it, because paths do not traverse triple terms. Two hops with qualified
+# relationships is core/dependents-qualified.
+#
+# Requires SPARQL 1.2; refused unless the profile declares capabilities.rdf_reifies.
+#
+# Parameters: FOCUS_IRI, LIMIT
+{{PREFIXES}}
+SELECT ?direction ?predicate ?relType ?other ?otherLabel
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    VALUES ?focus { {{FOCUS_IRI}} }
+    ?rel a {{ROLE:relationship_class}} .
+    {
+      ?rel {{ROLE:reifies}} <<( ?focus ?predicate ?other )>> .
+      BIND("outgoing" AS ?direction)
+    }
+    UNION
+    {
+      ?rel {{ROLE:reifies}} <<( ?other ?predicate ?focus )>> .
+      BIND("incoming" AS ?direction)
+    }
+    OPTIONAL {
+      ?rel a ?relType .
+      FILTER(?relType != {{ROLE:relationship_class}} && ?relType != {{ROLE:concept_class}})
+    }
+    OPTIONAL { ?other {{PATH:label}} ?otherLabel }
+  {{GRAPH_CLOSE}}
+}
+ORDER BY ?direction ?predicate ?other
+LIMIT {{LIMIT}}

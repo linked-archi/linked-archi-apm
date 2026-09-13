@@ -1,0 +1,31 @@
+# core/classified-by - Everything classified under a taxonomy branch.
+#
+# Answers: elements whose classification concept is CONCEPT_IRI or any concept
+# beneath it, with the concept that matched.
+#
+# Does NOT prove: that unclassified elements do not belong to the branch. Absence
+# of a classification is absence of an assertion.
+#
+# This is the one template a custom taxonomy needs, and it needs no editing to
+# serve one. It walks skos:broader upward from whatever concept you name, so it
+# works identically against the Linked.Archi common taxonomy, a notation's own
+# scheme, or a house scheme added through arch:conceptClassification. Adding a
+# taxonomy is a profile entry, not a new query.
+#
+# skos:broader* includes the concept itself, so naming a leaf concept returns
+# exactly its members and naming a top concept returns the whole branch.
+#
+# Parameters: CONCEPT_IRI, LIMIT
+{{PREFIXES}}
+SELECT DISTINCT ?element ?label ?concept ?conceptLabel
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    VALUES ?root { {{CONCEPT_IRI}} }
+    ?element ?classification ?concept .
+    ?concept {{ROLE:broader}}* ?root .
+    OPTIONAL { ?element {{PATH:label}} ?label }
+    OPTIONAL { ?concept {{PATH:label}} ?conceptLabel }
+  {{GRAPH_CLOSE}}
+}
+ORDER BY ?conceptLabel ?label ?element
+LIMIT {{LIMIT}}

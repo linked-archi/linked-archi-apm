@@ -1,0 +1,1224 @@
+{
+  "version": 1,
+  "templates": {
+    "core/classified-by": {
+      "file": "core/classified-by.rq",
+      "stage": "analysis",
+      "purpose": "Elements classified under a taxonomy concept or any concept beneath it.",
+      "answers": "The membership of a taxonomy branch, whichever scheme it belongs to.",
+      "does_not_prove": "That unclassified elements fall outside the branch.",
+      "parameters": {
+        "CONCEPT_IRI": {
+          "type": "iri",
+          "description": "SKOS concept at the top of the branch"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 300,
+          "min": 1,
+          "max": 3000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "broader",
+          "label"
+        ],
+        "graph_roles": [
+          "semantic"
+        ]
+      }
+    },
+    "core/coverage-gaps": {
+      "file": "core/coverage-gaps.rq",
+      "stage": "quality",
+      "purpose": "Elements of a type with no value for an expected predicate.",
+      "answers": "Where the models are silent about something you expected.",
+      "does_not_prove": "That the real thing lacks the property. Nobody recorded it.",
+      "parameters": {
+        "RESOURCE_TYPE": {
+          "type": "iri",
+          "description": "class to measure"
+        },
+        "EXPECTED_PREDICATE": {
+          "type": "iri",
+          "description": "predicate expected on it"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 300,
+          "min": 1,
+          "max": 3000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "label"
+        ],
+        "graph_roles": [
+          "semantic"
+        ]
+      }
+    },
+    "core/define-term": {
+      "file": "core/define-term.rq",
+      "stage": "resolution",
+      "purpose": "Explain each resource a term matches: definition, type, owning model, immediate relationships.",
+      "answers": "What this dataset says a term means, and how ambiguous the term is.",
+      "does_not_prove": "That a definition is true, current or agreed. It is text somebody typed in a modelling tool.",
+      "parameters": {
+        "TERM": {
+          "type": "string",
+          "description": "the term to define"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 100,
+          "min": 1,
+          "max": 1000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "label",
+          "alt_label",
+          "definition",
+          "native_id",
+          "model_class",
+          "rel_source",
+          "rel_target",
+          "source_file"
+        ],
+        "graph_roles": [
+          "semantic"
+        ],
+        "membership": true
+      },
+      "alternatives": [
+        "core/resolve-element",
+        "core/element-detail",
+        "core/neighbours-qualified"
+      ]
+    },
+    "core/dependents-direct": {
+      "file": "core/dependents-direct.rq",
+      "stage": "analysis",
+      "purpose": "Transitive dependents through named direct predicates.",
+      "answers": "Everything reaching an element at any depth along a chosen predicate set.",
+      "does_not_prove": "Impact, or completeness beyond the predicates named.",
+      "parameters": {
+        "FOCUS_IRI": {
+          "type": "iri",
+          "description": "the element to examine"
+        },
+        "PREDICATE_PATH": {
+          "type": "iri_path",
+          "max_terms": 12,
+          "description": "direct predicates to follow, from core/discover-relationship-types"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 300,
+          "min": 1,
+          "max": 3000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "label"
+        ],
+        "graph_roles": [
+          "semantic"
+        ],
+        "capabilities": {
+          "direct_rel_triples": true
+        }
+      },
+      "alternatives": [
+        "core/dependents-qualified",
+        "core/neighbours-qualified"
+      ]
+    },
+    "core/dependents-qualified": {
+      "file": "core/dependents-qualified.rq",
+      "stage": "analysis",
+      "purpose": "What reaches an element within two hops, via the qualified form.",
+      "answers": "Bounded incoming dependency paths, with the relationship types on each.",
+      "does_not_prove": "Impact. Reachability in a model is not blast radius.",
+      "parameters": {
+        "FOCUS_IRI": {
+          "type": "iri",
+          "description": "the element to examine"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 300,
+          "min": 1,
+          "max": 3000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "relationship_class",
+          "rel_source",
+          "rel_target",
+          "label"
+        ],
+        "graph_roles": [
+          "semantic"
+        ]
+      },
+      "alternatives": [
+        "core/neighbours-qualified"
+      ]
+    },
+    "core/discover-predicates": {
+      "file": "core/discover-predicates.rq",
+      "stage": "discovery",
+      "purpose": "Predicates in use, with frequency and object kind.",
+      "answers": "Exact predicate spellings, including house fields with no core role.",
+      "does_not_prove": "That a predicate means what its local name suggests.",
+      "parameters": {
+        "LIMIT": {
+          "type": "integer",
+          "default": 250,
+          "min": 1,
+          "max": 2000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "graph_roles": [
+          "semantic"
+        ]
+      }
+    },
+    "core/discover-relationship-types": {
+      "file": "core/discover-relationship-types.rq",
+      "stage": "discovery",
+      "purpose": "Relationship types present, with counts and the endpoint types they join.",
+      "answers": "Which relationship kinds this dataset actually uses.",
+      "does_not_prove": "What the metamodel permits. This is what was modelled.",
+      "parameters": {
+        "LIMIT": {
+          "type": "integer",
+          "default": 250,
+          "min": 1,
+          "max": 2000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "relationship_class",
+          "rel_source",
+          "rel_target"
+        ],
+        "graph_roles": [
+          "semantic"
+        ]
+      }
+    },
+    "core/element-detail": {
+      "file": "core/element-detail.rq",
+      "stage": "resolution",
+      "purpose": "Every predicate and object on one resource, with its graph.",
+      "answers": "What the dataset actually says about an element, in exact spelling.",
+      "does_not_prove": "Completeness. Absent here means absent from the models.",
+      "parameters": {
+        "FOCUS_IRI": {
+          "type": "iri",
+          "description": "the resource to inspect"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 200,
+          "min": 1,
+          "max": 2000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {}
+    },
+    "core/elements-by-type": {
+      "file": "core/elements-by-type.rq",
+      "stage": "resolution",
+      "purpose": "List elements carrying one rdf:type.",
+      "answers": "The population of a class, with labels and native ids.",
+      "does_not_prove": "That the type is the element's only type. Elements are multi-typed.",
+      "parameters": {
+        "TYPE_IRI": {
+          "type": "iri",
+          "description": "class IRI, taken from core/inventory"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 200,
+          "min": 1,
+          "max": 2000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "label"
+        ],
+        "graph_roles": [
+          "semantic"
+        ]
+      },
+      "alternatives": [
+        "core/inventory"
+      ]
+    },
+    "core/graph-provenance": {
+      "file": "core/graph-provenance.rq",
+      "stage": "quality",
+      "purpose": "What produced each named graph, from which source, and when.",
+      "answers": "Whether every graph in the dataset can be accounted for, or just the graphs whose IRI matches GRAPH_MATCH.",
+      "does_not_prove": "That a graph is complete, or that its source is current.",
+      "parameters": {
+        "GRAPH_MATCH": {
+          "type": "string",
+          "default": "",
+          "description": "narrow to graphs whose IRI contains this fragment: a notation slug, a model id, or a graph role such as graph/semantic. Empty means every graph"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 100,
+          "min": 1,
+          "max": 1000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "bundle_class",
+          "generated_at",
+          "derived_from",
+          "generated_by"
+        ],
+        "graph_roles": [
+          "provenance"
+        ],
+        "capabilities": {
+          "graph_bundles": true
+        }
+      },
+      "alternatives": [
+        "core/provenance",
+        "core/models"
+      ]
+    },
+    "core/identity-audit": {
+      "file": "core/identity-audit.rq",
+      "stage": "quality",
+      "purpose": "Cross-source identity assertions, and which kind each is.",
+      "answers": "Which elements are linked across tools, by correspondence or by identity.",
+      "does_not_prove": "That unlisted elements have no counterpart. Identity is authored.",
+      "parameters": {
+        "LIMIT": {
+          "type": "integer",
+          "default": 200,
+          "min": 1,
+          "max": 2000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "same_as",
+          "exact_match",
+          "label"
+        ],
+        "capabilities": {
+          "identity_assertions": true
+        },
+        "graph_roles": [
+          "semantic"
+        ]
+      },
+      "alternatives": [
+        "core/resolve-element",
+        "core/models"
+      ]
+    },
+    "core/inventory": {
+      "file": "core/inventory.rq",
+      "stage": "orientation",
+      "purpose": "Named graphs, types and counts. Run first, every session.",
+      "answers": "What is loaded, from which graphs, and how much of each type.",
+      "does_not_prove": "That the dataset is complete. A low count is usually a partial export.",
+      "parameters": {
+        "LIMIT": {
+          "type": "integer",
+          "default": 300,
+          "min": 1,
+          "max": 2000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {}
+    },
+    "core/inventory-summary": {
+      "file": "core/inventory-summary.rq",
+      "stage": "orientation",
+      "purpose": "Notations present, with model, graph and concept counts. Use on a large dataset.",
+      "answers": "How much of each notation is loaded, in one screen.",
+      "does_not_prove": "Completeness. A missing notation may never have been converted, or a merge may have dropped it.",
+      "parameters": {
+        "LIMIT": {
+          "type": "integer",
+          "default": 50,
+          "min": 1,
+          "max": 500,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "model_class",
+          "concept_class",
+          "conforms_to_metamodel"
+        ],
+        "graph_roles": [
+          "model",
+          "semantic"
+        ]
+      },
+      "alternatives": [
+        "core/inventory",
+        "core/models"
+      ]
+    },
+    "core/label-collisions": {
+      "file": "core/label-collisions.rq",
+      "stage": "quality",
+      "purpose": "Elements sharing a normalised label across different models. Identity CANDIDATES only.",
+      "answers": "Where the same name appears in more than one model, with each side's type and model.",
+      "does_not_prove": "Identity. Same label is not same system: it may be one thing modelled twice, two things, or a thing and a record about it.",
+      "caveat": "core/label-collisions returns identity CANDIDATES, not identity assertions. A shared label is not evidence that two resources are the same thing. Cross-tool identity here is authored and human-reviewed: core/identity-audit reads those assertions, and this template makes none.",
+      "parameters": {
+        "LIMIT": {
+          "type": "integer",
+          "default": 200,
+          "min": 1,
+          "max": 2000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "element_class",
+          "concept_class",
+          "label",
+          "model_class"
+        ],
+        "graph_roles": [
+          "semantic"
+        ],
+        "membership": true
+      },
+      "alternatives": [
+        "core/identity-audit",
+        "core/resolve-element",
+        "core/define-term"
+      ]
+    },
+    "core/lifecycle": {
+      "file": "core/lifecycle.rq",
+      "stage": "enrichment",
+      "purpose": "Element-level lifecycle status, where any notation records it.",
+      "answers": "Which elements carry a status, and what it is.",
+      "does_not_prove": "Coverage. Lifecycle is sparse and notation-specific.",
+      "parameters": {
+        "LIMIT": {
+          "type": "integer",
+          "default": 300,
+          "min": 1,
+          "max": 3000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "element_lifecycle",
+          "label"
+        ],
+        "graph_roles": [
+          "semantic"
+        ],
+        "capabilities": {
+          "element_lifecycle": true
+        }
+      },
+      "alternatives": [
+        "notation/backstage/ownership",
+        "notation/leanix/factsheets"
+      ]
+    },
+    "core/models": {
+      "file": "core/models.rq",
+      "stage": "orientation",
+      "purpose": "Models present, the metamodel each conforms to, and its source.",
+      "answers": "Which notations contributed, and when each model was converted.",
+      "does_not_prove": "That a model is current. A conversion timestamp is not an as-at date.",
+      "parameters": {
+        "LIMIT": {
+          "type": "integer",
+          "default": 100,
+          "min": 1,
+          "max": 1000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "model_class",
+          "conforms_to_metamodel"
+        ],
+        "graph_roles": [
+          "model"
+        ]
+      }
+    },
+    "core/neighbours-qualified": {
+      "file": "core/neighbours-qualified.rq",
+      "stage": "analysis",
+      "purpose": "Direct relationships touching an element, via the qualified form.",
+      "answers": "What an element relates to, in both directions, with the relationship kind.",
+      "does_not_prove": "Runtime dependency, criticality or failure propagation.",
+      "parameters": {
+        "FOCUS_IRI": {
+          "type": "iri",
+          "description": "the element to examine"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 200,
+          "min": 1,
+          "max": 2000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "relationship_class",
+          "rel_source",
+          "rel_target",
+          "label"
+        ],
+        "graph_roles": [
+          "semantic"
+        ]
+      }
+    },
+    "core/neighbours-reified": {
+      "file": "core/neighbours-reified.rq",
+      "stage": "analysis",
+      "purpose": "Relationships touching an element, naming the unqualified predicate as well as the class.",
+      "answers": "What an element relates to, in both directions, with the predicate the bridge names.",
+      "does_not_prove": "Runtime dependency. And one hop only: paths cannot traverse triple terms.",
+      "parameters": {
+        "FOCUS_IRI": {
+          "type": "iri",
+          "description": "the element to examine"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 200,
+          "min": 1,
+          "max": 2000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "relationship_class",
+          "reifies",
+          "label"
+        ],
+        "graph_roles": [
+          "semantic"
+        ],
+        "capabilities": {
+          "rdf_reifies": true
+        }
+      },
+      "alternatives": [
+        "core/neighbours-qualified",
+        "core/dependents-qualified"
+      ]
+    },
+    "core/orphans": {
+      "file": "core/orphans.rq",
+      "stage": "quality",
+      "purpose": "Elements taking part in no relationship.",
+      "answers": "Where the model has islands, as a data-quality reading.",
+      "does_not_prove": "That an element is unused or safe to remove.",
+      "parameters": {
+        "LIMIT": {
+          "type": "integer",
+          "default": 300,
+          "min": 1,
+          "max": 3000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "element_class",
+          "relationship_class",
+          "rel_source",
+          "rel_target"
+        ],
+        "graph_roles": [
+          "semantic"
+        ]
+      }
+    },
+    "core/provenance": {
+      "file": "core/provenance.rq",
+      "stage": "quality",
+      "purpose": "Source file, converter, and timestamps behind an element's model.",
+      "answers": "Where a fact came from, so a claim becomes evidence.",
+      "does_not_prove": "That the source model is current, correct or approved.",
+      "parameters": {
+        "FOCUS_IRI": {
+          "type": "iri",
+          "description": "the element to trace"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 50,
+          "min": 1,
+          "max": 500,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "model_class",
+          "part_of",
+          "source_file",
+          "generated_at"
+        ],
+        "graph_roles": [
+          "semantic",
+          "provenance"
+        ],
+        "capabilities": {
+          "provenance_graph": true
+        }
+      },
+      "alternatives": [
+        "core/models",
+        "core/element-detail"
+      ]
+    },
+    "core/reified-predicates": {
+      "file": "core/reified-predicates.rq",
+      "stage": "discovery",
+      "purpose": "Unqualified predicates exposed by the RDF 1.2 reification bridge, per qualified class.",
+      "answers": "The predicate a relationship stands for, which the qualified class alone does not carry.",
+      "does_not_prove": "That the predicate is asserted. A triple term is not a triple, and property paths do not traverse it.",
+      "parameters": {
+        "LIMIT": {
+          "type": "integer",
+          "default": 250,
+          "min": 1,
+          "max": 2000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "relationship_class",
+          "reifies"
+        ],
+        "graph_roles": [
+          "semantic"
+        ],
+        "capabilities": {
+          "rdf_reifies": true
+        }
+      },
+      "alternatives": [
+        "core/discover-relationship-types"
+      ]
+    },
+    "core/reifies-audit": {
+      "file": "core/reifies-audit.rq",
+      "stage": "quality",
+      "purpose": "Qualified relationships whose triple term is missing or disagrees with arch:source/arch:target.",
+      "answers": "Whether the two halves of each relationship agree with each other.",
+      "does_not_prove": "Correctness. A relationship wrong in both halves agrees with itself and passes.",
+      "parameters": {
+        "LIMIT": {
+          "type": "integer",
+          "default": 300,
+          "min": 1,
+          "max": 3000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "relationship_class",
+          "rel_source",
+          "rel_target",
+          "reifies"
+        ],
+        "graph_roles": [
+          "semantic"
+        ],
+        "capabilities": {
+          "rdf_reifies": true
+        }
+      },
+      "alternatives": [
+        "core/discover-relationship-types",
+        "core/orphans"
+      ]
+    },
+    "core/resolve-element": {
+      "file": "core/resolve-element.rq",
+      "stage": "resolution",
+      "purpose": "Resolve a name a user typed to candidate IRIs, best candidate first.",
+      "answers": "Which resources match a term by name, alias or native id, ranked by how much of the value matched (?rank) and by which of the three matched (?matched).",
+      "does_not_prove": "That the top match is the one meant. Ask when the choice changes the answer.",
+      "parameters": {
+        "TERM": {
+          "type": "string",
+          "description": "name or fragment the user typed"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 25,
+          "min": 1,
+          "max": 200,
+          "description": "maximum rows. A full page means candidates were discarded: the envelope reports truncated, so raise this rather than reading the page as the whole answer"
+        }
+      },
+      "requires": {
+        "roles": [
+          "label",
+          "alt_label",
+          "native_id"
+        ],
+        "graph_roles": [
+          "semantic"
+        ]
+      },
+      "alternatives": [
+        "core/resolve-model",
+        "core/define-term"
+      ]
+    },
+    "core/resolve-model": {
+      "file": "core/resolve-model.rq",
+      "stage": "resolution",
+      "purpose": "Resolve a phrase to a model, as against a concept inside one.",
+      "answers": "Which models match by title, name, native id, description, source file, status or notation, ranked exact then prefix then substring.",
+      "does_not_prove": "That the top-ranked model is the one meant, or that it is current. Rank is string similarity only.",
+      "parameters": {
+        "TERM": {
+          "type": "string",
+          "description": "name or fragment the user typed"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 25,
+          "min": 1,
+          "max": 200,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "model_class",
+          "label",
+          "native_id",
+          "conforms_to_metamodel",
+          "source_file",
+          "model_status"
+        ],
+        "graph_roles": [
+          "model"
+        ]
+      },
+      "alternatives": [
+        "core/models",
+        "core/resolve-element"
+      ]
+    },
+    "core/traceability": {
+      "file": "core/traceability.rq",
+      "stage": "analysis",
+      "purpose": "Paths of one or two hops between two kinds of element.",
+      "answers": "Which elements of one type connect to which of another, and how.",
+      "does_not_prove": "That an unlisted pair is unconnected. Deeper paths are out of scope.",
+      "parameters": {
+        "SOURCE_TYPE": {
+          "type": "iri",
+          "description": "class at one end"
+        },
+        "TARGET_TYPE": {
+          "type": "iri",
+          "description": "class at the other end"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 300,
+          "min": 1,
+          "max": 3000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "relationship_class",
+          "rel_source",
+          "rel_target",
+          "label"
+        ],
+        "graph_roles": [
+          "semantic"
+        ]
+      },
+      "alternatives": [
+        "core/coverage-gaps"
+      ]
+    },
+    "core/validation-summary": {
+      "file": "core/validation-summary.rq",
+      "stage": "quality",
+      "purpose": "SHACL verdict with violations by severity and shape, from a report in the dataset.",
+      "answers": "What a loaded SHACL report says, and how much it covered.",
+      "does_not_prove": "Soundness. A verdict without an evaluated count means nothing.",
+      "parameters": {
+        "LIMIT": {
+          "type": "integer",
+          "default": 200,
+          "min": 1,
+          "max": 2000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "capabilities": {
+          "validation_in_graph": true
+        }
+      },
+      "alternatives": [
+        "core/coverage-gaps",
+        "core/orphans"
+      ]
+    },
+    "core/view-contents": {
+      "file": "core/view-contents.rq",
+      "stage": "views",
+      "purpose": "Which elements a diagram places.",
+      "answers": "What one view depicts, with each element's label, native id and types.",
+      "does_not_prove": "That the diagram is current, or that an element absent from it is absent from the architecture.",
+      "parameters": {
+        "VIEW_IRI": {
+          "type": "iri",
+          "description": "the view to read, from core/views"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 200,
+          "min": 1,
+          "max": 2000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "node_element",
+          "view_ref"
+        ],
+        "graph_roles": [
+          "semantic",
+          "views"
+        ],
+        "capabilities": {
+          "views_graph": true
+        }
+      },
+      "alternatives": [
+        "core/view-contents-semantic",
+        "core/views",
+        "core/view-usage"
+      ]
+    },
+    "core/view-contents-semantic": {
+      "file": "core/view-contents-semantic.rq",
+      "stage": "views",
+      "purpose": "Which elements a diagram places, read from the semantic graph.",
+      "answers": "What one view depicts, from the one-hop arch:inView edge rather than a node in the views graph. The route that survives output published without geometry.",
+      "does_not_prove": "That the diagram is current, or that an element absent from it is absent from the architecture. It also says nothing about where on the canvas anything sits - use core/view-contents where the views graph exists.",
+      "parameters": {
+        "VIEW_IRI": {
+          "type": "iri",
+          "description": "the view to read, from core/views"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 200,
+          "min": 1,
+          "max": 2000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "in_view",
+          "element_class"
+        ],
+        "graph_roles": [
+          "semantic"
+        ]
+      },
+      "alternatives": [
+        "core/view-contents",
+        "core/views",
+        "core/view-usage-semantic"
+      ],
+      "caveat": "Read from arch:inView, so this reports which view presents an element and not where it is drawn. An element placed twice on one view is reported once."
+    },
+    "core/view-diff": {
+      "file": "core/view-diff.rq",
+      "stage": "views",
+      "purpose": "Set difference between two views, by placed element.",
+      "answers": "Which elements one diagram places and the other does not, in either or both directions.",
+      "does_not_prove": "That a difference between diagrams is a difference in the architecture. Views are editorial.",
+      "parameters": {
+        "VIEW_A_IRI": {
+          "type": "iri",
+          "description": "first view, from core/views"
+        },
+        "VIEW_B_IRI": {
+          "type": "iri",
+          "description": "second view, from core/views"
+        },
+        "DIRECTION": {
+          "type": "string",
+          "default": "symmetric",
+          "choices": [
+            "a-only",
+            "b-only",
+            "symmetric"
+          ],
+          "description": "which side to report; symmetric reports both differences and never the shared elements"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 200,
+          "min": 1,
+          "max": 2000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "view_ref",
+          "node_element",
+          "label",
+          "native_id"
+        ],
+        "graph_roles": [
+          "views",
+          "semantic"
+        ],
+        "capabilities": {
+          "views_graph": true
+        }
+      },
+      "alternatives": [
+        "core/view-contents",
+        "core/views"
+      ]
+    },
+    "core/view-usage": {
+      "file": "core/view-usage.rq",
+      "stage": "views",
+      "purpose": "Which diagrams depict an element.",
+      "answers": "Where an element has been drawn, and under which viewpoint.",
+      "does_not_prove": "That an undrawn element is unimportant.",
+      "parameters": {
+        "FOCUS_IRI": {
+          "type": "iri",
+          "description": "the element to look for"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 100,
+          "min": 1,
+          "max": 1000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "node_element",
+          "view_ref"
+        ],
+        "graph_roles": [
+          "semantic",
+          "views"
+        ],
+        "capabilities": {
+          "views_graph": true
+        }
+      },
+      "alternatives": [
+        "core/view-usage-semantic",
+        "core/views"
+      ]
+    },
+    "core/view-usage-semantic": {
+      "file": "core/view-usage-semantic.rq",
+      "stage": "views",
+      "purpose": "Which diagrams depict an element, read from the semantic graph.",
+      "answers": "Where an element has been drawn and under which viewpoint, from the one-hop arch:inView edge rather than a node in the views graph.",
+      "does_not_prove": "That an undrawn element is unimportant. It returns no node, so it cannot distinguish two drawings of one element on one view.",
+      "parameters": {
+        "FOCUS_IRI": {
+          "type": "iri",
+          "description": "the element to look for"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 100,
+          "min": 1,
+          "max": 1000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "in_view"
+        ],
+        "graph_roles": [
+          "semantic"
+        ]
+      },
+      "alternatives": [
+        "core/view-usage",
+        "core/views",
+        "core/view-contents-semantic"
+      ],
+      "caveat": "Returns no node column, unlike core/view-usage. Each view is reported once however many times the element is drawn on it."
+    },
+    "core/views": {
+      "file": "core/views.rq",
+      "stage": "views",
+      "purpose": "Views present, their viewpoint, and how many nodes each places.",
+      "answers": "What diagrams exist and how substantial they are.",
+      "does_not_prove": "Quality or currency of a diagram.",
+      "parameters": {
+        "LIMIT": {
+          "type": "integer",
+          "default": 200,
+          "min": 1,
+          "max": 2000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "view_class",
+          "view_ref"
+        ],
+        "graph_roles": [
+          "semantic",
+          "views"
+        ]
+      }
+    },
+    "notation/archimate/layer-crossing": {
+      "file": "notation/archimate/layer-crossing.rq",
+      "stage": "analysis",
+      "notation": "archimate",
+      "purpose": "Relationships that cross ArchiMate layers, grouped by layer pair.",
+      "answers": "Where realisation and serving cross layers, and how often.",
+      "does_not_prove": "That a crossing is correct, or that a missing one is a gap. Layer is inferred from class names.",
+      "parameters": {
+        "LIMIT": {
+          "type": "integer",
+          "default": 200,
+          "min": 1,
+          "max": 2000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "relationship_class",
+          "rel_source",
+          "rel_target"
+        ],
+        "graph_roles": [
+          "semantic"
+        ]
+      }
+    },
+    "notation/backstage/ownership": {
+      "file": "notation/backstage/ownership.rq",
+      "stage": "enrichment",
+      "notation": "backstage",
+      "purpose": "Backstage entities and the group or user that owns them.",
+      "answers": "Who is recorded as owning what, with lifecycle state.",
+      "does_not_prove": "Accountability. spec.owner is what somebody wrote in a file.",
+      "parameters": {
+        "LIMIT": {
+          "type": "integer",
+          "default": 200,
+          "min": 1,
+          "max": 2000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "rel_source",
+          "rel_target",
+          "label"
+        ],
+        "graph_roles": [
+          "semantic"
+        ]
+      },
+      "alternatives": [
+        "core/coverage-gaps"
+      ]
+    },
+    "notation/bpmn/process-components": {
+      "file": "notation/bpmn/process-components.rq",
+      "stage": "analysis",
+      "notation": "bpmn",
+      "purpose": "What takes part in a BPMN model, grouped by kind of participant.",
+      "answers": "Where work arrives, what is automated, what a person does, the participants, the data touched, and where it ends.",
+      "does_not_prove": "That any of it runs. A ServiceTask is a modelled intent, not a deployed service.",
+      "parameters": {
+        "MODEL_IRI": {
+          "type": "iri",
+          "description": "the BPMN model, from core/models or core/resolve-model"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 200,
+          "min": 1,
+          "max": 2000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "model_class",
+          "label",
+          "native_id"
+        ],
+        "graph_roles": [
+          "semantic"
+        ],
+        "membership": true
+      },
+      "alternatives": [
+        "notation/bpmn/process-flow",
+        "core/elements-by-type"
+      ]
+    },
+    "notation/bpmn/process-flow": {
+      "file": "notation/bpmn/process-flow.rq",
+      "stage": "analysis",
+      "notation": "bpmn",
+      "purpose": "Sequence flows of one BPMN process, as edges.",
+      "answers": "Which steps follow which, with the flow element types.",
+      "does_not_prove": "Runtime order. Gateways branch; these are edges, not a path.",
+      "parameters": {
+        "PROCESS_IRI": {
+          "type": "iri",
+          "description": "the bpmn:Process element"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 200,
+          "min": 1,
+          "max": 2000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "relationship_class",
+          "rel_source",
+          "rel_target",
+          "native_id"
+        ],
+        "graph_roles": [
+          "semantic"
+        ]
+      }
+    },
+    "notation/c4/containers": {
+      "file": "notation/c4/containers.rq",
+      "stage": "analysis",
+      "notation": "c4",
+      "purpose": "C4 elements with type, technology and containing parent.",
+      "answers": "The container and component structure of a C4 model.",
+      "does_not_prove": "Deployment. A container is a modelled unit, not a running instance.",
+      "parameters": {
+        "LIMIT": {
+          "type": "integer",
+          "default": 200,
+          "min": 1,
+          "max": 2000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "label",
+          "has_part",
+          "keywords"
+        ],
+        "graph_roles": [
+          "semantic"
+        ]
+      }
+    },
+    "notation/leanix/factsheets": {
+      "file": "notation/leanix/factsheets.rq",
+      "stage": "enrichment",
+      "notation": "leanix",
+      "purpose": "LeanIX fact sheets with status, completion and lifecycle phase.",
+      "answers": "What the inventory holds and how filled-in each record is.",
+      "does_not_prove": "That a fact sheet's subject exists, or that its content is right. A fact sheet is a record about a thing.",
+      "parameters": {
+        "LIMIT": {
+          "type": "integer",
+          "default": 200,
+          "min": 1,
+          "max": 2000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "label"
+        ],
+        "graph_roles": [
+          "semantic"
+        ]
+      }
+    }
+  }
+}

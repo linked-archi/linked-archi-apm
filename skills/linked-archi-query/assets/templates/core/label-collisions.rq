@@ -1,0 +1,67 @@
+# core/label-collisions - Which elements share a name across models?
+#
+# Answers: elements whose normalised label matches another element in a DIFFERENT
+# model, grouped by that normalised label, with each side's own type and model.
+#
+# Does NOT prove ANYTHING about identity. These are CANDIDATES. Two applications
+# called "Billing" may be one system modelled twice, two different systems, or a
+# system and a report about it. Cross-tool identity in this package is authored and
+# human-reviewed, never derived - core/identity-audit reads the assertions, and this
+# template deliberately does not produce any.
+#
+# It exists because the alternative was worse. When no identity role is bound,
+# core/identity-audit is correctly refused, which leaves nothing between "asserted
+# identity" and eyeballing labels - and a field session did reconcile five resources
+# named some form of "Errata Hub" across four notations by pure label reasoning, in
+# an answer. Making the candidate set visible and explicitly un-asserted is safer
+# than leaving the same reasoning to happen off the record.
+#
+# The catalogue attaches a caveat to every result from this template, so the warning
+# travels with the rows rather than staying in the documentation.
+#
+# Normalisation folds case and every run of non-alphanumeric characters to a single
+# space, then trims: "Errata Hub", "errata-hub" and "ERRATA_HUB" collide, while
+# "Errata Hub 2" does not. That is deliberately crude. A cleverer normaliser would
+# make the candidate set larger and its rules harder to explain, and the reader is
+# the one deciding.
+#
+# ?models is the number of distinct models the normalised label appears in, repeated
+# on each row, so a two-way collision is visibly different from a five-way one.
+#
+# Only cross-MODEL collisions are reported. Two elements with the same label inside
+# one model are usually deliberate - a process step drawn in two places, or genuinely
+# two things - and are a modelling question rather than an identity one.
+#
+# Membership comes from {{MEMBERSHIP:element}}, so "different model" means whatever
+# the profile says membership means.
+#
+# Parameters: LIMIT
+{{PREFIXES}}
+SELECT ?normalised ?models ?element ?label ?type ?model
+WHERE {
+  {
+    SELECT ?normalised (COUNT(DISTINCT ?model) AS ?models)
+    WHERE {
+      {{GRAPH_OPEN:semantic}}
+        ?candidate a {{ROLE:element_class}} ;
+                   {{PATH:label}} ?candidateLabel .
+        {{MEMBERSHIP:candidate}}
+      {{GRAPH_CLOSE}}
+      BIND(REPLACE(REPLACE(LCASE(STR(?candidateLabel)), "[^a-z0-9]+", " "), "^ +| +$", "") AS ?normalised)
+    }
+    GROUP BY ?normalised
+    HAVING(COUNT(DISTINCT ?model) > 1)
+  }
+  {{GRAPH_OPEN:semantic2}}
+    ?element a {{ROLE:element_class}} ;
+             {{PATH:label}} ?label .
+    {{MEMBERSHIP:element}}
+    OPTIONAL {
+      ?element a ?type .
+      FILTER(?type != {{ROLE:concept_class}} && ?type != {{ROLE:element_class}})
+    }
+  {{GRAPH_CLOSE}}
+  FILTER(REPLACE(REPLACE(LCASE(STR(?label)), "[^a-z0-9]+", " "), "^ +| +$", "") = ?normalised)
+}
+ORDER BY DESC(?models) ?normalised ?model ?element
+LIMIT {{LIMIT}}

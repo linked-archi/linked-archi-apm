@@ -1,0 +1,287 @@
+@prefix arch: <https://meta.linked.archi/core#> .
+@prefix archvis: <https://meta.linked.archi/core-vis#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix adms: <http://www.w3.org/ns/adms#> .
+@prefix schema: <https://schema.org/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix bs: <https://meta.linked.archi/backstage/onto#> .
+
+<https://example.org/la/backstage/usl-api-registry/graph/model> {<https://example.org/la/backstage/usl-api-registry> a arch:Model;
+arch:modelConformsToMetamodel <https://meta.linked.archi/backstage/metamodel#BackstageCatalog> .
+<https://example.org/la/backstage/usl-api-registry/folder> a arch:Folder;
+schema:name "usl-api-registry" .
+<https://example.org/la/backstage/usl-api-registry/folder/Elements> a arch:Folder;
+schema:name "Elements";
+dct:isPartOf <https://example.org/la/backstage/usl-api-registry/folder> .
+<https://example.org/la/backstage/usl-api-registry/folder/Relationships> a arch:Folder;
+schema:name "Relationships";
+dct:isPartOf <https://example.org/la/backstage/usl-api-registry/folder> .
+<https://example.org/la/backstage/usl-api-registry/folder/Views> a arch:Folder;
+schema:name "Views";
+dct:isPartOf <https://example.org/la/backstage/usl-api-registry/folder> .
+<https://example.org/la/backstage/usl-api-registry/folder/Elements> schema:itemListElement _:10e26829411e74f06876cf8199fa4e5780 .
+_:10e26829411e74f06876cf8199fa4e5780 a schema:ListItem;
+schema:position "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+schema:item <https://example.org/la/backstage/usl-api-registry/element/system/default/commerce-platform> .
+<https://example.org/la/backstage/usl-api-registry/element/system/default/commerce-platform> dct:isPartOf <https://example.org/la/backstage/usl-api-registry/folder/Elements> .
+<https://example.org/la/backstage/usl-api-registry/folder/Elements> schema:itemListElement _:20e26829411e74f06876cf8199fa4e57801 .
+_:20e26829411e74f06876cf8199fa4e57801 a schema:ListItem;
+schema:position "2"^^<http://www.w3.org/2001/XMLSchema#int>;
+schema:item <https://example.org/la/backstage/usl-api-registry/element/group/default/team-commerce> .
+<https://example.org/la/backstage/usl-api-registry/element/group/default/team-commerce> dct:isPartOf <https://example.org/la/backstage/usl-api-registry/folder/Elements> .
+<https://example.org/la/backstage/usl-api-registry/folder/Elements> schema:itemListElement _:30e26829411e74f06876cf8199fa4e578012 .
+_:30e26829411e74f06876cf8199fa4e578012 a schema:ListItem;
+schema:position "3"^^<http://www.w3.org/2001/XMLSchema#int>;
+schema:item <https://example.org/la/backstage/usl-api-registry/element/domain/default/commerce> .
+<https://example.org/la/backstage/usl-api-registry/element/domain/default/commerce> dct:isPartOf <https://example.org/la/backstage/usl-api-registry/folder/Elements> .
+<https://example.org/la/backstage/usl-api-registry/folder/Elements> schema:itemListElement _:40e26829411e74f06876cf8199fa4e5780123 .
+_:40e26829411e74f06876cf8199fa4e5780123 a schema:ListItem;
+schema:position "4"^^<http://www.w3.org/2001/XMLSchema#int>;
+schema:item <https://example.org/la/backstage/usl-api-registry/element/component/default/order-service> .
+<https://example.org/la/backstage/usl-api-registry/element/component/default/order-service> dct:isPartOf <https://example.org/la/backstage/usl-api-registry/folder/Elements> .
+<https://example.org/la/backstage/usl-api-registry/folder/Elements> schema:itemListElement _:50e26829411e74f06876cf8199fa4e57801234 .
+_:50e26829411e74f06876cf8199fa4e57801234 a schema:ListItem;
+schema:position "5"^^<http://www.w3.org/2001/XMLSchema#int>;
+schema:item <https://example.org/la/backstage/usl-api-registry/element/api/default/orders-api> .
+<https://example.org/la/backstage/usl-api-registry/element/api/default/orders-api> dct:isPartOf <https://example.org/la/backstage/usl-api-registry/folder/Elements> .
+<https://example.org/la/backstage/usl-api-registry/folder/Relationships> schema:itemListElement _:60e26829411e74f06876cf8199fa4e578012345 .
+_:60e26829411e74f06876cf8199fa4e578012345 a schema:ListItem;
+schema:position "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+schema:item <https://example.org/la/backstage/usl-api-registry/relationship/ownedBy--system-default-commerce-platform--group-default-team-commerce> .
+<https://example.org/la/backstage/usl-api-registry/relationship/ownedBy--system-default-commerce-platform--group-default-team-commerce> dct:isPartOf <https://example.org/la/backstage/usl-api-registry/folder/Relationships> .
+<https://example.org/la/backstage/usl-api-registry/folder/Relationships> schema:itemListElement _:70e26829411e74f06876cf8199fa4e5780123456 .
+_:70e26829411e74f06876cf8199fa4e5780123456 a schema:ListItem;
+schema:position "2"^^<http://www.w3.org/2001/XMLSchema#int>;
+schema:item <https://example.org/la/backstage/usl-api-registry/relationship/belongsToDomain--system-default-commerce-platform--domain-default-commerce> .
+<https://example.org/la/backstage/usl-api-registry/relationship/belongsToDomain--system-default-commerce-platform--domain-default-commerce> dct:isPartOf <https://example.org/la/backstage/usl-api-registry/folder/Relationships> .
+<https://example.org/la/backstage/usl-api-registry/folder/Relationships> schema:itemListElement _:80e26829411e74f06876cf8199fa4e57801234567 .
+_:80e26829411e74f06876cf8199fa4e57801234567 a schema:ListItem;
+schema:position "3"^^<http://www.w3.org/2001/XMLSchema#int>;
+schema:item <https://example.org/la/backstage/usl-api-registry/relationship/ownedBy--domain-default-commerce--group-default-team-commerce> .
+<https://example.org/la/backstage/usl-api-registry/relationship/ownedBy--domain-default-commerce--group-default-team-commerce> dct:isPartOf <https://example.org/la/backstage/usl-api-registry/folder/Relationships> .
+<https://example.org/la/backstage/usl-api-registry/folder/Relationships> schema:itemListElement _:90e26829411e74f06876cf8199fa4e578012345678 .
+_:90e26829411e74f06876cf8199fa4e578012345678 a schema:ListItem;
+schema:position "4"^^<http://www.w3.org/2001/XMLSchema#int>;
+schema:item <https://example.org/la/backstage/usl-api-registry/relationship/ownedBy--component-default-order-service--group-default-team-commerce> .
+<https://example.org/la/backstage/usl-api-registry/relationship/ownedBy--component-default-order-service--group-default-team-commerce> dct:isPartOf <https://example.org/la/backstage/usl-api-registry/folder/Relationships> .
+<https://example.org/la/backstage/usl-api-registry/folder/Relationships> schema:itemListElement _:010e26829411e74f06876cf8199fa4e578 .
+_:010e26829411e74f06876cf8199fa4e578 a schema:ListItem;
+schema:position "5"^^<http://www.w3.org/2001/XMLSchema#int>;
+schema:item <https://example.org/la/backstage/usl-api-registry/relationship/partOfSystem--component-default-order-service--system-default-commerce-platform> .
+<https://example.org/la/backstage/usl-api-registry/relationship/partOfSystem--component-default-order-service--system-default-commerce-platform> dct:isPartOf <https://example.org/la/backstage/usl-api-registry/folder/Relationships> .
+<https://example.org/la/backstage/usl-api-registry/folder/Relationships> schema:itemListElement _:110e26829411e74f06876cf8199fa4e5780 .
+_:110e26829411e74f06876cf8199fa4e5780 a schema:ListItem;
+schema:position "6"^^<http://www.w3.org/2001/XMLSchema#int>;
+schema:item <https://example.org/la/backstage/usl-api-registry/relationship/providesAPI--component-default-order-service--api-default-orders-api> .
+<https://example.org/la/backstage/usl-api-registry/relationship/providesAPI--component-default-order-service--api-default-orders-api> dct:isPartOf <https://example.org/la/backstage/usl-api-registry/folder/Relationships> .
+<https://example.org/la/backstage/usl-api-registry/folder/Relationships> schema:itemListElement _:210e26829411e74f06876cf8199fa4e57801 .
+_:210e26829411e74f06876cf8199fa4e57801 a schema:ListItem;
+schema:position "7"^^<http://www.w3.org/2001/XMLSchema#int>;
+schema:item <https://example.org/la/backstage/usl-api-registry/relationship/ownedBy--api-default-orders-api--group-default-team-commerce> .
+<https://example.org/la/backstage/usl-api-registry/relationship/ownedBy--api-default-orders-api--group-default-team-commerce> dct:isPartOf <https://example.org/la/backstage/usl-api-registry/folder/Relationships> .
+<https://example.org/la/backstage/usl-api-registry/folder/Relationships> schema:itemListElement _:310e26829411e74f06876cf8199fa4e578012 .
+_:310e26829411e74f06876cf8199fa4e578012 a schema:ListItem;
+schema:position "8"^^<http://www.w3.org/2001/XMLSchema#int>;
+schema:item <https://example.org/la/backstage/usl-api-registry/relationship/partOfSystem--api-default-orders-api--system-default-commerce-platform> .
+<https://example.org/la/backstage/usl-api-registry/relationship/partOfSystem--api-default-orders-api--system-default-commerce-platform> dct:isPartOf <https://example.org/la/backstage/usl-api-registry/folder/Relationships> .
+}
+
+<https://example.org/la/backstage/usl-api-registry/graph/semantic/group-payment-service/catalog-info-yaml> {<https://example.org/la/backstage/usl-api-registry/element/system/default/commerce-platform> a arch:Element,arch:ModelConcept;
+arch:inModel <https://example.org/la/backstage/usl-api-registry>;
+a bs:System;
+skos:prefLabel "Commerce Platform"@en;
+skos:notation "commerce-platform";
+skos:definition "End-to-end commerce capabilities.";
+bs:name "commerce-platform";
+bs:namespace "default";
+bs:kind "System";
+bs:entityRef "System:default/commerce-platform";
+bs:title "Commerce Platform" .
+<https://example.org/la/backstage/usl-api-registry/element/group/default/team-commerce> a arch:Element,arch:ModelConcept;
+arch:inModel <https://example.org/la/backstage/usl-api-registry>;
+a bs:Group;
+skos:prefLabel "Commerce Team"@en;
+skos:notation "team-commerce";
+bs:name "team-commerce";
+bs:namespace "default";
+bs:kind "Group";
+bs:entityRef "Group:default/team-commerce";
+bs:title "Commerce Team";
+bs:groupType bs:TeamGroupType .
+<https://example.org/la/backstage/usl-api-registry/element/domain/default/commerce> a arch:Element,arch:ModelConcept;
+arch:inModel <https://example.org/la/backstage/usl-api-registry>;
+a bs:Domain;
+skos:prefLabel "Commerce Domain"@en;
+skos:notation "commerce";
+bs:name "commerce";
+bs:namespace "default";
+bs:kind "Domain";
+bs:entityRef "Domain:default/commerce";
+bs:title "Commerce Domain" .
+<https://example.org/la/backstage/usl-api-registry/relationship/ownedBy--system-default-commerce-platform--group-default-team-commerce> a arch:QualifiedRelationship,arch:ModelConcept;
+arch:inModel <https://example.org/la/backstage/usl-api-registry>;
+a bs:Ownership;
+arch:source <https://example.org/la/backstage/usl-api-registry/element/system/default/commerce-platform>;
+arch:target <https://example.org/la/backstage/usl-api-registry/element/group/default/team-commerce>;
+skos:notation "ownedBy--system-default-commerce-platform--group-default-team-commerce" .
+<https://example.org/la/backstage/usl-api-registry/relationship/belongsToDomain--system-default-commerce-platform--domain-default-commerce> a arch:QualifiedRelationship,arch:ModelConcept;
+arch:inModel <https://example.org/la/backstage/usl-api-registry>;
+a bs:DomainMembership;
+arch:source <https://example.org/la/backstage/usl-api-registry/element/system/default/commerce-platform>;
+arch:target <https://example.org/la/backstage/usl-api-registry/element/domain/default/commerce>;
+skos:notation "belongsToDomain--system-default-commerce-platform--domain-default-commerce" .
+<https://example.org/la/backstage/usl-api-registry/relationship/ownedBy--domain-default-commerce--group-default-team-commerce> a arch:QualifiedRelationship,arch:ModelConcept;
+arch:inModel <https://example.org/la/backstage/usl-api-registry>;
+a bs:Ownership;
+arch:source <https://example.org/la/backstage/usl-api-registry/element/domain/default/commerce>;
+arch:target <https://example.org/la/backstage/usl-api-registry/element/group/default/team-commerce>;
+skos:notation "ownedBy--domain-default-commerce--group-default-team-commerce" .
+}
+
+<https://example.org/la/backstage/usl-api-registry/graph/semantic/group-order-service/catalog-info-yaml> {<https://example.org/la/backstage/usl-api-registry/element/component/default/order-service> a arch:Element,arch:ModelConcept;
+arch:inModel <https://example.org/la/backstage/usl-api-registry>;
+a bs:Component;
+skos:prefLabel "Order Service"@en;
+skos:notation "order-service";
+skos:definition "Manages order lifecycle.";
+bs:name "order-service";
+bs:namespace "default";
+bs:kind "Component";
+bs:entityRef "Component:default/order-service";
+bs:title "Order Service";
+bs:tag "kotlin","spring-boot";
+bs:lifecycleState bs:Production;
+bs:componentType bs:ServiceType .
+<https://example.org/la/backstage/usl-api-registry/element/api/default/orders-api> a arch:Element,arch:ModelConcept;
+arch:inModel <https://example.org/la/backstage/usl-api-registry>;
+a bs:API;
+skos:prefLabel "Orders REST API"@en;
+skos:notation "orders-api";
+skos:definition "CRUD operations for orders.";
+bs:name "orders-api";
+bs:namespace "default";
+bs:kind "API";
+bs:entityRef "API:default/orders-api";
+bs:title "Orders REST API";
+bs:lifecycleState bs:Production;
+bs:apiType bs:OpenAPI .
+<https://example.org/la/backstage/usl-api-registry/relationship/ownedBy--component-default-order-service--group-default-team-commerce> a arch:QualifiedRelationship,arch:ModelConcept;
+arch:inModel <https://example.org/la/backstage/usl-api-registry>;
+a bs:Ownership;
+arch:source <https://example.org/la/backstage/usl-api-registry/element/component/default/order-service>;
+arch:target <https://example.org/la/backstage/usl-api-registry/element/group/default/team-commerce>;
+skos:notation "ownedBy--component-default-order-service--group-default-team-commerce" .
+<https://example.org/la/backstage/usl-api-registry/relationship/partOfSystem--component-default-order-service--system-default-commerce-platform> a arch:QualifiedRelationship,arch:ModelConcept;
+arch:inModel <https://example.org/la/backstage/usl-api-registry>;
+a bs:SystemMembership;
+arch:source <https://example.org/la/backstage/usl-api-registry/element/component/default/order-service>;
+arch:target <https://example.org/la/backstage/usl-api-registry/element/system/default/commerce-platform>;
+skos:notation "partOfSystem--component-default-order-service--system-default-commerce-platform" .
+<https://example.org/la/backstage/usl-api-registry/relationship/providesAPI--component-default-order-service--api-default-orders-api> a arch:QualifiedRelationship,arch:ModelConcept;
+arch:inModel <https://example.org/la/backstage/usl-api-registry>;
+a bs:APIProvision;
+arch:source <https://example.org/la/backstage/usl-api-registry/element/component/default/order-service>;
+arch:target <https://example.org/la/backstage/usl-api-registry/element/api/default/orders-api>;
+skos:notation "providesAPI--component-default-order-service--api-default-orders-api" .
+<https://example.org/la/backstage/usl-api-registry/relationship/ownedBy--api-default-orders-api--group-default-team-commerce> a arch:QualifiedRelationship,arch:ModelConcept;
+arch:inModel <https://example.org/la/backstage/usl-api-registry>;
+a bs:Ownership;
+arch:source <https://example.org/la/backstage/usl-api-registry/element/api/default/orders-api>;
+arch:target <https://example.org/la/backstage/usl-api-registry/element/group/default/team-commerce>;
+skos:notation "ownedBy--api-default-orders-api--group-default-team-commerce" .
+<https://example.org/la/backstage/usl-api-registry/relationship/partOfSystem--api-default-orders-api--system-default-commerce-platform> a arch:QualifiedRelationship,arch:ModelConcept;
+arch:inModel <https://example.org/la/backstage/usl-api-registry>;
+a bs:SystemMembership;
+arch:source <https://example.org/la/backstage/usl-api-registry/element/api/default/orders-api>;
+arch:target <https://example.org/la/backstage/usl-api-registry/element/system/default/commerce-platform>;
+skos:notation "partOfSystem--api-default-orders-api--system-default-commerce-platform" .
+}
+
+<https://example.org/la/backstage/usl-api-registry/graph/provenance> {<https://example.org/la/backstage/usl-api-registry> dct:source "catalogs" .
+<https://example.org/la/provenance/run/379b6f78> a prov:Activity;
+prov:startedAtTime "2026-09-07T18:49:20.388114+02:00"^^<http://www.w3.org/2001/XMLSchema#dateTime>;
+prov:endedAtTime "2026-09-07T18:49:20.430742+02:00"^^<http://www.w3.org/2001/XMLSchema#dateTime>;
+prov:wasAssociatedWith <https://example.org/la/provenance/agent/0e9275a1> .
+<https://example.org/la/backstage/usl-api-registry> prov:generatedAtTime "2026-09-07T18:49:20.430742+02:00"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
+<https://example.org/la/provenance/agent/0e9275a1> a prov:SoftwareAgent,schema:SoftwareApplication;
+schema:name "backstage2linkedarchi";
+schema:softwareVersion "1.3.0-SNAPSHOT";
+dct:identifier "registry.gitlab.com/linked-archi/converters@sha256:89ab" .
+<https://example.org/la/provenance/source/group-payment-service/99aabbccddee/catalog-info-yaml> a prov:Entity;
+schema:name "catalog-info.yaml";
+dct:isPartOf <https://git.example.org/group/payment-service> .
+<https://git.example.org/group/payment-service> a prov:Collection;
+schema:name "group/payment-service" .
+<https://example.org/la/provenance/source/group-payment-service/99aabbccddee/catalog-info-yaml> schema:sha256 "91b1d4de1c1f4f7c9a2b3c4d5e6f70819293a4b5c6d7e8f90a1b2c3d4e5f6071";
+dct:identifier "99aabbccddee00112233445566778899aabbccdd";
+prov:wasGeneratedBy <https://example.org/la/provenance/commit/99aabbccddee>;
+prov:alternateOf <https://git.example.org/group/payment-service/-/blob/99aabbccdd/catalog-info.yaml> .
+<https://git.example.org/group/payment-service/-/blob/99aabbccdd/catalog-info.yaml> a prov:Entity .
+<https://example.org/la/provenance/commit/99aabbccddee> a prov:Activity;
+dct:identifier "99aabbccddee00112233445566778899aabbccdd";
+schema:url <https://git.example.org/group/payment-service/-/commit/99aabbccddee00112233445566778899aabbccdd> .
+<https://example.org/la/provenance/run/379b6f78> prov:used <https://example.org/la/provenance/source/group-payment-service/99aabbccddee/catalog-info-yaml> .
+<https://example.org/la/backstage/usl-api-registry> prov:wasGeneratedBy <https://example.org/la/provenance/run/379b6f78>;
+prov:wasDerivedFrom <https://example.org/la/provenance/source/group-payment-service/99aabbccddee/catalog-info-yaml> .
+<https://example.org/la/provenance/source/group-order-service/4f2c1ab8e0d1/catalog-info-yaml> a prov:Entity;
+schema:name "catalog-info.yaml";
+dct:isPartOf <https://git.example.org/group/order-service> .
+<https://git.example.org/group/order-service> a prov:Collection;
+schema:name "group/order-service" .
+<https://example.org/la/provenance/source/group-order-service/4f2c1ab8e0d1/catalog-info-yaml> schema:sha256 "4c294617b60715c1d218e61164a3abd4808a4284cbc30e6728a01ad9aada4481";
+dct:identifier "4f2c1ab8e0d1c2b3a4958677889900aabbccddee";
+prov:wasGeneratedBy <https://example.org/la/provenance/commit/4f2c1ab8e0d1>;
+prov:alternateOf <https://git.example.org/group/order-service/-/blob/4f2c1ab8e0/catalog-info.yaml> .
+<https://git.example.org/group/order-service/-/blob/4f2c1ab8e0/catalog-info.yaml> a prov:Entity .
+<https://example.org/la/provenance/commit/4f2c1ab8e0d1> a prov:Activity;
+dct:identifier "4f2c1ab8e0d1c2b3a4958677889900aabbccddee";
+schema:url <https://git.example.org/group/order-service/-/commit/4f2c1ab8e0d1c2b3a4958677889900aabbccddee> .
+<https://example.org/la/provenance/run/379b6f78> prov:used <https://example.org/la/provenance/source/group-order-service/4f2c1ab8e0d1/catalog-info-yaml> .
+<https://example.org/la/backstage/usl-api-registry> prov:wasDerivedFrom <https://example.org/la/provenance/source/group-order-service/4f2c1ab8e0d1/catalog-info-yaml> .
+<https://example.org/la/backstage/usl-api-registry/graph/model> a prov:Bundle;
+prov:wasGeneratedBy <https://example.org/la/provenance/run/379b6f78>;
+prov:generatedAtTime "2026-09-07T18:49:20.430742+02:00"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
+<https://example.org/la/backstage/usl-api-registry/graph/semantic/group-payment-service/catalog-info-yaml> a prov:Bundle;
+prov:wasGeneratedBy <https://example.org/la/provenance/run/379b6f78>;
+prov:generatedAtTime "2026-09-07T18:49:20.430742+02:00"^^<http://www.w3.org/2001/XMLSchema#dateTime>;
+prov:wasDerivedFrom <https://example.org/la/provenance/source/group-payment-service/99aabbccddee/catalog-info-yaml> .
+<https://example.org/la/backstage/usl-api-registry/graph/semantic/group-order-service/catalog-info-yaml> a prov:Bundle;
+prov:wasGeneratedBy <https://example.org/la/provenance/run/379b6f78>;
+prov:generatedAtTime "2026-09-07T18:49:20.430742+02:00"^^<http://www.w3.org/2001/XMLSchema#dateTime>;
+prov:wasDerivedFrom <https://example.org/la/provenance/source/group-order-service/4f2c1ab8e0d1/catalog-info-yaml> .
+<https://example.org/la/provenance/derivation/group-payment-service/99aabbccddee/catalog-info-yaml/379b6f78> a prov:Derivation;
+prov:entity <https://example.org/la/provenance/source/group-payment-service/99aabbccddee/catalog-info-yaml>;
+prov:hadActivity <https://example.org/la/provenance/run/379b6f78> .
+<https://example.org/la/backstage/usl-api-registry/element/system/default/commerce-platform> prov:wasDerivedFrom <https://example.org/la/provenance/source/group-payment-service/99aabbccddee/catalog-info-yaml>;
+prov:qualifiedDerivation <https://example.org/la/provenance/derivation/group-payment-service/99aabbccddee/catalog-info-yaml/379b6f78> .
+<https://example.org/la/backstage/usl-api-registry/element/group/default/team-commerce> prov:wasDerivedFrom <https://example.org/la/provenance/source/group-payment-service/99aabbccddee/catalog-info-yaml>;
+prov:qualifiedDerivation <https://example.org/la/provenance/derivation/group-payment-service/99aabbccddee/catalog-info-yaml/379b6f78> .
+<https://example.org/la/backstage/usl-api-registry/element/domain/default/commerce> prov:wasDerivedFrom <https://example.org/la/provenance/source/group-payment-service/99aabbccddee/catalog-info-yaml>;
+prov:qualifiedDerivation <https://example.org/la/provenance/derivation/group-payment-service/99aabbccddee/catalog-info-yaml/379b6f78> .
+<https://example.org/la/backstage/usl-api-registry/relationship/ownedBy--system-default-commerce-platform--group-default-team-commerce> prov:wasDerivedFrom <https://example.org/la/provenance/source/group-payment-service/99aabbccddee/catalog-info-yaml>;
+prov:qualifiedDerivation <https://example.org/la/provenance/derivation/group-payment-service/99aabbccddee/catalog-info-yaml/379b6f78> .
+<https://example.org/la/backstage/usl-api-registry/relationship/belongsToDomain--system-default-commerce-platform--domain-default-commerce> prov:wasDerivedFrom <https://example.org/la/provenance/source/group-payment-service/99aabbccddee/catalog-info-yaml>;
+prov:qualifiedDerivation <https://example.org/la/provenance/derivation/group-payment-service/99aabbccddee/catalog-info-yaml/379b6f78> .
+<https://example.org/la/backstage/usl-api-registry/relationship/ownedBy--domain-default-commerce--group-default-team-commerce> prov:wasDerivedFrom <https://example.org/la/provenance/source/group-payment-service/99aabbccddee/catalog-info-yaml>;
+prov:qualifiedDerivation <https://example.org/la/provenance/derivation/group-payment-service/99aabbccddee/catalog-info-yaml/379b6f78> .
+<https://example.org/la/provenance/derivation/group-order-service/4f2c1ab8e0d1/catalog-info-yaml/379b6f78> a prov:Derivation;
+prov:entity <https://example.org/la/provenance/source/group-order-service/4f2c1ab8e0d1/catalog-info-yaml>;
+prov:hadActivity <https://example.org/la/provenance/run/379b6f78> .
+<https://example.org/la/backstage/usl-api-registry/element/component/default/order-service> prov:wasDerivedFrom <https://example.org/la/provenance/source/group-order-service/4f2c1ab8e0d1/catalog-info-yaml>;
+prov:qualifiedDerivation <https://example.org/la/provenance/derivation/group-order-service/4f2c1ab8e0d1/catalog-info-yaml/379b6f78> .
+<https://example.org/la/backstage/usl-api-registry/element/api/default/orders-api> prov:wasDerivedFrom <https://example.org/la/provenance/source/group-order-service/4f2c1ab8e0d1/catalog-info-yaml>;
+prov:qualifiedDerivation <https://example.org/la/provenance/derivation/group-order-service/4f2c1ab8e0d1/catalog-info-yaml/379b6f78> .
+<https://example.org/la/backstage/usl-api-registry/relationship/ownedBy--component-default-order-service--group-default-team-commerce> prov:wasDerivedFrom <https://example.org/la/provenance/source/group-order-service/4f2c1ab8e0d1/catalog-info-yaml>;
+prov:qualifiedDerivation <https://example.org/la/provenance/derivation/group-order-service/4f2c1ab8e0d1/catalog-info-yaml/379b6f78> .
+<https://example.org/la/backstage/usl-api-registry/relationship/partOfSystem--component-default-order-service--system-default-commerce-platform> prov:wasDerivedFrom <https://example.org/la/provenance/source/group-order-service/4f2c1ab8e0d1/catalog-info-yaml>;
+prov:qualifiedDerivation <https://example.org/la/provenance/derivation/group-order-service/4f2c1ab8e0d1/catalog-info-yaml/379b6f78> .
+<https://example.org/la/backstage/usl-api-registry/relationship/providesAPI--component-default-order-service--api-default-orders-api> prov:wasDerivedFrom <https://example.org/la/provenance/source/group-order-service/4f2c1ab8e0d1/catalog-info-yaml>;
+prov:qualifiedDerivation <https://example.org/la/provenance/derivation/group-order-service/4f2c1ab8e0d1/catalog-info-yaml/379b6f78> .
+<https://example.org/la/backstage/usl-api-registry/relationship/ownedBy--api-default-orders-api--group-default-team-commerce> prov:wasDerivedFrom <https://example.org/la/provenance/source/group-order-service/4f2c1ab8e0d1/catalog-info-yaml>;
+prov:qualifiedDerivation <https://example.org/la/provenance/derivation/group-order-service/4f2c1ab8e0d1/catalog-info-yaml/379b6f78> .
+<https://example.org/la/backstage/usl-api-registry/relationship/partOfSystem--api-default-orders-api--system-default-commerce-platform> prov:wasDerivedFrom <https://example.org/la/provenance/source/group-order-service/4f2c1ab8e0d1/catalog-info-yaml>;
+prov:qualifiedDerivation <https://example.org/la/provenance/derivation/group-order-service/4f2c1ab8e0d1/catalog-info-yaml/379b6f78> .
+}

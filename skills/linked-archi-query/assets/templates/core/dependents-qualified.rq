@@ -1,0 +1,54 @@
+# core/dependents-qualified - What reaches this element, two hops out?
+#
+# Answers: elements connected to the focus by one or two qualified relationships,
+# with the path that got there.
+#
+# Does NOT prove: impact. Reachability in a model is not blast radius. A two-hop
+# path may cross relationship types whose composition means nothing - "A is
+# assigned to B" and "B is associated with C" does not make C depend on A. Read
+# ?firstType and ?secondType before calling anything affected.
+#
+# Bounded at two hops deliberately. Arbitrary-depth traversal over the qualified
+# form needs a property path through the relationship node, which SPARQL cannot
+# express in one step, and unbounded exploration of a merged enterprise graph is
+# how an exploratory query becomes an outage. If you need depth, walk it a hop at
+# a time and say how far you went.
+#
+# Direction is followed consistently: this reports what points AT the focus,
+# transitively. For the outgoing direction, use core/neighbours-qualified and read
+# the outgoing rows, or invert the endpoints here.
+#
+# Parameters: FOCUS_IRI, LIMIT
+{{PREFIXES}}
+SELECT DISTINCT ?hops ?dependent ?dependentLabel ?firstType ?secondType ?via
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    VALUES ?focus { {{FOCUS_IRI}} }
+    {
+      ?r1 a {{ROLE:relationship_class}} ;
+          {{ROLE:rel_source}} ?dependent ;
+          {{ROLE:rel_target}} ?focus .
+      ?r1 a ?firstType .
+      FILTER(?firstType != {{ROLE:relationship_class}} && ?firstType != {{ROLE:concept_class}})
+      BIND(1 AS ?hops)
+    }
+    UNION
+    {
+      ?r1 a {{ROLE:relationship_class}} ;
+          {{ROLE:rel_source}} ?via ;
+          {{ROLE:rel_target}} ?focus .
+      ?r1 a ?firstType .
+      FILTER(?firstType != {{ROLE:relationship_class}} && ?firstType != {{ROLE:concept_class}})
+      ?r2 a {{ROLE:relationship_class}} ;
+          {{ROLE:rel_source}} ?dependent ;
+          {{ROLE:rel_target}} ?via .
+      ?r2 a ?secondType .
+      FILTER(?secondType != {{ROLE:relationship_class}} && ?secondType != {{ROLE:concept_class}})
+      FILTER(?dependent != ?focus)
+      BIND(2 AS ?hops)
+    }
+    OPTIONAL { ?dependent {{PATH:label}} ?dependentLabel }
+  {{GRAPH_CLOSE}}
+}
+ORDER BY ?hops ?dependentLabel ?dependent
+LIMIT {{LIMIT}}

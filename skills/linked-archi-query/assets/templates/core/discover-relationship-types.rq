@@ -1,0 +1,39 @@
+# core/discover-relationship-types - Which kinds of relationship exist here?
+#
+# Answers: each relationship type present, how many instances it has, and which
+# source and target element types it actually connects.
+#
+# Does NOT prove: what the metamodel permits. This reports what somebody modelled,
+# which is usually a subset, and occasionally includes things the metamodel would
+# reject - the converters do not enforce shapes at conversion time.
+#
+# Run this before any impact or traceability question. It is the difference
+# between choosing a relationship type from evidence and choosing one from
+# memory of the ArchiMate specification.
+#
+# The FILTER strips the two core classes so ?relType is the notation class that
+# carries the meaning - am:Serving, bpmn:SequenceFlow, bs:Ownership.
+#
+# Parameters: LIMIT
+{{PREFIXES}}
+SELECT ?relType (COUNT(DISTINCT ?rel) AS ?count) ?sourceType ?targetType
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    ?rel a {{ROLE:relationship_class}} ;
+         {{ROLE:rel_source}} ?source ;
+         {{ROLE:rel_target}} ?target .
+    ?rel a ?relType .
+    FILTER(?relType != {{ROLE:relationship_class}} && ?relType != {{ROLE:concept_class}})
+    OPTIONAL {
+      ?source a ?sourceType .
+      FILTER(?sourceType != {{ROLE:concept_class}} && ?sourceType != {{ROLE:element_class}})
+    }
+    OPTIONAL {
+      ?target a ?targetType .
+      FILTER(?targetType != {{ROLE:concept_class}} && ?targetType != {{ROLE:element_class}})
+    }
+  {{GRAPH_CLOSE}}
+}
+GROUP BY ?relType ?sourceType ?targetType
+ORDER BY DESC(?count) ?relType
+LIMIT {{LIMIT}}

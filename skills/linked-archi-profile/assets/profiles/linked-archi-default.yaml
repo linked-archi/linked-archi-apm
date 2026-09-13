@@ -1,0 +1,473 @@
+# Linked.Archi default graph profile
+#
+# Describes a dataset produced by the Linked.Archi converters
+# (tools/converters/linked-archi-converters) with default flags, against the
+# published meta.linked.archi ontologies.
+#
+# Every vocabulary decision in this package lives here. Templates name semantic
+# ROLES and this file binds each role to a concrete term, so adapting to a
+# different vocabulary is an edit to a profile rather than a fork of the
+# template library. See ADAPTING.md.
+#
+# Every namespace, graph suffix, class and predicate below was verified against
+# real converter output, not inferred from documentation. The verification
+# evidence is recorded in PROPOSAL.md (Appendix A).
+
+profile: linked-archi-default
+# 2 because this profile's meaning changed: it now describes the graph layout the
+# converters emit today, where model resources have their own graph, the semantic graph
+# is partitioned per input, and membership is a direct edge. A dataset from an older
+# converter needs `graphs.roles.model: graph/semantic`, `descendants: []` and
+# `mode: same-graph-colocation`.
+#
+# Recorded verifications are keyed on a fingerprint of what the profile says, not on this
+# number, so anything checked against version 1 stops vouching automatically.
+version: 2
+description: >-
+  Converter output with default flags: qualified relationships only, model
+  resources in their own graph/model, a semantic graph partitioned per input, and
+  model membership as a direct arch:inModel edge.
+
+# Informational. Instance IRIs follow {base}{notation}/{modelId}/{segment}/{localId}
+# as minted by IriMinting.kt. Nothing here parses IRIs to extract meaning; the
+# base is recorded so `profile verify` can report when a dataset does not match
+# the profile it was handed.
+base_iri: https://example.org/la/
+
+# ---------------------------------------------------------------------------
+# Namespaces
+# ---------------------------------------------------------------------------
+# Emitted as the PREFIX block for every rendered query, via {{PREFIXES}}.
+# Prefix choice is cosmetic; role bindings below resolve through this map to
+# absolute IRIs, so a template never depends on a prefix being spelled a
+# particular way. Note the converters emit BOTH `archvis:` and `arch-vis:` for
+# the same namespace depending on which emitter ran - never key on the prefix.
+namespaces:
+  rdf: http://www.w3.org/1999/02/22-rdf-syntax-ns#
+  rdfs: http://www.w3.org/2000/01/rdf-schema#
+  owl: http://www.w3.org/2002/07/owl#
+  xsd: http://www.w3.org/2001/XMLSchema#
+  skos: http://www.w3.org/2004/02/skos/core#
+  dct: http://purl.org/dc/terms/
+  prov: http://www.w3.org/ns/prov#
+  adms: http://www.w3.org/ns/adms#
+  schema: https://schema.org/
+  sh: http://www.w3.org/ns/shacl#
+  # Linked.Archi core
+  arch: https://meta.linked.archi/core#
+  archvis: https://meta.linked.archi/core-vis#
+  arch-tax: https://meta.linked.archi/core-tax#
+  # Notation ontologies
+  am: https://meta.linked.archi/archimate3/onto#
+  am4: https://meta.linked.archi/archimate4/onto#
+  amvp: https://meta.linked.archi/archimate3/viewpoints#
+  bpmn: https://meta.linked.archi/bpmn/onto#
+  bpmndi: https://meta.linked.archi/bpmn/di#
+  di: https://meta.linked.archi/bpmn/di-core#
+  dc: https://meta.linked.archi/bpmn/dc#
+  infra: https://meta.linked.archi/bpmn/infra#
+  bpmnvp: https://meta.linked.archi/bpmn/viewpoints#
+  bpmnl: https://meta.linked.archi/bpmn-lite/onto#
+  c4: https://meta.linked.archi/c4/onto#
+  c4vp: https://meta.linked.archi/c4/viewpoints#
+  structurizr: https://meta.linked.archi/c4/structurizr#
+  bs: https://meta.linked.archi/backstage/onto#
+  lmm: https://meta.linked.archi/leanix/onto#
+  uml: https://meta.linked.archi/uml/onto#
+  # Extensions
+  ad: https://meta.linked.archi/arch-decision#
+
+# ---------------------------------------------------------------------------
+# Named graph layout
+# ---------------------------------------------------------------------------
+# layout: per-model-triple | explicit | single
+#
+#   per-model-triple  Each model contributes up to three graphs whose IRIs end
+#                     in the suffixes below. Matched by suffix, because the
+#                     model IRIs are not knowable in advance. This is what the
+#                     converters emit as TriG.
+#   explicit          `roles` holds literal graph IRIs. For a curated store.
+#   single            No named graphs. What the converters' TURTLE output
+#                     collapses to, and what a `.ttl` load produces. Templates
+#                     still work: the GRAPH wrapper is omitted at render time.
+graphs:
+  layout: per-model-triple
+  named_graphs: true
+  roles:
+    semantic: graph/semantic
+    views: graph/views
+    provenance: graph/provenance
+    # Where model-level resources live: arch:Model, its metamodel conformance and the
+    # folder tree. Its own graph since 1.3, having moved out of the semantic graph.
+    #
+    # Bound as a role rather than assumed, so a template asks for "the graph holding
+    # model-level facts" and the profile says where that is. A dataset from an older
+    # converter keeps them in the semantic graph and binds this to `graph/semantic`
+    # instead - one edit, no template changes.
+    model: graph/model
+  # `semantic` also matches graphs BELOW it, which is what makes
+  # graph/semantic/{repo}/{path} reachable. The converters partition the semantic
+  # graph per input wherever a model has more than one source, and a suffix test
+  # matches NONE of those graphs - so without this, a partitioned dataset looks
+  # like one with no semantic graph at all.
+  #
+  # Opt-in per role rather than global, because matching descendants everywhere
+  # would let a profile describing the older unpartitioned layout half-fit a
+  # partitioned dataset: its semantic role would start matching while `model` still
+  # pointed at the wrong graph. Half-fitting is how a wrong profile returns a
+  # confident wrong answer.
+  #
+  # Only `semantic` is partitioned. Model and provenance graphs are one per model
+  # however many inputs it had.
+  descendants:
+    - semantic
+  # There is no validation graph. The converters' `validate` subcommand writes a
+  # SHACL report to stdout or to -r <file>; it is a separate document, never a
+  # graph in the dataset. Declared null so a template requiring it is refused
+  # with that reason rather than returning nothing.
+  validation: null
+  # Roles a dataset MUST have for this profile to describe it. Absence is an error
+  # and `profile verify` exits non-zero, because a query scoped to a graph that is
+  # not there returns no rows and no complaint - an empty answer that reads like a
+  # finding.
+  #
+  # `semantic` and `model`. Every model-level question reads the model graph, and its
+  # absence means the dataset is not in this layout at all - so a missing one is an
+  # error rather than an empty result.
+  #
+  # `views` and `provenance` stay optional: a Backstage or LeanIX conversion emits no
+  # views graph, and refusing those datasets would be refusing correct data.
+  required:
+    - semantic
+    - model
+
+# ---------------------------------------------------------------------------
+# Role bindings
+# ---------------------------------------------------------------------------
+# A role is what a query needs; the binding is what this dataset calls it.
+#
+#   single value   bound to exactly that term
+#   list           a fallback chain. {{ROLE:x}} takes the first, {{ROLES:x}}
+#                  emits all for a VALUES block, {{PATH:x}} joins them with |
+#   null           not represented in this dataset. Any template declaring the
+#                  role under `requires` is refused, with the reason shown.
+roles:
+  # --- Identity and naming -------------------------------------------------
+  label: skos:prefLabel
+  alt_label: skos:altLabel
+  definition: skos:definition
+  # Native source id. skos:notation across ArchiMate, Backstage, LeanIX,
+  # PlantUML and Structurizr; BPMN carries bpmn:id instead, so both are listed
+  # and {{ROLES:native_id}} covers a mixed dataset.
+  native_id: [skos:notation, bpmn:id]
+
+  # --- Core typing ---------------------------------------------------------
+  concept_class: arch:ModelConcept
+  element_class: arch:Element
+  relationship_class: arch:QualifiedRelationship
+  model_class: arch:Model
+  view_class: arch:View
+  diagram_class: arch:Diagram
+  folder_class: arch:Folder
+
+  # --- Relationships -------------------------------------------------------
+  # The qualified form is the default and often the only form. Endpoints are
+  # arch:source/arch:target; arch:relSource/relTarget are the withdrawn
+  # rdf:Statement design and are deliberately absent.
+  rel_source: arch:source
+  rel_target: arch:target
+  # The relationship's own kind is an rdf:type on the qualified node alongside
+  # arch:QualifiedRelationship - am:Access, bpmn:SequenceFlow, bs:Ownership.
+  # There is no arch:relType predicate.
+  rel_type: rdf:type
+  # Generic link from an element to its qualified relationship. Emitted only
+  # with ArchiMate's --emit-qualified-rel-triples.
+  has_qualified_rel: arch:hasQualifiedRelationship
+
+  # --- RDF 1.2 reification bridge ------------------------------------------
+  # The core ontology's three-declaration pattern pairs the qualified resource
+  # with a triple term naming the *unqualified* predicate:
+  #
+  #   ex:rel-1 a am:Serving ; arch:source ex:A ; arch:target ex:B ;
+  #            rdf:reifies <<( ex:A am:serves ex:B )>> .
+  #
+  # This is the only way to recover the unqualified predicate (am:serves) from
+  # the data: the qualified form carries the *class* (am:Serving) and nothing
+  # else. Bound here because rdf:reifies is fixed RDF vocabulary rather than a
+  # Linked.Archi choice, and gated by capabilities.rdf_reifies, which is false in
+  # THIS profile because it describes default flags - every converter emits the
+  # bridge, but only under --emit-direct-rel-triples. See linked-archi-direct.yaml.
+  #
+  # A triple term is NOT an asserted triple. `?s am:serves ?o` matches nothing
+  # and property paths do not traverse it, so this cannot stand in for
+  # direct_rel_triples. Verified against pyoxigraph 0.5.9.
+  #
+  # It is also what makes `capabilities.direct_rel_triples` CHECKABLE, because the
+  # triple term names the predicate and both endpoints at once: pair it with the
+  # asserted triple and "are these endpoints joined by the predicate this
+  # relationship stands for" is answerable from the data alone. Without it, "joined
+  # by some other predicate" is all a probe can see and any unrelated edge between
+  # the same two resources looks like the real thing, so `verify` reports the
+  # capability as unknown rather than guessing.
+  #
+  # This role replaced `rel_predicate: arch:relPredicate`. Core never published that
+  # term - the historyNote on QualifiedRelationship records the rdf:Statement design
+  # behind it being dropped - and no converter emits it any more.
+  reifies: rdf:reifies
+  # Ontology-level: links a qualified class to its unqualified predicate. Lives
+  # in the metamodel, not usually in instance data.
+  unqualified_form: arch:unqualifiedForm
+  # --- Model membership ----------------------------------------------------
+  # A direct one-hop edge on every model concept, which is what
+  # `navigation.model_membership.mode: direct-predicate` below reads. Emitted by every
+  # converter into the semantic graph, and published as
+  # https://meta.linked.archi/core#inModel with domain arch:ModelConcept.
+  #
+  # It supersedes both other membership modes where it exists: it needs neither graph
+  # co-location nor a complete folder chain. It is also the only one that survives a
+  # partitioned semantic graph, since the model resource is in none of the partitions.
+  #
+  # `arch:inModel` since core 0.4.0; it was `arch:partOfModel`, now deprecated upstream.
+  # The role name is unchanged because it is this tool's key, not a vocabulary term.
+  # A dataset produced by an earlier converter carries only the old predicate and will
+  # answer nothing here — that is drift for `linked-archi-profile verify` to report, not
+  # something to paper over by binding both: `role()` takes the first binding only, so a
+  # list would silently prefer one and mask the other. See core DD-30.
+  part_of_model: arch:inModel
+
+  # --- Source records ------------------------------------------------------
+  # Provenance per RESOURCE rather than only per model: prov:qualifiedDerivation
+  # reaches a source record carrying the file, repository and digest.
+  #
+  # OPTIONAL IN PRACTICE, which is the part to read before relying on them. They are
+  # conditional on how the converter was CALLED, not on its version:
+  #
+  #   --source-map   gives source_digest, source_alternate and source_url
+  #   --image-ref    gives the agent's dct:identifier
+  #
+  # A conversion run without a source map is still current and carries none of them,
+  # so `verify` reports them as bound-and-unused - a warning, not an error. Do not
+  # "fix" that by nulling the role: the term is right, the invocation did not produce
+  # it.
+  # Each named graph the conversion wrote is described as a prov:Bundle, whose SUBJECT
+  # is the graph IRI. That is what makes "what produced this graph" answerable, and it
+  # is separate from the per-model and per-resource provenance below: a graph can exist
+  # with no bundle accounting for it, which is a finding rather than a gap.
+  bundle_class: prov:Bundle
+  qualified_derivation: prov:qualifiedDerivation
+  source_path: schema:name
+  source_repo: dct:isPartOf
+  source_digest: schema:sha256
+  source_alternate: prov:alternateOf
+  source_url: schema:url
+  # Present only where a source descriptor carries an owner email.
+  source_email: schema:email
+
+  # --- Membership and structure -------------------------------------------
+  part_of: dct:isPartOf
+  has_part: arch:hasPart
+  folder_name: schema:name
+
+  # --- Conformance ---------------------------------------------------------
+  conforms_to_metamodel: arch:modelConformsToMetamodel
+  conforms_to_viewpoint: arch:viewConformsToViewpoint
+
+  # --- Views ---------------------------------------------------------------
+  # Two routes say a concept is on a view, and converter output carries both since
+  # core 0.4.0. `view_ref` + `node_element` is the two-hop visual route through an
+  # archvis node, which also carries geometry. `in_view` is the one-hop semantic
+  # route, and it is the one that survives a graph published with no views graph.
+  # The view templates use the visual route; in_view is bound so a profile
+  # describes the data accurately and so a query can reach it. See core DD-30.
+  view_node_class: [archvis:ArchNode, archvis:Node]
+  view_link_class: archvis:Link
+  view_ref: archvis:view
+  node_element: archvis:archElement
+  in_view: arch:inView
+  link_relationship: archvis:archRelationship
+  link_source: archvis:source
+  link_target: archvis:target
+  bounds_x: archvis:bounds-x
+  bounds_y: archvis:bounds-y
+
+  # --- Provenance ----------------------------------------------------------
+  derived_from: prov:wasDerivedFrom
+  generated_by: prov:wasGeneratedBy
+  generated_at: prov:generatedAtTime
+  attributed_to: prov:wasAttributedTo
+  source_file: dct:source
+  agent_name: schema:name
+  agent_version: schema:softwareVersion
+
+  # --- Classification ------------------------------------------------------
+  broader: skos:broader
+  in_scheme: skos:inScheme
+  keywords: schema:keywords
+
+  # --- Governance and lifecycle -------------------------------------------
+  # Model-level status. Verified present, on the model, in the provenance graph.
+  model_status: adms:status
+  # Element-level lifecycle has no core predicate. Each notation spells it
+  # differently, so this is a chain rather than a single term, and templates
+  # that use it must declare the `element_lifecycle` capability.
+  element_lifecycle: [bs:lifecycleState, lmm:factSheetStatus]
+  architecture_state: arch:architectureState
+  # Verified absent from converter output: no arch:conceptOwner in any fixture.
+  # Ownership reaches the graph as a relationship (bs:Ownership) or not at all.
+  owner: null
+  # Cross-source identity is authored and human-reviewed, never converter-
+  # derived (design decision DD-11 prefers skos:exactMatch over owl:sameAs).
+  # Null until a reconciliation graph is present.
+  same_as: null
+  exact_match: null
+
+# ---------------------------------------------------------------------------
+# Capabilities
+# ---------------------------------------------------------------------------
+# What this dataset actually contains, as opposed to what the vocabulary
+# permits. Templates declare the capabilities they need; the renderer refuses
+# a template whose capability is false and names an alternative. This is the
+# mechanism that turns "runs and silently returns nothing" into "refused, for
+# this reason, try that instead".
+#
+# `profile verify --data ...` probes a dataset and reports drift from these.
+capabilities:
+  # The three observable facts that distinguish this graph layout from the one the
+  # converters emitted before it. Named as capabilities so a template can require one
+  # and be refused with a reason, rather than run and return nothing.
+  #
+  # `la-profile recommend` reports the same three from the data, so a dataset can be
+  # matched to a profile without reading either.
+  model_graph: true
+  part_of_model_edge: true
+  # Every emitted graph described as a prov:Bundle. Gated because output from a
+  # converter that predates it has none, and core/graph-provenance would then return
+  # nothing rather than being refused with a reason.
+  graph_bundles: true
+  # True of the CONTRACT, not of every dataset: partitioning happens only where a
+  # model has more than one input, so a single-input conversion has none and the
+  # `descendants` selector simply matches the one unpartitioned graph.
+  partitioned_semantic_graphs: true
+  # Direct source->predicate->target triples alongside the qualified form.
+  # Opt-in per converter (--emit-direct-rel-triples); default false. Verified
+  # zero in every default-flag fixture.
+  direct_rel_triples: false
+  # RDF 1.2 triple terms bridging the qualified resource to the unqualified
+  # predicate. Every converter emits it — but only alongside the direct triple,
+  # under --emit-direct-rel-triples, so it is false here for the same reason
+  # direct_rel_triples is: this profile describes default flags. Turn both on
+  # together; linked-archi-direct.yaml does.
+  #
+  # Setting it true also asserts that your *engine* speaks SPARQL 1.2: the
+  # `<<( s p o )>>` pattern is a parse error on a 1.1 engine, which is why
+  # templates needing it are refused at render time rather than failing at the
+  # endpoint — and why the direct_rel_triples probe reads the bridge only when
+  # this is claimed, falling back to a three-valued answer when it is not.
+  rdf_reifies: false
+  # `partial` because a views graph appears only when the source had diagrams.
+  # Backstage and LeanIX output has semantic + provenance only.
+  # true | false | partial
+  views_graph: partial
+  provenance_graph: true
+  # Geometry in the views graph. Present for ArchiMate; Structurizr and
+  # PlantUML emit topology without bounds.
+  view_geometry: partial
+  # Cross-notation identity assertions. Authored, so absent from raw output.
+  identity_assertions: false
+  # Element-level lifecycle status. Notation-specific and sparse.
+  element_lifecycle: partial
+  # arch:conceptOwner on concepts.
+  concept_owner: false
+  # A SHACL report inside the dataset.
+  validation_in_graph: false
+  label_language: en
+
+# ---------------------------------------------------------------------------
+# Notations
+# ---------------------------------------------------------------------------
+# Keyed by the notation slug that appears in minted IRIs. `metamodel` is the
+# object of arch:modelConformsToMetamodel and is the reliable way to detect
+# which notations a dataset contains - more reliable than inspecting element
+# types, and far more reliable than parsing IRIs.
+#
+# Note ArchiMate's slug is `model`, not `archimate`: its IRI scheme is
+# configurable and `--path-model` defaults to `model`.
+notations:
+  model:
+    label: ArchiMate
+    metamodel: https://meta.linked.archi/archimate3/metamodel#ArchiMate3.2
+    namespace: am
+    native_id: skos:notation
+  bpmn:
+    label: BPMN 2.0
+    metamodel: https://meta.linked.archi/bpmn/metamodel#BPMN2
+    namespace: bpmn
+    native_id: bpmn:id
+  c4:
+    label: C4 / Structurizr
+    metamodel: https://meta.linked.archi/c4/metamodel#C4Model
+    namespace: c4
+    native_id: skos:notation
+  backstage:
+    label: Backstage
+    metamodel: https://meta.linked.archi/backstage/metamodel#BackstageCatalog
+    namespace: bs
+    native_id: skos:notation
+    element_lifecycle: bs:lifecycleState
+  leanix:
+    label: LeanIX
+    metamodel: https://meta.linked.archi/leanix/metamodel#LeanIX
+    namespace: lmm
+    native_id: skos:notation
+    element_lifecycle: lmm:factSheetStatus
+  plantuml:
+    label: PlantUML
+    metamodel: https://meta.linked.archi/uml/metamodel#UML2
+    namespace: uml
+    native_id: skos:notation
+
+# ---------------------------------------------------------------------------
+# Taxonomies
+# ---------------------------------------------------------------------------
+# SKOS concept schemes available for classification queries. A custom taxonomy
+# is added here and needs no new templates: the classification templates walk
+# skos:broader against whichever scheme is named.
+taxonomies:
+  - scheme: https://meta.linked.archi/core-tax
+    prefix: arch-tax
+    label: Linked.Archi common taxonomy
+
+# ---------------------------------------------------------------------------
+# Navigation
+# ---------------------------------------------------------------------------
+# How this dataset expresses "this concept belongs to that model". Templates ask
+# for membership through {{MEMBERSHIP:var}} and this decides what that means, so
+# the traversal is written once rather than re-invented per template.
+#
+# Co-location for converter output at default flags, and that is a measurement
+# rather than a preference. Folder membership through dct:isPartOf *is* emitted -
+# by BPMN - but the chain stops at folder/Elements for C4, so walking it finds
+# some models and silently misses others. Every concept does sit in its model's
+# semantic graph, for every converter, so co-location is the portable answer.
+#
+# A store whose folder chain is complete should say `bounded-folder-tree`, which
+# is more precise where it holds. See examples/cloudplatform.
+navigation:
+  model_membership:
+    # One hop along `roles.part_of_model`. Refused at load if that role is unbound,
+    # because this mode IS that predicate - without it the pattern would match every
+    # model in the dataset and name the wrong one.
+    #
+    # `same-graph-colocation` remains available for a dataset carrying no direct
+    # membership edge at all, and `bounded-folder-tree` for a store that authors a complete
+    # folder chain. See references/membership.md.
+    mode: direct-predicate
+    max_depth: 3
+
+# ---------------------------------------------------------------------------
+# Execution defaults
+# ---------------------------------------------------------------------------
+limits:
+  default_row_limit: 200
+  max_row_limit: 5000
+  timeout_ms: 30000

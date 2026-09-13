@@ -1,0 +1,42 @@
+# core/view-usage-semantic - Which diagrams show this element, without the views graph?
+#
+# Answers: the same question core/view-usage answers, from the other of the two
+# statements converter output makes about view membership. Reads the one-hop
+# arch:inView edge on the element itself, in the SEMANTIC graph, instead of finding
+# a node in the views graph that points at it.
+#
+# Does NOT prove: that an element absent from every diagram is unimportant, nor that
+# appearing on many makes it central. Diagram membership is an editorial choice.
+#
+# WHEN TO USE THIS RATHER THAN core/view-usage. Prefer core/view-usage where the
+# views graph exists — it is the richer route and it names the node, so it can tell
+# two drawings of one element apart. This one exists for the case that route cannot
+# serve: a graph published with `--views-profile no-views` or `no-diagrams` has no
+# views graph, so core/view-usage returns zero rows and an undrawn element is
+# indistinguishable from one whose evidence was dropped at publication.
+#
+# Requires roles.in_view, so it is refused against output converted before core
+# 0.4.0. The two templates cover different datasets; the profile decides.
+#
+# RETURNS NO ?node COLUMN, unlike core/view-usage. There is no node on this route.
+# A caller reading that column must use core/view-usage, and a caller counting rows
+# should know these differ where an element is drawn twice on one view: this reports
+# the view once, core/view-usage reports each node.
+#
+# Unlike its counterpart this needs no cross-graph join. core/view-usage reaches into
+# views for the node and back into semantic for the view's own label and viewpoint;
+# here everything is semantic, so the view's label and viewpoint sit beside the edge.
+#
+# Parameters: FOCUS_IRI, LIMIT
+{{PREFIXES}}
+SELECT DISTINCT ?view ?viewLabel ?viewpoint
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    VALUES ?focus { {{FOCUS_IRI}} }
+    ?focus {{ROLE:in_view}} ?view .
+    OPTIONAL { ?view {{PATH:label}} ?viewLabel }
+    OPTIONAL { ?view {{ROLE:conforms_to_viewpoint}} ?viewpoint }
+  {{GRAPH_CLOSE}}
+}
+ORDER BY ?viewLabel ?view
+LIMIT {{LIMIT}}

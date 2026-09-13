@@ -1,0 +1,73 @@
+# core/reifies-audit - Is the reification bridge sound?
+#
+# Answers: which qualified relationships carry no triple term, and which carry one
+# whose subject or object disagrees with arch:source / arch:target.
+#
+# Does NOT prove: that a sound bridge is a *correct* bridge. This checks the two
+# halves of each relationship against each other, not against the source model. A
+# relationship wrong in both halves agrees with itself and passes.
+#
+# Why both halves can disagree: the qualified resource states its endpoints twice,
+# once as arch:source/arch:target and once inside the triple term. Nothing in RDF
+# keeps them in step, and a hand-authored or hand-migrated bridge is exactly where
+# they drift. A disagreeing bridge is worse than a missing one, because
+# core/neighbours-reified and core/neighbours-qualified will then return different
+# neighbours for the same element and both will look right.
+#
+# `missing-term` is not automatically a defect. The converters emit no bridge at
+# all, so on converter output every relationship is reported and the finding is
+# "this dataset has no bridge" - which core/discover-relationship-types tells you
+# more cheaply. Run this on a dataset whose author added the bridge deliberately.
+#
+# EVERY BRANCH IS SELF-CONTAINED, and that is not stylistic. A UNION branch is a
+# group graph pattern: variables bound in the enclosing group are not available
+# where the branch's own FILTER is evaluated, and a FILTER comparing against an
+# unbound variable is simply false. Hoisting the shared `arch:source`/`arch:target`
+# patterns out of these branches made both disagreement checks match nothing, and
+# they reported it as a clean bridge. Measured, both ways, against
+# tests/test_reifies.py.
+#
+# Requires SPARQL 1.2; refused unless the profile declares capabilities.rdf_reifies.
+#
+# Parameters: LIMIT
+{{PREFIXES}}
+SELECT ?finding ?rel ?relType ?expected ?found
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    {
+      ?rel a {{ROLE:relationship_class}} ;
+           {{ROLE:rel_source}} ?source ;
+           {{ROLE:rel_target}} ?target .
+      FILTER NOT EXISTS { ?rel {{ROLE:reifies}} <<( ?any ?anyPredicate ?other )>> }
+      BIND("missing-term" AS ?finding)
+    }
+    UNION
+    {
+      ?rel a {{ROLE:relationship_class}} ;
+           {{ROLE:rel_source}} ?source ;
+           {{ROLE:rel_target}} ?target ;
+           {{ROLE:reifies}} <<( ?termSource ?predicate ?termTarget )>> .
+      FILTER(?termSource != ?source)
+      BIND("subject-disagrees" AS ?finding)
+      BIND(?source AS ?expected)
+      BIND(?termSource AS ?found)
+    }
+    UNION
+    {
+      ?rel a {{ROLE:relationship_class}} ;
+           {{ROLE:rel_source}} ?source ;
+           {{ROLE:rel_target}} ?target ;
+           {{ROLE:reifies}} <<( ?termSource ?predicate ?termTarget )>> .
+      FILTER(?termTarget != ?target)
+      BIND("object-disagrees" AS ?finding)
+      BIND(?target AS ?expected)
+      BIND(?termTarget AS ?found)
+    }
+    OPTIONAL {
+      ?rel a ?relType .
+      FILTER(?relType != {{ROLE:relationship_class}} && ?relType != {{ROLE:concept_class}})
+    }
+  {{GRAPH_CLOSE}}
+}
+ORDER BY ?finding ?rel
+LIMIT {{LIMIT}}

@@ -1,0 +1,7 @@
+#!/usr/bin/env python3
+"""Executable owned by linked-archi-source."""
+import sys
+from linked_archi_source.cli import main
+
+if __name__ == "__main__":
+    sys.exit(main())

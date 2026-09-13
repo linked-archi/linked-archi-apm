@@ -1,0 +1,44 @@
+# core/neighbours-qualified - What does this element relate to?
+#
+# Answers: every relationship touching the focus element, in both directions,
+# through the qualified relationship resource - the form the converters emit by
+# default, and usually the only form present.
+#
+# Does NOT prove: runtime dependency, traffic, criticality or failure
+# propagation. A modelled relationship is a design-time statement by whoever drew
+# the model.
+#
+# This is the default traversal template. Routing traversal through a direct predicate
+# instead returns nothing on a default dataset, because direct triples are opt-in
+# (--emit-direct-rel-triples).
+#
+# The relationship's own kind is an rdf:type on the qualified resource alongside
+# the core class, so the OPTIONAL filters out the core types to leave the
+# notation type (am:Serving, bpmn:SequenceFlow, bs:Ownership). There is no
+# arch:relType predicate.
+#
+# Parameters: FOCUS_IRI, LIMIT
+{{PREFIXES}}
+SELECT ?direction ?rel ?relType ?other ?otherLabel
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    VALUES ?focus { {{FOCUS_IRI}} }
+    ?rel a {{ROLE:relationship_class}} .
+    {
+      ?rel {{ROLE:rel_source}} ?focus ; {{ROLE:rel_target}} ?other .
+      BIND("outgoing" AS ?direction)
+    }
+    UNION
+    {
+      ?rel {{ROLE:rel_target}} ?focus ; {{ROLE:rel_source}} ?other .
+      BIND("incoming" AS ?direction)
+    }
+    OPTIONAL {
+      ?rel a ?relType .
+      FILTER(?relType != {{ROLE:relationship_class}} && ?relType != {{ROLE:concept_class}})
+    }
+    OPTIONAL { ?other {{PATH:label}} ?otherLabel }
+  {{GRAPH_CLOSE}}
+}
+ORDER BY ?direction ?relType ?other
+LIMIT {{LIMIT}}

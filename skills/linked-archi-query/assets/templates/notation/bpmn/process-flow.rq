@@ -1,0 +1,42 @@
+# notation/bpmn/process-flow - What is the sequence of steps in a process?
+#
+# Answers: the sequence flows of one BPMN process, as source-to-target pairs with
+# the flow element types.
+#
+# Does NOT prove: execution order at runtime. Gateways branch, and this returns the
+# edges rather than a resolved path - a flow after an exclusive gateway is one
+# possible continuation, not a step that always happens.
+#
+# Order is by label rather than topological: SPARQL cannot sort a graph, so read
+# the pairs as edges and assemble the order yourself. The start event is the one no
+# flow targets.
+#
+# BPMN carries its native identifier as bpmn:id rather than skos:notation, which is
+# why the profile binds native_id as a chain. {{PATH:native_id}} covers both, so
+# this template works unchanged in a dataset mixing BPMN with other notations.
+#
+# Parameters: PROCESS_IRI, LIMIT
+{{PREFIXES}}
+SELECT ?flow ?flowLabel ?source ?sourceLabel ?sourceType ?target ?targetLabel ?targetType
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    VALUES ?process { {{PROCESS_IRI}} }
+    ?process bpmn:flowElements ?flow .
+    ?flow a {{ROLE:relationship_class}} ;
+          {{ROLE:rel_source}} ?source ;
+          {{ROLE:rel_target}} ?target .
+    OPTIONAL { ?flow {{PATH:label}} ?flowLabel }
+    OPTIONAL { ?source {{PATH:label}} ?sourceLabel }
+    OPTIONAL { ?target {{PATH:label}} ?targetLabel }
+    OPTIONAL {
+      ?source a ?sourceType .
+      FILTER(STRSTARTS(STR(?sourceType), STR(bpmn:)))
+    }
+    OPTIONAL {
+      ?target a ?targetType .
+      FILTER(STRSTARTS(STR(?targetType), STR(bpmn:)))
+    }
+  {{GRAPH_CLOSE}}
+}
+ORDER BY ?sourceLabel ?targetLabel
+LIMIT {{LIMIT}}

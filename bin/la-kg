@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+"""Repository convenience dispatcher; implementation belongs to owner skills."""
+
+from __future__ import annotations
+
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+ROUTES = {
+    "source": ("linked-archi-source", "la-source"),
+    "profile": ("linked-archi-profile", "la-profile"),
+    "datasets": ("linked-archi-connect", "la-connect"),
+    "connect": ("linked-archi-connect", "la-connect"),
+    "catalog": ("linked-archi-query", "la-query"),
+    "query": ("linked-archi-query", "la-query"),
+    # `lint` is SPARQL read-only checking, owned by query. `validate` is SHACL, owned by
+    # validate. These were one route until validate gained a runtime, and conflating them
+    # meant `la-kg validate` silently linted a query instead of validating a graph.
+    "lint": ("linked-archi-query", "la-query"),
+    "validate": ("linked-archi-validate", "la-validate"),
+    # Planning and bundling, owned by analyse. It executes nothing: `la-kg plan` emits the
+    # `la-kg query run` commands to run, and `la-kg bundle` assembles what they wrote.
+    "plan": ("linked-archi-analyse", "la-analyse"),
+    "bundle": ("linked-archi-analyse", "la-analyse"),
+    "render": ("linked-archi-analyse", "la-analyse"),
+}
+
+
+def _executable(skill: str, name: str) -> Path:
+    configured = os.environ.get("LINKED_ARCHI_SKILLS_DIR")
+    if configured:
+        candidate = Path(configured).expanduser() / skill / "scripts" / name
+        if candidate.is_file():
+            return candidate
+        raise SystemExit(
+            f"Missing required skill: {skill} under explicit "
+            f"LINKED_ARCHI_SKILLS_DIR={configured}."
+        )
+    root = Path(__file__).resolve().parents[1]
+    candidate = root / "skills" / skill / "scripts" / name
+    if candidate.is_file():
+        return candidate
+    raise SystemExit(
+        f"Missing required skill: {skill}. Install it or set LINKED_ARCHI_SKILLS_DIR."
+    )
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = list(sys.argv[1:] if argv is None else argv)
+    if not args or args[0] in {"-h", "--help"}:
+        print(
+            "usage: la-kg "
+            "{source,profile,datasets,connect,catalog,query,lint,validate,plan,bundle,render}"
+            " ..."
+        )
+        return 0
+    group = args[0]
+    if group not in ROUTES:
+        print(f"la-kg: unknown command {group!r}", file=sys.stderr)
+        return 2
+    skill, executable = ROUTES[group]
+    delegated = args[1:]
+    if group in {"datasets", "connect", "catalog", "query", "lint",
+                 "plan", "bundle", "render"}:
+        delegated.insert(0, group)
+    done = subprocess.run([sys.executable, str(_executable(skill, executable)), *delegated])
+    return done.returncode
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,28 @@
+# core/element-detail - Everything asserted about one element.
+#
+# Answers: every predicate and object on the focus resource, with the graph each
+# came from.
+#
+# Does NOT prove: completeness. What is absent here is absent from the models,
+# which is not the same as absent from the enterprise.
+#
+# Use this to check exact predicate spelling before writing a narrower query. Two
+# spellings of a property key are two different predicates, and a join on the
+# wrong casing returns fewer rows with no error - so when a result looks
+# suspiciously small, come back here and read the real keys for one known element.
+#
+# Unscoped on purpose: an element's semantic facts, its appearances in views and
+# its provenance are in different graphs, and seeing which graph each fact came
+# from is most of the value.
+#
+# Parameters: FOCUS_IRI, LIMIT
+{{PREFIXES}}
+SELECT {{GRAPH_VAR:any}} ?predicate ?object
+WHERE {
+  {{GRAPH_OPEN:any}}
+    VALUES ?focus { {{FOCUS_IRI}} }
+    ?focus ?predicate ?object .
+  {{GRAPH_CLOSE}}
+}
+ORDER BY {{GRAPH_VAR:any}} ?predicate ?object
+LIMIT {{LIMIT}}

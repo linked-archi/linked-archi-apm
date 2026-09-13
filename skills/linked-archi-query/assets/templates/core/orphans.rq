@@ -1,0 +1,36 @@
+# core/orphans - Which elements take part in no relationship at all?
+#
+# Answers: elements that are neither source nor target of any qualified
+# relationship.
+#
+# Does NOT prove: that an element is unused or safe to delete. Common innocent
+# causes: it was drawn on a diagram as context and never connected; its
+# relationships live in a model that was not loaded; or it is a routing construct
+# the notation permits to stand alone.
+#
+# Useful as a model-quality reading rather than a hit list. A high orphan count
+# concentrated in one model usually means a partial export, which core/models and
+# core/inventory will confirm faster than inspecting the elements.
+#
+# Parameters: LIMIT
+{{PREFIXES}}
+SELECT ?element ?label ?type ?model
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    ?element a {{ROLE:element_class}} .
+    FILTER NOT EXISTS {
+      ?rel a {{ROLE:relationship_class}} ; {{ROLE:rel_source}} ?element .
+    }
+    FILTER NOT EXISTS {
+      ?rel a {{ROLE:relationship_class}} ; {{ROLE:rel_target}} ?element .
+    }
+    OPTIONAL { ?element {{PATH:label}} ?label }
+    OPTIONAL {
+      ?element a ?type .
+      FILTER(?type != {{ROLE:element_class}} && ?type != {{ROLE:concept_class}})
+    }
+    OPTIONAL { ?element {{ROLE:part_of}} ?model }
+  {{GRAPH_CLOSE}}
+}
+ORDER BY ?model ?label ?element
+LIMIT {{LIMIT}}

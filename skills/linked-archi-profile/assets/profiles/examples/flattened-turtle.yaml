@@ -1,0 +1,41 @@
+# A dataset with no named graphs.
+#
+# What the converters' `TURTLE` output collapses to, and what you get when a TriG
+# file is renamed `.ttl`. The profile for `fixtures/flat.ttl`.
+#
+# The same templates work unchanged: `{{GRAPH_OPEN:role}}` renders as a plain group
+# rather than a `GRAPH` clause, so nothing has to be rewritten. What is lost is the
+# ability to separate meaning from layout and from provenance, and the templates
+# that depend on that separation say so as a caveat rather than silently returning a
+# mixture.
+#
+# Prefer TriG. This profile exists so that a flattened dataset fails loudly and
+# usefully instead of producing empty results that look like findings.
+extends: ../linked-archi-default.yaml
+
+profile: flattened-turtle
+version: 1
+description: >-
+  Flattened dataset with no graph identity, as produced by the converters' Turtle
+  output. Graph-scoped questions are answered unscoped, with a caveat.
+
+graphs:
+  layout: single
+  named_graphs: false
+  roles:
+    # Retained for documentation only. Nothing scopes to them under this layout, and
+    # a template requiring one gets a warning rather than a refusal - the data may
+    # well be present, it just cannot be told apart.
+    semantic: graph/semantic
+    views: graph/views
+    provenance: graph/provenance
+    model: graph/model
+  # Explicitly none, overriding the parent. Descendant matching is a statement about
+  # graph IRIs and this layout has no graphs, so inheriting the parent's claim is not
+  # merely useless - it is rejected at load as incoherent, which is the right outcome
+  # for a contradiction and the reason this line has to be here rather than omitted.
+  descendants: []
+
+capabilities:
+  # Provenance triples are still there; they simply sit alongside everything else.
+  provenance_graph: true

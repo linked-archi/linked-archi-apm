@@ -1,0 +1,72 @@
+# A custom metamodel, as a profile.
+#
+# Mirrors linked-archi-meta/examples/custom-metamodel/, which extends ArchiMate
+# 4.0 with cp:Microservice, cp:API, cp:MessageBroker, cp:Container and
+# cp:resilienceLevel, and declares them through an arch:Metamodel manifest.
+#
+# This file is what `linked-archi-profile derive` produces from that manifest
+# plus the converter --type-mapping that bound the custom classes at conversion
+# time. It is checked in as a worked example, and as the fixture proving a
+# custom ontology needs no new core templates.
+#
+# What makes it short is that nothing about the core vocabulary changed. The
+# custom metamodel adds classes and one property; the roles that templates
+# resolve through - label, endpoints, membership, provenance - are inherited
+# unchanged. That is the adaptability claim, stated as a diff.
+extends: ../linked-archi-default.yaml
+
+profile: cloudplatform
+version: 1
+description: >-
+  Cloud platform metamodel extending ArchiMate 4.0. Worked example of a custom
+  ontology and taxonomy reached through profile derivation rather than a fork.
+
+base_iri: https://example.org/cp/
+
+namespaces:
+  cp: https://meta.linked.archi/examples/cloudplatform/onto#
+  cpmm: https://meta.linked.archi/examples/cloudplatform/metamodel#
+  cptax: https://meta.linked.archi/examples/cloudplatform/tax#
+  cpvp: https://meta.linked.archi/examples/cloudplatform/viewpoints#
+
+roles:
+  # A custom property promoted to a first-class role, so a template can ask
+  # "which services are below the required resilience level" by naming the role
+  # rather than the IRI. Custom roles sit alongside the inherited ones; a
+  # template that needs this declares `resilience_level` under requires.roles.
+  resilience_level: cp:resilienceLevel
+
+notations:
+  cp:
+    label: Cloud Platform
+    metamodel: https://meta.linked.archi/examples/cloudplatform/metamodel#CloudPlatformMetamodel
+    namespace: cp
+    native_id: skos:notation
+
+taxonomies:
+  - scheme: https://meta.linked.archi/examples/cloudplatform/tax
+    prefix: cptax
+    label: Cloud platform service classification
+  - scheme: https://meta.linked.archi/core-tax
+    prefix: arch-tax
+    label: Linked.Archi common taxonomy
+
+# ---------------------------------------------------------------------------
+# Navigation
+# ---------------------------------------------------------------------------
+# The worked example of the folder-tree membership mode. This platform's pipeline
+# authors the containment chain end to end - service to component folder to
+# subsystem folder to model - so "which services belong to this model" can be
+# walked precisely instead of inferred from graph co-location.
+#
+# Bounded at three hops on purpose. SPARQL 1.1 has no {1,n} property-path range,
+# so the traversal is emitted as capped alternation; an unbounded `+` would turn
+# one mis-authored hop into a scan of the whole store.
+#
+# Do not copy this into a profile for converter output at default flags. There,
+# dct:isPartOf reaches the model for some notations and stops short for others, so
+# co-location is the portable answer - see linked-archi-default.
+navigation:
+  model_membership:
+    mode: bounded-folder-tree
+    max_depth: 3

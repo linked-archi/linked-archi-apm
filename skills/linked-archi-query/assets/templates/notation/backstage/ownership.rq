@@ -1,0 +1,32 @@
+# notation/backstage/ownership - Who owns which Backstage entities?
+#
+# Answers: entities and the group or user that owns them, through the Backstage
+# ownership relationship, with the entity's lifecycle state where recorded.
+#
+# Does NOT prove: accountability in the organisation. spec.owner in a
+# catalog-info.yaml is what somebody wrote in a file, and stale owner fields are
+# among the most common forms of catalogue drift.
+#
+# Ownership arrives as a RELATIONSHIP (bs:Ownership) rather than as
+# arch:conceptOwner. The core ownership predicate is absent from converter output
+# entirely, which is why the default profile binds the owner role to null - so
+# asking this through the core role would be refused, and asking it here works. If
+# your pipeline does promote ownership to arch:conceptOwner, use core/coverage-gaps
+# against that predicate instead.
+#
+# Parameters: LIMIT
+{{PREFIXES}}
+SELECT ?entity ?entityLabel ?kind ?owner ?ownerLabel ?lifecycle
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    ?rel a bs:Ownership ;
+         {{ROLE:rel_source}} ?entity ;
+         {{ROLE:rel_target}} ?owner .
+    OPTIONAL { ?entity {{PATH:label}} ?entityLabel }
+    OPTIONAL { ?entity bs:kind ?kind }
+    OPTIONAL { ?entity bs:lifecycleState ?lifecycle }
+    OPTIONAL { ?owner {{PATH:label}} ?ownerLabel }
+  {{GRAPH_CLOSE}}
+}
+ORDER BY ?ownerLabel ?entityLabel
+LIMIT {{LIMIT}}

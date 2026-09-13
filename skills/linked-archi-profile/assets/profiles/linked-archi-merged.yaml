@@ -1,0 +1,46 @@
+# A curated, merged store rather than raw converter output.
+#
+# The case this covers: per-model TriG files have been loaded into a triplestore
+# and enriched with authored cross-source identity assertions in a dedicated
+# reconciliation graph, following design decision DD-11 (skos:exactMatch for
+# correspondence, owl:sameAs only for genuine identity).
+#
+# Two things change from raw output, and both are the point of having a separate
+# profile rather than a flag: identity assertions exist, so cross-notation joins
+# become answerable; and the graph layout gains a fourth role whose IRI is
+# literal rather than suffix-matched.
+extends: linked-archi-default.yaml
+
+profile: linked-archi-merged
+version: 1
+description: >-
+  Merged multi-model store with an authored reconciliation graph. Cross-notation
+  identity joins are available; a validation graph may be present if the
+  publishing pipeline loads its SHACL report.
+
+graphs:
+  layout: per-model-triple
+  named_graphs: true
+  roles:
+    semantic: graph/semantic
+    views: graph/views
+    provenance: graph/provenance
+    # Suffix-matched like the others. If your store uses one literal IRI
+    # instead, switch layout to `explicit` and list full IRIs under roles.
+    reconciliation: graphs/reconciliation
+    # `model` is inherited from the parent, which binds it to the semantic graph.
+    # Graph roles MERGE with the parent's rather than replacing them, so only the
+    # role this profile adds is written here.
+
+roles:
+  same_as: owl:sameAs
+  exact_match: skos:exactMatch
+  owner: arch:conceptOwner
+
+capabilities:
+  identity_assertions: true
+  concept_owner: true
+  views_graph: partial
+  # Still false unless the pipeline explicitly loads its SHACL report as a
+  # graph. The converters do not; they write a report document.
+  validation_in_graph: false

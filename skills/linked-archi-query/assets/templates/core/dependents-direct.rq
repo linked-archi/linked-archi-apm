@@ -1,0 +1,37 @@
+# core/dependents-direct - Transitive dependents, via the direct predicate form.
+#
+# Answers: everything that reaches the focus element at any depth by following the
+# predicates you named.
+#
+# Does NOT prove: impact, criticality or failure propagation - and not
+# completeness either, because it follows only the predicates given. A dependency
+# expressed through a relationship type you left out is silently absent.
+#
+# REQUIRES capabilities.direct_rel_triples. The converters emit direct
+# source-predicate-target triples only with --emit-direct-rel-triples, which is
+# off by default, so against ordinary converter output this template is refused
+# rather than run. That refusal is the point: its predecessor made this the
+# primary traversal route and returned zero rows on a default dataset.
+#
+# Never union these rows with core/neighbours-qualified. When direct triples are
+# emitted, every relationship exists in both forms, so a union double-counts and
+# nothing raises an error.
+#
+# PREDICATE_PATH is an alternation, capped, and required. Get the predicates from
+# core/discover-relationship-types rather than assuming which ones this dataset
+# uses; the notation ontologies are versioned in the namespace, so am: and am4:
+# spell the same concept differently.
+#
+# Parameters: FOCUS_IRI, PREDICATE_PATH, LIMIT
+{{PREFIXES}}
+SELECT DISTINCT ?dependent ?dependentLabel
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    VALUES ?focus { {{FOCUS_IRI}} }
+    ?dependent ({{PREDICATE_PATH}})+ ?focus .
+    FILTER(?dependent != ?focus)
+    OPTIONAL { ?dependent {{PATH:label}} ?dependentLabel }
+  {{GRAPH_CLOSE}}
+}
+ORDER BY ?dependentLabel ?dependent
+LIMIT {{LIMIT}}

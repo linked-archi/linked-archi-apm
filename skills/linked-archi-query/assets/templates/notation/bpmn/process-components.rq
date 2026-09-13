@@ -1,0 +1,60 @@
+# notation/bpmn/process-components - What takes part in this BPMN model?
+#
+# Answers: the model's flow elements grouped into the categories a reader actually
+# asks about - where work arrives, what runs automatically, what a person does,
+# who the participants are, what data is touched, and where it ends.
+#
+# Does NOT prove: that any of it runs. A ServiceTask is a modelled intent to call
+# something, not evidence that a service exists, is deployed, or is reachable. Nor
+# does it prove completeness: a process drawn at one level of detail hides the
+# systems a more detailed one would name.
+#
+# notation/bpmn/process-flow answers the adjacent question - the sequence flows
+# between elements, as edges. Use that for order, this for participants.
+#
+# Membership comes from {{MEMBERSHIP:element}}, so it follows whatever the profile
+# says "belongs to this model" means: graph co-location for converter output, or a
+# bounded folder walk for a store that authors the chain. Hand-writing a folder path
+# here is what this directive exists to stop.
+#
+# The category list is the vocabulary, not a guess. Types absent from the model
+# simply produce no rows for that category; a category is never invented, and a type
+# outside the list is not silently dropped into "other" - it is left out, so adding
+# a BPMN construct here is a deliberate edit rather than an accident of matching.
+#
+# Categories are numbered so a plain sort reads in the order a process happens:
+# arrival, automation, human work, participants, data, outcome.
+#
+# Parameters: MODEL_IRI, LIMIT
+{{PREFIXES}}
+SELECT ?category ?element ?label ?type ?nativeId
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    VALUES ?model { {{MODEL_IRI}} }
+    VALUES (?type ?category) {
+      (bpmn:StartEvent            "1 arrives")
+      (bpmn:IntermediateCatchEvent "1 arrives")
+      (bpmn:ReceiveTask           "1 arrives")
+      (bpmn:ServiceTask           "2 automated")
+      (bpmn:ScriptTask            "2 automated")
+      (bpmn:SendTask              "2 automated")
+      (bpmn:BusinessRuleTask      "2 automated")
+      (bpmn:UserTask              "3 human")
+      (bpmn:ManualTask            "3 human")
+      (bpmn:Task                  "3 human")
+      (bpmn:Participant           "4 participant")
+      (bpmn:Lane                  "4 participant")
+      (bpmn:DataObject            "5 data")
+      (bpmn:DataObjectReference   "5 data")
+      (bpmn:DataStoreReference    "5 data")
+      (bpmn:EndEvent              "6 outcome")
+      (bpmn:IntermediateThrowEvent "6 outcome")
+    }
+    {{MEMBERSHIP:element}}
+    ?element a ?type .
+    OPTIONAL { ?element {{PATH:label}} ?label }
+    OPTIONAL { ?element {{PATH:native_id}} ?nativeId }
+  {{GRAPH_CLOSE}}
+}
+ORDER BY ?category ?label ?element
+LIMIT {{LIMIT}}

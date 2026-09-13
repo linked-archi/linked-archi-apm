@@ -1,0 +1,32 @@
+# core/views - Which diagrams exist, and how big are they?
+#
+# Answers: every view resource, its viewpoint, its model, and how many nodes it
+# places.
+#
+# Does NOT prove: quality or currency. A large diagram is not a good one, and a
+# view with no nodes is usually an empty diagram somebody left in the model.
+#
+# Node counts come from the views graph and are OPTIONAL, so a view whose geometry
+# was dropped - the converters can emit a no-views or no-geometry profile - still
+# appears with an unbound count. That is the honest rendering: the view exists, its
+# contents were not published.
+#
+# Parameters: LIMIT
+{{PREFIXES}}
+SELECT ?view ?viewLabel ?viewpoint ?model (COUNT(DISTINCT ?node) AS ?nodes)
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    ?view a {{ROLE:view_class}} .
+    OPTIONAL { ?view {{PATH:label}} ?viewLabel }
+    OPTIONAL { ?view {{ROLE:conforms_to_viewpoint}} ?viewpoint }
+    OPTIONAL { ?view {{ROLE:part_of}} ?model }
+  {{GRAPH_CLOSE}}
+  OPTIONAL {
+    {{GRAPH_OPEN:views}}
+      ?node {{ROLE:view_ref}} ?view .
+    {{GRAPH_CLOSE}}
+  }
+}
+GROUP BY ?view ?viewLabel ?viewpoint ?model
+ORDER BY DESC(?nodes) ?viewLabel
+LIMIT {{LIMIT}}

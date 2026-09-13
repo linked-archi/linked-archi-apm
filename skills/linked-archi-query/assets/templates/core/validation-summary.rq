@@ -1,0 +1,40 @@
+# core/validation-summary - What does the SHACL report say, and how much did it check?
+#
+# Answers: the conformance verdict and the violations by severity and shape, from a
+# SHACL report loaded into the dataset.
+#
+# Does NOT prove: that the graph is sound. A report that evaluated three
+# constraints and skipped forty conforms in the way that means nothing. Never
+# report "valid" without the count of what was actually evaluated beside it.
+#
+# REQUIRES capabilities.validation_in_graph, which is false for the Linked.Archi
+# pipeline: the converters' `validate` subcommand writes a report to stdout or to
+# -r <file>, as a separate document, and there is no validation graph in the
+# dataset. So under the default profile this is refused, correctly - the report is
+# not something to query, it is something to read. See the validate skill.
+#
+# It is here for stores that do load their report, which some publishing pipelines
+# choose to do. If yours does, bind graphs.roles.validation in your profile and set
+# the capability.
+#
+# A result count sitting exactly on a round number is an engine cap per constraint,
+# not a total. Report "at least".
+#
+# Parameters: LIMIT
+{{PREFIXES}}
+SELECT ?conforms ?severity ?sourceShape (COUNT(?result) AS ?count) (SAMPLE(?focusNode) AS ?example)
+WHERE {
+  {{GRAPH_OPEN:any}}
+    ?report a sh:ValidationReport .
+    OPTIONAL { ?report sh:conforms ?conforms }
+    OPTIONAL {
+      ?report sh:result ?result .
+      OPTIONAL { ?result sh:resultSeverity ?severity }
+      OPTIONAL { ?result sh:sourceShape ?sourceShape }
+      OPTIONAL { ?result sh:focusNode ?focusNode }
+    }
+  {{GRAPH_CLOSE}}
+}
+GROUP BY ?conforms ?severity ?sourceShape
+ORDER BY ?severity DESC(?count)
+LIMIT {{LIMIT}}

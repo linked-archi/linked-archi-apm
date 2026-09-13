@@ -1,0 +1,39 @@
+# core/reified-predicates - Which unqualified predicates does the bridge expose?
+#
+# Answers: for each qualified relationship class, the unqualified predicate its
+# RDF 1.2 triple term names, and how many relationships carry that pairing.
+#
+# Does NOT prove: that the predicate is asserted anywhere. A triple term is a
+# *term denoting* a triple, not an assertion of it. `?s am:serves ?o` matches
+# nothing in this dataset and property paths do not traverse the term, so this
+# cannot substitute for core/dependents-direct. Verified against pyoxigraph 0.5.9.
+#
+# Why this template exists: the qualified form records the relationship's *class*
+# (am:Serving) and nothing more. The unqualified predicate (am:serves) exists only
+# inside the triple term. Without the reification bridge there is no way to
+# recover it from the data - you would have to consult the ontology.
+#
+# Pair with core/discover-relationship-types, which reports the same population
+# by class and needs no RDF 1.2 support. Run that one first: if the two disagree
+# on counts, some relationships lack a bridge, and core/reifies-audit says which.
+#
+# Requires SPARQL 1.2. The `<<( s p o )>>` pattern is a parse error on a 1.1
+# engine, which is why this template is refused unless the profile declares
+# capabilities.rdf_reifies.
+#
+# Parameters: LIMIT
+{{PREFIXES}}
+SELECT ?relType ?predicate (COUNT(DISTINCT ?rel) AS ?count)
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    ?rel a {{ROLE:relationship_class}} ;
+         {{ROLE:reifies}} <<( ?source ?predicate ?target )>> .
+    OPTIONAL {
+      ?rel a ?relType .
+      FILTER(?relType != {{ROLE:relationship_class}} && ?relType != {{ROLE:concept_class}})
+    }
+  {{GRAPH_CLOSE}}
+}
+GROUP BY ?relType ?predicate
+ORDER BY DESC(?count) ?relType ?predicate
+LIMIT {{LIMIT}}

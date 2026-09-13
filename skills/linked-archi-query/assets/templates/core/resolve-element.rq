@@ -1,0 +1,65 @@
+# core/resolve-element - Which IRI does this name refer to?
+#
+# Answers: candidate resources whose label, alternative label or native
+# identifier matches TERM, with their types and the graph they came from, best
+# candidate first.
+#
+# Does NOT prove: that the best-ranked match is the one the user meant. Two
+# applications may share a label across two models. When more than one candidate
+# comes back and the choice changes the answer, ask rather than pick.
+#
+# Run this before any template taking an IRI. Never construct an IRI from a
+# label: the minted form is {base}{notation}/{modelId}/element/{localId}, and the
+# local id is the source tool's, so guessing it is guessing twice.
+#
+# Matching is case-insensitive and substring, across the label roles and the
+# native id. Two columns say how good a hit is, and both are ordered on:
+#
+#   ?rank     "1 exact", "2 prefix", "3 contains" - how much of the value matched
+#   ?matched  "1 name", "2 alias", "3 id"         - what kind of thing matched
+#
+# Both are numbered strings so a plain ORDER BY puts the best candidate first with
+# no scoring arithmetic anyone has to trust. Carried from core/resolve-model,
+# which needed the same thing for the same reason.
+#
+# The numbering is not cosmetic. This template ORDERED BY the role name alone, and
+# unnumbered names sort alphabetically: altLabel, nativeId, prefLabel. So a name
+# match sorted BELOW an id match, and LIMIT discarded names first. Measured on
+# fixtures/base.trig: TERM="e" at the default LIMIT 25 returned 23 native-id hits,
+# 2 alias hits and NOT ONE of the 63 name matches available. A match on a native id
+# ("APP-1") means something different from a match on a name, and a caller resolving
+# a phrase a human typed wants the names.
+#
+# Parameters: TERM, LIMIT
+{{PREFIXES}}
+SELECT ?rank ?matched ?value ?element ?type ?g
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    {
+      ?element {{ROLE:label}} ?value .
+      BIND("1 name" AS ?matched)
+    }
+    UNION
+    {
+      ?element {{ROLE:alt_label}} ?value .
+      BIND("2 alias" AS ?matched)
+    }
+    UNION
+    {
+      ?element {{PATH:native_id}} ?value .
+      BIND("3 id" AS ?matched)
+    }
+    FILTER(CONTAINS(LCASE(STR(?value)), LCASE({{TERM}})))
+    BIND(
+      IF(LCASE(STR(?value)) = LCASE({{TERM}}), "1 exact",
+        IF(STRSTARTS(LCASE(STR(?value)), LCASE({{TERM}})), "2 prefix", "3 contains")
+      ) AS ?rank
+    )
+    OPTIONAL {
+      ?element a ?type .
+      FILTER(?type != {{ROLE:concept_class}} && ?type != {{ROLE:element_class}})
+    }
+  {{GRAPH_CLOSE}}
+}
+ORDER BY ?rank ?matched ?value ?element
+LIMIT {{LIMIT}}

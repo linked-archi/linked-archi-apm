@@ -1,0 +1,61 @@
+# notation/archimate/layer-crossing - Which relationships cross ArchiMate layers?
+#
+# Answers: relationships whose source and target sit in different ArchiMate layers,
+# with both element types and the relationship type.
+#
+# Does NOT prove: that a crossing is wrong, or that a missing crossing is a gap.
+# Cross-layer relationships are how ArchiMate expresses realisation and serving;
+# this reports where they are, not whether they should be.
+#
+# The layer is inferred from the element class local name, because the ArchiMate
+# ontology expresses layer membership through the class hierarchy rather than a
+# layer property, and this query deliberately does not depend on reasoning being
+# enabled. That makes it a heuristic: it reads "Business", "Application",
+# "Technology" and so on out of the class name. A specialisation named outside that
+# convention will not be classified, and shows as an unbound layer rather than
+# being silently dropped.
+#
+# Parameters: LIMIT
+{{PREFIXES}}
+SELECT ?sourceLayer ?targetLayer ?relType (COUNT(*) AS ?count) (SAMPLE(?sourceLabel) AS ?example)
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    ?rel a {{ROLE:relationship_class}} ;
+         {{ROLE:rel_source}} ?source ;
+         {{ROLE:rel_target}} ?target .
+    ?rel a ?relType .
+    FILTER(?relType != {{ROLE:relationship_class}} && ?relType != {{ROLE:concept_class}})
+    ?source a ?sourceType .
+    ?target a ?targetType .
+    FILTER(STRSTARTS(STR(?sourceType), STR(am:)) && STRSTARTS(STR(?targetType), STR(am:)))
+    BIND(REPLACE(STR(?sourceType), "^.*#", "") AS ?sourceName)
+    BIND(REPLACE(STR(?targetType), "^.*#", "") AS ?targetName)
+    BIND(
+      IF(STRSTARTS(?sourceName, "Business"), "Business",
+      IF(STRSTARTS(?sourceName, "Application"), "Application",
+      IF(STRSTARTS(?sourceName, "Technology"), "Technology",
+      IF(STRSTARTS(?sourceName, "Node") || STRSTARTS(?sourceName, "Device"), "Technology",
+      IF(STRSTARTS(?sourceName, "Capability") || STRSTARTS(?sourceName, "Course")
+         || STRSTARTS(?sourceName, "Resource") || STRSTARTS(?sourceName, "Value"), "Strategy",
+      IF(STRSTARTS(?sourceName, "Stakeholder") || STRSTARTS(?sourceName, "Driver")
+         || STRSTARTS(?sourceName, "Goal") || STRSTARTS(?sourceName, "Outcome")
+         || STRSTARTS(?sourceName, "Principle") || STRSTARTS(?sourceName, "Requirement"), "Motivation",
+      ?sourceName)))))) AS ?sourceLayer)
+    BIND(
+      IF(STRSTARTS(?targetName, "Business"), "Business",
+      IF(STRSTARTS(?targetName, "Application"), "Application",
+      IF(STRSTARTS(?targetName, "Technology"), "Technology",
+      IF(STRSTARTS(?targetName, "Node") || STRSTARTS(?targetName, "Device"), "Technology",
+      IF(STRSTARTS(?targetName, "Capability") || STRSTARTS(?targetName, "Course")
+         || STRSTARTS(?targetName, "Resource") || STRSTARTS(?targetName, "Value"), "Strategy",
+      IF(STRSTARTS(?targetName, "Stakeholder") || STRSTARTS(?targetName, "Driver")
+         || STRSTARTS(?targetName, "Goal") || STRSTARTS(?targetName, "Outcome")
+         || STRSTARTS(?targetName, "Principle") || STRSTARTS(?targetName, "Requirement"), "Motivation",
+      ?targetName)))))) AS ?targetLayer)
+    FILTER(?sourceLayer != ?targetLayer)
+    OPTIONAL { ?source {{PATH:label}} ?sourceLabel }
+  {{GRAPH_CLOSE}}
+}
+GROUP BY ?sourceLayer ?targetLayer ?relType
+ORDER BY DESC(?count)
+LIMIT {{LIMIT}}

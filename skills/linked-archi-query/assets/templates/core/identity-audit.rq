@@ -1,0 +1,60 @@
+# core/identity-audit - Which elements are linked across sources?
+#
+# Answers: elements carrying a cross-source identity assertion, which kind it is,
+# and what it points at.
+#
+# Does NOT prove: that unlisted elements have no counterpart elsewhere. Identity
+# across tools cannot be derived - the same application in ArchiMate and in
+# Backstage produces two IRIs by construction - so it is authored and
+# human-reviewed. An absent assertion means nobody has made it yet.
+#
+# REQUIRES capabilities.identity_assertions, which is false for raw converter
+# output: the converters never emit identity. Under the default profile this is
+# refused, and that refusal is the correct answer to "join these two models" - the
+# work is a reconciliation step, not a cleverer query.
+#
+# The two predicates differ in force and the distinction is expensive to get wrong.
+# skos:exactMatch asserts correspondence between records; owl:sameAs asserts the
+# resources ARE one thing, which merges everything said about both and is
+# unforgiving of a mistake. Prefer the first. ?kind keeps them apart here.
+#
+# When a cross-notation join comes back empty, run this before rewriting SPARQL.
+# The cause is almost always a missing assertion rather than a wrong query.
+# Labels are read in SEPARATE semantic scopes, and the two sides use different
+# ones. Two reasons, both observed rather than theorised. The assertions live
+# wherever the reconciliation step put them - typically their own graph - while
+# labels live with the elements, so reading both in one scope binds the graph
+# variable to the reconciliation graph and returns every label empty. And the whole
+# point of a cross-source assertion is that the two elements come from different
+# models, so they sit in different semantic graphs: `semantic2` opens an
+# independent scope on the same role, which is what stops the counterpart's label
+# from being required to live in the element's graph.
+#
+# Parameters: LIMIT
+{{PREFIXES}}
+SELECT ?element ?elementLabel ?kind ?counterpart ?counterpartLabel
+WHERE {
+  {{GRAPH_OPEN:any}}
+    {
+      ?element {{ROLE:same_as}} ?counterpart .
+      BIND("sameAs (asserts one thing - merges both descriptions)" AS ?kind)
+    }
+    UNION
+    {
+      ?element {{ROLE:exact_match}} ?counterpart .
+      BIND("exactMatch (asserts correspondence between records)" AS ?kind)
+    }
+  {{GRAPH_CLOSE}}
+  OPTIONAL {
+    {{GRAPH_OPEN:semantic}}
+      ?element {{PATH:label}} ?elementLabel .
+    {{GRAPH_CLOSE}}
+  }
+  OPTIONAL {
+    {{GRAPH_OPEN:semantic2}}
+      ?counterpart {{PATH:label}} ?counterpartLabel .
+    {{GRAPH_CLOSE}}
+  }
+}
+ORDER BY ?kind ?elementLabel
+LIMIT {{LIMIT}}

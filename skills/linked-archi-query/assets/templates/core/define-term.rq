@@ -1,0 +1,87 @@
+# core/define-term - What is X, in this dataset's own words?
+#
+# Answers: for each resource matching TERM by name, alternative name, definition or
+# native id - its label, its definition, its native type, the model it belongs to,
+# that model's source file, and the relationships it takes part in immediately.
+#
+# Does NOT prove: that the definition is true, current, or agreed. It is the text
+# somebody typed in a modelling tool. Nor does an absent definition mean the term is
+# undefined; most converter output carries no skos:definition at all.
+#
+# ?candidates is the count of DISTINCT resources the term matched, repeated on every
+# row. Greater than one means the question is ambiguous, and the honest response is to
+# name the candidates and ask - not to describe the first row as though it were the
+# answer. Two applications called "Billing" may be one system in two models, two
+# systems, or a system and a report about it.
+#
+# core/resolve-element gives candidate IRIs and nothing else; this one explains each
+# candidate. core/element-detail dumps every triple in exact spelling, which is what
+# to reach for when checking predicate names. core/neighbours-qualified is the
+# template for relationship traversal and returns the counterpart IRIs; the
+# relationship columns here are context for a definition, deliberately one hop deep
+# and labelled rather than identified.
+#
+# Membership comes from {{MEMBERSHIP:resource}}, so "which model is this term from"
+# follows whatever the profile says membership means rather than being re-invented.
+#
+# The match is a DISTINCT subquery on purpose: a resource whose label and definition
+# both contain the term is one candidate, not two, and without DISTINCT it would
+# double every relationship row underneath it.
+#
+# Structural types (arch:ModelConcept, arch:Element, arch:QualifiedRelationship) are
+# filtered out of ?type and ?relType. They are true of everything and would crowd out
+# the notation type, which is the one that says what the thing is.
+#
+# Parameters: TERM, LIMIT
+{{PREFIXES}}
+SELECT ?candidates ?resource ?label ?definition ?type ?model ?source ?direction ?relType ?relatedLabel
+WHERE {
+  {
+    SELECT DISTINCT ?resource
+    WHERE {
+      {{GRAPH_OPEN:semantic}}
+        ?resource ({{PATH:label}}|{{PATH:alt_label}}|{{PATH:definition}}|{{PATH:native_id}}) ?matchValue .
+        FILTER(CONTAINS(LCASE(STR(?matchValue)), LCASE({{TERM}})))
+      {{GRAPH_CLOSE}}
+    }
+  }
+  {
+    SELECT (COUNT(DISTINCT ?candidate) AS ?candidates)
+    WHERE {
+      {{GRAPH_OPEN:semantic2}}
+        ?candidate ({{PATH:label}}|{{PATH:alt_label}}|{{PATH:definition}}|{{PATH:native_id}}) ?candidateValue .
+        FILTER(CONTAINS(LCASE(STR(?candidateValue)), LCASE({{TERM}})))
+      {{GRAPH_CLOSE}}
+    }
+  }
+  {{GRAPH_OPEN:semantic3}}
+    OPTIONAL { ?resource {{PATH:label}} ?label }
+    OPTIONAL { ?resource {{PATH:definition}} ?definition }
+    OPTIONAL {
+      ?resource a ?type .
+      FILTER(?type != {{ROLE:concept_class}}
+          && ?type != {{ROLE:element_class}}
+          && ?type != {{ROLE:relationship_class}})
+    }
+    {{MEMBERSHIP:resource}}
+    OPTIONAL {
+      {
+        ?rel {{ROLE:rel_source}} ?resource ;
+             {{ROLE:rel_target}} ?otherEnd .
+        BIND("outgoing" AS ?direction)
+      }
+      UNION
+      {
+        ?rel {{ROLE:rel_target}} ?resource ;
+             {{ROLE:rel_source}} ?otherEnd .
+        BIND("incoming" AS ?direction)
+      }
+      ?rel a ?relType .
+      FILTER(?relType != {{ROLE:relationship_class}} && ?relType != {{ROLE:concept_class}})
+      OPTIONAL { ?otherEnd {{PATH:label}} ?relatedLabel }
+    }
+  {{GRAPH_CLOSE}}
+  OPTIONAL { {{GRAPH_OPEN:provenance}} ?model {{ROLE:source_file}} ?source {{GRAPH_CLOSE}} }
+}
+ORDER BY ?resource ?direction ?relType ?relatedLabel
+LIMIT {{LIMIT}}

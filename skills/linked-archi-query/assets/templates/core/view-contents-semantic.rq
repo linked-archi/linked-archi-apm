@@ -1,0 +1,61 @@
+# core/view-contents-semantic - Which elements are placed on this diagram, without the views graph?
+#
+# Answers: the same question core/view-contents answers, from the other of the two
+# statements converter output makes about view membership. Reads the one-hop
+# arch:inView edge in the SEMANTIC graph instead of walking a node in the views
+# graph.
+#
+# Does NOT prove: anything core/view-contents does not. What a view contains is
+# still an editorial choice by whoever drew it, so "not on the diagram" is not
+# "not in the architecture".
+#
+# WHEN TO USE THIS RATHER THAN core/view-contents. Prefer core/view-contents where
+# the views graph exists: it is the richer route, it carries geometry, and it
+# distinguishes two drawings of one element. This one exists for the case that route
+# cannot serve — a graph published with `--views-profile no-views` or `no-diagrams`
+# has no views graph at all, and the arch:View resources survive in the semantic
+# graph while every node placing something on them is gone. core/view-contents then
+# returns zero rows, which reads as "this diagram is empty" rather than "the evidence
+# was dropped at publication".
+#
+# Requires roles.in_view, so it is refused against output converted before core
+# 0.4.0, which emitted no such edge. That refusal is the point: the two templates
+# cover different datasets and the profile decides which is offered.
+#
+# ONE GRAPH, not two. core/view-contents spans views and semantic, because the node
+# is in one and the element's own facts are in the other — and getting that pairing
+# backwards silently returns nothing. Here the edge and the facts are both semantic,
+# so there is no boundary to get wrong.
+#
+# `?element a {{ROLE:element_class}}` is load-bearing, not a formality. arch:inView
+# has domain arch:ModelConcept, so a QualifiedRelationship drawn on the view carries
+# it too — the C4 fixture has three elements and one relationship pointing at one
+# view. Without this line the template would return the relationship as a fourth
+# "element" and disagree with core/view-contents, which reaches elements only through
+# archvis:archElement and never sees it. Use core/view-usage's inverse or a
+# relationship template to ask what arrows a view draws.
+#
+# Types are concatenated rather than given a row each, and STR() around ?type is
+# load-bearing for the same reason it is in core/view-contents: GROUP_CONCAT over
+# IRIs is a type error, and an erroring aggregate yields an unbound result rather
+# than failing, so every row would arrive with an empty types column while the row
+# count still looked right.
+#
+# Get VIEW_IRI from core/views rather than constructing it.
+#
+# Parameters: VIEW_IRI, LIMIT
+{{PREFIXES}}
+SELECT ?element ?label (GROUP_CONCAT(DISTINCT STR(?type); separator=", ") AS ?types) ?nativeId
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    VALUES ?view { {{VIEW_IRI}} }
+    ?element {{ROLE:in_view}} ?view ;
+             a {{ROLE:element_class}} ;
+             a ?type .
+    OPTIONAL { ?element {{PATH:label}} ?label }
+    OPTIONAL { ?element {{PATH:native_id}} ?nativeId }
+  {{GRAPH_CLOSE}}
+}
+GROUP BY ?element ?label ?nativeId
+ORDER BY ?label ?element
+LIMIT {{LIMIT}}

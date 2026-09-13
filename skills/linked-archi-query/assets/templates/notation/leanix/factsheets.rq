@@ -1,0 +1,34 @@
+# notation/leanix/factsheets - What is in the LeanIX inventory, and how complete?
+#
+# Answers: fact sheets with their type, status, completion ratio and lifecycle
+# phase.
+#
+# Does NOT prove: that a fact sheet describes a system that exists, nor that a high
+# completion ratio means the content is right. Completion measures how many fields
+# were filled, not whether they were filled correctly.
+#
+# A fact sheet is a RECORD ABOUT a thing, not the thing. Treating one as the
+# application it describes merges a register entry with its subject and inflates
+# every count downstream. That is why cross-source identity to a fact sheet should
+# be skos:exactMatch and never owl:sameAs - see core/identity-audit, and design
+# decision DD-11.
+#
+# Parameters: LIMIT
+{{PREFIXES}}
+SELECT ?factSheet ?label ?type ?status ?completion ?phase ?url
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    ?factSheet a lmm:FactSheet .
+    OPTIONAL { ?factSheet {{PATH:label}} ?label }
+    OPTIONAL { ?factSheet dct:type ?type }
+    OPTIONAL { ?factSheet lmm:factSheetStatus ?status }
+    OPTIONAL { ?factSheet lmm:completion ?completion }
+    OPTIONAL {
+      ?factSheet lmm:hasLifecyclePhase ?phaseNode .
+      OPTIONAL { ?phaseNode {{PATH:label}} ?phase }
+    }
+    OPTIONAL { ?factSheet schema:url ?url }
+  {{GRAPH_CLOSE}}
+}
+ORDER BY ?type ?label
+LIMIT {{LIMIT}}

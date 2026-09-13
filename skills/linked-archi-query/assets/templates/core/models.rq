@@ -1,0 +1,47 @@
+# core/models - Which models are loaded, and in which notation?
+#
+# Answers: every model resource, the metamodel it conforms to, its source file,
+# and when it was converted.
+#
+# Does NOT prove: that a model is current. A conversion timestamp says when the
+# RDF was produced, not when the architecture was last true.
+#
+# Run this with core/inventory during orientation. arch:modelConformsToMetamodel
+# is the reliable way to tell which notations a dataset contains - far more so
+# than inspecting element types, and more so than parsing IRIs, since the
+# notation segment is configurable per converter.
+#
+# The model resource is read through the `model` GRAPH ROLE rather than the
+# semantic one, because the converters moved it. At default pre-1.3 flags the
+# model is declared in the semantic graph and the profile binds `model` to that
+# same suffix; in the 1.3 layout it lives in `graph/model` and the profile binds it
+# there. Asking for the role instead of naming a graph is what lets this template
+# serve both generations unchanged - and the field report's "core/models returns 0
+# rows" was exactly this template reading the wrong graph.
+#
+# Its provenance lives in the provenance graph either way, so this reaches across
+# both. That is why ?source and ?generated are OPTIONAL: a model with no
+# provenance graph still appears, which is itself worth seeing.
+#
+# Each provenance field is its own OPTIONAL carrying its own triple pattern and its
+# own graph scope. Grouping them as OPTIONALs inside one GRAPH block reads better and
+# is a trap: a group of nothing but OPTIONALs matches any graph trivially, leaving
+# ?model unbound in that solution, which is compatible with every row and duplicates
+# the result once per provenance graph in the dataset. Every fixture graph happens to
+# carry a model-level triple, which is the only reason that shape survived here -
+# core/resolve-model hit it for real.
+#
+# Parameters: LIMIT
+{{PREFIXES}}
+SELECT ?model ?metamodel ?title ?source ?generated
+WHERE {
+  {{GRAPH_OPEN:model}}
+    ?model a {{ROLE:model_class}} .
+    OPTIONAL { ?model {{ROLE:conforms_to_metamodel}} ?metamodel }
+  {{GRAPH_CLOSE}}
+  OPTIONAL { {{GRAPH_OPEN:provenance}} ?model dct:title ?title {{GRAPH_CLOSE}} }
+  OPTIONAL { {{GRAPH_OPEN:provenance2}} ?model {{ROLE:source_file}} ?source {{GRAPH_CLOSE}} }
+  OPTIONAL { {{GRAPH_OPEN:provenance3}} ?model {{ROLE:generated_at}} ?generated {{GRAPH_CLOSE}} }
+}
+ORDER BY ?model
+LIMIT {{LIMIT}}

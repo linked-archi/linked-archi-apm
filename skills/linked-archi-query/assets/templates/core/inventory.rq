@@ -1,0 +1,26 @@
+# core/inventory - What is actually loaded?
+#
+# Answers: which named graphs are present, which types occur in each, and how
+# many distinct subjects carry each type.
+#
+# Does NOT prove: that the dataset is complete. A count far below expectation is
+# usually a partial export rather than a small enterprise.
+#
+# Run this first, every session. An empty graph and a graph with no matching
+# elements look identical from any later query, and only this one can tell them
+# apart.
+#
+# Deliberately unscoped - {{GRAPH_OPEN:any}} rather than :semantic - because
+# reporting which graphs exist is the job. A views graph is absent whenever the
+# source carried no diagrams, and that absence is a finding worth seeing here
+# rather than discovering three queries later.
+{{PREFIXES}}
+SELECT {{GRAPH_VAR:any}} ?type (COUNT(DISTINCT ?s) AS ?count)
+WHERE {
+  {{GRAPH_OPEN:any}}
+    ?s a ?type .
+  {{GRAPH_CLOSE}}
+}
+GROUP BY {{GRAPH_VAR:any}} ?type
+ORDER BY {{GRAPH_VAR:any}} DESC(?count)
+LIMIT {{LIMIT}}

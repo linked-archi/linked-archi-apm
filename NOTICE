@@ -1,0 +1,13 @@
+linked-archi-apm
+Copyright 2026 Kalin Maldzhanski
+
+Licensed under the Apache License, Version 2.0.
+
+The first APM package for the linked.archi approach: six Agent Skills for asking
+architecture questions of an RDF graph produced by the linked.archi converters.
+See PROPOSAL.md for the design record, the evidence each decision rests on, and
+the decision log.
+
+The vocabulary this package targets is published at https://meta.linked.archi/
+(the linked-archi-meta repository) and is licensed CC-BY-4.0. This package
+contains no copy of those ontologies; it binds to their namespace IRIs.

@@ -1,0 +1,62 @@
+# core/traceability - What connects these two kinds of thing?
+#
+# Answers: pairs of elements of SOURCE_TYPE and TARGET_TYPE joined by one or two
+# qualified relationships, with the relationship types on the path.
+#
+# Does NOT prove: that an unlisted pair is unconnected. It proves no path of one
+# or two hops of the modelled kinds exists. Deeper or differently-typed paths are
+# outside this query, and a missing link in the models is not a missing link in
+# the enterprise.
+#
+# The usual shape of "which applications support this business process" and
+# "which capabilities does this component realise". Use core/coverage-gaps for the
+# complementary question - which SOURCE_TYPE elements reach nothing at all - since
+# a LEFT JOIN here would report an unbound column that is easy to misread as a
+# denial.
+#
+# Both directions are followed, because cross-layer relationship direction is a
+# modelling convention that differs between notations and even between models.
+# ?direction says which way the path actually ran.
+#
+# Parameters: SOURCE_TYPE, TARGET_TYPE, LIMIT
+{{PREFIXES}}
+SELECT DISTINCT ?source ?sourceLabel ?direction ?hops ?target ?targetLabel ?relType
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    ?source a {{SOURCE_TYPE}} .
+    ?target a {{TARGET_TYPE}} .
+    {
+      ?rel a {{ROLE:relationship_class}} ;
+           {{ROLE:rel_source}} ?source ;
+           {{ROLE:rel_target}} ?target .
+      BIND("source-to-target" AS ?direction)
+      BIND(1 AS ?hops)
+    }
+    UNION
+    {
+      ?rel a {{ROLE:relationship_class}} ;
+           {{ROLE:rel_source}} ?target ;
+           {{ROLE:rel_target}} ?source .
+      BIND("target-to-source" AS ?direction)
+      BIND(1 AS ?hops)
+    }
+    UNION
+    {
+      ?rel a {{ROLE:relationship_class}} ;
+           {{ROLE:rel_source}} ?source ;
+           {{ROLE:rel_target}} ?mid .
+      ?rel2 a {{ROLE:relationship_class}} ;
+            {{ROLE:rel_source}} ?mid ;
+            {{ROLE:rel_target}} ?target .
+      FILTER(?mid != ?source && ?mid != ?target)
+      BIND("source-to-target" AS ?direction)
+      BIND(2 AS ?hops)
+    }
+    ?rel a ?relType .
+    FILTER(?relType != {{ROLE:relationship_class}} && ?relType != {{ROLE:concept_class}})
+    OPTIONAL { ?source {{PATH:label}} ?sourceLabel }
+    OPTIONAL { ?target {{PATH:label}} ?targetLabel }
+  {{GRAPH_CLOSE}}
+}
+ORDER BY ?hops ?sourceLabel ?targetLabel
+LIMIT {{LIMIT}}

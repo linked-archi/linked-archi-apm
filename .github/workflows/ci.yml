@@ -1,0 +1,81 @@
+# CI validates and archives the committed Agent Skills directly. There is no build step and
+# no install-time bundling: the committed tree is the artifact.
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Every Python the skills claim to support. All six SKILL.md files say "Python 3.11 or
+  # newer", so the floor and the current ceiling are both tested - those are the two that
+  # break, and testing only the middle would leave the claim unbacked.
+  test:
+    name: tests (python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.11', '3.12', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      # pyshacl belongs to the validate owner and pulls rdflib. Omitting it does not fail
+      # loudly - `la-validate doctor` reports MISSING and 35 tests skip - so CI would report
+      # green while never exercising SHACL at all. Install what a real install has.
+      - run: pip install --quiet PyYAML pyoxigraph pyshacl
+      - run: python --version && ps --version | head -1
+      - run: make check
+      - run: make verify
+      - run: make verify-curated
+
+  # The same suite in a slim container, which is not redundant. A hosted runner has `make`,
+  # `git` and `ps` preinstalled; a slim image has none of them, and that difference is
+  # load-bearing. The memory watchdog reads /proc/<pid>/statm and falls back to `ps`, so on a
+  # runner where `ps` always exists a fault in either reader can hide. This job is where a
+  # bound that quietly stops enforcing gets caught.
+  slim:
+    name: tests (slim container, no preinstalled tooling)
+    runs-on: ubuntu-latest
+    container: python:3.12-slim
+    steps:
+      - uses: actions/checkout@v4
+      - name: system packages
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq --no-install-recommends make git procps
+      - run: pip install --quiet PyYAML pyoxigraph pyshacl
+      - run: python --version && git --version && ps --version | head -1
+      - run: make check
+
+  package:
+    name: package
+    needs: [test, slim]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install --quiet PyYAML pyoxigraph pyshacl
+      - run: make dist
+      - run: ls -lh dist/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linked-archi-apm-${{ github.ref_name }}
+          path: dist/*.tar.gz
+          retention-days: 365
+          if-no-files-found: error

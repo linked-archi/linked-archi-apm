@@ -1,0 +1,36 @@
+# notation/c4/containers - What containers and components make up the C4 model?
+#
+# Answers: C4 elements with their type, technology where recorded, and the element
+# they sit inside.
+#
+# Does NOT prove: deployment. A C4 container is a runnable unit in the model's
+# terms, not an instance running anywhere; deployment nodes are separate.
+#
+# Nesting is read through both the C4 ontology's own containment predicates and the
+# generic arch:hasPart, because Structurizr nests deployment nodes arbitrarily deep
+# and the published C4 extension declares no parent property for that case, so the
+# converter falls back to the generic one. Querying only the specific predicate
+# misses the deep nesting; querying only the generic one misses the ordinary
+# container-in-system structure.
+#
+# Parameters: LIMIT
+{{PREFIXES}}
+SELECT ?element ?label ?type ?technology ?parent ?parentLabel
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    ?element a ?type .
+    FILTER(STRSTARTS(STR(?type), STR(c4:)) || STRSTARTS(STR(?type), STR(structurizr:)))
+    OPTIONAL { ?element {{PATH:label}} ?label }
+    OPTIONAL { ?element {{ROLE:keywords}} ?technology }
+    OPTIONAL {
+      { ?parent c4:hasContainer ?element }
+      UNION
+      { ?parent c4:hasComponent ?element }
+      UNION
+      { ?parent {{ROLE:has_part}} ?element }
+      OPTIONAL { ?parent {{PATH:label}} ?parentLabel }
+    }
+  {{GRAPH_CLOSE}}
+}
+ORDER BY ?parentLabel ?label ?element
+LIMIT {{LIMIT}}

@@ -1,0 +1,270 @@
+{
+  "schema_version": 1,
+  "_comment": [
+    "The routing table, as data. Authoritative for routing: which question reaches which",
+    "pattern, which templates it uses, what capability gates it, and when to stop.",
+    "",
+    "The prose in references/patterns/ is the depth behind each entry, and",
+    "references/analysis-patterns.md is the index a reader browses. Neither is generated -",
+    "this skill ships no runtime and cannot run a generator - so the suite tests them",
+    "against this file instead: every pattern here has a file that exists and appears in",
+    "the index, and every template named here is in the query catalogue. A pattern that",
+    "names a template nobody ships is a routing instruction to nowhere.",
+    "",
+    "`capabilities` lists what the pattern's templates need, so a planner can say 'this",
+    "dataset cannot answer that' before running anything. It is advisory here: the",
+    "authoritative gate is the query catalogue's own `requires`, checked at render time."
+  ],
+  "patterns": {
+    "impact-and-dependency": {
+      "title": "Impact and dependency",
+      "file": "references/patterns/impact-and-dependency.md",
+      "triggers": [
+        "retire",
+        "replace",
+        "migrate",
+        "decommission",
+        "affected by",
+        "depends on",
+        "dependency",
+        "blast radius",
+        "impact"
+      ],
+      "templates": [
+        "core/resolve-element",
+        "core/discover-relationship-types",
+        "core/neighbours-qualified",
+        "core/dependents-qualified",
+        "core/dependents-direct",
+        "core/provenance"
+      ],
+      "capabilities": {
+        "direct_rel_triples": "core/dependents-direct only"
+      },
+      "stop_when": [
+        "the relationship semantics on a path stop supporting the claim",
+        "reachability has been established but criticality has not - they are different questions",
+        "the next hop needs data the models do not carry, such as traffic or failure history"
+      ]
+    },
+    "traceability": {
+      "title": "Traceability",
+      "file": "references/patterns/traceability.md",
+      "triggers": [
+        "which capability",
+        "supports",
+        "realises",
+        "realizes",
+        "implements",
+        "serves",
+        "cross-layer",
+        "end to end",
+        "traceability",
+        "trace"
+      ],
+      "templates": [
+        "core/resolve-element",
+        "core/traceability",
+        "core/coverage-gaps"
+      ],
+      "capabilities": {},
+      "stop_when": [
+        "no cross-layer relationship type exists in this dataset, which is a finding",
+        "a missing link has been identified - report it separately from a negative assertion"
+      ]
+    },
+    "coverage-and-gaps": {
+      "title": "Coverage and gaps",
+      "file": "references/patterns/coverage-and-gaps.md",
+      "triggers": [
+        "uncovered",
+        "coverage",
+        "incomplete",
+        "gap",
+        "gaps",
+        "missing",
+        "no owner",
+        "without an owner",
+        "unowned",
+        "how many have"
+      ],
+      "templates": [
+        "core/inventory",
+        "core/elements-by-type",
+        "core/element-detail",
+        "core/coverage-gaps",
+        "core/orphans"
+      ],
+      "capabilities": {},
+      "stop_when": [
+        "the population is empty, which produces zero gaps and looks like perfect coverage",
+        "the gap concentrates in one model, which is a partial export rather than an ownership problem"
+      ]
+    },
+    "governance-and-decisions": {
+      "title": "Governance and decisions",
+      "file": "references/patterns/governance-and-decisions.md",
+      "triggers": [
+        "decision",
+        "principle",
+        "standard",
+        "policy",
+        "exception",
+        "constraint",
+        "approved",
+        "governance",
+        "compliant"
+      ],
+      "templates": [
+        "core/discover-predicates",
+        "core/element-detail",
+        "core/classified-by",
+        "core/provenance"
+      ],
+      "capabilities": {},
+      "stop_when": [
+        "no predicate in this dataset carries decisions or policies at all",
+        "the only status found describes the conversion rather than the architecture"
+      ]
+    },
+    "lifecycle-and-portfolio": {
+      "title": "Lifecycle and portfolio comparison",
+      "file": "references/patterns/lifecycle-and-portfolio.md",
+      "triggers": [
+        "duplicate",
+        "duplicates",
+        "overlap",
+        "rationalise",
+        "rationalize",
+        "lifecycle",
+        "deprecated",
+        "portfolio",
+        "strategic importance"
+      ],
+      "templates": [
+        "core/lifecycle",
+        "core/define-term",
+        "core/label-collisions",
+        "core/identity-audit",
+        "notation/leanix/factsheets"
+      ],
+      "capabilities": {
+        "element_lifecycle": "core/lifecycle only",
+        "identity_assertions": "core/identity-audit only"
+      },
+      "stop_when": [
+        "equivalence rests on labels alone - say the question is not answerable yet",
+        "lifecycle is absent for most of the population, so the listed subset is not a portfolio view"
+      ]
+    },
+    "cross-notation": {
+      "title": "Cross-notation questions",
+      "file": "references/patterns/cross-notation.md",
+      "triggers": [
+        "reconcile",
+        "same system",
+        "same thing",
+        "both tools",
+        "across tools",
+        "bpmn to archimate",
+        "backstage to c4",
+        "identity"
+      ],
+      "templates": [
+        "core/identity-audit",
+        "core/label-collisions",
+        "core/inventory-summary"
+      ],
+      "capabilities": {
+        "identity_assertions": "core/identity-audit only"
+      },
+      "stop_when": [
+        "identity-audit is refused, which means the dataset has no reconciliation and the join cannot be made",
+        "only label candidates remain - report them as candidates and stop"
+      ]
+    },
+    "views-and-documentation": {
+      "title": "Views and documentation",
+      "file": "references/patterns/views-and-documentation.md",
+      "triggers": [
+        "diagram",
+        "diagrams",
+        "drawn",
+        "documented",
+        "view",
+        "views",
+        "what is new in"
+      ],
+      "templates": [
+        "core/views",
+        "core/view-contents",
+        "core/view-usage",
+        "core/view-diff"
+      ],
+      "capabilities": {
+        "views_graph": "every template in this pattern"
+      },
+      "stop_when": [
+        "the notation carries no diagrams at all, which is always true of Backstage and LeanIX",
+        "a difference between diagrams has been found - it is not yet a difference in the architecture"
+      ]
+    },
+    "model-contents": {
+      "title": "What a model contains",
+      "file": "references/patterns/model-contents.md",
+      "triggers": [
+        "what is in",
+        "what does this model cover",
+        "take part",
+        "takes part",
+        "participate",
+        "who is involved",
+        "contents",
+        "components"
+      ],
+      "templates": [
+        "core/inventory-summary",
+        "core/resolve-model",
+        "core/define-term",
+        "notation/bpmn/process-components",
+        "notation/bpmn/process-flow",
+        "notation/c4/containers"
+      ],
+      "capabilities": {},
+      "stop_when": [
+        "the model is drawn at a level of detail that hides what was asked about",
+        "a participant has been listed - that is a drawn intent, not a running system"
+      ]
+    },
+    "model-quality": {
+      "title": "Model quality",
+      "file": "references/patterns/model-quality.md",
+      "triggers": [
+        "can we trust",
+        "trust",
+        "quality",
+        "complete",
+        "wrong with",
+        "orphan",
+        "orphans",
+        "conformance",
+        "conform"
+      ],
+      "templates": [
+        "core/inventory-summary",
+        "core/orphans",
+        "core/coverage-gaps",
+        "core/provenance",
+        "core/identity-audit",
+        "core/validation-summary"
+      ],
+      "capabilities": {
+        "validation_in_graph": "core/validation-summary only"
+      },
+      "stop_when": [
+        "the question turns out to be about conformance against shapes - hand it to linked-archi-validate",
+        "a verdict is available but its target-class coverage is not, which makes the verdict unreadable"
+      ]
+    }
+  }
+}

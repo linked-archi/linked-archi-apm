@@ -1,0 +1,7 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<title>Bind vocabulary to roles</title>
+<rect x="3" y="4.5" width="6" height="3.5" rx="1.75" fill="#FFD400"/>
+<rect x="3" y="10.25" width="6" height="3.5" rx="1.75" fill="#FFA43D"/>
+<rect x="3" y="16" width="6" height="3.5" rx="1.75" fill="#F75858"/>
+<path d="M11 6.25H20M11 12H17M11 17.75H20" stroke="#FFA43D" stroke-width="1.6" stroke-linecap="round"/>
+</svg>

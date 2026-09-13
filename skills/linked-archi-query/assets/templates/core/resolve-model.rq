@@ -1,0 +1,86 @@
+# core/resolve-model - Which model does this phrase refer to?
+#
+# Answers: candidate models whose title, name, native id, description, source
+# filename, status or metamodel matches TERM, with which field matched and how
+# closely.
+#
+# Does NOT prove: that the top-ranked model is the one meant, and never that the
+# model is current or authoritative. Rank measures string similarity, nothing else.
+#
+# core/resolve-element resolves a CONCEPT - an application, a task, a capability.
+# This resolves the MODEL that holds concepts. Different populations, and a phrase
+# can belong to either: "New Errata Ingestion" turned out to be a BPMN model rather
+# than an element, and searching concepts for it returns nothing while reading as
+# absence.
+#
+# The fields a model is findable by are spread across graphs - the model resource
+# and its metamodel are semantic, while title, description, source file and status
+# are provenance - so the match is unscoped and the model resource is what anchors
+# it. ?model is a model because the first block says so; nothing else is trusted.
+#
+# The model is read through the `model` GRAPH ROLE, not the semantic one, because that
+# is where arch:Model and its metamodel conformance live. A profile describing an older
+# dataset binds the role to `graph/semantic` instead and this template needs no edit -
+# which is the point of asking for a role rather than naming a graph.
+#
+# dct:title and dct:description are read directly rather than through a role for one
+# reason: core/models already reads dct:title directly, and two answers to "what is
+# a model called here" would be worse than either alone. The fields that genuinely
+# vary by dataset - label, native id, source file, status, metamodel - go through
+# roles.
+#
+# ?matched is numbered by how much a hit is worth, so a title match sorts above a
+# match inside a filename, and ?rank orders "1 exact", "2 prefix", "3 contains".
+# A plain string ORDER BY then puts the best candidate first, with no scoring
+# arithmetic anyone has to trust.
+#
+# ?status is projected on every row deliberately. A model still under development,
+# or one whose conversion did not complete, is exactly the candidate that needs to
+# be visible before an answer is built on it.
+#
+# The two projection OPTIONALs each carry their own triple pattern, and each opens
+# an independent graph scope. Both matter. A group of nothing but OPTIONALs matches
+# a graph trivially, leaving ?model unbound in that solution, which is compatible
+# with every row and multiplies the result once per provenance graph in the dataset -
+# measured, not theorised. Independent scopes then allow a store that keeps title and
+# status in different provenance graphs, without forcing them into the same one.
+#
+# Parameters: TERM, LIMIT
+{{PREFIXES}}
+SELECT ?rank ?matched ?value ?model ?title ?status ?metamodel
+WHERE {
+  {{GRAPH_OPEN:model}}
+    ?model a {{ROLE:model_class}} .
+    OPTIONAL { ?model {{ROLE:conforms_to_metamodel}} ?metamodel }
+  {{GRAPH_CLOSE}}
+  OPTIONAL { {{GRAPH_OPEN:provenance}} ?model dct:title ?title {{GRAPH_CLOSE}} }
+  OPTIONAL { {{GRAPH_OPEN:provenance2}} ?model {{ROLE:model_status}} ?status {{GRAPH_CLOSE}} }
+  {
+    {{GRAPH_OPEN:any}}
+      VALUES (?field ?matched) {
+        (dct:title                      "1 title")
+        ({{ROLE:label}}                 "2 name")
+        (dct:description                "4 description")
+        ({{ROLE:source_file}}           "5 source")
+        ({{ROLE:model_status}}          "6 status")
+        ({{ROLE:conforms_to_metamodel}} "7 notation")
+      }
+      ?model ?field ?value .
+    {{GRAPH_CLOSE}}
+  }
+  UNION
+  {
+    {{GRAPH_OPEN:any}}
+      ?model {{PATH:native_id}} ?value .
+      BIND("3 id" AS ?matched)
+    {{GRAPH_CLOSE}}
+  }
+  FILTER(CONTAINS(LCASE(STR(?value)), LCASE({{TERM}})))
+  BIND(
+    IF(LCASE(STR(?value)) = LCASE({{TERM}}), "1 exact",
+      IF(STRSTARTS(LCASE(STR(?value)), LCASE({{TERM}})), "2 prefix", "3 contains")
+    ) AS ?rank
+  )
+}
+ORDER BY ?rank ?matched ?model
+LIMIT {{LIMIT}}

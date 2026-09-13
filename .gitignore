@@ -1,0 +1,24 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.env
+
+# Regenerated converter output. Committed fixtures remain tracked.
+fixtures/generated/
+out/
+
+# Optional workspace-local source cache (default is ~/.cache/linked-archi/sources).
+.linked-archi-cache/
+
+# Distribution artifacts from make dist.
+dist/
+
+# Rendered queries and saved result envelopes from ad-hoc runs.
+*.rendered.rq
+*.results.json
+
+.DS_Store
+.idea/
+.vscode/

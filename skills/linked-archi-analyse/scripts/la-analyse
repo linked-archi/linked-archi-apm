@@ -1,0 +1,8 @@
+#!/usr/bin/env python3
+"""Executable owned by linked-archi-analyse."""
+import sys
+
+from linked_archi_analyse.cli import main
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,41 @@
+# core/view-usage - Which diagrams show this element?
+#
+# Answers: the views in which the focus element appears, via the view node that
+# references it.
+#
+# Does NOT prove: that an element absent from every diagram is unimportant, nor
+# that appearing on many diagrams makes it central. Diagram membership is an
+# editorial choice by whoever drew it.
+#
+# REQUIRES the views graph, which is emitted only when the source carried
+# diagrams. Backstage and LeanIX output has no views graph at all, so under a
+# profile where views_graph is partial this runs with a caveat: an empty result may
+# mean "this notation has no diagrams" rather than "this element is undrawn".
+#
+# The view resources themselves live in the SEMANTIC graph while the nodes that
+# place them live in the views graph, so this reaches across both. Getting that
+# backwards returns nothing.
+#
+# Nodes are matched on the view reference rather than the node class, because a
+# node is typed archvis:ArchNode only when it is backed by an element; layout-only
+# nodes are plain archvis:Node, and older converter output types every node that
+# way.
+#
+# Parameters: FOCUS_IRI, LIMIT
+{{PREFIXES}}
+SELECT DISTINCT ?view ?viewLabel ?node ?viewpoint
+WHERE {
+  {{GRAPH_OPEN:views}}
+    VALUES ?focus { {{FOCUS_IRI}} }
+    ?node {{ROLE:node_element}} ?focus ;
+          {{ROLE:view_ref}} ?view .
+  {{GRAPH_CLOSE}}
+  OPTIONAL {
+    {{GRAPH_OPEN:semantic}}
+      OPTIONAL { ?view {{PATH:label}} ?viewLabel }
+      OPTIONAL { ?view {{ROLE:conforms_to_viewpoint}} ?viewpoint }
+    {{GRAPH_CLOSE}}
+  }
+}
+ORDER BY ?viewLabel ?view
+LIMIT {{LIMIT}}

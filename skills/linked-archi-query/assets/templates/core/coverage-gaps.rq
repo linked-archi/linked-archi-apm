@@ -1,0 +1,28 @@
+# core/coverage-gaps - Which elements of this type lack an expected property?
+#
+# Answers: elements of RESOURCE_TYPE with no EXPECTED_PREDICATE asserted.
+#
+# Does NOT prove: that the real thing lacks the property. It proves nobody
+# recorded it. "No owner is modelled" and "this system has no owner" are different
+# statements, and reporting the second when you measured the first is the most
+# damaging mistake available here.
+#
+# Before reporting a gap, check three things. That RESOURCE_TYPE actually has
+# instances - a type with zero members produces zero gaps and looks like perfect
+# coverage. That the predicate spelling is right - use core/element-detail on one
+# element you know carries it. And which models are in scope, since a gap
+# concentrated in one model is usually a partial export, not an ownership problem.
+#
+# Parameters: RESOURCE_TYPE, EXPECTED_PREDICATE, LIMIT
+{{PREFIXES}}
+SELECT ?element ?label ?model
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    ?element a {{RESOURCE_TYPE}} .
+    FILTER NOT EXISTS { ?element {{EXPECTED_PREDICATE}} ?anyValue }
+    OPTIONAL { ?element {{PATH:label}} ?label }
+    OPTIONAL { ?element {{ROLE:part_of}} ?model }
+  {{GRAPH_CLOSE}}
+}
+ORDER BY ?model ?label ?element
+LIMIT {{LIMIT}}

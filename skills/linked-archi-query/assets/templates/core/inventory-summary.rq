@@ -1,0 +1,65 @@
+# core/inventory-summary - What is loaded, in one screen?
+#
+# Answers: per notation, how many models arrived, how many semantic graphs their
+# concepts occupy, and how many concepts they contain.
+#
+# Does NOT prove: completeness. A notation absent from this table is a notation
+# nothing in this dataset declares - which may mean it was never converted, or
+# that a merge dropped it. Only the publishing project's own manifest can tell
+# those apart, and linked-archi-connect reports that when it attaches.
+#
+# Run this instead of core/inventory during orientation on a large dataset.
+# core/inventory groups by graph AND type, so it returns graphs x types rows -
+# on an estate with 134 named graphs that runs into thousands, truncates, and
+# buries the signal it exists to provide. This rolls up to one row per notation,
+# which stays readable at any size. Reach for core/inventory once you know which
+# notation to look inside.
+#
+# arch:modelConformsToMetamodel is the reliable notation signal, far more so than
+# inspecting element types or parsing IRIs, since the notation segment of an IRI
+# is configurable per converter. A model that declares no metamodel appears with
+# an unbound notation rather than being dropped - unlabelled is a finding.
+#
+# THE MODEL IS READ THROUGH THE `model` GRAPH ROLE, and concepts are joined to it
+# through {{MEMBERSHIP}}. Both matter, and this template previously did neither:
+# it declared the model inside the semantic graph and counted concepts by
+# co-location, which is correct only for the pre-1.3 layout. On a 1.3 dataset
+# arch:Model lives in graph/model, so the whole query matched nothing and returned
+# ZERO ROWS - from the one template the skill tells you to run first, and whose
+# job is to tell an empty dataset apart from a dataset with no matches. Observed
+# on a 1.4M-quad estate where every notation was in fact present.
+#
+# Asking for the role and the membership mode instead of hardcoding either is what
+# lets this serve both generations. Under the pre-1.3 profile `model` is bound to
+# the semantic suffix and membership is co-location, so the rendered query is
+# equivalent to what it was before; under 1.3 it reads graph/model and joins on
+# the one-hop arch:inModel edge.
+#
+# Relationships are concepts too, so this count includes them;
+# core/discover-relationship-types breaks them out.
+#
+# Only one OPTIONAL joins concepts, deliberately. Adding a second independent
+# OPTIONAL - relationships alongside concepts - would multiply them into a
+# concepts x relationships intermediate per graph before aggregation.
+#
+# Parameters: LIMIT
+{{PREFIXES}}
+SELECT ?metamodel
+       (COUNT(DISTINCT ?model) AS ?models)
+       (COUNT(DISTINCT {{GRAPH_VAR:semantic}}) AS ?graphs)
+       (COUNT(DISTINCT ?concept) AS ?concepts)
+WHERE {
+  {{GRAPH_OPEN:model}}
+    ?model a {{ROLE:model_class}} .
+    OPTIONAL { ?model {{ROLE:conforms_to_metamodel}} ?metamodel }
+  {{GRAPH_CLOSE}}
+  OPTIONAL {
+    {{GRAPH_OPEN:semantic}}
+      ?concept a {{ROLE:concept_class}} .
+      {{MEMBERSHIP:concept}}
+    {{GRAPH_CLOSE}}
+  }
+}
+GROUP BY ?metamodel
+ORDER BY DESC(?concepts) ?metamodel
+LIMIT {{LIMIT}}

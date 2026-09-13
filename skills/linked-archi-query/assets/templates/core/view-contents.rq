@@ -1,0 +1,59 @@
+# core/view-contents - Which elements are placed on this diagram?
+#
+# Answers: the elements a view depicts, with label, native id and every type each
+# carries. The inverse of core/view-usage, which asks which diagrams show one
+# element.
+#
+# Does NOT prove: that the diagram is current, complete, or the authoritative
+# picture of anything. What a view contains is an editorial choice by whoever drew
+# it, so "not on the diagram" is not "not in the architecture" - and an element
+# placed on it may have been left behind by a change nobody redrew.
+#
+# REQUIRES the views graph, emitted only where the source carried diagrams.
+# Backstage and LeanIX output has no views graph at all, so under a profile where
+# views_graph is partial an empty result may mean "this notation has no diagrams"
+# rather than "this view is empty".
+#
+# The direction that catches people: the view resource lives in the SEMANTIC graph
+# while the nodes that place elements on it live in the VIEWS graph. This template
+# reaches across both, matching nodes by their view reference. Querying the view
+# and its nodes in one graph returns nothing, silently.
+#
+# Nodes are matched on the view reference rather than the node class, because a
+# node is typed archvis:ArchNode only when it is backed by an element; layout-only
+# nodes are plain archvis:Node, and older converter output types every node that
+# way. A node placing no element - a group box, a note - contributes no row here.
+#
+# Types are concatenated rather than given a row each. Elements are multi-typed, a
+# core class plus a notation class, so one row per type would triple the result and
+# read as three elements. To narrow to a single type instead, use
+# core/elements-by-type; to see what kinds of thing a diagram mixes, read the
+# types column.
+#
+# STR() around ?type is load-bearing, not tidying. GROUP_CONCAT over IRIs is a type
+# error, and an erroring aggregate yields an unbound result rather than a failure -
+# so without it every row arrives with an empty types column while the row count
+# still looks right.
+#
+# Get VIEW_IRI from core/views rather than constructing it.
+#
+# Parameters: VIEW_IRI, LIMIT
+{{PREFIXES}}
+SELECT ?element ?label (GROUP_CONCAT(DISTINCT STR(?type); separator=", ") AS ?types) ?nativeId
+WHERE {
+  {{GRAPH_OPEN:views}}
+    VALUES ?view { {{VIEW_IRI}} }
+    ?node {{ROLE:view_ref}} ?view ;
+          {{ROLE:node_element}} ?element .
+  {{GRAPH_CLOSE}}
+  OPTIONAL {
+    {{GRAPH_OPEN:semantic}}
+      ?element a ?type .
+      OPTIONAL { ?element {{PATH:label}} ?label }
+      OPTIONAL { ?element {{PATH:native_id}} ?nativeId }
+    {{GRAPH_CLOSE}}
+  }
+}
+GROUP BY ?element ?label ?nativeId
+ORDER BY ?label ?element
+LIMIT {{LIMIT}}

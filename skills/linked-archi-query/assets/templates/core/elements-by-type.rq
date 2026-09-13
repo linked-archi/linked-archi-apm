@@ -1,0 +1,27 @@
+# core/elements-by-type - List the elements of one type.
+#
+# Answers: elements carrying the given rdf:type, with label, native id and the
+# model they belong to.
+#
+# Does NOT prove: that the type is the only one an element has. Elements are
+# multi-typed - a core class plus a notation class - so an application component
+# is also arch:Element and arch:ModelConcept.
+#
+# Get TYPE_IRI from core/inventory rather than assuming it. Guessing a class IRI
+# is the most common way to get a confidently empty result, because the notation
+# ontologies are versioned in the namespace (archimate3 and archimate4 are
+# different IRIs for the same concept name).
+#
+# Parameters: TYPE_IRI, LIMIT
+{{PREFIXES}}
+SELECT ?element ?label ?nativeId ?model
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    ?element a {{TYPE_IRI}} .
+    OPTIONAL { ?element {{ROLE:label}} ?label }
+    OPTIONAL { ?element {{PATH:native_id}} ?nativeId }
+    OPTIONAL { ?element {{ROLE:part_of}} ?model }
+  {{GRAPH_CLOSE}}
+}
+ORDER BY ?label ?element
+LIMIT {{LIMIT}}
