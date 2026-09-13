@@ -33,6 +33,7 @@ import yaml
 from support import ROOT
 
 MANIFEST = ROOT / "apm.yml"
+CHANGELOG = ROOT / "CHANGELOG.md"
 
 #: Normative OpenAPM v0.1, pinned deliberately rather than tracking the working draft.
 #: An unknown schema identity fails closed in a consumer, which is the safe direction.
@@ -191,6 +192,63 @@ class TestDependencies(ManifestTestCase):
     def test_no_apm_dependencies(self):
         """The six skills depend on each other, and on nothing outside this package."""
         self.assertEqual(self.manifest["dependencies"]["apm"], [])
+
+
+class TestChangelog(ManifestTestCase):
+    """The release body is read from CHANGELOG.md, so the two files have to agree.
+
+    `make release-notes` extracts the section for the manifest version and the release
+    workflow publishes exactly that. A version bumped in `apm.yml` with no section written
+    for it fails the release - and that failure is worth having here instead, where it
+    costs a test run rather than a tag that has already been pushed and fetched.
+    """
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.changelog = CHANGELOG.read_text(encoding="utf-8")
+
+    def test_the_manifest_version_has_a_section(self):
+        heading = f"## [{self.manifest['version']}]"
+        self.assertIn(
+            heading,
+            self.changelog,
+            f"CHANGELOG.md has no {heading} section for the declared version",
+        )
+
+    def test_that_section_says_something(self):
+        """An empty section passes a substring check and publishes a blank release."""
+        version = self.manifest["version"]
+        after = self.changelog.split(f"## [{version}]", 1)[1]
+        # Same three stops the Makefile extractor uses: the next release heading, a link
+        # reference definition, or end of file.
+        body = re.split(r"^(?:## \[|\[[^\]]+\]: )", after, maxsplit=1, flags=re.M)[0]
+        # Drop the rest of the heading line, which carries only the date.
+        body = body.split("\n", 1)[1] if "\n" in body else ""
+        self.assertTrue(body.strip(), f"the {version} section is empty")
+
+    def test_the_version_is_linked(self):
+        """Keep a Changelog's link definitions, so a reader can reach the release."""
+        self.assertIn(f"[{self.manifest['version']}]: https://", self.changelog)
+
+    def test_every_root_document_ships_including_this_one(self):
+        """`make dist` copies a hand-written list, so a new document is opt-in.
+
+        A changelog a consumer cannot read after installing is a changelog for us only,
+        and the same is true of every other root document. Asserting the whole set rather
+        than just CHANGELOG.md means the next document added at the root is caught too -
+        the mistake is forgetting the list exists, not forgetting one file.
+        """
+        recipe = re.search(r"@for item in (.*?); do",
+                           (ROOT / "Makefile").read_text(encoding="utf-8"), re.S)
+        self.assertIsNotNone(recipe, "the dist copy list moved; this test cannot see it")
+        # Line continuations and indentation are noise between the item names.
+        shipped = set(recipe.group(1).replace("\\", " ").split())
+        at_root = {path.name for path in ROOT.glob("*.md")}
+        self.assertEqual(
+            at_root - shipped, set(), "root documents missing from the dist copy list"
+        )
+        self.assertIn("CHANGELOG.md", shipped)
 
 
 class TestScripts(ManifestTestCase):

@@ -79,3 +79,49 @@ jobs:
           path: dist/*.tar.gz
           retention-days: 365
           if-no-files-found: error
+
+  # Tags only. The tag itself is what `apm install ...#v0.1.0` resolves, so this job is not
+  # on the critical path for the documented install route - a consumer is served by the
+  # commit the tag points at, whether or not a release exists. It exists because the
+  # artifact above is a build receipt rather than a distribution: downloading one needs a
+  # login, it has no stable URL, and it expires. A release asset has none of those limits,
+  # and the notes give the "what changed" that a bare tag cannot.
+  release:
+    name: release
+    needs: [package]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    # Raised for this job alone; every other job in this file stays read-only. Publishing
+    # is the only step here that needs to write, so it is the only scope that gets to.
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      # A tag that disagrees with the manifest would publish a release named after one
+      # version carrying the notes and tarball of another. Cheaper to refuse than to
+      # retract, since a fetched tag cannot be recalled.
+      - name: tag agrees with the manifest version
+        run: |
+          declared="v$(make -s version)"
+          if [ "$declared" != "${{ github.ref_name }}" ]; then
+            echo "REFUSED: tag ${{ github.ref_name }} but apm.yml declares $declared" >&2
+            exit 1
+          fi
+          echo "  $declared"
+      # The same command a maintainer runs before tagging, so what CI publishes is what
+      # they already read. A missing CHANGELOG section fails here rather than shipping an
+      # empty release body.
+      - run: make -s release-notes | tee release-notes.md
+      - uses: actions/download-artifact@v4
+        with:
+          name: linked-archi-apm-${{ github.ref_name }}
+          path: dist
+      # --verify-tag refuses to invent a tag if the ref ever disappears underneath us.
+      - name: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" dist/*.tar.gz \
+            --title "${{ github.ref_name }}" \
+            --notes-file release-notes.md \
+            --verify-tag

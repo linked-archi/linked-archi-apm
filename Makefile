@@ -13,7 +13,8 @@ SKILLS_DIR ?= $(HOME)/.kiro/skills
 BIN_DIR ?= $(HOME)/.local/bin
 
 .PHONY: help check test test-quiet catalog profile verify verify-curated fixtures \
-        skills install-local uninstall-local link-cli unlink-cli dist release-check clean
+        skills install-local uninstall-local link-cli unlink-cli dist version \
+        release-notes release-check clean
 
 help:
 	@echo "check          validate skills and run the tests"
@@ -21,7 +22,9 @@ help:
 	@echo "test-quiet     run the test suite (summary only)"
 	@echo "skills         validate SKILL.md frontmatter"
 	@echo "dist           archive the committed package directly"
-	@echo "release-check  clean-tree and test preflight before tagging"
+	@echo "version        print the manifest version"
+	@echo "release-notes  print the CHANGELOG section for that version"
+	@echo "release-check  clean-tree, notes and test preflight before tagging"
 	@echo "install-local  symlink committed skill directories into SKILLS_DIR"
 	@echo "uninstall-local remove those symlinks"
 	@echo "link-cli       symlink the repository la-kg dispatcher into BIN_DIR"
@@ -111,7 +114,7 @@ VERSION ?= $(shell $(PY) -c "import re,pathlib;m=re.search(r'^version:\s*(\S+)',
 
 dist: check
 	@rm -rf dist/linked-archi-apm && mkdir -p dist/linked-archi-apm
-	@for item in apm.yml LICENSE NOTICE README.md USAGE.md ADAPTING.md \
+	@for item in apm.yml LICENSE NOTICE README.md USAGE.md ADAPTING.md CHANGELOG.md \
 	             CONTRIBUTING.md SECURITY.md PROPOSAL.md Makefile bin fixtures tests skills; do \
 	  COPYFILE_DISABLE=1 cp -R "$$item" dist/linked-archi-apm/; \
 	done
@@ -121,6 +124,35 @@ dist: check
 	@rm -rf dist/linked-archi-apm
 	@echo "  dist/linked-archi-apm-$(VERSION).tar.gz"
 
+# Prints the version alone, for a caller that needs to compare it with something. CI uses
+# it to refuse a tag that disagrees with the manifest.
+version:
+	@echo "$(VERSION)"
+
+# The CHANGELOG section for VERSION, which is what the release workflow publishes.
+#
+# An absent section is an error rather than an empty release body. A release nobody
+# wrote notes for is a release nobody can read, and the failure has to land here - before
+# the tag - rather than in a published artifact.
+# Three stops, not one. The next `## [` ends the section; a link-reference definition
+# (`[0.1.0]: https://...`) ends it too, because the oldest section is followed by the
+# footer rather than by another heading and those definitions would otherwise be
+# published as the tail of the release body. Then leading and trailing blank lines are
+# trimmed, so the body starts at the first word.
+release-notes:
+	@notes=$$(awk -v v="$(VERSION)" \
+	  '$$0 ~ "^## \\[" v "\\]" {found=1; next} \
+	   found && (/^## \[/ || /^\[[^]]+\]: /) {exit} \
+	   found {print}' CHANGELOG.md \
+	  | sed -e '/./,$$!d' \
+	  | awk 'NF{last=NR} {line[NR]=$$0} END{for(i=1;i<=last;i++) print line[i]}'); \
+	if [ -z "$$(printf '%s' "$$notes" | tr -d '[:space:]')" ]; then \
+	  echo "REFUSED: CHANGELOG.md has no section for $(VERSION)." >&2; \
+	  echo "  Add '## [$(VERSION)] - YYYY-MM-DD' with what changed, then retry." >&2; \
+	  exit 1; \
+	fi; \
+	printf '%s\n' "$$notes"
+
 release-check: check
 	@printf '\n'
 	@if [ -n "$$(git status --porcelain)" ]; then \
@@ -129,7 +161,15 @@ release-check: check
 	fi
 	@echo "  working tree clean"
 	@echo "  version: $(VERSION)"
-	@echo "Ready: make dist && git tag v$(VERSION) && git push --tags"
+	@$(MAKE) --no-print-directory release-notes >/dev/null
+	@echo "  release notes: $$($(MAKE) --no-print-directory release-notes | wc -l | tr -d ' ') lines from CHANGELOG.md"
+	@printf 'Ready:\n'
+	@printf '  make dist\n'
+	@printf '  git tag -a v$(VERSION) -m "v$(VERSION)"\n'
+	@printf '  git push origin v$(VERSION)\n'
+	@printf '\nThe tag must be annotated: APM refuses a lightweight tag when it refreshes a\n'
+	@printf 'full-SHA revision pin, so a lightweight v$(VERSION) installs but never offers itself\n'
+	@printf 'as an upgrade. Pushing it runs CI and publishes the GitHub release.\n'
 
 clean:
 	find . -name __pycache__ -type d -prune -exec rm -rf {} +
