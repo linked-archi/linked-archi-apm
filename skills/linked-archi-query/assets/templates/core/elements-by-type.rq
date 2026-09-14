@@ -12,6 +12,12 @@
 # ontologies are versioned in the namespace (archimate3 and archimate4 are
 # different IRIs for the same concept name).
 #
+# The model comes from {{MEMBERSHIP:element}}, so it follows whatever the profile
+# says membership is. This hardcoded a single dct:isPartOf hop, which is the folder
+# edge rather than model membership: BPMN's folder chain reaches the model in one
+# hop, C4's stops at folder/Elements, so the column was populated for some notations
+# and empty for others with nothing marking the difference.
+#
 # Parameters: TYPE_IRI, LIMIT
 {{PREFIXES}}
 SELECT ?element ?label ?nativeId ?model
@@ -20,7 +26,7 @@ WHERE {
     ?element a {{TYPE_IRI}} .
     OPTIONAL { ?element {{ROLE:label}} ?label }
     OPTIONAL { ?element {{PATH:native_id}} ?nativeId }
-    OPTIONAL { ?element {{ROLE:part_of}} ?model }
+    OPTIONAL { {{MEMBERSHIP:element}} }
   {{GRAPH_CLOSE}}
 }
 ORDER BY ?label ?element

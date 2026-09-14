@@ -27,6 +27,19 @@ workflow publishes exactly this text, so what is written here is what a consumer
   for custom profiles rather than altering current results.
 
 ### Fixed
+- **The `?model` column now comes from the profile's membership, not a hardcoded folder
+  hop.** `core/coverage-gaps`, `core/elements-by-type`, `core/lifecycle`, `core/orphans`
+  and `core/views` resolved it with a single `dct:isPartOf` step, which is the folder edge
+  rather than model membership: Appendix A7 records that the folder chain reaches the
+  model for BPMN and stops at `folder/Elements` for C4. Because the lookup is `OPTIONAL`
+  the mismatch never raised — the column just arrived unbound. Measured on
+  `fixtures/augmented.trig` before the change: 0 of 2 C4 containers, 0 of 1 BPMN user
+  task, 0 of 10 lifecycle rows and 2 of 5 orphans named a model; now all of them do.
+  These templates declare `requires.membership`, so a profile that cannot express
+  membership is refused with the reason rather than answering with an empty column.
+- **`core/views` no longer promises an unbound node count.** `COUNT` over an unmatched
+  `OPTIONAL` is 0 by definition, so the documented null was a check a consumer could
+  write and never see fire.
 - **`core/orphans` tests for relationships across every semantic graph, and reports each
   element once.** The absence test ran inside the element's own graph, so under the
   partitioned 1.3 layout it asked whether a relationship sat in the same converter input

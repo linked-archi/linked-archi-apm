@@ -55,9 +55,9 @@
       },
       "requires": {
         "roles": [
-          "label",
-          "part_of"
-        ]
+          "label"
+        ],
+        "membership": true
       }
     },
     "core/define-term": {
@@ -272,12 +272,12 @@
       "requires": {
         "roles": [
           "label",
-          "native_id",
-          "part_of"
+          "native_id"
         ],
         "graph_roles": [
           "semantic"
-        ]
+        ],
+        "membership": true
       },
       "alternatives": [
         "core/inventory"
@@ -456,15 +456,15 @@
       "requires": {
         "roles": [
           "element_lifecycle",
-          "label",
-          "part_of"
+          "label"
         ],
         "graph_roles": [
           "semantic"
         ],
         "capabilities": {
           "element_lifecycle": true
-        }
+        },
+        "membership": true
       },
       "alternatives": [
         "notation/backstage/ownership",
@@ -591,12 +591,12 @@
           "rel_source",
           "rel_target",
           "concept_class",
-          "label",
-          "part_of"
+          "label"
         ],
         "graph_roles": [
           "semantic"
-        ]
+        ],
+        "membership": true
       }
     },
     "core/provenance": {
@@ -1073,13 +1073,13 @@
           "view_class",
           "view_ref",
           "conforms_to_viewpoint",
-          "label",
-          "part_of"
+          "label"
         ],
         "graph_roles": [
           "semantic",
           "views"
-        ]
+        ],
+        "membership": true
       }
     },
     "notation/archimate/layer-crossing": {

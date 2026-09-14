@@ -38,12 +38,25 @@
 # DISTINCT because a type assertion repeated in more than one graph is one resource,
 # not two, and a duplicated row inflates a count that reads as a population.
 #
+# The model comes from {{MEMBERSHIP:element}}, and it is the ONE thing here that stays
+# inside the resource's own scope rather than spanning the dataset. That is not an
+# inconsistency: under `same-graph-colocation` the pattern is "?model is a model", which
+# only means "this resource's model" when it is evaluated in the resource's own graph.
+# Rendered in a dataset-wide scope it would match every model in the store and name the
+# wrong one - the failure that mode's documentation warns about.
+#
+# Read the column with the type you asked about in mind. RESOURCE_TYPE is caller-chosen
+# and need not be a model concept: ask about arch:Model itself and membership is
+# meaningless, so under the direct-predicate mode the column is simply unbound, which is
+# the right answer to "which model does this model belong to".
+#
 # Parameters: RESOURCE_TYPE, EXPECTED_PREDICATE, LIMIT
 {{PREFIXES}}
 SELECT DISTINCT ?element ?label ?model
 WHERE {
   {{GRAPH_OPEN:any}}
     ?element a {{RESOURCE_TYPE}} .
+    OPTIONAL { {{MEMBERSHIP:element}} }
   {{GRAPH_CLOSE}}
   FILTER NOT EXISTS {
     {{GRAPH_OPEN:any2}}
@@ -53,11 +66,6 @@ WHERE {
   OPTIONAL {
     {{GRAPH_OPEN:any3}}
       ?element {{PATH:label}} ?label .
-    {{GRAPH_CLOSE}}
-  }
-  OPTIONAL {
-    {{GRAPH_OPEN:any4}}
-      ?element {{ROLE:part_of}} ?model .
     {{GRAPH_CLOSE}}
   }
 }

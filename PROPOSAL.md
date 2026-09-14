@@ -1012,10 +1012,25 @@ change what the package promises, so each needs a decision-log entry when taken.
    resolvability, base-IRI fit, or whether the configured membership mode returns
    anything — the four checks that would have caught B1. A warning-only run still leaves a
    marker that reads as semantic verification.
-5. **Model membership is bypassed where it is meant.** `{{MEMBERSHIP}}` exists;
-   `core/elements-by-type`, `core/lifecycle`, `core/orphans`, `core/views` and
-   `core/coverage-gaps` reach for `dct:isPartOf` directly, which **A7** records as
-   reaching the model for some notations and stopping short for others.
+5. ~~**Model membership is bypassed where it is meant.**~~ **Done.** All five templates
+   now resolve `?model` through `{{MEMBERSHIP}}` and declare `requires.membership`. The
+   hardcoded `dct:isPartOf` hop was the folder edge, which **A7** records as reaching the
+   model for BPMN and stopping at `folder/Elements` for C4 — and since the lookup is
+   `OPTIONAL`, the mismatch never raised. Measured on `fixtures/augmented.trig`
+   beforehand: 0 of 2 C4 containers, 0 of 1 BPMN user task, 0 of 10 lifecycle rows and
+   2 of 5 orphans named a model. The regression test asserts the invariant that holds
+   under all three membership modes rather than any one mode's pattern: whatever lands in
+   the column is an `arch:Model`.
+
+   The scope question this raised is worth recording, because it looked like an
+   inconsistency and is not. Membership renders **inside the scope that discovered the
+   subject**, even in `core/coverage-gaps` where everything else is dataset-wide: under
+   `same-graph-colocation` the pattern is "?model is a model", which only means "this
+   subject's model" when evaluated in the subject's own graph. Rendered dataset-wide it
+   would match every model in the store — the failure that mode's own documentation
+   warns about. `core/coverage-gaps` is also the one template whose subject type is
+   caller-chosen and may itself be a model, for which membership is meaningless and an
+   unbound column is the correct answer; its test therefore excludes that column.
 6. ~~**Negative tests and cross-role scope.**~~ **Done for `core/coverage-gaps`.** It
    scoped both the type search and the absence test to the semantic graph, and each was
    wrong in the opposite direction. `arch:Model` has lived in `graph/model` since the 1.3
@@ -1069,8 +1084,9 @@ change what the package promises, so each needs a decision-log entry when taken.
     3-minute wall clock or a 3.6 GB ceiling on an aggregate export. Correctness came first
     here (B3 adds branches); the structural work needs a large synthetic fixture and a
     time budget in CI, neither of which exists yet.
-11. **Smaller, verified:** `core/views` documents unbound node counts where `COUNT`
-    returns `0`; `core/label-collisions` normalises ASCII only, so non-Latin labels are
+11. **Smaller, verified:** ~~`core/views` documents unbound node counts where `COUNT`
+    returns `0`~~ (done, alongside item 5, since it was the same file);
+    `core/label-collisions` normalises ASCII only, so non-Latin labels are
     compared unnormalised; `core/view-diff` compares element sets and loses repeated
     placements of one element; the BPMN component whitelist is hand-maintained against an
     ontology that can grow; and `README.md` says 36 tested templates where the catalogue

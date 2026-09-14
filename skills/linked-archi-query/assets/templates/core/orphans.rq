@@ -39,6 +39,12 @@
 # without it every row arrives with an empty types column while the count still looks
 # right.
 #
+# The model comes from {{MEMBERSHIP:element}}, inside the element's own scope because
+# co-location is a statement about that scope. It hardcoded a dct:isPartOf hop, which
+# is the folder edge rather than model membership, so the "concentrated in one model"
+# reading this template recommends was unavailable for whichever notations do not
+# carry a one-hop folder chain to the model.
+#
 # Parameters: LIMIT
 {{PREFIXES}}
 SELECT ?element ?label (GROUP_CONCAT(DISTINCT STR(?type); separator=", ") AS ?types) ?model
@@ -50,7 +56,7 @@ WHERE {
       ?element a ?type .
       FILTER(?type != {{ROLE:element_class}} && ?type != {{ROLE:concept_class}})
     }
-    OPTIONAL { ?element {{ROLE:part_of}} ?model }
+    OPTIONAL { {{MEMBERSHIP:element}} }
   {{GRAPH_CLOSE}}
   FILTER NOT EXISTS {
     {{GRAPH_OPEN:semantic2}}

@@ -26,6 +26,7 @@ BPMN_TASK = support.BPMN_TASK
 CORE = support.CORE
 SKOS = support.SKOS
 BPMN = "https://meta.linked.archi/bpmn/onto#"
+C4 = "https://meta.linked.archi/c4/onto#"
 LEANIX = "https://meta.linked.archi/leanix/onto#"
 
 #: template -> (parameters, minimum rows against fixtures/augmented.trig)
@@ -198,6 +199,48 @@ class TestAgainstAugmentedFixture(unittest.TestCase):
             self.assertEqual(row["direction"], "source-to-mid, mid-to-target")
             self.assertEqual(row["relType"], f"{BPMN}SequenceFlow")
             self.assertEqual(row["relType2"], f"{BPMN}SequenceFlow")
+
+    def test_the_model_column_names_a_model(self):
+        """`dct:isPartOf` is the folder edge. Model membership is a different edge.
+
+        Five templates hardcoded a single `dct:isPartOf` hop for their `?model` column.
+        Appendix A7 records why that cannot work uniformly: the folder chain reaches the
+        model for BPMN and stops at `folder/Elements` for C4. Because the lookup is
+        OPTIONAL the mismatch never raised - the column simply arrived unbound. Measured
+        on this fixture before the change: 0 of 2 C4 containers, 0 of 1 BPMN user task,
+        0 of 10 lifecycle rows and 2 of 5 orphans named a model.
+
+        Through {{MEMBERSHIP}} the profile decides how membership is expressed, so this
+        asserts the invariant that survives any of the three modes: whatever lands in
+        the column is a model. core/coverage-gaps is excluded on purpose - its
+        RESOURCE_TYPE is caller-chosen and may itself be a model, for which membership
+        is meaningless and unbound is the right answer.
+        """
+        models = {
+            row["m"] for row in self.adapter.execute(
+                f"SELECT ?m WHERE {{ GRAPH ?g {{ ?m a <{CORE}Model> }} }}").rows
+        }
+        self.assertTrue(models, "the fixture must contain models at all")
+        cases = (
+            ("core/elements-by-type", {"TYPE_IRI": f"{C4}Container"}),
+            ("core/elements-by-type", {"TYPE_IRI": f"{BPMN}UserTask"}),
+            ("core/orphans", {}),
+            ("core/views", {}),
+            ("core/lifecycle", {}),
+        )
+        for name, params in cases:
+            with self.subTest(f"{name} {sorted(params.values())}"):
+                rendered = render(name, self.profile, params, catalog=self.catalog)
+                envelope = self.adapter.execute(
+                    rendered.query, template=name, profile_id=self.profile.name,
+                    profile_version=self.profile.profile_version, limit=200,
+                )
+                self.assertTrue(envelope.rows, f"{name} returned nothing to check")
+                for row in envelope.rows:
+                    self.assertIn(
+                        row["model"], models,
+                        f"{name} put a non-model in the model column: {row['model']!r}",
+                    )
 
     def test_orphans_reports_each_element_once_with_its_types(self):
         """One row per element, and the types column actually populated.

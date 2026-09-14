@@ -8,8 +8,16 @@
 #
 # Node counts come from the views graph and are OPTIONAL, so a view whose geometry
 # was dropped - the converters can emit a no-views or no-geometry profile - still
-# appears with an unbound count. That is the honest rendering: the view exists, its
-# contents were not published.
+# appears. Its count is 0, NOT unbound: COUNT over an unmatched OPTIONAL is zero by
+# definition, and this header used to promise an unbound column, which is a promise a
+# consumer can write a null check against and never see fire. Read 0 as "no nodes were
+# published for this view", which is not the same as "this diagram is empty" - and
+# core/inventory-summary will say whether the dataset has a views graph at all.
+#
+# The model comes from {{MEMBERSHIP:view}}. A view is an arch:ModelConcept like any
+# other, so membership applies to it unchanged; the previous hardcoded dct:isPartOf
+# was the folder edge, which reaches the model for some notations and stops short for
+# others.
 #
 # Parameters: LIMIT
 {{PREFIXES}}
@@ -19,7 +27,7 @@ WHERE {
     ?view a {{ROLE:view_class}} .
     OPTIONAL { ?view {{PATH:label}} ?viewLabel }
     OPTIONAL { ?view {{ROLE:conforms_to_viewpoint}} ?viewpoint }
-    OPTIONAL { ?view {{ROLE:part_of}} ?model }
+    OPTIONAL { {{MEMBERSHIP:view}} }
   {{GRAPH_CLOSE}}
   OPTIONAL {
     {{GRAPH_OPEN:views}}

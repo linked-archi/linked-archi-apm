@@ -16,6 +16,12 @@
 # which describes the conversion, not the architecture. "Completed" there means the
 # converter finished.
 #
+# The model comes from {{MEMBERSHIP:element}} rather than a hardcoded dct:isPartOf
+# hop, which was the folder edge rather than model membership and so reached the
+# model for some notations only. It matters more here than elsewhere: lifecycle is
+# notation-specific, so this template's rows are concentrated in exactly the
+# notations whose folder chain differs.
+#
 # Parameters: LIMIT
 {{PREFIXES}}
 SELECT ?element ?label ?statusPredicate ?status ?model
@@ -24,7 +30,7 @@ WHERE {
     VALUES ?statusPredicate { {{ROLES:element_lifecycle}} }
     ?element ?statusPredicate ?status .
     OPTIONAL { ?element {{PATH:label}} ?label }
-    OPTIONAL { ?element {{ROLE:part_of}} ?model }
+    OPTIONAL { {{MEMBERSHIP:element}} }
   {{GRAPH_CLOSE}}
 }
 ORDER BY ?status ?label ?element
