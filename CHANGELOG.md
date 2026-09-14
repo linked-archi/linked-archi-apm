@@ -9,6 +9,21 @@ A section here is not optional at release time: `make release-notes` reads it, a
 workflow publishes exactly this text, so what is written here is what a consumer reads.
 
 ## [Unreleased]
+
+## [0.2.0] - 2026-09-14
+An audit of the bundled profiles and the whole template catalogue against the published
+ontologies, the converter emitters and a large multi-notation export. Every fix below is a
+case where a query answered confidently and wrongly rather than failing — an empty column,
+an inflated count, a silent zero — because that is the failure mode this package exists to
+remove, and it had instances of its own. `PROPOSAL.md` Appendix B records the method, what
+was corrected, what was investigated and found already correct, and what remains open.
+
+**Result columns changed**, so a consumer reading them by name needs a look: `core/orphans`
+`?type`→`?types`, `core/models` `?source`→`?sources` (now a count), `core/reifies-audit`
+`?relType`→`?relTypes`, `notation/leanix/factsheets` `?phase`→`?phases`,
+`core/discover-predicates` `?objectKind`/`?example`→`?objectKinds`/`?exampleObject`,
+`core/resolve-element` `?g`→`?g_semantic`, and `core/traceability` gains `?relType2`.
+
 ### Added
 - **A test refuses to let a non-public host reach a commit.** Auditing this package against
   a real estate produces IRIs, model names, digests and a private host — all useful, none
@@ -172,5 +187,6 @@ converters against the meta.linked.archi ontologies.
   for SHACL validation, and `git` for Git acquisition. Endpoint and HTTPS transport use
   the standard library. No mandatory MCP server.
 
-[Unreleased]: https://github.com/linked-archi/linked-archi-apm/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/linked-archi/linked-archi-apm/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/linked-archi/linked-archi-apm/releases/tag/v0.1.0
