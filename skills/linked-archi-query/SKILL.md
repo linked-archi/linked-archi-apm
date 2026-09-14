@@ -185,12 +185,26 @@ python3 scripts/la-query query render core/coverage-gaps --profile acme \
 Parameters are typed and escaped. An IRI is accepted with or without angle brackets,
 and a relative IRI is refused.
 
+**Do not pipe a result through `jq` to get a column.** The default output is already
+tab-separated rows, so `cut -f2` works and the parse step is not needed:
+
+| | |
+|---|---|
+| `--format tsv` | Default. A header line, then one line per row. The row count, caveats and citation follow as `#` comment lines, so `grep -v '^#'` leaves the header and the rows and nothing else. Tabs and newlines inside a value are escaped, so a literal cannot invent a column. |
+| `--format md` | An aligned markdown table. Costs about a third more for the same rows, which buys readability for a person. |
+| `--format json` | The full envelope. Use it when the *metadata* is what you need — `query_id`, `truncated`, `warnings` — or when writing an evidence step. `--json` is the same thing. |
+
+All three carry identical values: the adapters flatten every RDF term to its lexical
+form, so none of them is a W3C SPARQL results document and `json` is not richer, only
+more verbose. `-o FILE` always writes the envelope whatever `--format` says, because an
+artifact is a record that `query batch` and the analyse bundler read back.
+
 **Two different things are called a limit, and only one of them bounds the query.**
 
 | | |
 |---|---|
 | `--set LIMIT=N` | The query's own cap. It is what `LIMIT` in the SPARQL becomes, what decides whether a result is `truncated`, and the only one that bounds the work. |
-| `--limit N` | How many rows to **print**. A display cap: `-o` and `--json` still write every row, and the query still computed them all. |
+| `--limit N` | How many rows to **print**. A display cap: `-o` and `--format json` still write every row, and the query still computed them all. |
 
 `--set LIMIT=N` is refused above two separate ceilings, and the lower one wins: the
 template's own `max` from `catalog show`, and the profile's `limits.max_row_limit`. The

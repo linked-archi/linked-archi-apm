@@ -10,6 +10,28 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 
+### Changed
+- **`query run` and `query literal` print tab-separated rows by default, not a markdown
+  table.** Agents were piping results through `jq` to recover a column, which is a parse
+  step that should not have been necessary. Measured on one 108-row result, the same answer
+  costs 11.1 kB as `tsv`, 14.9 kB as the aligned table — which showed only 100 of the rows,
+  because alignment padding accounted for about 2.5 kB — and 21.8 kB as the JSON envelope,
+  most of that last figure being the column name repeated on every row. The envelope's
+  metadata was 708 bytes of it, so provenance was never the cost. `cut -f2` now works
+  without a parse, and `grep -v '^#'` leaves the header and the rows and nothing else.
+
+### Added
+- **`--format tsv|md|json` on `run` and `literal`.** `tsv` is the new default; `md` is the
+  previous aligned table, kept because padding is what makes a result readable to a person;
+  `json` is the full envelope, and `--json` still means exactly that. The row count, caveats
+  and citation travel as `#` comment lines rather than on stderr, so capturing stdout alone
+  cannot silently drop the attribution. Values inside a row are escaped, because a literal
+  containing a tab would otherwise invent a column and nothing downstream could tell. All
+  three formats carry identical values: the connect adapters flatten every RDF term to its
+  lexical form, so none of them is a W3C SPARQL results document and none claims to be.
+  NDJSON was considered and left out — `json` already gives an agent every row, and
+  streaming is the only thing NDJSON would add.
+
 ### Fixed
 - **The documented install pin and every skill's `metadata.version` said 0.1.0 at
   release 0.3.0.** The version was repeated in ten files outside `apm.yml` and read by

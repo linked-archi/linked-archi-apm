@@ -192,9 +192,12 @@ class TestTruncationIsHardToMiss(unittest.TestCase):
         self.assertLess(note, first_row, "the truncation note must come before the table")
 
     def test_a_limit_hit_says_the_count_is_a_floor(self):
-        table = self._envelope(100, 100, truncated=True).to_table(limit=100)
-        self.assertIn("floor", table)
-        self.assertIn("never read absence from this table", table)
+        """"this result", not "this table": one wording now serves tsv and md both."""
+        for shape in ("to_table", "to_tsv"):
+            with self.subTest(shape=shape):
+                rendered = getattr(self._envelope(100, 100, truncated=True), shape)(limit=100)
+                self.assertIn("floor", rendered)
+                self.assertIn("never read absence from this result", rendered)
 
     def test_a_complete_result_gets_no_note(self):
         table = self._envelope(3, 100, truncated=False).to_table(limit=100)
@@ -441,3 +444,132 @@ class TestTheRowCapComesFromTheQuery(unittest.TestCase):
             self.assertEqual(payload["row_count"], 50)
             verdicts.add(payload["truncated"])
         self.assertEqual(verdicts, {True})
+
+
+class TestTsvIsTheDefaultShape(unittest.TestCase):
+    """Tab-separated rows with the provenance commented, so a pipe stays a pipe.
+
+    The reason it is the default is cost: on one 108-row result the same answer measured
+    11.1 kB as tsv, 14.9 kB as the aligned markdown table - which showed only 100 of the
+    rows - and 21.8 kB as the envelope, most of that last figure being the column name
+    repeated on every row. Agents handed the envelope were shelling out to `jq` to get a
+    column back.
+
+    What must not be lost in exchange is the citation, so it is a comment rather than a
+    line on stderr: capturing stdout alone cannot drop it.
+    """
+
+    @staticmethod
+    def _rows(rendered: str) -> list[str]:
+        """What a caller gets from `grep -v '^#'` - and nothing else."""
+        return [line for line in rendered.split("\n") if not line.startswith("#")]
+
+    def test_the_header_and_the_rows_are_all_that_is_not_commented(self):
+        body = self._rows(_envelope().to_tsv())
+        self.assertEqual(body, ["s", "urn:a", "urn:b"])
+
+    def test_no_blank_line_survives_the_filter(self):
+        """A blank line reads as a row to `cut`, which is why the separator is a comment."""
+        for label, envelope in (
+            ("plain", _envelope()),
+            ("truncated", _envelope(truncated=True)),
+            ("caveats", _envelope(warnings=["views graph is partial"])),
+        ):
+            with self.subTest(label):
+                self.assertNotIn("", self._rows(envelope.to_tsv()))
+
+    def test_every_row_has_the_same_field_count(self):
+        """An unbound variable is an empty field, not a missing column."""
+        envelope = _envelope(
+            variables=["a", "b"], rows=[{"a": "1", "b": "2"}, {"a": "3"}], row_count=2
+        )
+        body = self._rows(envelope.to_tsv())
+        self.assertEqual(body, ["a\tb", "1\t2", "3\t"])
+
+    def test_a_value_containing_a_tab_cannot_invent_a_column(self):
+        envelope = _envelope(rows=[{"s": "one\ttwo"}], row_count=1)
+        body = self._rows(envelope.to_tsv())
+        self.assertEqual(body, ["s", "one\\ttwo"])
+        self.assertEqual(body[1].count("\t"), 0)
+
+    def test_a_value_containing_a_newline_cannot_invent_a_row(self):
+        envelope = _envelope(rows=[{"s": "one\ntwo"}], row_count=1)
+        body = self._rows(envelope.to_tsv())
+        self.assertEqual(body, ["s", "one\\ntwo"])
+
+    def test_a_backslash_is_escaped_first_so_the_escaping_is_reversible(self):
+        envelope = _envelope(rows=[{"s": "a\\tb"}], row_count=1)
+        self.assertEqual(self._rows(envelope.to_tsv())[1], "a\\\\tb")
+
+    def test_the_citation_still_comes_last(self):
+        envelope = _envelope()
+        self.assertTrue(envelope.to_tsv().rstrip().endswith(envelope.citation()))
+
+    def test_the_truncation_note_precedes_the_rows_and_is_commented(self):
+        rendered = _envelope(
+            rows=[{"s": f"urn:{index}"} for index in range(50)], row_count=50
+        ).to_tsv(limit=5)
+        note = rendered.index("NOTE: showing 5 of 50")
+        self.assertLess(note, rendered.index("urn:0"))
+        self.assertTrue(rendered.startswith("# NOTE:"))
+
+    def test_caveats_are_carried_and_commented(self):
+        rendered = _envelope(warnings=["views graph is partial"]).to_tsv()
+        self.assertIn("# caveat: views graph is partial", rendered)
+
+    def test_shapes_with_nothing_tabular_render_as_the_prose_they_are(self):
+        """ASK, CONSTRUCT and an empty result are guidance, and it is written once."""
+        for label, overrides in (
+            ("empty", {"rows": [], "row_count": 0}),
+            ("boolean", {"form": "ASK", "boolean": True, "rows": [], "variables": []}),
+            ("triples", {"form": "CONSTRUCT", "triples": "<urn:a> <urn:b> <urn:c> .",
+                         "rows": [], "variables": []}),
+        ):
+            with self.subTest(label):
+                envelope = _envelope(**overrides)
+                self.assertEqual(envelope.to_tsv(), envelope.to_table())
+
+
+class TestTheDefaultFormatIsTsv(unittest.TestCase):
+    """Through the command, because the default is a property of the CLI, not the envelope."""
+
+    @classmethod
+    def setUpClass(cls):
+        try:
+            import pyoxigraph  # noqa: F401
+        except ModuleNotFoundError:  # pragma: no cover - environment dependent
+            raise unittest.SkipTest("pyoxigraph is not installed")
+
+    def _run(self, *extra: str) -> str:
+        env = {
+            key: value for key, value in os.environ.items()
+            if key not in {"PYTHONPATH", "LINKED_ARCHI_DATA", "LINKED_ARCHI_SKILLS_DIR"}
+        }
+        script = support.ROOT / "skills/linked-archi-query/scripts/la-query"
+        done = subprocess.run(
+            [sys.executable, str(script), "query", "run", "core/models",
+             "--data", str(support.BASE), *extra],
+            capture_output=True, text=True, timeout=180, cwd=support.ROOT, env=env,
+        )
+        self.assertEqual(done.returncode, 0, done.stderr)
+        return done.stdout
+
+    def test_no_format_flag_gives_tab_separated_rows(self):
+        output = self._run()
+        rows = [line for line in output.strip().split("\n") if not line.startswith("#")]
+        self.assertNotIn("|", rows[0], "the default should no longer be a markdown table")
+        self.assertIn("\t", rows[0])
+
+    def test_md_still_gives_the_aligned_table(self):
+        self.assertIn("|", self._run("--format", "md").split("\n")[0])
+
+    def test_json_and_the_older_flag_agree(self):
+        by_format = json.loads(self._run("--format", "json"))
+        by_alias = json.loads(self._run("--json"))
+        self.assertEqual(by_format["rows"], by_alias["rows"])
+        self.assertEqual(by_format["query_id"], by_alias["query_id"])
+
+    def test_the_citation_survives_every_format(self):
+        for shape in ([], ["--format", "md"]):
+            with self.subTest(shape=shape or "default"):
+                self.assertIn("profile linked-archi-default", self._run(*shape))

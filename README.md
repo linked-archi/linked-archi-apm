@@ -56,8 +56,9 @@ taxonomy classification, lifecycle, ownership, coverage gaps, orphans, identity
 audit, provenance and diagram usage, plus notation-specific templates for ArchiMate,
 BPMN, C4, Backstage and LeanIX. `catalog list --why` explains which templates this
 dataset can and cannot support. `query render` produces SPARQL without executing it,
-`query run` executes it, and results come back as a table or `--json`, with `--limit`
-and `-o`.
+`query run` executes it, and results come back as tab-separated rows with the citation
+kept as `#` comments — `--format md` for an aligned table, `--format json` for the full
+envelope, plus `--limit` and `-o`.
 
 **Get refused instead of misled.** Every template declares the roles and
 capabilities it needs. A missing dependency is a refusal naming the reason and

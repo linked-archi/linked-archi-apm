@@ -144,7 +144,12 @@ class Envelope:
         )
 
     def to_table(self, limit: int = 100) -> str:
-        """A markdown table, or a finding when there is nothing to show.
+        """An aligned markdown table, or a finding when there is nothing to show.
+
+        Opt-in as `--format md` since `tsv` became the default. The column padding is why:
+        it is what makes the table readable in a console, and it cost 2.5 kB of whitespace
+        on the 108-row result measured in :meth:`to_tsv` - worth paying when a person is
+        reading, not worth paying on every agent call.
 
         An empty result is reported as a finding rather than a failure, and says
         so, because "no capability is unrealised" and "no capability is modelled"
@@ -183,21 +188,8 @@ class Envelope:
 
         columns = self.variables or sorted({k for row in self.rows for k in row})
         shown = self.rows[:limit]
-        # Truncation is announced before the table as well as after it. It was only in the
-        # footer once, and a field session read a 200-row result, grepped the visible part
-        # for a term, found none, and nearly reported that those views did not exist.
-        banner = ""
-        if self.truncated or len(self.rows) > limit:
-            banner = (
-                f"NOTE: showing {min(limit, len(self.rows))} of {self.row_count} row(s)"
-                + (
-                    " and the result hit the query's row limit, so counts here are a "
-                    "floor - report 'at least', and never read absence from this table."
-                    if self.truncated
-                    else " - raise --limit or use --json to see the rest."
-                )
-                + "\n\n"
-            )
+        note = self._truncation_note(limit)
+        banner = f"{note}\n\n" if note else ""
         widths = {
             col: max(len(col), *(len(str(row.get(col, ""))) for row in shown))
             for col in columns
@@ -208,17 +200,102 @@ class Envelope:
             "| " + " | ".join(str(row.get(col, "")).ljust(widths[col]) for col in columns) + " |"
             for row in shown
         ]
-        footer = f"\n{self.row_count} row(s)"
+        footer = "\n" + "\n".join(self._footer_lines(limit))
+        return banner + "\n".join([head, rule, *body]) + footer + f"\n\n{self.citation()}"
+
+    def to_tsv(self, limit: int = 100) -> str:
+        """Tab-separated rows, with the provenance kept as `#` comment lines.
+
+        The default, because it is the cheapest shape that still carries everything: on a
+        108-row result it measured 11.5 kB against 14.9 kB for the aligned markdown table
+        (which showed only 100 of the rows) and 21.8 kB for the full JSON envelope. Most of
+        the JSON cost is the column name repeated on every row; the envelope's metadata is
+        708 bytes of it. Agents were reaching for `jq` to recover columns from that.
+
+        The furniture is commented rather than moved to stderr, so that capturing stdout
+        alone cannot silently drop the citation - and `grep -v '^#'` still leaves pure
+        rows for `cut`. Values are escaped, because a literal containing a tab would
+        otherwise invent a column and nothing downstream could tell.
+
+        Not a W3C SPARQL-TSV document, and deliberately not claiming to be one: the
+        connect adapters flatten every term to its lexical form before it reaches here,
+        so the type, datatype and language a compliant serialisation needs are already
+        gone. `--format json` has the same values, not richer ones.
+        """
+        if self.boolean is not None or self.triples is not None or not self.rows:
+            # Nothing tabular to render, and every one of these shapes is prose whose
+            # wording matters - an empty result especially. Render it exactly once.
+            return self.to_table(limit=limit)
+
+        columns = self.variables or sorted({key for row in self.rows for key in row})
+        lines = ["\t".join(columns)]
+        lines += [
+            "\t".join(self._tsv_cell(row.get(column, "")) for column in columns)
+            for row in self.rows[:limit]
+        ]
+        note = self._truncation_note(limit)
+        return "\n".join(
+            [
+                *(self._commented([note]) if note else []),
+                *lines,
+                # The separator is a comment too, not a bare blank line: `grep -v '^#'`
+                # has to leave the header and the rows and nothing else, or `cut` reads
+                # an empty field as a row.
+                *self._commented(["", *self._footer_lines(limit), self.citation()]),
+            ]
+        )
+
+    @staticmethod
+    def _tsv_cell(value: object) -> str:
+        """Escape a value so it cannot invent a column or a row."""
+        return (
+            str(value)
+            .replace("\\", "\\\\")
+            .replace("\t", "\\t")
+            .replace("\r", "\\r")
+            .replace("\n", "\\n")
+        )
+
+    @staticmethod
+    def _commented(lines: list[str]) -> list[str]:
+        """Prefix every physical line, so a multi-line caveat stays fully commented."""
+        return [
+            f"# {physical}" if physical else "#"
+            for line in lines
+            for physical in str(line).split("\n")
+        ]
+
+    def _truncation_note(self, limit: int) -> str:
+        """The warning that precedes the rows, or "" when the result is complete.
+
+        Announced before the rows as well as after them. It was only in the footer once,
+        and a field session read a 200-row result, grepped the visible part for a term,
+        found none, and nearly reported that those views did not exist.
+        """
+        if not (self.truncated or len(self.rows) > limit):
+            return ""
+        return (
+            f"NOTE: showing {min(limit, len(self.rows))} of {self.row_count} row(s)"
+            + (
+                " and the result hit the query's row limit, so counts here are a "
+                "floor - report 'at least', and never read absence from this result."
+                if self.truncated
+                else " - raise --limit, or --format json to see the rest."
+            )
+        )
+
+    def _footer_lines(self, limit: int) -> list[str]:
+        """What follows the rows, in one wording for every tabular format."""
+        count = f"{self.row_count} row(s)"
         if len(self.rows) > limit:
-            footer += f", showing {limit}"
+            count += f", showing {limit}"
+        lines = [count]
         if self.truncated:
-            footer += (
-                "\nResult was truncated at the row limit, so this is a floor: "
+            lines.append(
+                "Result was truncated at the row limit, so this is a floor: "
                 "report 'at least' rather than a total."
             )
-        for line in self._caveat_lines():
-            footer += f"\n{line}"
-        return banner + "\n".join([head, rule, *body]) + footer + f"\n\n{self.citation()}"
+        return lines + self._caveat_lines()
 
     def _caveat_lines(self) -> list[str]:
         """The caveats, for every output shape rather than only for a populated table.

@@ -760,13 +760,30 @@ def _envelope(raw: dict[str, Any], rendered, profile: ResolvedProfile) -> Envelo
 
 
 def _emit(envelope: Envelope, args: argparse.Namespace) -> int:
+    """Print the result in the requested shape, or write the envelope to a file.
+
+    `-o` still writes JSON whatever `--format` says, because an artifact is a record: the
+    analyse bundler and `query batch` read it back, and the envelope is the only shape
+    carrying the fields a citation is reconstructed from.
+    """
     if args.output:
         written = envelope.write(args.output)
         print(f"Wrote {written} ({envelope.row_count} row(s))")
-    elif args.json:
+        return OK
+
+    # --json predates --format and is documented in three places, so it keeps working.
+    # An explicit --format wins, which is the only reading that lets a caller override an
+    # alias it inherited from a script or a habit.
+    chosen = getattr(args, "format", "tsv")
+    if chosen == "tsv" and getattr(args, "json", False):
+        chosen = "json"
+
+    if chosen == "json":
         print(envelope.to_json())
-    else:
+    elif chosen == "md":
         print(envelope.to_table(limit=args.limit))
+    else:
+        print(envelope.to_tsv(limit=args.limit))
     return OK
 
 
@@ -1078,8 +1095,26 @@ _LIMIT_HELP = (
     "`--set LIMIT=N`"
 )
 _JSON_HELP = (
-    "emit the full result envelope: query, query_id, dataset_id, profile_id, "
-    "profile_version, executed_at, row_count, truncated, warnings, rows"
+    "the same as --format json: emit the full result envelope - query, query_id, "
+    "dataset_id, profile_id, profile_version, executed_at, row_count, truncated, "
+    "warnings, rows. Kept because it is the documented flag; --format wins if both appear"
+)
+#: The printable shapes. Deliberately three: NDJSON was considered and left out, because
+#: `json` already gives an agent every row and NDJSON's only advantage is streaming, which
+#: nothing in this pipeline does. W3C SPARQL results formats were left out too - they need
+#: term type, datatype and language, and the adapters have already discarded those.
+FORMATS = ("tsv", "md", "json")
+
+#: `tsv` is the default because it is the cheapest shape that still carries the citation:
+#: 11.5 kB against 14.9 kB for `md` and 21.8 kB for `json` on one 108-row result, most of
+#: the JSON cost being the column name repeated per row. `md` pays for alignment, which is
+#: worth it for a person and not for an agent. See Envelope.to_tsv.
+_FORMAT_HELP = (
+    "how to print the result: tsv (default) tab-separated rows with the row count, "
+    "caveats and citation as '#' comment lines, so `grep -v '^#'` leaves pure rows; "
+    "md an aligned markdown table; json the full envelope. Values are identical in all "
+    "three - the adapters flatten RDF terms to lexical form, so none of them is a W3C "
+    "SPARQL results document"
 )
 #: For the commands that write an ARTIFACT rather than their own stdout: `render` writes
 #: the SPARQL, `run` and `literal` write the full envelope as JSON regardless of --json.
@@ -1205,13 +1240,17 @@ def build_parser() -> argparse.ArgumentParser:
     run = query_sub.add_parser(
         "run",
         help="render and execute a catalogued template",
-        description="The normal way to ask a question. Prints a table, or an envelope with --json.",
+        description=(
+            "The normal way to ask a question. Prints tab-separated rows with a citation; "
+            "--format md for an aligned table, --format json for the full envelope."
+        ),
     )
     run.add_argument("template", help="template name, e.g. core/dependents-qualified")
     _profile_arg(run)
     _target_args(run)
     run.add_argument("--set", action="append", default=[], metavar="NAME=VALUE",
                      help=_SET_HELP)
+    run.add_argument("--format", choices=FORMATS, default="tsv", help=_FORMAT_HELP)
     run.add_argument("--json", action="store_true", help=_JSON_HELP)
     run.add_argument("--limit", type=int, default=100, metavar="N", help=_LIMIT_HELP)
     run.add_argument("-o", "--output", metavar="FILE", help=_OUTPUT_HELP)
@@ -1233,6 +1272,7 @@ def build_parser() -> argparse.ArgumentParser:
                          help="the query text; mutually exclusive with --file")
     literal.add_argument("--file", metavar="FILE",
                          help="read the query from this file instead of --query")
+    literal.add_argument("--format", choices=FORMATS, default="tsv", help=_FORMAT_HELP)
     literal.add_argument("--json", action="store_true", help=_JSON_HELP)
     literal.add_argument("--limit", type=int, default=100, metavar="N", help=_LIMIT_HELP)
     literal.add_argument("-o", "--output", metavar="FILE", help=_OUTPUT_HELP)
