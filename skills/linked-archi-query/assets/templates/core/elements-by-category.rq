@@ -1,0 +1,52 @@
+# core/elements-by-category - What is in this model, grouped the way its notation groups it?
+#
+# Answers: every element of a model, under the taxonomy category its TYPE belongs to,
+# with the category's own label.
+#
+# Does NOT prove: that an uncategorised element is unimportant. A type no taxonomy
+# concept names produces no row here at all, which is why ?uncategorised exists in
+# core/inventory's place - use core/elements-by-type or core/inventory when the question
+# is "what types are present" rather than "how does this notation group them".
+#
+# REQUIRES the vocabulary graph role, which converter output does not have: a conversion
+# emits instances, not the ontologies and taxonomies they conform to. Attach the published
+# vocabulary beside the data - `la-connect` takes several files - and bind
+# `graphs.roles.vocabulary`. See examples/with-vocabulary. Without it this template is
+# refused rather than returning nothing, and notation/bpmn/process-components is the
+# fallback: same question, answered from a hand-maintained list of types.
+#
+# THIS IS THE TEMPLATE THAT LIST SHOULD NOT HAVE NEEDED. A published taxonomy already
+# states which classes each category covers -
+#
+#   bpmn-tax:Gateways skos:broader bpmn-tax:FlowObjects ;
+#       skos:narrower bpmn:ExclusiveGateway, bpmn:ParallelGateway, ... .
+#
+# - so the grouping is a fact in the vocabulary rather than an opinion in a query. The
+# hand-written table it replaces covered 17 of the 49 element classes the BPMN ontology
+# declares, omitting every gateway and every sub-process, and invented its own categories
+# because it could not see the standard ones. Adding a notation, or a category, is then a
+# vocabulary change and needs no template at all - the same claim the classification
+# templates make for taxonomies, extended to types.
+#
+# The category is matched one hop down (`narrower`), not transitively, because a taxonomy
+# names classes at the level where the grouping is meaningful; ?parentCategory reports the
+# branch above it so a caller can roll up without a second query.
+#
+# Parameters: MODEL_IRI, LIMIT
+{{PREFIXES}}
+SELECT ?category ?categoryLabel ?parentCategory ?element ?label ?type
+WHERE {
+  {{GRAPH_OPEN:vocabulary}}
+    ?category {{ROLE:narrower}} ?type .
+    OPTIONAL { ?category {{PATH:label}} ?categoryLabel }
+    OPTIONAL { ?category {{ROLE:broader}} ?parentCategory }
+  {{GRAPH_CLOSE}}
+  {{GRAPH_OPEN:semantic}}
+    VALUES ?model { {{MODEL_IRI}} }
+    {{MEMBERSHIP:element}}
+    ?element a ?type .
+    OPTIONAL { ?element {{PATH:label}} ?label }
+  {{GRAPH_CLOSE}}
+}
+ORDER BY ?categoryLabel ?label ?element
+LIMIT {{LIMIT}}

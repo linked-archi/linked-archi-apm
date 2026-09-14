@@ -25,6 +25,26 @@ was corrected, what was investigated and found already correct, and what remains
 `core/resolve-element` `?g`→`?g_semantic`, and `core/traceability` gains `?relType2`.
 
 ### Added
+- **Published vocabulary can be attached beside a dataset, and queried.** A conversion emits
+  instances, never the ontologies and taxonomies they conform to, so anything schema-level —
+  which classes are activities, what category a type belongs to — was unanswerable, and a
+  template facing that gap could only enumerate types by hand. A new optional
+  `graphs.roles.vocabulary` binds the graph the vocabulary lands in; `la-connect` already
+  accepts several files, so pairing happens at query time and no export changes. Its own
+  graph role, never `semantic`: ontology classes carry `skos:prefLabel` and would otherwise
+  come back as candidates from `core/resolve-element`. `examples/with-vocabulary` is the
+  worked profile, `fixtures/vocabulary.trig` the extracted fixture, and `roles.narrower` and
+  `roles.subclass_of` the two new bindings it needs.
+- **`core/elements-by-category`** — what is in a model, grouped the way its own notation
+  groups it. The taxonomy already states which classes each category covers
+  (`bpmn-tax:Gateways skos:narrower bpmn:ExclusiveGateway, …`), so the grouping is a
+  published fact rather than an opinion in a query. It replaces the reason
+  `notation/bpmn/process-components` carries a hand-written table of 17 classes — against
+  the 49 the BPMN ontology declares, omitting every gateway and sub-process — under category
+  names invented because the standard ones were unreachable. Notation-agnostic: any
+  vocabulary declaring `skos:narrower` to its classes works, and a test pins that the
+  template names no notation term. Refused without the vocabulary role, with the
+  hand-table template as the documented alternative.
 - **A test refuses to let a non-public host reach a commit.** Auditing this package against
   a real estate produces IRIs, model names, digests and a private host — all useful, none
   publishable, and a published commit cannot be unpublished. An allowlist rather than a

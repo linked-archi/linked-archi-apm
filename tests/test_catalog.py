@@ -181,11 +181,26 @@ class TestCatalogueIntegrity(unittest.TestCase):
                     self.assertIn(role, profile.roles)
 
     def test_declared_graph_roles_exist(self):
-        profile = load_profile("curated-store")
+        """Some bundled profile must bind every graph role a template asks for.
+
+        Checked across the bundled set rather than against one profile: a role can be
+        legitimately absent from converter output and still be real - `vocabulary` is
+        attached beside the data, `reconciliation` and `validation` are authored by a
+        publishing pipeline - so requiring one profile to bind them all would either
+        force a false claim into that profile or block the template from existing. What
+        must not happen is a `requires` block naming a role nothing knows, which is a typo.
+        """
+        profiles = [
+            load_profile(name) for name in
+            ("linked-archi-default", "curated-store", "with-vocabulary")
+        ]
         for entry in self.catalog:
             for role in entry.requires.graph_roles:
                 with self.subTest(f"{entry.name}:{role}"):
-                    self.assertTrue(profile.graphs.has_role(role))
+                    self.assertTrue(
+                        any(profile.graphs.has_role(role) for profile in profiles),
+                        f"no bundled profile binds the graph role {role!r}",
+                    )
 
     def test_every_role_a_template_renders_is_declared(self):
         """The mirror of the test above, and the direction that actually bites.
@@ -342,6 +357,12 @@ class TestGating(unittest.TestCase):
                 "core/neighbours-reified",
                 "core/reified-predicates",
                 "core/reifies-audit",
+                # A conversion emits instances, not the ontologies and taxonomies they
+                # conform to, so there is no class hierarchy and no class-to-category
+                # link to read. Attaching published vocabulary beside the data is what
+                # lifts this - examples/with-vocabulary - and until then the answer comes
+                # from notation/bpmn/process-components and its hand-maintained list.
+                "core/elements-by-category",
             },
         )
 

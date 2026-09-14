@@ -14,11 +14,12 @@ from __future__ import annotations
 import unittest
 
 import support
-from support import AUGMENTED, BASE, FLAT, requires_pyoxigraph
+from support import AUGMENTED, BASE, FLAT, VOCABULARY, requires_pyoxigraph
 
 from linked_archi_connect.adapters.base import AdapterError
 from linked_archi_query import load_catalog, render
 from linked_archi_query.render import UnsupportedTemplate
+from linked_archi_query.validate import split_comments
 
 load_profile = support.load_resolved_profile
 
@@ -32,6 +33,9 @@ LEANIX = "https://meta.linked.archi/leanix/onto#"
 #: template -> (parameters, minimum rows against fixtures/augmented.trig)
 CASES: dict[str, tuple[dict, int]] = {
     "core/inventory": ({"LIMIT": 50}, 8),
+    # Needs published vocabulary attached beside the data, which is why this
+    # class loads two files. Refused under linked-archi-default, by design.
+    "core/elements-by-category": ({"MODEL_IRI": support.BPMN_MODEL}, 1),
     "core/inventory-summary": ({}, 4),
     "core/models": ({}, 5),
     "core/resolve-element": ({"TERM": "order"}, 2),
@@ -127,7 +131,7 @@ class TestAgainstAugmentedFixture(unittest.TestCase):
             raise unittest.SkipTest("pyoxigraph is not installed")
         cls.catalog = load_catalog()
         cls.profile = load_profile("curated-store")
-        cls.adapter = support.load_fixture(AUGMENTED)
+        cls.adapter = support.load_fixture(AUGMENTED, VOCABULARY)
 
     def test_every_template_returns_at_least_its_floor(self):
         for name, (params, minimum) in sorted(CASES.items()):
@@ -241,6 +245,54 @@ class TestAgainstAugmentedFixture(unittest.TestCase):
                         row["model"], models,
                         f"{name} put a non-model in the model column: {row['model']!r}",
                     )
+
+    def test_categories_come_from_the_taxonomy_not_from_the_query(self):
+        """The point of attaching vocabulary: the grouping is a published fact.
+
+        `notation/bpmn/process-components` answers the same question from a table written
+        into the template - 17 of the 49 element classes the BPMN ontology declares, under
+        category names ("2 automated", "3 human") invented because the standard ones were
+        not reachable. With the taxonomy in the dataset the standard names are reachable,
+        so this asserts they are what comes back, and that each row carries the branch
+        above it so a caller can roll up without a second query.
+        """
+        rendered = render("core/elements-by-category", self.profile,
+                          {"MODEL_IRI": support.BPMN_MODEL}, catalog=self.catalog)
+        envelope = self.adapter.execute(
+            rendered.query, template="core/elements-by-category",
+            profile_id=self.profile.name,
+            profile_version=self.profile.profile_version, limit=200,
+        )
+        self.assertTrue(envelope.rows)
+        labels = {row["categoryLabel"] for row in envelope.rows}
+        self.assertEqual(
+            labels, {"Activities", "Events"},
+            "categories must be the taxonomy's own, for the types this model uses",
+        )
+        for row in envelope.rows:
+            self.assertTrue(row["categoryLabel"], f"unlabelled category for {row['type']}")
+            self.assertTrue(
+                row["parentCategory"].endswith("FlowObjects"),
+                f"the branch above the category is missing: {row['parentCategory']!r}",
+            )
+
+    def test_the_derived_template_names_no_notation_term(self):
+        """What makes it notation-agnostic, stated as a check rather than a claim.
+
+        The template it replaces has to name `bpmn:UserTask` and sixteen siblings, so it
+        serves one notation and drifts as that ontology grows. This one names roles only:
+        any vocabulary whose taxonomy declares `skos:narrower` to its classes works, which
+        is the same argument the classification templates make for taxonomies.
+        """
+        text = load_catalog().get("core/elements-by-category").text()
+        code = "".join(
+            "" if is_comment else chunk for is_comment, chunk in split_comments(text)
+        )
+        for prefix in ("bpmn:", "c4:", "am:", "am4:", "bs:", "lmm:", "uml:"):
+            self.assertNotIn(
+                prefix, code,
+                f"{prefix} in a core template: the vocabulary belongs in the profile",
+            )
 
     def test_multi_valued_columns_do_not_multiply_rows(self):
         """One row per subject, for the templates whose optional columns are one-to-many.
@@ -721,6 +773,9 @@ class TestAgainstBaseFixture(unittest.TestCase):
         # The RDF 1.2 bridge. Refused here for two reasons at once: no converter
         # emits it, and the `<<( s p o )>>` syntax is a parse error on SPARQL 1.1.
         "core/reified-predicates", "core/neighbours-reified", "core/reifies-audit",
+        # Converter output carries instances, not the ontologies and taxonomies
+        # they conform to, so there is no class hierarchy here to group by.
+        "core/elements-by-category",
     }
 
     def test_gated_templates_are_refused(self):

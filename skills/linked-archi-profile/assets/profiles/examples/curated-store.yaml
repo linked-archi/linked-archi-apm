@@ -30,6 +30,13 @@ graphs:
     # converters do not: `validate` writes a document to stdout or -r <file>.
     # Binding it here does not make it true of anyone else's dataset.
     validation: graphs/validation
+    # Published ontologies and taxonomies, attached beside the data rather than emitted
+    # into it - `la-connect` takes several files. Bound here because this profile is the
+    # one that has to support every template, and a schema-level question cannot be
+    # answered from instances alone. Its own graph, never `semantic`: ontology classes
+    # carry skos:prefLabel, and in the semantic graph they would come back as candidates
+    # from core/resolve-element. See examples/with-vocabulary for the reasoning in full.
+    vocabulary: graph/vocabulary
 
 capabilities:
   direct_rel_triples: true

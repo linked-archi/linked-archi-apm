@@ -126,6 +126,22 @@ graphs:
   # graph in the dataset. Declared null so a template requiring it is refused
   # with that reason rather than returning nothing.
   validation: null
+  # Nor is there a vocabulary graph, for the same reason: a conversion emits instances,
+  # not the ontologies and taxonomies they conform to. So the class hierarchy and the
+  # class-to-category links a published taxonomy declares are simply not in the dataset,
+  # and a template that needs them can only enumerate types by hand - which is what
+  # notation/bpmn/process-components does, and why its list drifts from the ontology.
+  #
+  # Bind this when the vocabulary is attached beside the data - `la-connect` takes several
+  # files, so pairing them is a query-time decision rather than a pipeline change, which
+  # also keeps the export free of a version it would then have to be kept in step with.
+  # See examples/with-vocabulary.
+  #
+  # Its own role, never merged into `semantic`, and that separation is load-bearing rather
+  # than tidy: ontology classes carry skos:prefLabel, so in the semantic graph they would
+  # surface as resolution candidates from core/resolve-element and as collisions from
+  # core/label-collisions - a class offered as an answer to "which element is this".
+  vocabulary: null
   # Roles a dataset MUST have for this profile to describe it. Absence is an error
   # and `profile verify` exits non-zero, because a query scoped to a graph that is
   # not there returns no rows and no complaint - an empty answer that reads like a
@@ -301,8 +317,17 @@ roles:
 
   # --- Classification ------------------------------------------------------
   broader: skos:broader
+  # The inverse direction, and it is not redundant. A published taxonomy states which
+  # CLASSES a category covers - `bpmn-tax:Gateways skos:narrower bpmn:ExclusiveGateway` -
+  # so walking downward from a category is how a query groups elements without a
+  # hand-maintained list of types. Only usable where the vocabulary is in the dataset;
+  # see graphs.roles.vocabulary.
+  narrower: skos:narrower
   in_scheme: skos:inScheme
   keywords: schema:keywords
+  # Schema-level, like unqualified_form: present when published vocabulary is loaded
+  # beside the data, absent from converter output, which carries instances only.
+  subclass_of: rdfs:subClassOf
 
   # --- Governance and lifecycle -------------------------------------------
   # Model-level status. Verified present, on the model, in the provenance graph.

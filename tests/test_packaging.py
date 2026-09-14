@@ -138,10 +138,11 @@ class TestStrictOwnership(unittest.TestCase):
         profile_files = {path.relative_to(PROFILE / "assets" / "profiles").as_posix() for path in (PROFILE / "assets" / "profiles").rglob("*.yaml")}
         self.assertEqual(profile_files, {
             "linked-archi-default.yaml", "linked-archi-direct.yaml", "linked-archi-merged.yaml",
-            "examples/cloudplatform.yaml", "examples/curated-store.yaml", "examples/flattened-turtle.yaml",
+            "examples/cloudplatform.yaml", "examples/curated-store.yaml",
+            "examples/flattened-turtle.yaml", "examples/with-vocabulary.yaml",
         })
         template_files = {path.relative_to(QUERY / "assets" / "templates").as_posix() for path in (QUERY / "assets" / "templates").rglob("*.rq")}
-        self.assertEqual(len(template_files), 38)
+        self.assertEqual(len(template_files), 39)
         for skill in (CONNECT, ANALYSE, VALIDATE):
             self.assertFalse((skill / "assets" / "profiles").exists())
             self.assertFalse((skill / "assets" / "templates").exists())
@@ -214,7 +215,7 @@ class TestIsolatedOwners(unittest.TestCase):
             script = skill / "scripts" / "la-query"
             catalog = _run(script, "catalog", "list", cwd=root)
             self.assertEqual(catalog.returncode, 0, catalog.stderr)
-            self.assertIn("38 template(s)", catalog.stdout)
+            self.assertIn("39 template(s)", catalog.stdout)
             shown = _run(script, "catalog", "show", "core/dependents-qualified", cwd=root)
             self.assertEqual(shown.returncode, 0, shown.stderr)
             self.assertIn("parameters", shown.stdout)

@@ -50,7 +50,7 @@ taxonomy terms are all data, so a custom ontology or taxonomy needs no code chan
 reports drift between claimed and observed terms, and exits non-zero when a claim is
 false. `--all` verifies every profile so you can find which one actually fits.
 
-**Ask a question.** 38 tested templates in four groups — analysis, enrichment,
+**Ask a question.** 39 tested templates in four groups — analysis, enrichment,
 quality and views — spanning neighbours, transitive dependents, traceability paths,
 taxonomy classification, lifecycle, ownership, coverage gaps, orphans, identity
 audit, provenance and diagram usage, plus notation-specific templates for ArchiMate,

@@ -1,0 +1,45 @@
+# Converter output with published vocabulary attached beside it.
+#
+# The converters emit instances, never the ontologies and taxonomies those instances
+# conform to. So a dataset on its own cannot answer anything that needs the schema: which
+# classes are activities, what category a type belongs to, which unqualified predicate a
+# relationship class stands for. A template facing that gap has one option left, which is
+# to enumerate types by hand - and notation/bpmn/process-components does exactly that,
+# with a list covering 17 of the 49 element classes its ontology declares.
+#
+# This profile is the other option. `la-connect` accepts several files, so the vocabulary
+# is paired with the data at query time:
+#
+#   la-connect connect --data graph/merged/merged-graph.trig --data vocabulary.trig
+#
+# Query time rather than conversion time, deliberately. Baking the ontology into every
+# export couples each artifact to a vocabulary version it must then be kept in step with,
+# and the export is the thing most likely to be copied, cached and re-published. Pairing at
+# query time keeps that coupling explicit and per-session - at the cost of making the
+# operator responsible for pairing the RIGHT version, which is what `verify` is for.
+extends: ../linked-archi-default.yaml
+
+profile: with-vocabulary
+version: 1
+description: >-
+  Converter output plus the published ontologies and taxonomies, loaded into their own
+  named graph so schema-level questions become answerable without changing the export.
+
+graphs:
+  roles:
+    # Suffix-matched like every other role. One graph for all vocabulary rather than one
+    # per notation or per model: it is shared reference data, and a copy per model would
+    # multiply it by however many models a store holds.
+    vocabulary: graph/vocabulary
+
+# ---------------------------------------------------------------------------
+# What this does NOT claim
+# ---------------------------------------------------------------------------
+# Loading the ontology gives you its AXIOMS, not entailment. `?e a bpmn:Task` still does
+# not match a `bpmn:UserTask` instance: a query has to walk `rdfs:subClassOf*` itself, and
+# the templates that do say so. Materialising supertypes onto instances instead would make
+# every type count in core/inventory mean something else, and would inflate every
+# concatenated types column, so it is deliberately not the route here.
+#
+# Nor does attaching vocabulary make the data conform to it. That is a SHACL question, and
+# `linked-archi-validate` answers it against shapes - which can be attached the same way.

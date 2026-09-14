@@ -66,9 +66,13 @@ off a version stamp either, since every `.trig` here says
 `schema:softwareVersion "1.3.0-SNAPSHOT"`. See
 [The version stamp proves nothing](#the-version-stamp-proves-nothing).
 
-All 38 catalogued templates return rows against `augmented.trig` under the
+All 39 catalogued templates return rows against `augmented.trig` under the
 `curated-store` profile committed at
-`skills/linked-archi-profile/assets/profiles/examples/curated-store.yaml`. That is
+`skills/linked-archi-profile/assets/profiles/examples/curated-store.yaml` — with one
+pairing: `core/elements-by-category` reads published vocabulary, which no conversion
+emits, so the suite loads `vocabulary.trig` beside the dataset exactly as an operator
+would (`la-connect` takes several files). See
+[vocabulary.trig](#vocabularytrig-published-not-converted) below. That is
 the bar the selection rules below
 are tuned to: a fixture on which a template returns nothing is a template the test
 suite cannot distinguish from a broken one.
@@ -218,7 +222,7 @@ correspondence between records over a claim that two resources are one thing.
 
 Use it with the `curated-store` profile at
 `skills/linked-archi-profile/assets/profiles/examples/curated-store.yaml`, which is
-the profile these additions describe. All 38 templates are available under it, and none
+the profile these additions describe. All 39 templates are available under it, and none
 are refused — which is the point of the additions.
 
 ### The RDF 1.2 bridge, and where it bends the extraction rule
@@ -361,3 +365,61 @@ profile whose `graphs.layout` is `single`; `la-kg connect` reports the shape, an
 Blank nodes for folder list items and view styles are regenerated on every
 conversion, so re-running `make fixtures` produces a semantically identical file
 that does not diff cleanly. Assert on shape and counts, never on bytes.
+
+
+## `vocabulary.trig`: published, not converted
+
+The only fixture here that is not converter output, and the distinction matters more than
+its size suggests. Every other file answers "what does a conversion emit". This one answers
+"what does the vocabulary those instances conform to actually say" — and a conversion emits
+none of it. That is not an omission in the converters: instances and schema are different
+artifacts with different lifecycles, and the converter's job is the former.
+
+The consequence for this package was a template that could not do its job. Asked what is in
+a BPMN model grouped by kind, `notation/bpmn/process-components` had nothing to consult, so
+it carried a hand-written table of 17 classes — against the 49 element classes the BPMN
+ontology declares, omitting every gateway and every sub-process — and invented its own
+category names because the standard ones were out of reach. With the vocabulary present,
+`core/elements-by-category` derives both the membership and the categories, because the
+taxonomy states them:
+
+```turtle
+bpmn-tax:Gateways skos:broader bpmn-tax:FlowObjects ;
+    skos:prefLabel "Gateways"@en ;
+    skos:narrower bpmn:ExclusiveGateway, bpmn:ParallelGateway, bpmn:InclusiveGateway,
+                  bpmn:EventBasedGateway, bpmn:ComplexGateway .
+```
+
+**Source.** `linked-archi-meta/modelingLanguages/bpmn/bpmn-tax.ttl` and
+`linkedarchi-bpmn-onto.ttl`, published at `https://meta.linked.archi/`. Nothing is authored;
+only the selection is ours, on the same terms as every other fixture here.
+
+**Selection rule**, so a regeneration is reproducible:
+
+- every `skos:Concept` in the BPMN taxonomy, with its `prefLabel`, `definition`, `broader`,
+  `narrower` and `inScheme`;
+- every `bpmn:` class a concept names through `skos:narrower`, with its `rdf:type`,
+  `skos:prefLabel` and `rdfs:subClassOf` chain — so a query can walk the hierarchy rather
+  than trust a flat list.
+
+253 quads, all in one named graph: `https://meta.linked.archi/graph/vocabulary`. One graph
+rather than one per notation or per model, because it is shared reference data — a copy per
+model would multiply it by however many models a store holds.
+
+**Its own graph is load-bearing, not tidiness.** Ontology classes carry `skos:prefLabel`.
+Merged into the semantic graph they would surface as candidates from
+`core/resolve-element` and as collisions from `core/label-collisions`: a class offered as
+an answer to "which element did you mean". Every existing template scopes to a graph role
+and none scopes to `vocabulary`, so attaching this file changes no other answer — which is
+also why the suite can load it beside `augmented.trig` without adjusting any other floor.
+
+**What it does not add.** Axioms, not entailment. `?e a bpmn:Task` still does not match a
+`bpmn:UserTask` instance; a query walks `rdfs:subClassOf*` itself. Materialising supertypes
+onto instances would change what every type count in `core/inventory` means, so it is
+deliberately not done.
+
+**Versioning is the operator's risk**, and the reason to say so here: pairing a dataset with
+the wrong vocabulary version derives from the wrong hierarchy, silently. The data records
+what it conforms to in `arch:modelConformsToMetamodel`; the vocabulary attached beside it
+should be that version. Checking the pairing is verification work this package has not done
+yet — recorded in `PROPOSAL.md` B5.

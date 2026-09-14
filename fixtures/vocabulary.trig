@@ -1,0 +1,214 @@
+<https://meta.linked.archi/graph/vocabulary> {
+	<https://meta.linked.archi/bpmn/onto#Process> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Process"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#FlowElementsContainer> , <https://meta.linked.archi/bpmn/onto#CallableElement> , <https://meta.linked.archi/core#Element> .
+	<https://meta.linked.archi/bpmn/onto#SubProcess> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "SubProcess"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Activity> , <https://meta.linked.archi/bpmn/onto#FlowElementsContainer> .
+	<https://meta.linked.archi/bpmn/onto#Task> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Task"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Activity> , <https://meta.linked.archi/bpmn/onto#InteractionNode> .
+	<https://meta.linked.archi/bpmn/onto#UserTask> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "UserTask"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Task> .
+	<https://meta.linked.archi/bpmn/onto#ServiceTask> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "ServiceTask"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Task> .
+	<https://meta.linked.archi/bpmn/onto#SendTask> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "SendTask"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Task> .
+	<https://meta.linked.archi/bpmn/onto#ReceiveTask> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "ReceiveTask"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Task> .
+	<https://meta.linked.archi/bpmn/onto#ScriptTask> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "ScriptTask"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Task> .
+	<https://meta.linked.archi/bpmn/onto#BusinessRuleTask> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "BusinessRuleTask"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Task> .
+	<https://meta.linked.archi/bpmn/onto#ManualTask> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "ManualTask"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Task> .
+	<https://meta.linked.archi/bpmn/onto#CallActivity> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "CallActivity"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Activity> .
+	<https://meta.linked.archi/bpmn/onto#AdHocSubProcess> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "AdHocSubProcess"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#SubProcess> .
+	<https://meta.linked.archi/bpmn/onto#Transaction> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Transaction"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#SubProcess> .
+	<https://meta.linked.archi/bpmn/onto#StartEvent> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "StartEvent"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#CatchEvent> .
+	<https://meta.linked.archi/bpmn/onto#EndEvent> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "EndEvent"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#ThrowEvent> .
+	<https://meta.linked.archi/bpmn/onto#IntermediateCatchEvent> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "IntermediateCatchEvent"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#CatchEvent> .
+	<https://meta.linked.archi/bpmn/onto#IntermediateThrowEvent> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "IntermediateThrowEvent"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#ThrowEvent> .
+	<https://meta.linked.archi/bpmn/onto#BoundaryEvent> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "BoundaryEvent"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#CatchEvent> .
+	<https://meta.linked.archi/bpmn/onto#ExclusiveGateway> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "ExclusiveGateway"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Gateway> .
+	<https://meta.linked.archi/bpmn/onto#ParallelGateway> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "ParallelGateway"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Gateway> .
+	<https://meta.linked.archi/bpmn/onto#InclusiveGateway> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "InclusiveGateway"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Gateway> .
+	<https://meta.linked.archi/bpmn/onto#EventBasedGateway> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "EventBasedGateway"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Gateway> .
+	<https://meta.linked.archi/bpmn/onto#ComplexGateway> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "ComplexGateway"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Gateway> .
+	<https://meta.linked.archi/bpmn/onto#Participant> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Participant"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#InteractionNode> , <https://meta.linked.archi/bpmn/onto#BaseElement> , <https://meta.linked.archi/core#Element> .
+	<https://meta.linked.archi/bpmn/onto#Lane> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Lane"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#BaseElement> , <https://meta.linked.archi/core#Element> .
+	<https://meta.linked.archi/bpmn/onto#DataObject> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "DataObject"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#FlowElement> , <https://meta.linked.archi/bpmn/onto#ItemAwareElement> , <https://meta.linked.archi/core#Element> .
+	<https://meta.linked.archi/bpmn/onto#DataObjectReference> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "DataObjectReference"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#ItemAwareElement> , <https://meta.linked.archi/bpmn/onto#FlowElement> , <https://meta.linked.archi/core#Element> .
+	<https://meta.linked.archi/bpmn/onto#DataStoreReference> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "DataStoreReference"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#ItemAwareElement> , <https://meta.linked.archi/bpmn/onto#FlowElement> , <https://meta.linked.archi/core#Element> .
+	<https://meta.linked.archi/bpmn/onto#Message> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Message"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#RootElement> , <https://meta.linked.archi/core#Element> .
+	<https://meta.linked.archi/bpmn/onto#Group> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Group"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Artifact> .
+	<https://meta.linked.archi/bpmn/onto#TextAnnotation> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "TextAnnotation"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Artifact> .
+	<https://meta.linked.archi/bpmn/onto#Collaboration> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Collaboration"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#RootElement> , <https://meta.linked.archi/core#Element> .
+	<https://meta.linked.archi/bpmn/onto#Choreography> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Choreography"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#FlowElementsContainer> , <https://meta.linked.archi/bpmn/onto#Collaboration> .
+	<https://meta.linked.archi/bpmn/onto#ChoreographyTask> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "ChoreographyTask"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#ChoreographyActivity> .
+	<https://meta.linked.archi/bpmn/onto#Conversation> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Conversation"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#ConversationNode> .
+	<https://meta.linked.archi/bpmn/onto#ConversationNode> a <http://www.w3.org/2002/07/owl#Class> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "ConversationNode"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#InteractionNode> , <https://meta.linked.archi/bpmn/onto#BaseElement> , <https://meta.linked.archi/core#Element> .
+	<https://meta.linked.archi/bpmn/tax#FlowObjects> a <http://www.w3.org/2004/02/skos/core#Concept> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Flow Objects"@en ;
+		<http://www.w3.org/2004/02/skos/core#definition> "The main graphical elements within a process flow: activities, events, and gateways."@en ;
+		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> .
+	<https://meta.linked.archi/bpmn/tax#ConnectingObjects> a <http://www.w3.org/2004/02/skos/core#Concept> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Connecting Objects"@en ;
+		<http://www.w3.org/2004/02/skos/core#definition> "Elements connecting flow objects: sequence flows, message flows, associations."@en ;
+		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> .
+	<https://meta.linked.archi/bpmn/tax#SwimLanes> a <http://www.w3.org/2004/02/skos/core#Concept> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Swim Lanes"@en ;
+		<http://www.w3.org/2004/02/skos/core#definition> "Organizational groupings: pools and lanes."@en ;
+		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> .
+	<https://meta.linked.archi/bpmn/tax#Artifacts> a <http://www.w3.org/2004/02/skos/core#Concept> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Artifacts"@en ;
+		<http://www.w3.org/2004/02/skos/core#definition> "Data-related and annotation elements: data objects, data stores, groups, text annotations."@en ;
+		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> .
+	<https://meta.linked.archi/bpmn/tax#Collaborations> a <http://www.w3.org/2004/02/skos/core#Concept> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Collaborations"@en ;
+		<http://www.w3.org/2004/02/skos/core#definition> "Collaboration, choreography, and conversation elements."@en ;
+		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> .
+	<https://meta.linked.archi/bpmn/tax#Activities> a <http://www.w3.org/2004/02/skos/core#Concept> ;
+		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#FlowObjects> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Activities"@en ;
+		<http://www.w3.org/2004/02/skos/core#definition> "Work performed within a business process — tasks and sub-processes."@en ;
+		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> ;
+		<http://www.w3.org/2004/02/skos/core#narrower> <https://meta.linked.archi/bpmn/onto#Process> , <https://meta.linked.archi/bpmn/onto#SubProcess> , <https://meta.linked.archi/bpmn/onto#Task> , <https://meta.linked.archi/bpmn/onto#UserTask> , <https://meta.linked.archi/bpmn/onto#ServiceTask> , <https://meta.linked.archi/bpmn/onto#SendTask> , <https://meta.linked.archi/bpmn/onto#ReceiveTask> , <https://meta.linked.archi/bpmn/onto#ScriptTask> , <https://meta.linked.archi/bpmn/onto#BusinessRuleTask> , <https://meta.linked.archi/bpmn/onto#ManualTask> , <https://meta.linked.archi/bpmn/onto#CallActivity> , <https://meta.linked.archi/bpmn/onto#AdHocSubProcess> , <https://meta.linked.archi/bpmn/onto#Transaction> .
+	<https://meta.linked.archi/bpmn/tax#Events> a <http://www.w3.org/2004/02/skos/core#Concept> ;
+		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#FlowObjects> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Events"@en ;
+		<http://www.w3.org/2004/02/skos/core#definition> "Things that happen during a process: start, intermediate, and end events."@en ;
+		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> ;
+		<http://www.w3.org/2004/02/skos/core#narrower> <https://meta.linked.archi/bpmn/onto#StartEvent> , <https://meta.linked.archi/bpmn/onto#EndEvent> , <https://meta.linked.archi/bpmn/onto#IntermediateCatchEvent> , <https://meta.linked.archi/bpmn/onto#IntermediateThrowEvent> , <https://meta.linked.archi/bpmn/onto#BoundaryEvent> .
+	<https://meta.linked.archi/bpmn/tax#Gateways> a <http://www.w3.org/2004/02/skos/core#Concept> ;
+		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#FlowObjects> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Gateways"@en ;
+		<http://www.w3.org/2004/02/skos/core#definition> "Control flow divergence and convergence."@en ;
+		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> ;
+		<http://www.w3.org/2004/02/skos/core#narrower> <https://meta.linked.archi/bpmn/onto#ExclusiveGateway> , <https://meta.linked.archi/bpmn/onto#ParallelGateway> , <https://meta.linked.archi/bpmn/onto#InclusiveGateway> , <https://meta.linked.archi/bpmn/onto#EventBasedGateway> , <https://meta.linked.archi/bpmn/onto#ComplexGateway> .
+	<https://meta.linked.archi/bpmn/tax#SequenceFlowConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
+		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#ConnectingObjects> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Sequence Flow"@en ;
+		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> .
+	<https://meta.linked.archi/bpmn/tax#MessageFlowConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
+		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#ConnectingObjects> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Message Flow"@en ;
+		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> .
+	<https://meta.linked.archi/bpmn/tax#AssociationConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
+		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#ConnectingObjects> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Association"@en ;
+		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> .
+	<https://meta.linked.archi/bpmn/tax#DataAssociationConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
+		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#ConnectingObjects> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Data Association"@en ;
+		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> .
+	<https://meta.linked.archi/bpmn/tax#PoolConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
+		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#SwimLanes> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Pool (Participant)"@en ;
+		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> ;
+		<http://www.w3.org/2004/02/skos/core#narrower> <https://meta.linked.archi/bpmn/onto#Participant> .
+	<https://meta.linked.archi/bpmn/tax#LaneConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
+		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#SwimLanes> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Lane"@en ;
+		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> ;
+		<http://www.w3.org/2004/02/skos/core#narrower> <https://meta.linked.archi/bpmn/onto#Lane> .
+	<https://meta.linked.archi/bpmn/tax#DataObjectConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
+		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#Artifacts> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Data Object"@en ;
+		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> ;
+		<http://www.w3.org/2004/02/skos/core#narrower> <https://meta.linked.archi/bpmn/onto#DataObject> , <https://meta.linked.archi/bpmn/onto#DataObjectReference> .
+	<https://meta.linked.archi/bpmn/tax#DataStoreConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
+		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#Artifacts> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Data Store"@en ;
+		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> ;
+		<http://www.w3.org/2004/02/skos/core#narrower> <https://meta.linked.archi/bpmn/onto#DataStoreReference> .
+	<https://meta.linked.archi/bpmn/tax#MessageConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
+		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#Artifacts> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Message"@en ;
+		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> ;
+		<http://www.w3.org/2004/02/skos/core#narrower> <https://meta.linked.archi/bpmn/onto#Message> .
+	<https://meta.linked.archi/bpmn/tax#GroupConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
+		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#Artifacts> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Group"@en ;
+		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> ;
+		<http://www.w3.org/2004/02/skos/core#narrower> <https://meta.linked.archi/bpmn/onto#Group> .
+	<https://meta.linked.archi/bpmn/tax#TextAnnotationConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
+		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#Artifacts> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Text Annotation"@en ;
+		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> ;
+		<http://www.w3.org/2004/02/skos/core#narrower> <https://meta.linked.archi/bpmn/onto#TextAnnotation> .
+	<https://meta.linked.archi/bpmn/tax#CollaborationConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
+		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#Collaborations> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Collaboration"@en ;
+		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> ;
+		<http://www.w3.org/2004/02/skos/core#narrower> <https://meta.linked.archi/bpmn/onto#Collaboration> .
+	<https://meta.linked.archi/bpmn/tax#ChoreographyConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
+		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#Collaborations> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Choreography"@en ;
+		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> ;
+		<http://www.w3.org/2004/02/skos/core#narrower> <https://meta.linked.archi/bpmn/onto#Choreography> , <https://meta.linked.archi/bpmn/onto#ChoreographyTask> .
+	<https://meta.linked.archi/bpmn/tax#ConversationConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
+		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#Collaborations> ;
+		<http://www.w3.org/2004/02/skos/core#prefLabel> "Conversation"@en ;
+		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> ;
+		<http://www.w3.org/2004/02/skos/core#narrower> <https://meta.linked.archi/bpmn/onto#Conversation> , <https://meta.linked.archi/bpmn/onto#ConversationNode> .
+}

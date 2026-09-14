@@ -27,6 +27,10 @@ FLAT = FIXTURES / "flat.ttl"
 #: Both files carry the same ``schema:softwareVersion``, which is why fixtures are
 #: told apart by shape - see ``tests/test_fixtures.py`` and ``fixtures/PROVENANCE.md``.
 CONVERTER_13 = FIXTURES / "converter-1.3.trig"
+#: Published vocabulary - the BPMN taxonomy and the classes it groups - in one named
+#: graph, for attaching beside a dataset. Not converter output: the converters emit no
+#: ontology, which is why a template that needs the class hierarchy has to be given it.
+VOCABULARY = FIXTURES / "vocabulary.trig"
 
 #: Real IRIs from real converter output, present in the committed fixtures. Tests
 #: assert against these rather than inventing IRIs, so a test that passes is
@@ -91,16 +95,22 @@ def requires_pyoxigraph(test: unittest.TestCase) -> None:
 _STORES: dict[Path, object] = {}
 
 
-def load_fixture(path: Path):
-    """Open a fixture through the local adapter, once per process.
+def load_fixture(*paths: Path):
+    """Open one or more fixtures through the local adapter, once per combination.
 
     Parsing the same 900 quads for every test class is wasted time, and the adapter is
     read-only so sharing one is safe.
+
+    Several paths is how a dataset is paired with published vocabulary at query time:
+    the converters emit no ontology, so `vocabulary.trig` is attached beside the data
+    rather than baked into it. The adapter already accepted a list; only this helper
+    insisted on one file.
     """
-    if path not in _STORES:
+    key = paths if len(paths) > 1 else paths[0]
+    if key not in _STORES:
         from linked_archi_connect.adapters import open_adapter
-        _STORES[path] = open_adapter(data=[path])
-    return _STORES[path]
+        _STORES[key] = open_adapter(data=list(paths))
+    return _STORES[key]
 
 
 def load_resolved_profile(reference: str):

@@ -250,6 +250,43 @@
       },
       "requires": {}
     },
+    "core/elements-by-category": {
+      "file": "core/elements-by-category.rq",
+      "stage": "orientation",
+      "purpose": "Elements of a model grouped by the taxonomy category of their type.",
+      "answers": "How a notation's own taxonomy groups what is in this model.",
+      "does_not_prove": "That an element whose type no category names is unimportant - it produces no row at all.",
+      "parameters": {
+        "MODEL_IRI": {
+          "type": "iri",
+          "description": "the model to read, from core/models"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 300,
+          "min": 1,
+          "max": 3000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "narrower",
+          "broader",
+          "label"
+        ],
+        "graph_roles": [
+          "vocabulary",
+          "semantic"
+        ],
+        "membership": true
+      },
+      "alternatives": [
+        "notation/bpmn/process-components",
+        "core/elements-by-type"
+      ],
+      "caveat": "Grouping comes from the attached vocabulary, so it is only as current as the ontology version paired with this dataset."
+    },
     "core/elements-by-type": {
       "file": "core/elements-by-type.rq",
       "stage": "resolution",

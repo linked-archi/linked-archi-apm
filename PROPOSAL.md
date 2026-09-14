@@ -73,7 +73,7 @@ The terms that exist, against the ones an author reasonably reaches for first:
 **How it is enforced:** no template names a vocabulary term at all. Templates name roles, and
 `skills/linked-archi-profile/assets/profiles/linked-archi-default.yaml` binds each role to a
 verified term. `tests/test_render.py::test_no_template_carries_its_own_prefixes` asserts it
-across all 38 templates, so a term cannot creep back into one.
+across all 39 templates, so a term cannot creep back into one.
 
 ### F2. Graph scoping has to be a profile decision, not a constant
 
@@ -276,7 +276,7 @@ identified by shape and `tests/test_fixtures.py` asserts the shape of each one.
 Extraction proves a fixture was true of *some* build; only an assertion pins which.
 
 Every selection rule in `fixtures/build_fixtures.py` exists because a template
-returned zero rows without it. All 38 templates return rows against
+returned zero rows without it. All 39 templates return rows against
 `augmented.trig`: a template returning nothing is one the suite cannot distinguish
 from a broken one. Details in [fixtures/PROVENANCE.md](fixtures/PROVENANCE.md).
 
@@ -509,9 +509,9 @@ anything about the code under test.
 | `make verify-curated` (curated profile / `augmented.trig`) | 0 errors |
 | `query batch` against separate `query run` commands | identical `rows`, `query_id`, `truncated` and `row_count`; load paid once |
 | Store modes `memory`, `cached`, `readonly`, `refresh` | same quad and named-graph counts from each; a changed input rebuilds rather than serving a stale store |
-| `la-query catalog list --profile linked-archi-default` | 38 templates, 32 available, 6 refused with reasons |
+| `la-query catalog list --profile linked-archi-default` | 39 templates, 32 available, 7 refused with reasons |
 | `la-query catalog list --profile curated-store` | 35 available, 0 refused |
-| All 38 templates against `augmented.trig` | every one returns rows |
+| All 39 templates against `augmented.trig` | every one returns rows |
 | Exit-code contracts | 9 of 9 |
 | Owner skills copied alone to temp directories | independent commands run with `PYTHONPATH` scrubbed; combined siblings execute |
 
@@ -1166,9 +1166,27 @@ change what the package promises, so each needs a decision-log entry when taken.
     - `core/view-diff` still compares element sets and loses repeated placements of one
       element. Left open deliberately: preserving placement identity is a redesign of what
       the template compares, not a fix to how it compares.
-    - The BPMN component whitelist is still hand-maintained against an ontology that can
-      grow. Deriving it needs the ontology loaded alongside the data, which is the same
-      prerequisite **D21** records for confirming a direct-form claim.
+    - ~~The BPMN component whitelist is hand-maintained against an ontology that can
+      grow~~ — **addressed, and the premise was wrong twice.** First correction: the
+      categories *are* derivable. `bpmn-tax.ttl` declares `skos:narrower` from each
+      taxonomy concept to the ontology classes it covers, so "Gateways covers these five
+      classes" is a published fact; the template's invented buckets ("2 automated", "3
+      human") existed only because nothing had looked. Second correction: the blocker was
+      never availability of the ontology — it is published and local — but whether it is
+      *in the queried dataset*, which is a different question with a different answer.
+
+      Resolved by attaching vocabulary at query time rather than emitting it: a new
+      optional `vocabulary` graph role, and `core/elements-by-category`, which derives both
+      membership and category and names no notation term. Measured on the fixture: standard
+      `Activities`/`Events` under `FlowObjects`, where the hand table covered 17 of 49
+      element classes and omitted every gateway and sub-process.
+
+      The hand-table template stays as the documented alternative, because a dataset with no
+      vocabulary attached is the normal case and refusing outright would remove the only
+      answer available there. What is *not* done: nothing yet checks that the attached
+      vocabulary is the version the data claims conformance to. Pairing the wrong version
+      derives from the wrong hierarchy, silently — the highest-value probe left, and the one
+      that would also settle the `arch:unqualifiedForm` question **D21** records.
 
 ### B6: method and limits
 
