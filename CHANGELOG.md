@@ -10,6 +10,50 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-14
+A dataset can now be paired with the vocabulary it conforms to, so what one template
+enumerated by hand is derived instead. The converters emit instances, never the ontologies
+and taxonomies those instances conform to, which left every schema-level question
+unanswerable from an export alone — and the template that needed an answer carried a list
+covering 17 of the 49 element classes its ontology declares.
+
+Pairing happens at query time rather than in the pipeline: `la-connect` already accepted
+several files, so no export changes and no artifact becomes coupled to a vocabulary version
+it must then be kept in step with. The cost is that the operator owns the pairing, so
+`verify` now checks it.
+
+### Added
+- **Published vocabulary can be attached beside a dataset, and queried.** A conversion emits
+  instances, never the ontologies and taxonomies they conform to, so anything schema-level —
+  which classes are activities, what category a type belongs to — was unanswerable, and a
+  template facing that gap could only enumerate types by hand. A new optional
+  `graphs.roles.vocabulary` binds the graph the vocabulary lands in; `la-connect` already
+  accepts several files, so pairing happens at query time and no export changes. Its own
+  graph role, never `semantic`: ontology classes carry `skos:prefLabel` and would otherwise
+  come back as candidates from `core/resolve-element`. `examples/with-vocabulary` is the
+  worked profile, `fixtures/vocabulary.trig` the extracted fixture, and `roles.narrower` and
+  `roles.subclass_of` the two new bindings it needs.
+- **`verify` reports partial or mismatched vocabulary pairing.** Attaching vocabulary at
+  query time puts the operator in charge of which files are paired, and a wrong or partial
+  choice fails in the quietest way available: no error, just a grouping query returning
+  fewer categories, with every element of an uncovered notation absent — which reads as
+  "this model has none of those". The probe asks, per notation the profile declares,
+  whether the data uses its types and whether the attached vocabulary describes any of its
+  classes, and names the notations where the first is true and the second is not. Version
+  mismatch is the same finding rather than a separate one, because a notation ontology
+  carries its version in its namespace: `archimate3/onto#` and `archimate4/onto#` are
+  different namespaces. Silent when no `vocabulary` role is bound.
+- **`core/elements-by-category`** — what is in a model, grouped the way its own notation
+  groups it. The taxonomy already states which classes each category covers
+  (`bpmn-tax:Gateways skos:narrower bpmn:ExclusiveGateway, …`), so the grouping is a
+  published fact rather than an opinion in a query. It replaces the reason
+  `notation/bpmn/process-components` carries a hand-written table of 17 classes — against
+  the 49 the BPMN ontology declares, omitting every gateway and sub-process — under category
+  names invented because the standard ones were unreachable. Notation-agnostic: any
+  vocabulary declaring `skos:narrower` to its classes works, and a test pins that the
+  template names no notation term. Refused without the vocabulary role, with the
+  hand-table template as the documented alternative.
+
 ## [0.2.0] - 2026-09-14
 An audit of the bundled profiles and the whole template catalogue against the published
 ontologies, the converter emitters and a large multi-notation export. Every fix below is a
@@ -25,26 +69,6 @@ was corrected, what was investigated and found already correct, and what remains
 `core/resolve-element` `?g`→`?g_semantic`, and `core/traceability` gains `?relType2`.
 
 ### Added
-- **Published vocabulary can be attached beside a dataset, and queried.** A conversion emits
-  instances, never the ontologies and taxonomies they conform to, so anything schema-level —
-  which classes are activities, what category a type belongs to — was unanswerable, and a
-  template facing that gap could only enumerate types by hand. A new optional
-  `graphs.roles.vocabulary` binds the graph the vocabulary lands in; `la-connect` already
-  accepts several files, so pairing happens at query time and no export changes. Its own
-  graph role, never `semantic`: ontology classes carry `skos:prefLabel` and would otherwise
-  come back as candidates from `core/resolve-element`. `examples/with-vocabulary` is the
-  worked profile, `fixtures/vocabulary.trig` the extracted fixture, and `roles.narrower` and
-  `roles.subclass_of` the two new bindings it needs.
-- **`core/elements-by-category`** — what is in a model, grouped the way its own notation
-  groups it. The taxonomy already states which classes each category covers
-  (`bpmn-tax:Gateways skos:narrower bpmn:ExclusiveGateway, …`), so the grouping is a
-  published fact rather than an opinion in a query. It replaces the reason
-  `notation/bpmn/process-components` carries a hand-written table of 17 classes — against
-  the 49 the BPMN ontology declares, omitting every gateway and sub-process — under category
-  names invented because the standard ones were unreachable. Notation-agnostic: any
-  vocabulary declaring `skos:narrower` to its classes works, and a test pins that the
-  template names no notation term. Refused without the vocabulary role, with the
-  hand-table template as the documented alternative.
 - **A test refuses to let a non-public host reach a commit.** Auditing this package against
   a real estate produces IRIs, model names, digests and a private host — all useful, none
   publishable, and a published commit cannot be unpublished. An allowlist rather than a
@@ -207,6 +231,7 @@ converters against the meta.linked.archi ontologies.
   for SHACL validation, and `git` for Git acquisition. Endpoint and HTTPS transport use
   the standard library. No mandatory MCP server.
 
-[Unreleased]: https://github.com/linked-archi/linked-archi-apm/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/linked-archi/linked-archi-apm/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/linked-archi/linked-archi-apm/releases/tag/v0.1.0

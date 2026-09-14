@@ -1122,6 +1122,71 @@ def _verify_against_dataset(profile: Profile, adapter) -> list[Finding]:
 
     # --- capabilities ------------------------------------------------------
     findings += _verify_capabilities(profile, adapter)
+    findings += _verify_vocabulary_pairing(profile, adapter)
+    return findings
+
+
+def _verify_vocabulary_pairing(profile: Profile, adapter) -> list[Finding]:
+    """Does the attached vocabulary cover the notations the data actually uses?
+
+    Only asked when the profile binds ``graphs.roles.vocabulary``, because otherwise
+    there is nothing to pair and every notation would be reported as uncovered.
+
+    This is the cost of pairing vocabulary at query time rather than emitting it into the
+    dataset: the operator chooses which files to attach, and a partial or mismatched
+    choice fails in the quietest possible way. Nothing errors - the vocabulary simply has
+    no class for those types, so a grouping query returns fewer categories and every
+    element of the uncovered notation is absent from the result. That reads as "this model
+    has none of those".
+
+    Versioning is checked by the same probe rather than separately, because a notation
+    ontology carries its version in its namespace: ``archimate3/onto#`` and
+    ``archimate4/onto#`` are different namespaces, so vocabulary for the wrong version
+    covers none of the types the data uses and is reported exactly as an absent one.
+
+    Both probes per notation are derived from the profile, never from a probe result, so
+    the query set stays deterministic for the batch planner.
+    """
+    if not profile.graphs.has_role("vocabulary") or not profile.graphs.named_graphs:
+        return []
+
+    p = profile.prefix_block()
+    vocabulary = profile.graphs.suffix_test("vocabulary", "?g")
+    findings: list[Finding] = []
+    uncovered: list[str] = []
+
+    for slug in sorted(profile.notations):
+        spec = profile.notations.get(slug) or {}
+        prefix = str(spec.get("namespace", ""))
+        namespace = profile.namespaces.get(prefix)
+        if not namespace:
+            continue
+        used = adapter.ask(
+            f"{p}\nASK {{ GRAPH ?g {{ ?s a ?type . "
+            f'FILTER(STRSTARTS(STR(?type), "{namespace}")) }} }}'
+        )
+        described = adapter.ask(
+            f"{p}\nASK {{ GRAPH ?g {{ ?class a ?meta . FILTER({vocabulary}) "
+            f'FILTER(STRSTARTS(STR(?class), "{namespace}")) }} }}'
+        )
+        if used and not described:
+            uncovered.append(f"{slug} ({namespace})")
+
+    if uncovered:
+        findings.append(Finding(
+            "warning", "graphs.roles.vocabulary",
+            "bound, but the attached vocabulary describes no class for notations the data "
+            f"uses: {', '.join(uncovered)}. Templates deriving from the class hierarchy "
+            "will silently omit every element of those notations rather than fail - and a "
+            "notation ontology is versioned in its namespace, so this is also what "
+            "pairing the wrong version looks like. Attach the matching vocabulary, or "
+            "read the result as covering only the notations listed.",
+        ))
+    else:
+        findings.append(Finding(
+            "info", "graphs.roles.vocabulary",
+            "bound, and every notation the data uses has vocabulary describing it",
+        ))
     return findings
 
 

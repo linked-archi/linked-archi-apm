@@ -1183,10 +1183,25 @@ change what the package promises, so each needs a decision-log entry when taken.
 
       The hand-table template stays as the documented alternative, because a dataset with no
       vocabulary attached is the normal case and refusing outright would remove the only
-      answer available there. What is *not* done: nothing yet checks that the attached
-      vocabulary is the version the data claims conformance to. Pairing the wrong version
-      derives from the wrong hierarchy, silently — the highest-value probe left, and the one
-      that would also settle the `arch:unqualifiedForm` question **D21** records.
+      answer available there.
+
+      **Pairing is now verified**, which was the open risk in choosing query-time
+      attachment: `verify` asks, per declared notation, whether the data uses its types and
+      whether the attached vocabulary describes any of its classes, and names the notations
+      where the first holds and the second does not. Version mismatch needs no separate
+      probe — a notation ontology carries its version in its namespace, so vocabulary for
+      `archimate3/onto#` simply covers none of an `archimate4/onto#` dataset and is
+      reported as absent. On the committed pairing it correctly names four uncovered
+      notations and not the one that is covered.
+
+      Still open, and now cheaply reachable: `notation/archimate/layer-crossing` matches on
+      **class-name strings**, while the ArchiMate ontology declares layer markers as
+      classes (`am:BusinessLayerElement`, `am:ApplicationLayerElement`, under
+      `am:CoreLayerElement`). With ArchiMate vocabulary attached it could walk
+      `rdfs:subClassOf*` to a layer marker instead of parsing names — which also removes the
+      3-versus-4 assumption, since the marker classes are versioned with their namespace.
+      Needs the fixture extended beyond BPMN and the template rewritten; deliberately not
+      rushed into this release.
 
 ### B6: method and limits
 

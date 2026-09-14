@@ -443,6 +443,42 @@ class TestDriftDetection(unittest.TestCase):
         self.assertEqual(relevant[0].severity, "info")
         self.assertIn("partial", relevant[0].message)
 
+    def test_partial_vocabulary_pairing_is_reported(self):
+        """The cost of pairing vocabulary at query time, made visible.
+
+        The operator chooses which files to attach, and a partial or mismatched choice
+        fails in the quietest possible way: no error, just a grouping query returning
+        fewer categories, with every element of an uncovered notation absent. That reads
+        as "this model has none of those".
+
+        The fixture pairs a five-notation dataset with BPMN vocabulary only, so the four
+        uncovered notations must be named. A notation ontology carries its version in its
+        namespace, so this same probe is what pairing the wrong version looks like.
+        """
+        findings = verify_against_dataset(
+            load_profile("curated-store"),
+            support.load_fixture(AUGMENTED, support.VOCABULARY),
+        )
+        relevant = [f for f in findings
+                    if f.subject == "graphs.roles.vocabulary" and f.severity == "warning"]
+        self.assertTrue(relevant, format_findings(findings))
+        message = relevant[0].message
+        for namespace in ("archimate3/onto#", "c4/onto#", "backstage/onto#", "leanix/onto#"):
+            self.assertIn(namespace, message)
+        self.assertNotIn(
+            "bpmn/onto#", message,
+            "BPMN vocabulary IS attached, so it must not be reported as uncovered",
+        )
+
+    def test_no_vocabulary_role_means_no_pairing_findings(self):
+        """Silence where there is nothing to pair, or every profile gains noise."""
+        findings = verify_against_dataset(
+            load_profile("linked-archi-default"), support.load_fixture(BASE)
+        )
+        self.assertEqual(
+            [f for f in findings if f.subject == "graphs.roles.vocabulary"], [],
+        )
+
     def test_claiming_absence_of_something_present_is_only_a_warning(self):
         """Over-caution refuses templates unnecessarily; it does not mislead."""
         profile = load_profile("linked-archi-default")
