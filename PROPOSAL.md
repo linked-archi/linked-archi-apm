@@ -1194,14 +1194,50 @@ change what the package promises, so each needs a decision-log entry when taken.
       reported as absent. On the committed pairing it correctly names four uncovered
       notations and not the one that is covered.
 
-      Still open, and now cheaply reachable: `notation/archimate/layer-crossing` matches on
-      **class-name strings**, while the ArchiMate ontology declares layer markers as
-      classes (`am:BusinessLayerElement`, `am:ApplicationLayerElement`, under
-      `am:CoreLayerElement`). With ArchiMate vocabulary attached it could walk
-      `rdfs:subClassOf*` to a layer marker instead of parsing names — which also removes the
-      3-versus-4 assumption, since the marker classes are versioned with their namespace.
-      Needs the fixture extended beyond BPMN and the template rewritten; deliberately not
-      rushed into this release.
+      **`notation/archimate/layer-crossing` — solved on paper, blocked on a fixture.**
+      Written, run, and then reverted rather than shipped. Recorded here in full because the
+      analysis is the expensive part and it is finished.
+
+      It derives the layer of an element from its class, which no dataset states — a
+      conversion emits instances. So it matches class-name strings instead: twelve nested
+      conditions per endpoint on prefixes like `Business` and `Node`, with a fall-through
+      that uses the class name itself as the layer. **Measured on `augmented.trig`, the one
+      row it returns is fabricated**: it reports `Business → Strategy` for a
+      `BusinessRole → Value` association, because the name starts with `Value` and the
+      heuristic was aiming at `ValueStream`. The published taxonomy puts `am:Value` under
+      the Motivation *aspect*, not the Strategy layer. So the template's only output on the
+      committed fixture is wrong, and it is wrong in the direction that looks plausible.
+
+      The taxonomy answers it exactly, and the query is verified against the real file:
+
+      ```sparql
+      ?layerConcept skos:broader amtax:ElementByLayer ;
+                    skos:narrower ?type ; skos:prefLabel ?layer .
+      ```
+
+      48 class-to-layer assignments in ArchiMate 3.2, no string matching. The
+      `ElementByLayer` parent is load-bearing: the same taxonomy groups the same classes a
+      second, orthogonal way — by aspect, under `ElementByAspect`, using `skos:narrower`
+      identically — so "any concept naming a class" would report an aspect as a layer. And
+      the parent belongs in a **role** (`layer_grouping`) rather than in the template, since
+      the concept is versioned with its vocabulary: an ArchiMate 4 dataset rebinds the role
+      and the query is unchanged, which is what finally removes the 3-versus-4 assumption.
+
+      What stops it shipping is the fixture, and the repo's own rule is why. The committed
+      ArchiMate slice is **business-layer only** — 7 types, 14 elements, every relationship
+      inside the Business layer apart from that one association to a Motivation-aspect
+      element. So the *correct* query returns zero rows, and
+      `fixtures/PROVENANCE.md` states the standard for exactly this case: a fixture on
+      which a template returns nothing is a fixture gap rather than a floor to lower,
+      because the suite cannot tell empty-by-design from broken. Shipping it would trade a
+      measured false positive for an untestable template.
+
+      Two things are needed, neither of which is an edit: ArchiMate output containing a
+      genuine cross-layer relationship, extracted via `make fixtures` from the playground
+      conversion (it needs the converter jars); and a decision about
+      `core/elements-by-category` once ArchiMate vocabulary is attached, since it would then
+      group the same element by layer *and* by aspect and multiply its rows — which is item
+      7's problem arriving from a new direction.
 
 ### B6: method and limits
 
