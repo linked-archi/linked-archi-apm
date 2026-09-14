@@ -1113,16 +1113,24 @@ change what the package promises, so each needs a decision-log entry when taken.
    built from a repository scan carries hundreds of `dct:source` values. Its source paths
    remain available per graph from `core/graph-provenance`.
 
-   Still open in `core/identity-audit`, `core/reifies-audit` and
-   `notation/leanix/factsheets`. `core/identity-audit` is the one to think about rather than
-   pattern-match: it reports each side of an identity assertion, and whether a reciprocal
-   pair is duplication or the point - a one-sided assertion is a finding - is a semantic
-   question its `?kind` column may already be answering.
+   Also done for `core/identity-audit`, `core/reifies-audit` and
+   `notation/leanix/factsheets`. Each counted once per value of a column rather than once
+   per subject, and each result reads as a population — how many broken bridges, how large
+   the inventory, how well reconciled the estate — so the inflation changed the finding
+   rather than the formatting.
 
-   The fixtures also cannot catch this class directly: no committed fixture has a
-   multi-typed orphan, so that test pins the one-row-per-element contract without
-   reproducing the inflation. Extracting one would make the rest testable rather than
-   argued.
+   `core/identity-audit` needed the thought rather than the pattern. Its inflation was the
+   `any` scope: one assertion repeated across graphs is still one assertion, and converter
+   output does repeat statements between graphs, which is how 4 `owl:sameAs` links became
+   215 rows. So `DISTINCT`, which collapses graph repetition — and deliberately does **not**
+   collapse direction, because a reciprocal pair and a one-sided assertion are different
+   findings and the one-sided case is the one worth chasing.
+
+   The fixtures still cannot catch this class directly: none holds a multi-typed orphan or
+   relationship, a multi-phase fact sheet, or a cross-graph duplicate assertion, so these
+   tests pin the one-row-per-subject contract without reproducing the inflation and say so.
+   Extracting a fixture with those shapes is the remaining work, and per `CONTRIBUTING.md`
+   it needs a converter run rather than an edit.
 8. ~~**`core/discover-predicates` can describe a tuple that never existed**~~ **Done.** Two
    independent `SAMPLE`s pick independently, so the object kind and the example object
    could come from different solutions - real values describing a pair that never occurred,

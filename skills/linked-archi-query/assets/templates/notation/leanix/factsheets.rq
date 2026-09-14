@@ -13,9 +13,17 @@
 # be skos:exactMatch and never owl:sameAs - see core/identity-audit, and design
 # decision DD-11.
 #
+# One row per fact sheet, with lifecycle phases concatenated. A fact sheet has several
+# phases by design - that is what a lifecycle is - so a row per phase multiplied the
+# inventory by however many phases each entry recorded, and an inventory that overstates
+# its own size is worse than one that omits a column. The remaining fields are grouping
+# keys because LeanIX carries at most one of each; if a dataset carries more, those rows
+# still separate, which is visible rather than silent.
+#
 # Parameters: LIMIT
 {{PREFIXES}}
-SELECT ?factSheet ?label ?type ?status ?completion ?phase ?url
+SELECT ?factSheet ?label ?type ?status ?completion
+       (GROUP_CONCAT(DISTINCT ?phase; separator=", ") AS ?phases) ?url
 WHERE {
   {{GRAPH_OPEN:semantic}}
     ?factSheet a lmm:FactSheet .
@@ -30,5 +38,6 @@ WHERE {
     OPTIONAL { ?factSheet schema:url ?url }
   {{GRAPH_CLOSE}}
 }
+GROUP BY ?factSheet ?label ?type ?status ?completion ?url
 ORDER BY ?type ?label
 LIMIT {{LIMIT}}

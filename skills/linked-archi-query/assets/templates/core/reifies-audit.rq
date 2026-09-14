@@ -27,11 +27,18 @@
 # they reported it as a clean bridge. Measured, both ways, against
 # tests/test_reifies.py.
 #
+# One row per finding per relationship, with the relationship's types concatenated. A
+# relationship is multi-typed - the core class plus its notation class - so a row per type
+# reported one broken bridge as several, and in an audit an inflated count reads as a worse
+# problem than the one you have. STR() inside GROUP_CONCAT for the reason core/view-contents
+# records: the aggregate is a type error over IRIs and yields unbound rather than failing.
+#
 # Requires SPARQL 1.2; refused unless the profile declares capabilities.rdf_reifies.
 #
 # Parameters: LIMIT
 {{PREFIXES}}
-SELECT ?finding ?rel ?relType ?expected ?found
+SELECT ?finding ?rel (GROUP_CONCAT(DISTINCT STR(?relType); separator=", ") AS ?relTypes)
+       ?expected ?found
 WHERE {
   {{GRAPH_OPEN:semantic}}
     {
@@ -69,5 +76,6 @@ WHERE {
     }
   {{GRAPH_CLOSE}}
 }
+GROUP BY ?finding ?rel ?expected ?found
 ORDER BY ?finding ?rel
 LIMIT {{LIMIT}}

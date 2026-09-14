@@ -242,6 +242,41 @@ class TestAgainstAugmentedFixture(unittest.TestCase):
                         f"{name} put a non-model in the model column: {row['model']!r}",
                     )
 
+    def test_multi_valued_columns_do_not_multiply_rows(self):
+        """One row per subject, for the templates whose optional columns are one-to-many.
+
+        Each of these counted something once per value of a column rather than once per
+        subject: a relationship's several types, a fact sheet's several lifecycle phases,
+        an identity assertion repeated across graphs. The result reads as a population -
+        how many broken bridges, how large the inventory, how well reconciled the estate -
+        so inflation there is not cosmetic, it changes the finding.
+
+        A contract guard rather than a reproduction, and the distinction is worth stating:
+        the committed fixtures hold no multi-typed relationship, no multi-phase fact sheet
+        and no cross-graph duplicate assertion, so these passed before the change too. The
+        measurements that motivated it came from a large export (215 rows from 4 identity
+        assertions). Extracting a fixture with those shapes is what would turn this into a
+        real reproduction - recorded in PROPOSAL.md B5 item 7.
+        """
+        for name, key in (
+            ("core/identity-audit", "element"),
+            ("core/reifies-audit", "rel"),
+            ("notation/leanix/factsheets", "factSheet"),
+        ):
+            with self.subTest(name):
+                rendered = render(name, self.profile, {}, catalog=self.catalog)
+                envelope = self.adapter.execute(
+                    rendered.query, template=name, profile_id=self.profile.name,
+                    profile_version=self.profile.profile_version, limit=500,
+                )
+                self.assertTrue(envelope.rows, f"{name} returned nothing to check")
+                subjects = [row[key] for row in envelope.rows]
+                self.assertEqual(
+                    len(subjects), len(set(subjects)),
+                    f"{name} returns more rows than {key} values, so its count reads as "
+                    "more than it found",
+                )
+
     def test_orphans_reports_each_element_once_with_its_types(self):
         """One row per element, and the types column actually populated.
 

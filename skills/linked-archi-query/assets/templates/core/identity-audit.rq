@@ -30,9 +30,20 @@
 # independent scope on the same role, which is what stops the counterpart's label
 # from being required to live in the element's graph.
 #
+# DISTINCT because the scope is every graph, and one assertion repeated across graphs is
+# still one assertion. Converter output does repeat statements between graphs, so without
+# it a handful of identity links can arrive as a page of rows and read as a well-reconciled
+# dataset - the opposite of what the count means. Measured on a large export: 215 rows from
+# 4 owl:sameAs assertions.
+#
+# What DISTINCT deliberately does NOT collapse is direction. If A and B assert identity of
+# each other, both rows stand: a reciprocal pair and a one-sided assertion are different
+# findings, and the one-sided case is the one worth chasing. Reading the pair as
+# duplication would hide it.
+#
 # Parameters: LIMIT
 {{PREFIXES}}
-SELECT ?element ?elementLabel ?kind ?counterpart ?counterpartLabel
+SELECT DISTINCT ?element ?elementLabel ?kind ?counterpart ?counterpartLabel
 WHERE {
   {{GRAPH_OPEN:any}}
     {

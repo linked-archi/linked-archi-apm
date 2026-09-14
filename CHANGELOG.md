@@ -47,6 +47,13 @@ workflow publishes exactly this text, so what is written here is what a consumer
   for custom profiles rather than altering current results.
 
 ### Fixed
+- **Three more templates return one row per subject.** `core/identity-audit` searched every
+  graph, and converter output repeats statements between graphs, so 4 `owl:sameAs` links
+  arrived as 215 rows and read as a well-reconciled estate; it is now `DISTINCT`, which
+  collapses graph repetition but deliberately not direction, since a one-sided assertion is
+  a finding rather than half a pair. `core/reifies-audit` reported one broken bridge once
+  per relationship type, and `notation/leanix/factsheets` counted a fact sheet once per
+  lifecycle phase — an inventory overstating its own size. Both now aggregate that column.
 - **`core/models` returns one row per model.** A model converted from many inputs carries
   many `dct:source` values — a catalogue built from a repository scan carries hundreds — and
   a row each turned "which models are loaded" into a number several times larger than the
