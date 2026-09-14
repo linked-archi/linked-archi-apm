@@ -362,6 +362,13 @@ class TestAgainstAugmentedFixture(unittest.TestCase):
         ArchiMate model's conversion timestamp, which is in its provenance graph and was
         never reported. Each field now carries its own triple pattern and its own scope.
         A row count could not have caught this: the count was right and a cell was empty.
+
+        The row-shape assertion below used to tolerate exactly one duplicate row, for the
+        model carrying two timestamps. It is now the stronger statement: one row per model,
+        with the second timestamp in the same cell. An orientation template that answers
+        "how many models are loaded" must not return more rows than models - measured on a
+        large export, 263 rows for 55 models - and A8 records why two timestamps are
+        history rather than duplication.
         """
         rendered = render("core/models", self.profile, {}, catalog=self.catalog)
         envelope = self.adapter.execute(
@@ -374,9 +381,12 @@ class TestAgainstAugmentedFixture(unittest.TestCase):
         self.assertIn("https://example.org/la/model/archisurance", generated)
         models = [row["model"] for row in envelope.rows]
         self.assertEqual(
-            len(models), len(set(models)) + 1,
-            "exactly one model has two conversion timestamps in this fixture; more "
-            "repetition than that is row multiplication, not history",
+            len(models), len(set(models)),
+            "one row per model: repetition here reads as more models than exist",
+        )
+        self.assertIn(
+            ", ", generated.get("https://example.org/la/leanix/leanix-inventory", ""),
+            "the export and conversion timestamps belong in one cell, not two rows",
         )
 
     def _resolve_model(self, term):

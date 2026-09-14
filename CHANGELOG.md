@@ -10,6 +10,12 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 ### Added
+- **A test refuses to let a non-public host reach a commit.** Auditing this package against
+  a real estate produces IRIs, model names, digests and a private host — all useful, none
+  publishable, and a published commit cannot be unpublished. An allowlist rather than a
+  denylist, deliberately: a denylist has to name the customer to exclude them, and protects
+  only that one engagement. RFC 2606 documentation names and the reserved IP ranges the
+  transport tests use are allowed by rule, and the guard's own rule is tested.
 - **Notation templates are gated on the vocabulary they name.** The catalogue carried a
   `notation` label from the start and never consulted it, so a BPMN template offered against
   a C4-only dataset ran and returned nothing — indistinguishable from "this model has no
@@ -41,6 +47,26 @@ workflow publishes exactly this text, so what is written here is what a consumer
   for custom profiles rather than altering current results.
 
 ### Fixed
+- **`core/models` returns one row per model.** A model converted from many inputs carries
+  many `dct:source` values — a catalogue built from a repository scan carries hundreds — and
+  a row each turned "which models are loaded" into a number several times larger than the
+  number of models: 263 rows for 55 models on a large export. `?sources` is now a count and
+  `?generated` the set of timestamps; the source paths remain available per graph from
+  `core/graph-provenance`.
+- **`core/label-collisions` normalises any script, not just ASCII.** `[^a-z0-9]` did not
+  merely miss accents, it manufactured collisions: every non-ASCII character became a
+  separator, so "Café Ünïcode 日本" normalised to "caf n code" and a label written entirely
+  in a non-Latin script normalised to the empty string, where it matched every other such
+  label. An identity *candidate* list that invents candidates is worse than one that misses
+  them. Now `\p{L}\p{N}`, with an empty-normalisation guard.
+- **`core/discover-predicates` no longer describes an object pair that never occurred.** The
+  object kind and the example were independent `SAMPLE`s, so they could come from different
+  solutions — both real, the combination invented. Kinds are now the complete set, which
+  also reveals a predicate carrying both IRIs and literals.
+- **`core/dependents-direct` points at the right source for its predicates.** It told callers
+  to take `PREDICATE_PATH` from `core/discover-relationship-types`, which returns qualified
+  classes (`am:Serving`) rather than the predicates they stand for (`am:serves`); following a
+  class matches nothing and returns it as an empty answer. Now `core/reified-predicates`.
 - **The `?model` column now comes from the profile's membership, not a hardcoded folder
   hop.** `core/coverage-gaps`, `core/elements-by-type`, `core/lifecycle`, `core/orphans`
   and `core/views` resolved it with a single `dct:isPartOf` step, which is the folder edge

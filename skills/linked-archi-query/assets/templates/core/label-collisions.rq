@@ -25,6 +25,17 @@
 # make the candidate set larger and its rules harder to explain, and the reader is
 # the one deciding.
 #
+# "Alphanumeric" is \p{L}\p{N} - any letter or number in any script - not [a-z0-9].
+# The ASCII class did not merely miss accents, it manufactured collisions: every
+# character outside ASCII became a separator, so "Café Ünïcode 日本" normalised to
+# "caf n code" and a label written entirely in a non-Latin script normalised to the
+# empty string, where it matched every other such label. An identity CANDIDATE list
+# that invents candidates is worse than one that misses them, because the reader is
+# asked to adjudicate a resemblance that does not exist.
+#
+# The empty-normalisation guard stays even so: a label of nothing but punctuation
+# normalises to "" in any script, and "" is not a resemblance.
+#
 # ?models is the number of distinct models the normalised label appears in, repeated
 # on each row, so a two-way collision is visibly different from a five-way one.
 #
@@ -47,7 +58,8 @@ WHERE {
                    {{PATH:label}} ?candidateLabel .
         {{MEMBERSHIP:candidate}}
       {{GRAPH_CLOSE}}
-      BIND(REPLACE(REPLACE(LCASE(STR(?candidateLabel)), "[^a-z0-9]+", " "), "^ +| +$", "") AS ?normalised)
+      BIND(REPLACE(REPLACE(LCASE(STR(?candidateLabel)), "[^\\p{L}\\p{N}]+", " "), "^ +| +$", "") AS ?normalised)
+      FILTER(?normalised != "")
     }
     GROUP BY ?normalised
     HAVING(COUNT(DISTINCT ?model) > 1)
@@ -61,7 +73,7 @@ WHERE {
       FILTER(?type != {{ROLE:concept_class}} && ?type != {{ROLE:element_class}})
     }
   {{GRAPH_CLOSE}}
-  FILTER(REPLACE(REPLACE(LCASE(STR(?label)), "[^a-z0-9]+", " "), "^ +| +$", "") = ?normalised)
+  FILTER(REPLACE(REPLACE(LCASE(STR(?label)), "[^\\p{L}\\p{N}]+", " "), "^ +| +$", "") = ?normalised)
 }
 ORDER BY DESC(?models) ?normalised ?model ?element
 LIMIT {{LIMIT}}

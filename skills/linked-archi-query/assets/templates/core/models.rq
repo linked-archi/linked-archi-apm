@@ -31,9 +31,26 @@
 # carry a model-level triple, which is the only reason that shape survived here -
 # core/resolve-model hit it for real.
 #
+# ONE ROW PER MODEL, which needs saying because it did not used to be true. A model
+# converted from many input files carries many dct:source values - a catalogue built
+# from a repository scan can carry hundreds - and a row each turned "which models are
+# loaded" into a number several times larger than the number of models. Measured on a
+# large export: 263 rows for 55 models. For an orientation template, whose whole job
+# is telling a reader how much is in front of them, that is the worst place to inflate.
+#
+# So ?sources is a count and ?generated is the set. The source PATHS are still
+# available per graph from core/graph-provenance; they are omitted here because a
+# hundred of them in one cell is not orientation either.
+#
+# Two generation times is not duplication, which is why they are concatenated rather
+# than counted: a model can carry the author's export timestamp and the conversion's
+# own, and the difference between them is a staleness signal (A8).
+#
 # Parameters: LIMIT
 {{PREFIXES}}
-SELECT ?model ?metamodel ?title ?source ?generated
+SELECT ?model ?metamodel ?title
+       (COUNT(DISTINCT ?source) AS ?sources)
+       (GROUP_CONCAT(DISTINCT STR(?generated); separator=", ") AS ?generated)
 WHERE {
   {{GRAPH_OPEN:model}}
     ?model a {{ROLE:model_class}} .
@@ -43,5 +60,6 @@ WHERE {
   OPTIONAL { {{GRAPH_OPEN:provenance2}} ?model {{ROLE:source_file}} ?source {{GRAPH_CLOSE}} }
   OPTIONAL { {{GRAPH_OPEN:provenance3}} ?model {{ROLE:generated_at}} ?generated {{GRAPH_CLOSE}} }
 }
+GROUP BY ?model ?metamodel ?title
 ORDER BY ?model
 LIMIT {{LIMIT}}

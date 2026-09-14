@@ -18,9 +18,18 @@
 # nothing raises an error.
 #
 # PREDICATE_PATH is an alternation, capped, and required. Get the predicates from
-# core/discover-relationship-types rather than assuming which ones this dataset
-# uses; the notation ontologies are versioned in the namespace, so am: and am4:
-# spell the same concept differently.
+# core/reified-predicates rather than assuming which ones this dataset uses; the
+# notation ontologies are versioned in the namespace, so am: and am4: spell the same
+# concept differently.
+#
+# NOT from core/discover-relationship-types, which this used to recommend. That
+# template reports the qualified relationship CLASSES a dataset uses - am:Serving,
+# bpmn:SequenceFlow - and this parameter needs the unqualified PREDICATES those
+# classes stand for - am:serves. Following a class as if it were a predicate matches
+# nothing, and returns it as an empty answer rather than an error. core/reified-
+# predicates reads the rdf:reifies bridge, whose triple term names exactly the
+# predicate each relationship stands for, which is the same bridge whose presence
+# gates this template.
 #
 # Parameters: FOCUS_IRI, PREDICATE_PATH, LIMIT
 {{PREFIXES}}

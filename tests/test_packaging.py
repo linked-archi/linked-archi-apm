@@ -1163,6 +1163,9 @@ class TestDocumentedCountsMatchReality(unittest.TestCase):
         re.compile(r"across all (\d+) templates"),
         re.compile(r"(\d+) template\(s\)"),
         re.compile(r"(\d+) templates, \d+ available"),
+        # README's own phrasing, added because it drifted: it said 36 while the catalogue
+        # held 38, in the one sentence most readers see first.
+        re.compile(r"(\d+) tested templates"),
     )
 
     #: "N templates, M available under <profile>" - the availability number too.
@@ -1220,3 +1223,108 @@ class TestDocumentedCountsMatchReality(unittest.TestCase):
                         f"but {available} are available"
                     )
         self.assertEqual(wrong, [], "documented availability is stale:\n  " + "\n  ".join(wrong))
+
+
+class TestNoPrivateHostsShip(unittest.TestCase):
+    """No committed file may name a host outside the public set this package documents.
+
+    The failure this prevents is not hypothetical and not really about hosts: it is about
+    evidence. Auditing this package against a real customer estate produces IRIs, model
+    names, release digests and a GitLab host, all of it useful and none of it publishable.
+    Keeping it out by remembering to grep works until the once it does not, and a leak is
+    unrecoverable in a way a bug is not - a published commit cannot be unpublished.
+
+    An allowlist rather than a denylist, deliberately. A denylist has to name the customer
+    to exclude them, which puts the thing being protected into the repository that must not
+    contain it, and it protects exactly one engagement. This fails on any host that is not
+    documentation, so the next dataset is covered by a test written before it arrives.
+
+    Reserved and documentation names are allowed by rule rather than by listing: RFC 2606
+    `.example`/`.test`/`.invalid`/`.localhost`, the `example.org|net|com` documentation
+    domains, and the private and link-local IP ranges the transport tests use as SSRF
+    targets. Hosts with no dot are skipped as truncated test stubs (`https://bad`), since
+    they cannot name a real machine.
+    """
+
+    #: Real public hosts this package legitimately references.
+    ALLOWED = {
+        "meta.linked.archi",          # the published ontologies
+        "schema.org", "purl.org", "www.w3.org",
+        "github.com", "git-lfs.github.com", "microsoft.github.io", "gitlab.com",
+        "keepachangelog.com", "semver.org",
+        "agentskills.io", "kiro.dev",
+        "acme.leanix.net",            # a vendor endpoint shape, in an example profile
+        "e.org",                      # a stub target in the transport tests
+    }
+
+    #: Reserved for documentation and testing, so allowed by suffix.
+    ALLOWED_SUFFIXES = (
+        ".example", ".example.org", ".example.net", ".example.com",
+        ".invalid", ".test", ".localhost",
+    )
+    ALLOWED_EXACT_SUFFIX_ROOTS = {"example.org", "example.net", "example.com"}
+
+    #: Private, loopback, link-local and CGNAT literals: the SSRF test targets.
+    RESERVED_IP = re.compile(
+        r"^(?:127\.|10\.|192\.168\.|169\.254\.|100\.(?:6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.|"
+        r"172\.(?:1[6-9]|2\d|3[01])\.)"
+    )
+
+    HOST = re.compile(r"https?://([A-Za-z0-9._-]+)")
+
+    TEXT_SUFFIXES = {
+        ".py", ".md", ".rq", ".json", ".yaml", ".yml", ".ttl", ".trig", ".txt", ".cfg",
+        ".toml", ".sh", ".ini",
+    }
+
+    def _files(self):
+        skip = {".git", ".linked-archi-cache", "__pycache__", "dist", "node_modules",
+                ".venv", ".pytest_cache"}
+        for path in sorted(ROOT.rglob("*")):
+            if not path.is_file() or any(part in skip for part in path.parts):
+                continue
+            if path.suffix in self.TEXT_SUFFIXES or path.name in {"la-kg", "Makefile"}:
+                yield path
+
+    def _allowed(self, host: str) -> bool:
+        host = host.lower().rstrip(".")
+        if "." not in host:
+            return True
+        if host in self.ALLOWED or self.RESERVED_IP.match(host):
+            return True
+        if host in self.ALLOWED_EXACT_SUFFIX_ROOTS:
+            return True
+        return host.endswith(self.ALLOWED_SUFFIXES)
+
+    def test_no_committed_file_names_a_non_public_host(self):
+        offenders: dict[str, set[str]] = {}
+        for path in self._files():
+            try:
+                text = path.read_text(encoding="utf-8")
+            except UnicodeDecodeError:  # pragma: no cover - binary asset
+                continue
+            for host in self.HOST.findall(text):
+                if not self._allowed(host):
+                    offenders.setdefault(
+                        host.lower(), set()
+                    ).add(path.relative_to(ROOT).as_posix())
+        self.assertEqual(
+            offenders, {},
+            "non-public hosts in committed files (add to ALLOWED only if the host is "
+            "genuinely public and belongs in this package): "
+            + "; ".join(
+                f"{host} in {', '.join(sorted(files))}"
+                for host, files in sorted(offenders.items())
+            ),
+        )
+
+    def test_the_guard_would_catch_a_private_host(self):
+        """A guard that cannot fail is decoration, so this checks the rule itself."""
+        for host in ("source.internal.corp", "archi.acmebank", "gitlab.acme-corp.io",
+                     "203.0.113.7"):
+            with self.subTest(host):
+                self.assertFalse(self._allowed(host))
+        for host in ("meta.linked.archi", "models.example.org", "graph.example",
+                     "127.0.0.1", "192.168.1.1", "bad"):
+            with self.subTest(host):
+                self.assertTrue(self._allowed(host))

@@ -1106,34 +1106,61 @@ change what the package promises, so each needs a decision-log entry when taken.
    purpose — comparing the two halves of one resource against each other — is
    resource-local by nature, and widening the scope would add cost for no semantics. Its
    `?relType` column does still multiply rows; that belongs to item 7.
-7. **Row multiplicity from optional projections.** Done for `core/orphans`, which
-   returned 1,530 rows for 1,009 distinct elements on a large export and now concatenates
-   types per element. Still open in `core/models`, `core/identity-audit`,
-   `core/reifies-audit` and `notation/leanix/factsheets`. A count read as a population is
-   wrong by whatever the optional columns multiply, and the inflation reads as severity.
+7. **Row multiplicity from optional projections.** Done for `core/orphans` (1,530 rows for
+   1,009 distinct elements on a large export) and for `core/models` (263 rows for 55
+   models). The second mattered most: an orientation template whose job is telling a reader
+   how much is in front of them must not return more rows than models, and a catalogue
+   built from a repository scan carries hundreds of `dct:source` values. Its source paths
+   remain available per graph from `core/graph-provenance`.
 
-   Worth noting the fixtures cannot currently catch this class: no committed fixture has
-   a multi-typed orphan, so the `core/orphans` test pins the one-row-per-element contract
-   without reproducing the inflation. Extracting a fixture that does would make the
-   remaining four testable rather than argued.
-8. **`core/discover-predicates` can describe a tuple that never existed**, because its
-   subject, object and graph are independent `SAMPLE`s.
-9. **Qualified classes are not unqualified predicates.**
-   `core/discover-relationship-types` returns relationship *classes*, while
-   `core/dependents-direct` asks for the *predicates* its `PREDICATE_PATH` follows, and
-   the catalogue points callers from one to the other.
+   Still open in `core/identity-audit`, `core/reifies-audit` and
+   `notation/leanix/factsheets`. `core/identity-audit` is the one to think about rather than
+   pattern-match: it reports each side of an identity assertion, and whether a reciprocal
+   pair is duplication or the point - a one-sided assertion is a finding - is a semantic
+   question its `?kind` column may already be answering.
+
+   The fixtures also cannot catch this class directly: no committed fixture has a
+   multi-typed orphan, so that test pins the one-row-per-element contract without
+   reproducing the inflation. Extracting one would make the rest testable rather than
+   argued.
+8. ~~**`core/discover-predicates` can describe a tuple that never existed**~~ **Done.** Two
+   independent `SAMPLE`s pick independently, so the object kind and the example object
+   could come from different solutions - real values describing a pair that never occurred,
+   and invisibly so. The kinds are now the complete set rather than a sample, which is also
+   the better answer: a predicate carrying both IRIs and literals is worth seeing, and a
+   single sample hid exactly that.
+9. ~~**Qualified classes are not unqualified predicates.**~~ **Done**, as documentation,
+   which is where the defect was. `core/dependents-direct` told callers to source its
+   `PREDICATE_PATH` from `core/discover-relationship-types`, which returns qualified
+   *classes* (`am:Serving`); following a class as a predicate matches nothing and returns
+   it as an empty answer. Both the template header and the parameter description now point
+   at `core/reified-predicates`, whose triple terms name the predicate each relationship
+   stands for - the same bridge that gates the template.
 10. **Cost.** Several templates sort or cross-join globally before `LIMIT`; at scale
     `core/define-term`, `core/dependents-qualified` and `core/traceability` exceeded a
     3-minute wall clock or a 3.6 GB ceiling on an aggregate export. Correctness came first
     here (B3 adds branches); the structural work needs a large synthetic fixture and a
     time budget in CI, neither of which exists yet.
-11. **Smaller, verified:** ~~`core/views` documents unbound node counts where `COUNT`
-    returns `0`~~ (done, alongside item 5, since it was the same file);
-    `core/label-collisions` normalises ASCII only, so non-Latin labels are
-    compared unnormalised; `core/view-diff` compares element sets and loses repeated
-    placements of one element; the BPMN component whitelist is hand-maintained against an
-    ontology that can grow; and `README.md` says 36 tested templates where the catalogue
-    has 38.
+11. **Smaller, verified.** Four of five done.
+
+    - ~~`core/views` documents unbound node counts where `COUNT` returns `0`~~ — done
+      alongside item 5, since it was the same file.
+    - ~~`core/label-collisions` normalises ASCII only~~ — done, and worse than recorded.
+      `[^a-z0-9]` does not merely miss accents: every non-ASCII character became a
+      separator, so a label written entirely in a non-Latin script normalised to the empty
+      string and matched every other such label. An identity *candidate* list that invents
+      candidates is worse than one that misses them. Now `\p{L}\p{N}`, with an
+      empty-normalisation guard, verified against the engine's regex support.
+    - ~~The README's template count had drifted~~ — done, and the count is now pinned:
+      `TestDocumentedCountsMatchReality` knew four phrasings for "the whole catalogue" and
+      not the one the README actually used, which is why prose could disagree with the
+      catalogue in the sentence most readers see first. That phrasing is now checked too.
+    - `core/view-diff` still compares element sets and loses repeated placements of one
+      element. Left open deliberately: preserving placement identity is a redesign of what
+      the template compares, not a fix to how it compares.
+    - The BPMN component whitelist is still hand-maintained against an ontology that can
+      grow. Deriving it needs the ontology loaded alongside the data, which is the same
+      prerequisite **D21** records for confirming a direct-form claim.
 
 ### B6: method and limits
 

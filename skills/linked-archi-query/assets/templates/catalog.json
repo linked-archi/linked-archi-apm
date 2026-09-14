@@ -119,7 +119,7 @@
         "PREDICATE_PATH": {
           "type": "iri_path",
           "max_terms": 12,
-          "description": "direct predicates to follow, from core/discover-relationship-types"
+          "description": "unqualified direct predicates to follow. Get them from core/reified-predicates, which reports the predicate each relationship stands for; core/discover-relationship-types returns qualified CLASSES (am:Serving), not predicates (am:serves), and following a class matches nothing"
         },
         "LIMIT": {
           "type": "integer",

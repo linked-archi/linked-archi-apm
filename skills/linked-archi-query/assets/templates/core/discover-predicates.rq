@@ -12,9 +12,21 @@
 # the same key are two predicates, and this is where that shows up as two rows
 # with suspiciously split counts.
 #
+# ?objectKinds is every kind this predicate's objects take, not a sample of one.
+# Two independent SAMPLE aggregates pick independently, so a kind sampled from one
+# solution and an object sampled from another could describe a pair that never
+# occurred - and the incoherence is invisible, because both values are real. Listing
+# the kinds is also the more useful answer: a predicate carrying both IRIs and
+# literals is worth seeing, and a single sample hid exactly that.
+#
+# ?exampleObject remains a sample, which is what it says it is: one object drawn from
+# the solutions, with no claim to be representative.
+#
 # Parameters: LIMIT
 {{PREFIXES}}
-SELECT ?predicate (COUNT(*) AS ?uses) (SAMPLE(?kind) AS ?objectKind) (SAMPLE(?object) AS ?example)
+SELECT ?predicate (COUNT(*) AS ?uses)
+       (GROUP_CONCAT(DISTINCT ?kind; separator=", ") AS ?objectKinds)
+       (SAMPLE(STR(?object)) AS ?exampleObject)
 WHERE {
   {{GRAPH_OPEN:semantic}}
     ?s ?predicate ?object .
