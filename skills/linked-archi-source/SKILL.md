@@ -5,7 +5,7 @@ license: Apache-2.0
 compatibility: Needs Python 3.11 or newer and pyoxigraph for RDF verification. Git sources also need git. HTTPS uses the standard library. GitLab MCP is optional and agent-mediated; no MCP server is installed or invoked by the Python runtime.
 metadata:
   author: linked-archi
-  version: "0.3.0"
+  version: "0.4.0"
   homepage: https://meta.linked.archi
 allowed-tools: Read Bash(python3:*) Bash(git:*)
 ---

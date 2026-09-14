@@ -10,6 +10,22 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-14
+Results are handed over as tab-separated rows now. The shape that was easiest to read
+turned out to be the one that cost the most to produce and the one agents worked around:
+the aligned markdown table padded every cell, which came to more bytes than the JSON
+envelope's entire metadata block, and it truncated rows at the display cap while spending
+them. Agents given the envelope instead were shelling out to `jq` to recover a column.
+
+**If you parse `query run` stdout, pass `--format md` to keep the table.** Everything
+else is additive, and `--json` still means what it did.
+
+Both halves of this release are the same defect in different clothes: a fact stated in
+more than one place, with nothing checking that the copies agreed. The version was
+repeated in ten files and had been stale for two releases, including the install command
+a reader copies first. Now one place states it, one command writes the rest, and a test
+fails the build when they diverge.
+
 ### Changed
 - **`query run` and `query literal` print tab-separated rows by default, not a markdown
   table.** Agents were piping results through `jq` to recover a column, which is a parse
@@ -265,7 +281,8 @@ converters against the meta.linked.archi ontologies.
   for SHACL validation, and `git` for Git acquisition. Endpoint and HTTPS transport use
   the standard library. No mandatory MCP server.
 
-[Unreleased]: https://github.com/linked-archi/linked-archi-apm/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/linked-archi/linked-archi-apm/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/linked-archi/linked-archi-apm/releases/tag/v0.1.0
