@@ -1191,8 +1191,13 @@ def _verify_capabilities(profile: Profile, adapter) -> list[Finding]:
     # published it - the historyNote on QualifiedRelationship records the rdf:Statement
     # design behind that name being dropped - and no converter emits it any more.
     forms_declared = declared_direct = False
+    # `partial` opens this gate as well as `true`. The gate is about SYNTAX - can the
+    # engine parse `<<( s p o )>>` - and a bridge covering some relationships still has to
+    # be parseable to be read at all. Accepting only `true` would leave the honest claim
+    # for a partially bridged remote endpoint unable to probe its own bridge.
     can_destructure = (
-        getattr(adapter, "sparql_12", False) or profile.capability("rdf_reifies") is True
+        getattr(adapter, "sparql_12", False)
+        or profile.capability("rdf_reifies") in (True, "partial")
     )
     if profile.has_role("reifies") and can_destructure:
         bridge = profile.role("reifies")
@@ -1208,9 +1213,22 @@ def _verify_capabilities(profile: Profile, adapter) -> list[Finding]:
     else:
         observed_direct = None
     probes.append(("direct_rel_triples", observed_direct))
+    # Two ASKs rather than one, because presence and coverage are different questions and
+    # only the second can distinguish "this dataset has the bridge" from "this dataset has
+    # the bridge everywhere". A single existence probe reports the first and recommends
+    # `true`, which overstates any dataset where the bridge is notation-specific - the
+    # normal case, since each converter emits it only under its own flag, and the usual
+    # shape of an aggregate store. Both probes are static, so the batch stays deterministic:
+    # nothing here branches on a probe result.
+    reifies = "http://www.w3.org/1999/02/22-rdf-syntax-ns#reifies"
+    bridge_present = ask(f"?r <{reifies}> ?x")
+    bridge_absent = ask(
+        f"?r a <{rel_class}> ; <{src}> ?s ; <{tgt}> ?t . "
+        f"FILTER NOT EXISTS {{ ?r <{reifies}> ?anyTerm }}"
+    )
     probes.append((
         "rdf_reifies",
-        ask("?r <http://www.w3.org/1999/02/22-rdf-syntax-ns#reifies> ?x"),
+        "partial" if bridge_present and bridge_absent else bridge_present,
     ))
     if profile.has_role("owner"):
         probes.append(("concept_owner", ask(f"?s <{profile.role('owner')}> ?o")))
@@ -1258,6 +1276,26 @@ def _verify_capabilities(profile: Profile, adapter) -> list[Finding]:
                 "re-convert with --emit-direct-rel-triples, or claim "
                 "capabilities.rdf_reifies if the endpoint speaks SPARQL 1.2, to settle it.",
             ))
+            continue
+        if observed == "partial":
+            # Measured coverage, so it outranks a claim in either direction. `true` would
+            # promise a completeness the data does not have, and `false` refuses templates
+            # the data can answer for part of the estate; `partial` runs them and carries
+            # the caveat that a short result may be coverage rather than absence.
+            if claimed == "partial":
+                findings.append(Finding(
+                    "info", f"capabilities.{name}", "partial, confirmed by coverage",
+                ))
+            else:
+                findings.append(Finding(
+                    "warning", f"capabilities.{name}",
+                    f"claimed {str(claimed).lower()}, but present for some qualified "
+                    "relationships and absent for others - so neither true nor false "
+                    "describes this dataset. Set it 'partial': templates needing it then "
+                    "run with a coverage caveat instead of promising completeness or "
+                    "being refused outright.",
+                    fix=(f"capabilities.{name}", "partial"),
+                ))
             continue
         if claimed is True and not observed:
             findings.append(Finding(

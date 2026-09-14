@@ -413,6 +413,36 @@ class TestDriftDetection(unittest.TestCase):
         )
         self.assertEqual(worst_severity(findings), "error")
 
+    def test_a_capability_present_for_some_relationships_is_reported_as_partial(self):
+        """Presence and coverage are different questions, and only one is useful here.
+
+        An existence probe answers "does this dataset have the bridge" and then recommends
+        `true`, which overstates every dataset where the bridge is notation-specific - the
+        normal case, since each converter emits it only under its own flag. The augmented
+        fixture is exactly that shape by design: the bridge covers only the relationship
+        classes whose ontology declares an `arch:unqualifiedForm`.
+
+        So a profile claiming `false` here must not be told to claim `true`. `partial` is
+        the only value that neither promises completeness nor refuses templates the data
+        can partly answer.
+        """
+        profile = load_profile("linked-archi-default")
+        findings = verify_against_dataset(profile, support.load_fixture(AUGMENTED))
+        relevant = [f for f in findings if f.subject == "capabilities.rdf_reifies"]
+        self.assertTrue(relevant, format_findings(findings))
+        self.assertEqual(relevant[0].severity, "warning")
+        self.assertIn("absent for others", relevant[0].message)
+        self.assertEqual(relevant[0].fix, ("capabilities.rdf_reifies", "partial"))
+
+    def test_a_partial_claim_is_confirmed_by_coverage(self):
+        """And the curated profile, which says `partial`, is told it is right."""
+        profile = load_profile("curated-store")
+        findings = verify_against_dataset(profile, support.load_fixture(AUGMENTED))
+        relevant = [f for f in findings if f.subject == "capabilities.rdf_reifies"]
+        self.assertTrue(relevant, format_findings(findings))
+        self.assertEqual(relevant[0].severity, "info")
+        self.assertIn("partial", relevant[0].message)
+
     def test_claiming_absence_of_something_present_is_only_a_warning(self):
         """Over-caution refuses templates unnecessarily; it does not mislead."""
         profile = load_profile("linked-archi-default")

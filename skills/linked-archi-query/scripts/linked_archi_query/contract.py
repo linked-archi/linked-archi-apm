@@ -392,6 +392,26 @@ class ResolvedProfile:
                 return slug
         return None
 
+    def notation_for_namespace(self, namespace_iri: str) -> str | None:
+        """The notation slug whose vocabulary is ``namespace_iri``, or ``None``.
+
+        Keyed on the namespace IRI rather than on the notation slug, for two reasons that
+        both bite. A slug is not stable: ArchiMate's is ``model`` because the converter's
+        ``--path-model`` defaults to that and is configurable, so the catalogue's
+        ``archimate`` and a profile's ``model`` name the same notation. And a prefix is
+        not stable either - the converters emit both ``archvis:`` and ``arch-vis:`` for one
+        namespace - so the IRI is the only identity here that cannot drift.
+
+        Versioned by construction, which is a feature: a profile describing an ArchiMate 4
+        dataset binds ``am4``, so a template written against ``am`` (3.x) does not match
+        and is refused rather than quietly returning nothing.
+        """
+        for slug, spec in self.notations.items():
+            prefix = str((spec or {}).get("namespace", ""))
+            if prefix and self.namespaces.get(prefix) == namespace_iri:
+                return slug
+        return None
+
     def row_limit(self, requested: int | None = None) -> int:
         default = int(self.limits.get("default_row_limit", 200))
         ceiling = int(self.limits.get("max_row_limit", 5000))

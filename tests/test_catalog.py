@@ -13,7 +13,9 @@ from pathlib import Path
 
 import support
 
-from linked_archi_query import load_catalog, render
+from linked_archi_profile import load_profile as load_owner_profile
+
+from linked_archi_query import ResolvedProfile, load_catalog, render
 from linked_archi_query.catalog import (
     PARAM_TYPES,
     STAGES,
@@ -272,6 +274,24 @@ class TestCatalogueIntegrity(unittest.TestCase):
                 with self.subTest(entry.name):
                     self.assertTrue(entry.file.startswith(f"notation/{entry.notation}/"))
 
+    def test_every_notation_template_names_the_vocabulary_it_uses(self):
+        """Without this the `notation` label is decoration, which is what it was.
+
+        A notation template names that notation's terms directly - there is no role
+        indirection for `bpmn:SequenceFlow` - so against a dataset without the notation it
+        returns nothing rather than being refused. The namespace IRI is what makes that
+        gateable, so a new notation template must not be able to skip it.
+        """
+        for entry in self.catalog:
+            if entry.notation:
+                with self.subTest(entry.name):
+                    self.assertTrue(
+                        entry.notation_namespace,
+                        f"{entry.name} declares notation {entry.notation!r} but no "
+                        "notation_namespace, so nothing can gate it",
+                    )
+                    self.assertTrue(entry.notation_namespace.startswith("https://"))
+
 
 class TestLookup(unittest.TestCase):
     def setUp(self):
@@ -353,6 +373,50 @@ class TestGating(unittest.TestCase):
     def test_requirement_rejects_unknown_keys(self):
         with self.assertRaises(CatalogError):
             Requirement.from_json({"rolez": ["label"]})
+
+    def test_a_notation_the_profile_does_not_declare_is_refused(self):
+        """A C4-only store must not be offered the BPMN templates.
+
+        They would run and return nothing, and nothing distinguishes that from "this
+        model has no sequence flows". The profile is narrowed by dropping notations from
+        a resolved snapshot rather than by authoring a profile file, because notation maps
+        merge key by key on inheritance and cannot be narrowed by an override.
+        """
+        snapshot = load_owner_profile("linked-archi-default").resolved_snapshot()
+        snapshot["notations"] = {
+            slug: spec for slug, spec in snapshot["notations"].items() if slug == "c4"
+        }
+        c4_only = ResolvedProfile(snapshot)
+
+        refused = {entry.name for entry, _ in self.catalog.refused(c4_only)}
+        self.assertIn("notation/bpmn/process-flow", refused)
+        self.assertIn("notation/leanix/factsheets", refused)
+        self.assertNotIn("notation/c4/containers", refused)
+
+        verdict = self.catalog.get("notation/bpmn/process-flow").check(c4_only)
+        self.assertTrue(
+            any("bpmn/onto#" in reason for reason in verdict.unmet),
+            f"the refusal must name the vocabulary: {verdict.unmet}",
+        )
+
+    def test_the_bundled_profiles_refuse_no_notation_template(self):
+        """The trap this gate had to avoid: a slug is not a notation's identity.
+
+        ArchiMate's profile slug is `model`, because the converter's --path-model defaults
+        to that, while the catalogue directory is `archimate`. Gating on the label would
+        have refused a supported template against every bundled profile. Matching is on
+        the namespace IRI for that reason, and this is what keeps it honest.
+        """
+        for name in ("linked-archi-default", "curated-store", "flattened-turtle"):
+            profile = load_profile(name)
+            for entry in self.catalog:
+                if not entry.notation_namespace:
+                    continue
+                with self.subTest(f"{name}:{entry.name}"):
+                    self.assertIsNotNone(
+                        profile.notation_for_namespace(entry.notation_namespace),
+                        f"{name} does not match {entry.notation_namespace}",
+                    )
 
     def test_a_role_the_dataset_lacks_refuses_instead_of_crashing(self):
         """What declaring a rendered role actually buys, as behaviour.

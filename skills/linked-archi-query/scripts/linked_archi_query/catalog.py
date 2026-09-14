@@ -180,6 +180,17 @@ class TemplateEntry:
     requires: Requirement = field(default_factory=Requirement)
     alternatives: tuple[str, ...] = ()
     notation: str | None = None
+    #: The notation vocabulary this template is written against, as a namespace IRI.
+    #:
+    #: What turns ``notation`` from a label into a gate. A notation template names that
+    #: notation's terms directly - there is no role indirection for `bpmn:SequenceFlow` -
+    #: so against a dataset without that notation it does not fail, it returns nothing,
+    #: which is indistinguishable from "this notation has none of those".
+    #:
+    #: An IRI rather than the slug above, because the slug is a directory name and a
+    #: profile's own slug for the same notation may differ (ArchiMate's is ``model``).
+    #: See ResolvedProfile.notation_for_namespace.
+    notation_namespace: str | None = None
     #: A caveat that travels with every RESULT, not just with the catalogue entry.
     #:
     #: Distinct from ``does_not_prove``, which helps choose a template. This is for a
@@ -259,6 +270,26 @@ class TemplateEntry:
             if gap:
                 unmet.append(gap)
 
+        # A notation template names that notation's own terms, because there is no role
+        # indirection for `bpmn:SequenceFlow` or `c4:hasContainer`. Against a dataset
+        # without the notation it therefore runs and returns nothing, which reads as "this
+        # notation has none of those" rather than "this dataset has no such notation" -
+        # and an empty result is the one answer this package refuses to leave ambiguous.
+        #
+        # The catalogue has carried a `notation` label since the beginning without ever
+        # consulting it. Matching is on the vocabulary's namespace IRI rather than that
+        # label, because a profile's slug for a notation is its own choice.
+        if self.notation_namespace:
+            if profile.notation_for_namespace(self.notation_namespace) is None:
+                declared = ", ".join(sorted(profile.notations)) or "none"
+                unmet.append(
+                    f"profile {profile.name!r} declares no notation using the vocabulary "
+                    f"{self.notation_namespace} that this {self.notation} template is "
+                    f"written against (it declares: {declared}). The query would run and "
+                    "return nothing, which is not the same as an empty answer. Add the "
+                    "notation to the profile if the dataset does carry it."
+                )
+
         return Verdict(ok=not unmet, unmet=tuple(unmet), warnings=tuple(warnings))
 
     def summary_line(self) -> str:
@@ -303,7 +334,8 @@ class Catalog:
     def _entry(self, name: str, spec: Mapping[str, Any]) -> TemplateEntry:
         known = {
             "file", "stage", "purpose", "answers", "does_not_prove",
-            "parameters", "requires", "alternatives", "notation", "caveat",
+            "parameters", "requires", "alternatives", "notation",
+            "notation_namespace", "caveat",
         }
         if any(not isinstance(key, str) for key in spec):
             raise CatalogError(f"Template {name!r} keys must be strings")
@@ -332,6 +364,20 @@ class Catalog:
         for field_name in ("answers", "does_not_prove"):
             if field_name in spec and not isinstance(spec[field_name], str):
                 raise CatalogError(f"Template {name!r} {field_name} must be a string")
+        notation_namespace = spec.get("notation_namespace")
+        if notation_namespace is not None and (
+            not isinstance(notation_namespace, str)
+            or not notation_namespace.strip()
+            or notation_namespace != notation_namespace.strip()
+        ):
+            raise CatalogError(
+                f"Template {name!r} notation_namespace must be a stripped, non-empty "
+                "namespace IRI or null"
+            )
+        if notation_namespace and not spec.get("notation"):
+            raise CatalogError(
+                f"Template {name!r} declares notation_namespace without notation"
+            )
         notation = spec.get("notation")
         if notation is not None and (
             not isinstance(notation, str)
@@ -459,6 +505,7 @@ class Catalog:
             requires=Requirement.from_json(spec.get("requires")),
             alternatives=tuple(alternatives),
             notation=notation,
+            notation_namespace=notation_namespace,
             caveat=caveat,
         )
 

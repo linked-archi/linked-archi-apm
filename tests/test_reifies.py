@@ -208,13 +208,26 @@ class TestGating(unittest.TestCase):
         self.assertIn("core/neighbours-qualified", message)
 
     def test_available_under_the_curated_profile(self):
+        """Available, and honest about coverage.
+
+        This profile claims `partial` rather than `true`, which is what its own comments
+        always described: the bridge covers only the relationship classes whose ontology
+        declares an `arch:unqualifiedForm`. `partial` is what keeps these templates
+        runnable - a partial capability warns rather than refuses - so what matters here
+        is that they still render AND that the caveat travels with them, because a short
+        result under a partial bridge may be coverage rather than absence.
+        """
         profile = load_profile("curated-store")
-        self.assertIs(profile.capability("rdf_reifies"), True)
+        self.assertEqual(profile.capability("rdf_reifies"), "partial")
         for name in REIFIED_TEMPLATES:
             with self.subTest(name):
                 rendered = render(name, profile, self._params(name),
                                   catalog=self.catalog)
                 self.assertIn("reifies", rendered.query)
+                self.assertTrue(
+                    any("partial" in warning for warning in rendered.warnings),
+                    f"{name} must carry the coverage caveat: {rendered.warnings}",
+                )
 
     @staticmethod
     def _params(name: str) -> dict:

@@ -1109,7 +1109,8 @@
         "graph_roles": [
           "semantic"
         ]
-      }
+      },
+      "notation_namespace": "https://meta.linked.archi/archimate3/onto#"
     },
     "notation/backstage/ownership": {
       "file": "notation/backstage/ownership.rq",
@@ -1139,7 +1140,8 @@
       },
       "alternatives": [
         "core/coverage-gaps"
-      ]
+      ],
+      "notation_namespace": "https://meta.linked.archi/backstage/onto#"
     },
     "notation/bpmn/process-components": {
       "file": "notation/bpmn/process-components.rq",
@@ -1175,7 +1177,8 @@
       "alternatives": [
         "notation/bpmn/process-flow",
         "core/elements-by-type"
-      ]
+      ],
+      "notation_namespace": "https://meta.linked.archi/bpmn/onto#"
     },
     "notation/bpmn/process-flow": {
       "file": "notation/bpmn/process-flow.rq",
@@ -1208,7 +1211,8 @@
         "graph_roles": [
           "semantic"
         ]
-      }
+      },
+      "notation_namespace": "https://meta.linked.archi/bpmn/onto#"
     },
     "notation/c4/containers": {
       "file": "notation/c4/containers.rq",
@@ -1235,7 +1239,8 @@
         "graph_roles": [
           "semantic"
         ]
-      }
+      },
+      "notation_namespace": "https://meta.linked.archi/c4/onto#"
     },
     "notation/leanix/factsheets": {
       "file": "notation/leanix/factsheets.rq",
@@ -1260,7 +1265,8 @@
         "graph_roles": [
           "semantic"
         ]
-      }
+      },
+      "notation_namespace": "https://meta.linked.archi/leanix/onto#"
     }
   }
 }

@@ -756,6 +756,46 @@ Stat data rather than content hashes, because hashing a dataset to decide whethe
 parsing it gives back most of the saving. The accepted cost is that two spellings of one
 dataset get two stores, which is what the byte budget bounds.
 
+**D20. A notation template is gated on its vocabulary's namespace IRI, not on its notation
+label.** The catalogue carried a `notation` field from the beginning and never consulted it,
+which made it documentation. That is a gap rather than a nicety: a notation template names
+that notation's terms directly - there is no role indirection for `bpmn:SequenceFlow` or
+`c4:hasContainer` - so against a dataset without the notation it runs and returns nothing,
+and nothing distinguishes that from "this model has no sequence flows".
+
+The gate keys on a new `notation_namespace`, the vocabulary IRI, because neither of the
+obvious alternatives identifies a notation. The **slug** is not identity: ArchiMate's profile
+slug is `model`, since the converter's `--path-model` defaults to that and is configurable,
+while the catalogue directory is `archimate` - gating on the label would have refused a
+supported template against every bundled profile. The **prefix** is not identity either, and
+A12 already records why: the converters emit both `archvis:` and `arch-vis:` for one
+namespace. The IRI is versioned by construction, which is a second benefit: a profile
+describing an ArchiMate 4 dataset binds `am4`, so a template written against `am` (3.x) is
+refused rather than quietly returning nothing - the versioning the audit flagged in
+`notation/archimate/layer-crossing`.
+
+Every template declaring `notation` must declare the namespace, enforced by a test, so a new
+notation template cannot opt out of its own gate.
+
+**D21. A capability is measured for coverage, not for presence, wherever coverage can differ.**
+`TRISTATE` and the "partial warns rather than refuses" gate were already in place; what was
+missing was verification that could ever *recommend* `partial`. The probe asked "does this
+dataset have the bridge", answered yes, and told the operator to claim `true` - which
+overstates every dataset where the bridge is notation-specific. That is the normal case, not
+an edge case: each converter emits it only under its own flag, so an aggregate store is
+routinely bridged in part.
+
+Implemented for `rdf_reifies` as two static ASKs - one for presence, one for a qualified
+relationship lacking a bridge - because the probe batch is planned against a stub and must
+not branch on a probe result. Both together mean `partial`, and a measured `partial` outranks
+a claim in either direction: `true` promises completeness the data lacks, `false` refuses
+templates the data can partly answer. `examples/curated-store` now claims `partial`, which is
+what its own comments always described.
+
+The same two-ASK shape extends to `views_graph`, `view_geometry` and `element_lifecycle`,
+which are all documented as partial and still probed existentially. Not done here, so their
+`partial` claims are accepted rather than confirmed.
+
 ### Requests deliberately not adopted as stated
 
 Carried here from the agent-usability plan when that plan was retired, because each of these
@@ -982,17 +1022,18 @@ Recorded so they are not re-litigated. Each looked like a defect and is not.
 Not fixed. Each is a package-level defect with a named mechanism, and the first four
 change what the package promises, so each needs a decision-log entry when taken.
 
-1. **The `notation` field is declared but never enforced.** The catalogue carries
-   `"notation"` on notation-specific templates, and nothing refuses one when the profile
-   or dataset has no such notation. That turns "unsupported" into "zero rows", which is
-   the failure the refusal mechanism exists to prevent. The gate already exists for
-   capabilities; this needs wiring, and B1 shows detection itself must be trustworthy first.
-2. **Relationship-form capabilities are Booleans describing a per-notation reality.**
-   Each converter emits direct triples and the `rdf:reifies` bridge only under its own
-   `--emit-direct-rel-triples`, so a mixed estate is normal and one `true`/`false` must
-   overstate or understate. `views_graph: partial` is the precedent: `partial` warns
-   rather than refuses. Extend `none|partial|complete` to `direct_rel_triples` and
-   `rdf_reifies`.
+1. ~~**The `notation` field is declared but never enforced.**~~ **Done**, as **D20**. Gated
+   on a new `notation_namespace` rather than the label, because a profile's slug for a
+   notation is its own choice - ArchiMate's is `model`, so label matching would have
+   refused a supported template against every bundled profile.
+2. ~~**Relationship-form capabilities are Booleans describing a per-notation reality.**~~
+   **Corrected, then done**, as **D21**. The premise was wrong: capability values were
+   already tri-state (`TRISTATE = {True, False, "partial"}`) and the gate already
+   downgraded a partial claim to a warning, so nothing needed a new capability model. What
+   was missing sat in verification, which measured *presence* and could therefore only ever
+   recommend `true` — overstating every dataset where the bridge is notation-specific.
+   Now measured for coverage for `rdf_reifies`; `views_graph`, `view_geometry` and
+   `element_lifecycle` are still probed existentially.
 3. ~~**`requires:` drifts from what a template renders.**~~ **Done.** The suite checked
    that declared roles exist but not the converse, so a template could read roles it
    never declared. The mirror tests found it in **24 of 38 templates**: 22 undeclared
@@ -1006,7 +1047,9 @@ change what the package promises, so each needs a decision-log entry when taken.
    Worth noting what the fix did **not** do: `core/coverage-gaps`, `core/elements-by-type`,
    `core/lifecycle`, `core/orphans` and `core/views` now honestly declare `part_of`,
    which makes item 5 below visible in the catalogue rather than resolved.
-4. **Verification proves occurrence, not fit.** Roles are probed by occurrence anywhere,
+4. **Verification proves occurrence, not fit.** Partly closed by **D21** for capability
+   coverage, and by B1's fixture-wide metamodel test. The rest stands: roles are probed by
+   occurrence anywhere,
    a fallback role passes when any alternative occurs, and a graph role passes when a
    suffix matches a non-empty graph. Nothing probes notation identifiers, scheme
    resolvability, base-IRI fit, or whether the configured membership mode returns

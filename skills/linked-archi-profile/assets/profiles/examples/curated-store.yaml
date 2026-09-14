@@ -45,7 +45,14 @@ capabilities:
   # excludes bpmn:SequenceFlow and am:UsedBy. core/reifies-audit reports those as
   # `missing-term`, which is a true finding about the ontologies rather than a
   # planted defect.
-  rdf_reifies: true
+  #
+  # Hence `partial` rather than `true`, which is what the sentence above always
+  # described: present for some relationships, absent for others. `true` would promise
+  # a completeness this store does not have, and `verify` now measures the difference
+  # instead of reporting mere presence. Templates needing the bridge still run - a
+  # partial capability warns rather than refuses - and their results carry the caveat
+  # that a short answer may be coverage rather than absence.
+  rdf_reifies: partial
 
 # Membership stays co-location even here, and that is a measured decision rather than
 # a default left untouched: in the fixture this profile is verified against,

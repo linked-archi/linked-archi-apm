@@ -10,6 +10,20 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 ### Added
+- **Notation templates are gated on the vocabulary they name.** The catalogue carried a
+  `notation` label from the start and never consulted it, so a BPMN template offered against
+  a C4-only dataset ran and returned nothing — indistinguishable from "this model has no
+  sequence flows". A new `notation_namespace` key carries the vocabulary IRI and the gate
+  refuses when no declared notation uses it. Keyed on the IRI, not the label: ArchiMate's
+  profile slug is `model` while its catalogue directory is `archimate`, so label matching
+  would have refused a supported template against every bundled profile. Decision **D20**.
+- **Capability verification measures coverage, not presence.** Asked whether a dataset had
+  the `rdf:reifies` bridge, the probe answered yes and recommended `true` — which overstates
+  any dataset where the bridge is notation-specific, the normal case since each converter
+  emits it only under its own flag. Two static probes now distinguish "has it" from "has it
+  everywhere", and a measured `partial` is recommended over both `true` and `false`.
+  `examples/curated-store` claims `partial` accordingly, which is what its own comments
+  always described. Decision **D21**.
 - **The catalogue now has to declare every role, graph role and membership walk its
   templates actually render.** Four tests enforce it: three static mirrors of the
   existing "declared roles exist" check, plus one behavioural test. The direction
