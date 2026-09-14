@@ -27,6 +27,16 @@ workflow publishes exactly this text, so what is written here is what a consumer
   for custom profiles rather than altering current results.
 
 ### Fixed
+- **`core/orphans` tests for relationships across every semantic graph, and reports each
+  element once.** The absence test ran inside the element's own graph, so under the
+  partitioned 1.3 layout it asked whether a relationship sat in the same converter input
+  file — a boundary the converter chose, not the architecture — and a relationship in a
+  sibling partition would have left its endpoint listed as an orphan. No committed
+  fixture or observed export splits them, so this is correctness under partitioning
+  rather than a measured behaviour change, and it costs nothing: the scope widens to all
+  semantic graphs, not to the whole dataset. Separately, the `?type` column is now
+  `?types`, concatenated per element as in `core/view-contents`: a row per type reads as
+  several elements, and on a large export 1,530 rows described 1,009 elements.
 - **`core/coverage-gaps` is dataset-wide, in both directions.** It scoped the type
   search and the absence test to the semantic graph, which was wrong two opposite ways:
   since the 1.3 layout `arch:Model` lives in `graph/model`, so asking which models lack

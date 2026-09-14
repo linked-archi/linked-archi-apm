@@ -199,6 +199,65 @@ class TestAgainstAugmentedFixture(unittest.TestCase):
             self.assertEqual(row["relType"], f"{BPMN}SequenceFlow")
             self.assertEqual(row["relType2"], f"{BPMN}SequenceFlow")
 
+    def test_orphans_reports_each_element_once_with_its_types(self):
+        """One row per element, and the types column actually populated.
+
+        Two failure modes at once. A row per type reads as several elements - measured
+        on a large export, 1,530 rows described 1,009 elements - and GROUP_CONCAT over
+        IRIs without STR() is a type error that yields unbound, so the column arrives
+        empty while the count still looks right.
+
+        The fixtures hold no multi-typed orphan, so this pins the contract rather than
+        reproducing the inflation; the types assertion is what would catch the
+        aggregate breaking.
+        """
+        rendered = render("core/orphans", self.profile, {}, catalog=self.catalog)
+        envelope = self.adapter.execute(
+            rendered.query, template="core/orphans", profile_id=self.profile.name,
+            profile_version=self.profile.profile_version, limit=200,
+        )
+        self.assertTrue(envelope.rows)
+        elements = [row["element"] for row in envelope.rows]
+        self.assertEqual(
+            len(elements), len(set(elements)),
+            "one row per element: a row per type reads as several elements",
+        )
+        self.assertTrue(
+            any(row["types"] for row in envelope.rows),
+            "the types column is empty on every row - GROUP_CONCAT needs STR()",
+        )
+
+    def test_orphans_ignores_a_relationship_in_another_semantic_graph(self):
+        """An orphan is an element no relationship reaches, in any semantic graph.
+
+        The absence test used to run inside the element's own graph, so under the
+        partitioned 1.3 layout it asked whether a relationship sat in the same input
+        file - a boundary the converter chose, not the architecture. Every element
+        reported here must be unreferenced dataset-wide, or an orphan list becomes a
+        list of things that are in fact used.
+
+        This is an invariant guard rather than a reproduction: no committed fixture
+        splits a relationship from its endpoints, so it also passed before the fix. It
+        fails the moment one does - which is exactly when the old scoping would have
+        started lying.
+        """
+        rendered = render("core/orphans", self.profile, {}, catalog=self.catalog)
+        envelope = self.adapter.execute(
+            rendered.query, template="core/orphans", profile_id=self.profile.name,
+            profile_version=self.profile.profile_version, limit=200,
+        )
+        referenced = self.adapter.execute(f"""
+            SELECT DISTINCT ?e WHERE {{ GRAPH ?g {{
+              ?rel a <{CORE}QualifiedRelationship> .
+              {{ ?rel <{CORE}source> ?e }} UNION {{ ?rel <{CORE}target> ?e }} }} }}""")
+        endpoints = {row["e"] for row in referenced.rows}
+        self.assertTrue(endpoints, "the fixture must contain relationships at all")
+        wrongly_reported = sorted({row["element"] for row in envelope.rows} & endpoints)
+        self.assertEqual(
+            wrongly_reported, [],
+            "reported as orphans while a relationship references them",
+        )
+
     def test_coverage_gaps_sees_a_type_outside_the_semantic_graph(self):
         """The count here tells three implementations apart, which is why it is exact.
 

@@ -1029,15 +1029,35 @@ change what the package promises, so each needs a decision-log entry when taken.
    the count discriminates: on `fixtures/base.trig` the old form returns 0, widening only
    the type search returns 5, and the correct reading returns the 1 real gap.
 
-   `core/orphans` and `core/reifies-audit` carry the same graph-local negative test and
-   are not yet converted. Their scope question is harder: an orphan is defined by the
-   absence of a relationship, and in a partitioned semantic graph the relationship may
-   legitimately live in a sibling partition — so the fix needs a decision about whether
-   "no relationship" means none in the dataset or none in the model, and those differ.
-7. **Row multiplicity from optional projections.** `core/orphans` returned 1,530 rows for
-   1,009 distinct elements on a large export, and `core/models`, `core/identity-audit` and
-   `notation/leanix/factsheets` duplicate the same way. A count read as a population is
-   wrong by whatever the optional columns multiply.
+   **`core/orphans` followed**, and the scope question resolved more cleanly than
+   expected. The choice looked like "no relationship in the dataset" versus "none in the
+   model", but graph-locality implements neither: under partitioning it means "none in
+   the same converter input file", and a model spans several. So the reading is every
+   semantic graph — wide enough to be true, narrow enough to stay meaningful, since a
+   qualified relationship is a semantic fact and no views or provenance graph holds one.
+   Expressed with the renderer's independent scopes (`semantic2`, `semantic3`), so the
+   declared graph role is unchanged.
+
+   No fixture and no observed export splits a relationship from its endpoints, so that
+   one is correctness under partitioning rather than a measured change, and its test says
+   so: an invariant guard that fails the moment a fixture does split them.
+
+   **`core/reifies-audit` is deliberately left alone**, correcting the grouping above.
+   Its `rdf:reifies` bridge is part of the relationship resource's own description, so
+   "in this graph" and "wherever this relationship is described" are the same place. Its
+   purpose — comparing the two halves of one resource against each other — is
+   resource-local by nature, and widening the scope would add cost for no semantics. Its
+   `?relType` column does still multiply rows; that belongs to item 7.
+7. **Row multiplicity from optional projections.** Done for `core/orphans`, which
+   returned 1,530 rows for 1,009 distinct elements on a large export and now concatenates
+   types per element. Still open in `core/models`, `core/identity-audit`,
+   `core/reifies-audit` and `notation/leanix/factsheets`. A count read as a population is
+   wrong by whatever the optional columns multiply, and the inflation reads as severity.
+
+   Worth noting the fixtures cannot currently catch this class: no committed fixture has
+   a multi-typed orphan, so the `core/orphans` test pins the one-row-per-element contract
+   without reproducing the inflation. Extracting a fixture that does would make the
+   remaining four testable rather than argued.
 8. **`core/discover-predicates` can describe a tuple that never existed**, because its
    subject, object and graph are independent `SAMPLE`s.
 9. **Qualified classes are not unqualified predicates.**

@@ -1,7 +1,7 @@
 # core/orphans - Which elements take part in no relationship at all?
 #
 # Answers: elements that are neither source nor target of any qualified
-# relationship.
+# relationship, one row each.
 #
 # Does NOT prove: that an element is unused or safe to delete. Common innocent
 # causes: it was drawn on a diagram as context and never connected; its
@@ -12,18 +12,39 @@
 # concentrated in one model usually means a partial export, which core/models and
 # core/inventory will confirm faster than inspecting the elements.
 #
+# THE ABSENCE TEST SPANS EVERY SEMANTIC GRAPH, through the independent scopes
+# `semantic2` and `semantic3`, while the element itself is still found in one. That
+# distinction is the whole point. These tests used to sit inside the element's own
+# scope, which asks "is there a relationship in the same graph the element was typed
+# in" - and since the 1.3 layout the semantic graph is partitioned per input file, so
+# that question is bounded by which file the converter happened to read. A
+# relationship in a sibling partition would leave its endpoint reported as an orphan,
+# and an orphan list is read as a list of things nobody is using.
+#
+# No such case appears in the committed fixtures, and none was found in a large
+# aggregate export either: converters keep a relationship with its endpoints. So this
+# is a correctness fix under partitioning rather than a measured behaviour change, and
+# it costs nothing - the scope widens from one semantic graph to all of them, not to
+# the whole dataset, because a qualified relationship is a semantic fact and no views
+# or provenance graph holds one.
+#
+# Types are concatenated rather than given a row each, as in core/view-contents.
+# Elements are multi-typed - a core class plus a notation class - so one row per type
+# reads as several elements: measured on a large export, 1,530 rows described 1,009
+# elements. A count that inflates by whatever the optional columns multiply is worse
+# than useless in a quality reading, because the inflation looks like severity.
+#
+# STR() around ?type is load-bearing, not tidying. GROUP_CONCAT over IRIs is a type
+# error, and an erroring aggregate yields an unbound result rather than a failure - so
+# without it every row arrives with an empty types column while the count still looks
+# right.
+#
 # Parameters: LIMIT
 {{PREFIXES}}
-SELECT ?element ?label ?type ?model
+SELECT ?element ?label (GROUP_CONCAT(DISTINCT STR(?type); separator=", ") AS ?types) ?model
 WHERE {
   {{GRAPH_OPEN:semantic}}
     ?element a {{ROLE:element_class}} .
-    FILTER NOT EXISTS {
-      ?rel a {{ROLE:relationship_class}} ; {{ROLE:rel_source}} ?element .
-    }
-    FILTER NOT EXISTS {
-      ?rel a {{ROLE:relationship_class}} ; {{ROLE:rel_target}} ?element .
-    }
     OPTIONAL { ?element {{PATH:label}} ?label }
     OPTIONAL {
       ?element a ?type .
@@ -31,6 +52,17 @@ WHERE {
     }
     OPTIONAL { ?element {{ROLE:part_of}} ?model }
   {{GRAPH_CLOSE}}
+  FILTER NOT EXISTS {
+    {{GRAPH_OPEN:semantic2}}
+      ?rel a {{ROLE:relationship_class}} ; {{ROLE:rel_source}} ?element .
+    {{GRAPH_CLOSE}}
+  }
+  FILTER NOT EXISTS {
+    {{GRAPH_OPEN:semantic3}}
+      ?rel a {{ROLE:relationship_class}} ; {{ROLE:rel_target}} ?element .
+    {{GRAPH_CLOSE}}
+  }
 }
+GROUP BY ?element ?label ?model
 ORDER BY ?model ?label ?element
 LIMIT {{LIMIT}}
