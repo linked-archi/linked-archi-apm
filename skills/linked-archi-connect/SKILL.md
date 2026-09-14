@@ -5,7 +5,7 @@ license: Apache-2.0
 compatibility: Local files need Python 3.11 or newer with pyoxigraph, and work fully offline. An endpoint needs only the standard library. Never both at once.
 metadata:
   author: linked-archi
-  version: "0.1.0"
+  version: "0.3.0"
   homepage: https://meta.linked.archi
 allowed-tools: Read Bash(python3:*)
 ---

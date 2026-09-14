@@ -80,7 +80,7 @@ jobs:
           retention-days: 365
           if-no-files-found: error
 
-  # Tags only. The tag itself is what `apm install ...#v0.1.0` resolves, so this job is not
+  # Tags only. The tag itself is what `apm install ...#<tag>` resolves, so this job is not
   # on the critical path for the documented install route - a consumer is served by the
   # commit the tag points at, whether or not a release exists. It exists because the
   # artifact above is a build receipt rather than a distribution: downloading one needs a

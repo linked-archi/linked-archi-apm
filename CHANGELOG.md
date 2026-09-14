@@ -10,6 +10,18 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 
+### Fixed
+- **The documented install pin and every skill's `metadata.version` said 0.1.0 at
+  release 0.3.0.** The version was repeated in ten files outside `apm.yml` and read by
+  nothing, so two releases of drift accumulated in the copies a consumer sees first: the
+  `apm install linked-archi/linked-archi-apm#v0.1.0` line in `README.md` and `USAGE.md`
+  named a tag two versions old, and all six `SKILL.md` files still declared 0.1.0. That
+  frontmatter is the only version an installed skill carries — `apm.yml` is not deployed
+  into a harness — so the stalest copy was the one an operator would read to identify what
+  they had. `apm.yml` is now the single authority, `make bump TO=X.Y.Z` writes every derived
+  copy from it, and a packaging test fails the build when any of them disagrees. The check
+  also fails when a pattern matches nothing, so rewording prose cannot silently retire it.
+
 ## [0.3.0] - 2026-09-14
 A dataset can now be paired with the vocabulary it conforms to, so what one template
 enumerated by hand is derived instead. The converters emit instances, never the ontologies

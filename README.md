@@ -133,7 +133,7 @@ install-time bundling step.
 auto-detects your runtime from the project and promotes each of the six skills into it:
 
 ```bash
-apm install linked-archi/linked-archi-apm#v0.1.0
+apm install linked-archi/linked-archi-apm#v0.3.0
 apm install .                    # from a local clone
 ```
 

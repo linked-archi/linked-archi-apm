@@ -5,7 +5,7 @@ license: Apache-2.0
 compatibility: Needs Python 3.11 or newer and no third-party package. Owns planning and bundling only; every query is executed by linked-archi-query, which uses linked-archi-profile and linked-archi-connect, so install those three alongside it. linked-archi-validate is needed for SHACL conformance and linked-archi-source for remote artifacts. Planning and bundling work with query absent, unannotated and reduced.
 metadata:
   author: linked-archi
-  version: "0.1.0"
+  version: "0.3.0"
   homepage: https://meta.linked.archi
 allowed-tools: Read Bash(python3:*)
 ---

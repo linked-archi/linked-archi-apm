@@ -13,7 +13,7 @@ SKILLS_DIR ?= $(HOME)/.kiro/skills
 BIN_DIR ?= $(HOME)/.local/bin
 
 .PHONY: help check test test-quiet catalog profile verify verify-curated fixtures \
-        skills install-local uninstall-local link-cli unlink-cli dist version \
+        skills install-local uninstall-local link-cli unlink-cli dist version bump \
         release-notes release-check clean
 
 help:
@@ -23,6 +23,7 @@ help:
 	@echo "skills         validate SKILL.md frontmatter"
 	@echo "dist           archive the committed package directly"
 	@echo "version        print the manifest version"
+	@echo "bump           set the version everywhere it is repeated (TO=X.Y.Z)"
 	@echo "release-notes  print the CHANGELOG section for that version"
 	@echo "release-check  clean-tree, notes and test preflight before tagging"
 	@echo "install-local  symlink committed skill directories into SKILLS_DIR"
@@ -128,6 +129,17 @@ dist: check
 # it to refuse a tag that disagrees with the manifest.
 version:
 	@echo "$(VERSION)"
+
+# The version is repeated outside the manifest, in places that cannot be derived at read
+# time: `metadata.version` in each SKILL.md - the only version an installed skill carries,
+# since apm.yml is not deployed into a harness - and the install pin readers copy out of
+# README.md and USAGE.md. Ten copies were two releases stale before this existed.
+#
+# TO, not VERSION: VERSION is an override for reading the manifest, and a bump is a write.
+bump:
+	@test -n "$(TO)" || { echo "usage: make bump TO=X.Y.Z" >&2; exit 1; }
+	@$(PY) tests/version_sync.py --set "$(TO)"
+	@echo "  now write the CHANGELOG section for $(TO), which release-check requires"
 
 # The CHANGELOG section for VERSION, which is what the release workflow publishes.
 #

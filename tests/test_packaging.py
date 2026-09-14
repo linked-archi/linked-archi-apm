@@ -14,6 +14,7 @@ import unittest
 from pathlib import Path
 
 import support
+import version_sync
 from support import ROOT
 
 SKILLS = ROOT / "skills"
@@ -1329,3 +1330,43 @@ class TestNoPrivateHostsShip(unittest.TestCase):
                      "127.0.0.1", "192.168.1.1", "bad"):
             with self.subTest(host):
                 self.assertTrue(self._allowed(host))
+
+
+class TestOneVersionStatedEverywhereItIsRepeated(unittest.TestCase):
+    """`apm.yml` said 0.3.0 while ten other files said 0.1.0, and nothing read them.
+
+    Two releases of drift accumulated in the copies a consumer sees first: the install pin
+    in `README.md` and `USAGE.md` named a tag two versions old, and `metadata.version` in
+    all six `SKILL.md` files still said 0.1.0. That frontmatter is the *only* version an
+    installed skill carries - `apm.yml` is not deployed into a harness - so the stalest
+    copy was the one an operator would rely on to identify what they had.
+
+    `tests/version_sync.py` names every site once; `make bump TO=X.Y.Z` writes them all.
+    This is the half that fails the build when they disagree.
+    """
+
+    def test_every_derived_copy_agrees_with_the_manifest(self):
+        problems = version_sync.disagreements()
+        self.assertEqual(problems, [], "run: make bump TO=" + version_sync.manifest_version())
+
+    def test_the_check_would_catch_drift(self):
+        """A check that cannot fail is decoration, so this drifts the expectation instead."""
+        problems = version_sync.disagreements(version="9.9.9")
+        self.assertNotEqual(problems, [])
+        self.assertTrue(
+            all("9.9.9" in problem for problem in problems),
+            "each report should name the version it expected",
+        )
+
+    def test_every_skill_is_a_version_site(self):
+        """A seventh skill must not be able to ship an unchecked version by being new."""
+        listed = {
+            site for site, _ in version_sync.SITES if site.endswith("SKILL.md")
+        }
+        actual = {
+            path.relative_to(ROOT).as_posix() for path in SKILLS.glob("*/SKILL.md")
+        }
+        self.assertEqual(listed, actual)
+
+    def test_the_manifest_version_is_semver(self):
+        self.assertRegex(version_sync.manifest_version(), r"^\d+\.\d+\.\d+$")
