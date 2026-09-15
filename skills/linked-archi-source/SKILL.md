@@ -89,12 +89,35 @@ requests an uncompressed response, enforces `--timeout-ms` and `--max-bytes`, pa
 the selected RDF format, checks the digest, and atomically promotes it into the
 content-addressed cache.
 
-The URL suffix selects the format. For an extensionless URL, say it explicitly:
+The URL suffix selects the format. An extensionless URL is content-negotiated instead,
+and you can still pin the serialisation:
 
 ```bash
+python3 scripts/la-source url https://meta.linked.archi/archimate3/shapes   # negotiated
 python3 scripts/la-source url https://models.example.org/export \
   --format trig --sha256 68b8...
 ```
+
+**Negotiation asks for Turtle first, one type at a time.** A published namespace IRI is
+where a single broad `Accept` header goes wrong. Some publishers answer **404, not 406**,
+for a serialisation they do not hold, so a broader request fails where a narrower one
+succeeds — on `meta.linked.archi`, the full RDF list returns 404 for ten of twelve assets
+including every shape set and taxonomy, while `text/turtle` alone returns all twelve. Others
+ignore `q` weights entirely and answer with whatever they prefer. So the first attempt names
+one type, and only the fallback lists everything.
+
+Two consequences worth knowing:
+
+- **`--format` is a request, not just an interpretation.** It now sets the `Accept` header,
+  and no other serialisation is accepted in its place — answering a Turtle request with
+  JSON-LD and parsing it as Turtle produces "syntax error at line 1" rather than "this
+  publisher does not offer Turtle".
+- **A URL with an RDF extension is asked for once, broadly.** `/dataset.trig` already says
+  what it is, and must not be requested as Turtle: a quad dataset offered as both would come
+  back flattened, losing graph identity.
+
+A `200` carrying `text/html` is refused rather than parsed, and the refusal names the
+`Accept` that produced it.
 
 Do not put credentials in URL userinfo or a query string. Userinfo is refused; query
 strings are omitted from recorded identities but still appear in shell history.

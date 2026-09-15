@@ -22,22 +22,137 @@ from .core import (
     normalize_format,
     optional_digest,
     require_text,
+    EXTENSIONS,
+    MEDIA_TYPES,
 )
 from .errors import SourceError
 
 MAX_REDIRECTS = 5
 USER_AGENT = "linked-archi-source/0.1"
-ACCEPT = ", ".join(
-    (
-        "application/trig",
-        "application/n-quads",
-        "text/turtle",
-        "application/n-triples",
-        "application/rdf+xml",
-        "application/ld+json",
-        "text/n3",
-    )
+
+#: The fallback header: everything this client can parse, weighted. Weights state a
+#: preference correctly and are not sufficient on their own - the server measured here
+#: ignores them completely - which is why they are the LAST attempt rather than the only
+#: one. See :func:`negotiation_sequence` for the narrow attempts that come first.
+#:
+#: Turtle leads because that is what these documents are. An ontology, a SKOS taxonomy
+#: and a SHACL shape set are single-graph, so TriG buys nothing, and Turtle is the
+#: smallest serialisation published: 94 kB for the core ontology against 129 kB of
+#: RDF/XML and 141 kB of JSON-LD, all three measured.
+#:
+#: A quad dataset is the case where leading with Turtle would be wrong - a server
+#: offering the same dataset as both would hand back flattened triples, losing graph
+#: identity exactly as `fixtures/flat.ttl` documents. That is what `--format trig`
+#: is for, and why an explicit format now reaches this header: see :func:`accept_header`.
+ACCEPT_WEIGHTS: tuple[tuple[str, str], ...] = (
+    ("text/turtle", "1.0"),
+    ("application/trig", "0.9"),
+    ("application/n-quads", "0.8"),
+    ("application/n-triples", "0.8"),
+    ("application/rdf+xml", "0.7"),
+    ("application/ld+json", "0.7"),
+    ("text/n3", "0.5"),
 )
+ACCEPT = ", ".join(f"{media};q={weight}" for media, weight in ACCEPT_WEIGHTS)
+
+#: Which media type to ask for first when the caller named a format. Derived from the
+#: format table rather than restated, so a new format cannot be requestable and
+#: unparseable at the same time.
+_MEDIA_FOR_FORMAT = {value: key for key, value in MEDIA_TYPES.items()}
+
+
+#: Content types that mean "this is a page about the RDF", not the RDF. Named rather
+#: than inferred, so an unfamiliar type is still allowed through to format detection
+#: instead of being refused on a guess.
+_DOCUMENTATION_TYPES = frozenset(
+    {"text/html", "application/xhtml+xml", "text/plain", "application/json"}
+)
+
+
+def is_documentation(content_type: str) -> bool:
+    """Whether a response carries a page about the RDF rather than the RDF."""
+    media_type = content_type.partition(";")[0].strip().lower()
+    return bool(media_type) and media_type in _DOCUMENTATION_TYPES
+
+
+def reject_non_rdf(content_type: str, url: str, asked_for: str = ACCEPT) -> None:
+    """Refuse a 200 that carries documentation instead of RDF.
+
+    Content negotiation can fail without failing: asked for `application/trig`,
+    meta.linked.archi answers 200 with 254 kB of `text/html`, and a 406 would have been
+    the honest reply. Status alone therefore proves nothing about what arrived.
+
+    Worth refusing here rather than at the parser, for the one case where the parser
+    would not object either. A URL ending `.ttl` that serves an HTML error page takes its
+    format from the extension, so the bytes reach a Turtle parser that reports a syntax
+    error at line 1 - which reads as "the vocabulary is malformed" rather than "the
+    server sent you a web page".
+    """
+    media_type = content_type.partition(";")[0].strip().lower()
+    if not media_type or media_type not in _DOCUMENTATION_TYPES:
+        return
+    if media_type == "application/json":
+        # JSON-LD is served as application/ld+json. Plain application/json may still be
+        # JSON-LD from a server that does not distinguish them, so say what to pass.
+        raise SourceError(
+            f"{public_url(url)} returned Content-Type {media_type!r}. If this really is "
+            "JSON-LD, request it with --format json-ld; otherwise the endpoint is not "
+            "serving RDF"
+        )
+    raise SourceError(
+        f"{public_url(url)} returned Content-Type {media_type!r}, not RDF, in answer to "
+        f"Accept: {asked_for}. A namespace IRI commonly serves human documentation unless "
+        "RDF is negotiated for, and some publishers answer 404 or a web page rather than "
+        "406 for a type they do not hold - so a narrower request can succeed where a "
+        "broader one fails. Try --format with a serialisation the publisher offers"
+    )
+
+
+def accept_header(rdf_format: str | None = None) -> str:
+    """The Accept header, with ``rdf_format`` promoted to first preference.
+
+    Asking for what you intend to parse is the point. `--format turtle` used to be
+    applied only when interpreting the response, never when requesting it, so a server
+    holding several serialisations could answer JSON-LD to a Turtle request and the
+    download then failed to parse - a confusing way to be told about content negotiation.
+    """
+    if rdf_format is None or rdf_format not in _MEDIA_FOR_FORMAT:
+        return ACCEPT
+    wanted = _MEDIA_FOR_FORMAT[rdf_format]
+    rest = [
+        f"{media};q={weight if media != wanted else '0.9'}"
+        for media, weight in ACCEPT_WEIGHTS
+        if media != wanted
+    ]
+    return ", ".join([f"{wanted};q=1.0", *rest])
+
+
+def negotiation_sequence(rdf_format: str | None, path: str) -> list[str]:
+    """Accept headers to try, in order, because weights are not always honoured.
+
+    A weighted list is the correct way to state a preference and it is not sufficient.
+    meta.linked.archi ignores q entirely: it answers JSON-LD whenever JSON-LD appears
+    anywhere in the list, at any weight, and serves Turtle only when JSON-LD is absent.
+    Measured across four headers - Turtle at q=1.0 beside JSON-LD at q=0.7 still returns
+    141 kB of JSON-LD, while Turtle alone returns 94 kB of Turtle. A server like that can
+    only be asked one type at a time.
+
+    So the first attempt is narrow and the last is the full list, which is both a real
+    preference and a fallback for a publisher who offers something else entirely.
+
+    A path with an RDF extension gets no narrow attempt: `/dataset.trig` is a document,
+    not a negotiated namespace, and its extension already says what it is. That is also
+    what keeps a quad dataset from being asked for as Turtle and silently flattened.
+    """
+    if rdf_format is not None:
+        media = _MEDIA_FOR_FORMAT.get(rdf_format)
+        # No fallback when a format was named. Answering a Turtle request with JSON-LD
+        # and parsing it as Turtle is how you get "syntax error at line 1" instead of
+        # "this server does not publish Turtle".
+        return [media] if media else [accept_header(rdf_format)]
+    if Path(path).suffix.lower() in EXTENSIONS:
+        return [ACCEPT]
+    return ["text/turtle", ACCEPT]
 _REDIRECTS = frozenset({301, 302, 303, 307, 308})
 
 
@@ -262,8 +377,14 @@ def acquire_url(source: dict[str, Any], policy: Policy) -> dict[str, Any]:
     current = uri
     redirect_chain: list[str] = []
     temporary: Path | None = None
+    # Content negotiation is a sequence here, not one header - see negotiation_sequence.
+    # Redirects are counted separately from attempts so that renegotiating does not
+    # spend the redirect budget, and the whole thing stays bounded by the deadline.
+    candidates = negotiation_sequence(normalized_explicit, initial_split.path)
+    attempt = 0
+    redirects_used = 0
     try:
-        for redirect_count in range(MAX_REDIRECTS + 1):
+        for _iteration in range(len(candidates) * (MAX_REDIRECTS + 1)):
             split, addresses = validated_https_transport(current, policy, deadline)
             current_origin = _origin(split)
             if token is not None and current_origin != initial_origin:
@@ -272,7 +393,7 @@ def acquire_url(source: dict[str, Any], policy: Policy) -> dict[str, Any]:
             connection = _PinnedHTTPSConnection(host, port, addresses, deadline)
             path = urllib.parse.urlunsplit(("", "", split.path or "/", split.query, ""))
             headers = {
-                "Accept": ACCEPT,
+                "Accept": candidates[attempt],
                 "Accept-Encoding": "identity",
                 "User-Agent": USER_AGENT,
             }
@@ -292,8 +413,9 @@ def acquire_url(source: dict[str, Any], policy: Policy) -> dict[str, Any]:
                     location = response.getheader("Location")
                     if not location:
                         raise SourceError(f"source returned HTTP {response.status} without Location")
-                    if redirect_count >= MAX_REDIRECTS:
+                    if redirects_used >= MAX_REDIRECTS:
                         raise SourceError(f"source exceeded {MAX_REDIRECTS} HTTPS redirects")
+                    redirects_used += 1
                     current = urllib.parse.urljoin(current, location)
                     redirected = parse_https_url(current, policy)
                     if token is not None and _origin(redirected) != initial_origin:
@@ -318,6 +440,15 @@ def acquire_url(source: dict[str, Any], policy: Policy) -> dict[str, Any]:
                             f"source declares {declared} bytes, above max_bytes={policy.max_bytes}"
                         )
                 content_type = response.getheader("Content-Type", "")
+                if is_documentation(content_type) and attempt + 1 < len(candidates):
+                    # Negotiation failed without failing: 200, but a web page. Ask again
+                    # with the next header rather than reporting a parse error later.
+                    attempt += 1
+                    current = uri
+                    redirect_chain.clear()
+                    redirects_used = 0
+                    continue
+                reject_non_rdf(content_type, current, candidates[attempt])
                 rdf_format = normalize_format(normalized_explicit, split.path, content_type)
                 temporary = cache.temporary_path()
                 received = 0
@@ -346,7 +477,10 @@ def acquire_url(source: dict[str, Any], policy: Policy) -> dict[str, Any]:
             finally:
                 connection.close()
         else:  # pragma: no cover - bounded loop always exits or raises
-            raise SourceError(f"source exceeded {MAX_REDIRECTS} HTTPS redirects")
+            raise SourceError(
+                f"source exhausted {len(candidates)} content-negotiation attempt(s) "
+                f"within {MAX_REDIRECTS} redirects each"
+            )
 
         artifact = cache.materialize(temporary, rdf_format, expected)
         warnings: list[str] = []

@@ -37,7 +37,14 @@ from linked_archi_source.core import (
     validate_repository_path,
 )
 from linked_archi_source.errors import SourceError
-from linked_archi_source.http import parse_https_url
+from linked_archi_source.http import (
+    ACCEPT,
+    accept_header,
+    is_documentation,
+    negotiation_sequence,
+    parse_https_url,
+    reject_non_rdf,
+)
 from linked_archi_source.mcp import request_gitlab
 
 TRIG = b'<https://example.org/s> <https://example.org/p> <https://example.org/o> .\n'
@@ -374,6 +381,67 @@ def _tmp():
     import tempfile
 
     return tempfile.TemporaryDirectory()
+
+
+class TestContentNegotiationAsksNarrowlyFirst(unittest.TestCase):
+    """Turtle first, and one type at a time, because weights are not always honoured.
+
+    Measured against the published ontologies, which is where this matters: asking
+    `meta.linked.archi` with the full weighted list returns 404 for ten of twelve assets,
+    including every SHACL shape set and every taxonomy. Asking the same IRIs for
+    `text/turtle` alone returns all twelve - 1.15 MB of ArchiMate relationship shapes
+    among them. The server answers 404 rather than 406 for a type it does not hold, so a
+    broader request is not a safer one, and a single header cannot express the preference
+    because q values are ignored: Turtle at q=1.0 beside JSON-LD at q=0.7 still returns
+    JSON-LD.
+    """
+
+    def test_turtle_leads_the_default_header(self):
+        self.assertTrue(ACCEPT.startswith("text/turtle;q=1.0"))
+
+    def test_a_namespace_iri_is_asked_narrowly_before_broadly(self):
+        self.assertEqual(negotiation_sequence(None, "/core"), ["text/turtle", ACCEPT])
+
+    def test_a_document_url_keeps_its_extension_and_is_asked_once(self):
+        """`/dataset.trig` says what it is, and must not be asked for as Turtle.
+
+        A quad dataset offered as both would come back flattened, losing graph identity
+        exactly as `fixtures/flat.ttl` documents.
+        """
+        self.assertEqual(negotiation_sequence(None, "/dataset.trig"), [ACCEPT])
+
+    def test_a_named_format_is_asked_for_alone_and_never_substituted(self):
+        """Answering a Turtle request with JSON-LD and parsing it as Turtle is a lie."""
+        self.assertEqual(negotiation_sequence("turtle", "/core"), ["text/turtle"])
+        self.assertEqual(negotiation_sequence("trig", "/core"), ["application/trig"])
+
+    def test_a_named_format_leads_its_own_header(self):
+        self.assertTrue(accept_header("json-ld").startswith("application/ld+json;q=1.0"))
+        self.assertIn("text/turtle", accept_header("json-ld"))
+
+    def test_html_is_recognised_as_documentation_not_rdf(self):
+        for value in ("text/html", "text/html; charset=utf-8", "application/xhtml+xml"):
+            with self.subTest(value):
+                self.assertTrue(is_documentation(value))
+        for value in ("text/turtle", "application/trig", "", "application/octet-stream"):
+            with self.subTest(value):
+                self.assertFalse(is_documentation(value))
+
+    def test_a_refusal_names_the_header_that_was_sent(self):
+        """Otherwise the report blames the wrong request - it used to print the default."""
+        with self.assertRaises(SourceError) as caught:
+            reject_non_rdf("text/html", "https://example.org/shapes", "application/trig")
+        self.assertIn("application/trig", str(caught.exception))
+        self.assertIn("not RDF", str(caught.exception))
+
+    def test_plain_json_says_how_to_ask_for_json_ld(self):
+        with self.assertRaises(SourceError) as caught:
+            reject_non_rdf("application/json", "https://example.org/onto")
+        self.assertIn("--format json-ld", str(caught.exception))
+
+    def test_an_unfamiliar_type_is_left_to_format_detection(self):
+        """Refusing on a guess would break a publisher serving octet-stream."""
+        reject_non_rdf("application/octet-stream", "https://example.org/onto")
 
 
 if __name__ == "__main__":  # pragma: no cover

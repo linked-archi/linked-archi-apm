@@ -10,6 +10,30 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 
+### Changed
+- **HTTPS acquisition negotiates for Turtle first, and asks one type at a time.** The
+  published assets a query check needs turn out to be reachable only this way. Asking
+  `meta.linked.archi` with the full weighted RDF `Accept` list returns 404 for ten of
+  twelve assets — every SHACL shape set and every taxonomy among them — while asking the
+  same IRIs for `text/turtle` alone returns all twelve, including 1.15 MB of ArchiMate
+  relationship shapes. The publisher answers 404 rather than 406 for a serialisation it
+  does not hold, so a broader request is not a safer one, and weights cannot express the
+  preference because they are ignored: Turtle at `q=1.0` beside JSON-LD at `q=0.7` still
+  returns JSON-LD. So the first attempt names one type and the fallback lists everything.
+  `--format` now sets the header rather than only interpreting the response, which fixes
+  `--format turtle` failing with a parse error against a server holding several
+  serialisations; a named format is never substituted. A URL with an RDF extension is
+  still asked for once and broadly, so a quad dataset cannot be requested as Turtle and
+  silently flattened.
+
+### Fixed
+- **A `200` carrying `text/html` is refused instead of parsed.** Content negotiation can
+  fail without failing: asked for `application/trig`, `meta.linked.archi` answers 200 with
+  254 kB of documentation. For a URL ending `.ttl` the extension then chose the format, so
+  the page reached a Turtle parser and reported a syntax error at line 1 — which reads as
+  "this vocabulary is malformed" rather than "the server sent you a web page". The refusal
+  names the `Accept` header that produced it.
+
 ### Added
 - **The fixtures now carry what says whether a query's path is possible.** Groundwork for
   checking a hand-written or generated query against the metamodel instead of running it and
