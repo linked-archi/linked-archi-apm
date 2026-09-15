@@ -1,214 +1,598 @@
+@prefix amvp: <https://meta.linked.archi/archimate3/viewpoints#> .
+@prefix am: <https://meta.linked.archi/archimate3/onto#> .
+@prefix bs: <https://meta.linked.archi/backstage/onto#> .
+@prefix lmm: <https://meta.linked.archi/leanix/onto#> .
+@prefix infra: <https://meta.linked.archi/bpmn/infra#> .
+@prefix bpmn: <https://meta.linked.archi/bpmn/onto#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix arch-tax: <https://meta.linked.archi/core-tax#> .
+@prefix archvis: <https://meta.linked.archi/core-vis#> .
+@prefix c4: <https://meta.linked.archi/c4/onto#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix arch: <https://meta.linked.archi/core#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix adms: <http://www.w3.org/ns/adms#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix schema: <https://schema.org/> .
 <https://meta.linked.archi/graph/vocabulary> {
-	<https://meta.linked.archi/bpmn/onto#Process> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Process"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#FlowElementsContainer> , <https://meta.linked.archi/bpmn/onto#CallableElement> , <https://meta.linked.archi/core#Element> .
-	<https://meta.linked.archi/bpmn/onto#SubProcess> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "SubProcess"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Activity> , <https://meta.linked.archi/bpmn/onto#FlowElementsContainer> .
-	<https://meta.linked.archi/bpmn/onto#Task> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Task"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Activity> , <https://meta.linked.archi/bpmn/onto#InteractionNode> .
-	<https://meta.linked.archi/bpmn/onto#UserTask> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "UserTask"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Task> .
-	<https://meta.linked.archi/bpmn/onto#ServiceTask> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "ServiceTask"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Task> .
-	<https://meta.linked.archi/bpmn/onto#SendTask> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "SendTask"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Task> .
-	<https://meta.linked.archi/bpmn/onto#ReceiveTask> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "ReceiveTask"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Task> .
-	<https://meta.linked.archi/bpmn/onto#ScriptTask> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "ScriptTask"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Task> .
-	<https://meta.linked.archi/bpmn/onto#BusinessRuleTask> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "BusinessRuleTask"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Task> .
-	<https://meta.linked.archi/bpmn/onto#ManualTask> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "ManualTask"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Task> .
-	<https://meta.linked.archi/bpmn/onto#CallActivity> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "CallActivity"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Activity> .
-	<https://meta.linked.archi/bpmn/onto#AdHocSubProcess> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "AdHocSubProcess"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#SubProcess> .
-	<https://meta.linked.archi/bpmn/onto#Transaction> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Transaction"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#SubProcess> .
-	<https://meta.linked.archi/bpmn/onto#StartEvent> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "StartEvent"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#CatchEvent> .
-	<https://meta.linked.archi/bpmn/onto#EndEvent> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "EndEvent"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#ThrowEvent> .
-	<https://meta.linked.archi/bpmn/onto#IntermediateCatchEvent> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "IntermediateCatchEvent"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#CatchEvent> .
-	<https://meta.linked.archi/bpmn/onto#IntermediateThrowEvent> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "IntermediateThrowEvent"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#ThrowEvent> .
-	<https://meta.linked.archi/bpmn/onto#BoundaryEvent> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "BoundaryEvent"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#CatchEvent> .
-	<https://meta.linked.archi/bpmn/onto#ExclusiveGateway> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "ExclusiveGateway"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Gateway> .
-	<https://meta.linked.archi/bpmn/onto#ParallelGateway> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "ParallelGateway"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Gateway> .
-	<https://meta.linked.archi/bpmn/onto#InclusiveGateway> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "InclusiveGateway"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Gateway> .
-	<https://meta.linked.archi/bpmn/onto#EventBasedGateway> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "EventBasedGateway"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Gateway> .
-	<https://meta.linked.archi/bpmn/onto#ComplexGateway> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "ComplexGateway"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Gateway> .
-	<https://meta.linked.archi/bpmn/onto#Participant> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Participant"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#InteractionNode> , <https://meta.linked.archi/bpmn/onto#BaseElement> , <https://meta.linked.archi/core#Element> .
-	<https://meta.linked.archi/bpmn/onto#Lane> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Lane"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#BaseElement> , <https://meta.linked.archi/core#Element> .
-	<https://meta.linked.archi/bpmn/onto#DataObject> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "DataObject"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#FlowElement> , <https://meta.linked.archi/bpmn/onto#ItemAwareElement> , <https://meta.linked.archi/core#Element> .
-	<https://meta.linked.archi/bpmn/onto#DataObjectReference> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "DataObjectReference"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#ItemAwareElement> , <https://meta.linked.archi/bpmn/onto#FlowElement> , <https://meta.linked.archi/core#Element> .
-	<https://meta.linked.archi/bpmn/onto#DataStoreReference> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "DataStoreReference"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#ItemAwareElement> , <https://meta.linked.archi/bpmn/onto#FlowElement> , <https://meta.linked.archi/core#Element> .
-	<https://meta.linked.archi/bpmn/onto#Message> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Message"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#RootElement> , <https://meta.linked.archi/core#Element> .
-	<https://meta.linked.archi/bpmn/onto#Group> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Group"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Artifact> .
-	<https://meta.linked.archi/bpmn/onto#TextAnnotation> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "TextAnnotation"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#Artifact> .
-	<https://meta.linked.archi/bpmn/onto#Collaboration> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Collaboration"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#RootElement> , <https://meta.linked.archi/core#Element> .
-	<https://meta.linked.archi/bpmn/onto#Choreography> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Choreography"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#FlowElementsContainer> , <https://meta.linked.archi/bpmn/onto#Collaboration> .
-	<https://meta.linked.archi/bpmn/onto#ChoreographyTask> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "ChoreographyTask"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#ChoreographyActivity> .
-	<https://meta.linked.archi/bpmn/onto#Conversation> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Conversation"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#ConversationNode> .
-	<https://meta.linked.archi/bpmn/onto#ConversationNode> a <http://www.w3.org/2002/07/owl#Class> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "ConversationNode"@en ;
-		<http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://meta.linked.archi/bpmn/onto#InteractionNode> , <https://meta.linked.archi/bpmn/onto#BaseElement> , <https://meta.linked.archi/core#Element> .
-	<https://meta.linked.archi/bpmn/tax#FlowObjects> a <http://www.w3.org/2004/02/skos/core#Concept> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Flow Objects"@en ;
-		<http://www.w3.org/2004/02/skos/core#definition> "The main graphical elements within a process flow: activities, events, and gateways."@en ;
-		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> .
-	<https://meta.linked.archi/bpmn/tax#ConnectingObjects> a <http://www.w3.org/2004/02/skos/core#Concept> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Connecting Objects"@en ;
-		<http://www.w3.org/2004/02/skos/core#definition> "Elements connecting flow objects: sequence flows, message flows, associations."@en ;
-		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> .
-	<https://meta.linked.archi/bpmn/tax#SwimLanes> a <http://www.w3.org/2004/02/skos/core#Concept> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Swim Lanes"@en ;
-		<http://www.w3.org/2004/02/skos/core#definition> "Organizational groupings: pools and lanes."@en ;
-		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> .
-	<https://meta.linked.archi/bpmn/tax#Artifacts> a <http://www.w3.org/2004/02/skos/core#Concept> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Artifacts"@en ;
-		<http://www.w3.org/2004/02/skos/core#definition> "Data-related and annotation elements: data objects, data stores, groups, text annotations."@en ;
-		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> .
-	<https://meta.linked.archi/bpmn/tax#Collaborations> a <http://www.w3.org/2004/02/skos/core#Concept> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Collaborations"@en ;
-		<http://www.w3.org/2004/02/skos/core#definition> "Collaboration, choreography, and conversation elements."@en ;
-		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> .
-	<https://meta.linked.archi/bpmn/tax#Activities> a <http://www.w3.org/2004/02/skos/core#Concept> ;
-		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#FlowObjects> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Activities"@en ;
-		<http://www.w3.org/2004/02/skos/core#definition> "Work performed within a business process — tasks and sub-processes."@en ;
-		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> ;
-		<http://www.w3.org/2004/02/skos/core#narrower> <https://meta.linked.archi/bpmn/onto#Process> , <https://meta.linked.archi/bpmn/onto#SubProcess> , <https://meta.linked.archi/bpmn/onto#Task> , <https://meta.linked.archi/bpmn/onto#UserTask> , <https://meta.linked.archi/bpmn/onto#ServiceTask> , <https://meta.linked.archi/bpmn/onto#SendTask> , <https://meta.linked.archi/bpmn/onto#ReceiveTask> , <https://meta.linked.archi/bpmn/onto#ScriptTask> , <https://meta.linked.archi/bpmn/onto#BusinessRuleTask> , <https://meta.linked.archi/bpmn/onto#ManualTask> , <https://meta.linked.archi/bpmn/onto#CallActivity> , <https://meta.linked.archi/bpmn/onto#AdHocSubProcess> , <https://meta.linked.archi/bpmn/onto#Transaction> .
-	<https://meta.linked.archi/bpmn/tax#Events> a <http://www.w3.org/2004/02/skos/core#Concept> ;
-		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#FlowObjects> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Events"@en ;
-		<http://www.w3.org/2004/02/skos/core#definition> "Things that happen during a process: start, intermediate, and end events."@en ;
-		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> ;
-		<http://www.w3.org/2004/02/skos/core#narrower> <https://meta.linked.archi/bpmn/onto#StartEvent> , <https://meta.linked.archi/bpmn/onto#EndEvent> , <https://meta.linked.archi/bpmn/onto#IntermediateCatchEvent> , <https://meta.linked.archi/bpmn/onto#IntermediateThrowEvent> , <https://meta.linked.archi/bpmn/onto#BoundaryEvent> .
-	<https://meta.linked.archi/bpmn/tax#Gateways> a <http://www.w3.org/2004/02/skos/core#Concept> ;
-		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#FlowObjects> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Gateways"@en ;
-		<http://www.w3.org/2004/02/skos/core#definition> "Control flow divergence and convergence."@en ;
-		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> ;
-		<http://www.w3.org/2004/02/skos/core#narrower> <https://meta.linked.archi/bpmn/onto#ExclusiveGateway> , <https://meta.linked.archi/bpmn/onto#ParallelGateway> , <https://meta.linked.archi/bpmn/onto#InclusiveGateway> , <https://meta.linked.archi/bpmn/onto#EventBasedGateway> , <https://meta.linked.archi/bpmn/onto#ComplexGateway> .
-	<https://meta.linked.archi/bpmn/tax#SequenceFlowConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
-		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#ConnectingObjects> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Sequence Flow"@en ;
-		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> .
-	<https://meta.linked.archi/bpmn/tax#MessageFlowConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
-		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#ConnectingObjects> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Message Flow"@en ;
-		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> .
-	<https://meta.linked.archi/bpmn/tax#AssociationConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
-		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#ConnectingObjects> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Association"@en ;
-		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> .
-	<https://meta.linked.archi/bpmn/tax#DataAssociationConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
-		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#ConnectingObjects> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Data Association"@en ;
-		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> .
-	<https://meta.linked.archi/bpmn/tax#PoolConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
-		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#SwimLanes> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Pool (Participant)"@en ;
-		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> ;
-		<http://www.w3.org/2004/02/skos/core#narrower> <https://meta.linked.archi/bpmn/onto#Participant> .
-	<https://meta.linked.archi/bpmn/tax#LaneConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
-		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#SwimLanes> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Lane"@en ;
-		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> ;
-		<http://www.w3.org/2004/02/skos/core#narrower> <https://meta.linked.archi/bpmn/onto#Lane> .
-	<https://meta.linked.archi/bpmn/tax#DataObjectConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
-		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#Artifacts> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Data Object"@en ;
-		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> ;
-		<http://www.w3.org/2004/02/skos/core#narrower> <https://meta.linked.archi/bpmn/onto#DataObject> , <https://meta.linked.archi/bpmn/onto#DataObjectReference> .
-	<https://meta.linked.archi/bpmn/tax#DataStoreConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
-		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#Artifacts> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Data Store"@en ;
-		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> ;
-		<http://www.w3.org/2004/02/skos/core#narrower> <https://meta.linked.archi/bpmn/onto#DataStoreReference> .
-	<https://meta.linked.archi/bpmn/tax#MessageConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
-		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#Artifacts> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Message"@en ;
-		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> ;
-		<http://www.w3.org/2004/02/skos/core#narrower> <https://meta.linked.archi/bpmn/onto#Message> .
-	<https://meta.linked.archi/bpmn/tax#GroupConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
-		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#Artifacts> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Group"@en ;
-		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> ;
-		<http://www.w3.org/2004/02/skos/core#narrower> <https://meta.linked.archi/bpmn/onto#Group> .
-	<https://meta.linked.archi/bpmn/tax#TextAnnotationConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
-		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#Artifacts> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Text Annotation"@en ;
-		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> ;
-		<http://www.w3.org/2004/02/skos/core#narrower> <https://meta.linked.archi/bpmn/onto#TextAnnotation> .
-	<https://meta.linked.archi/bpmn/tax#CollaborationConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
-		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#Collaborations> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Collaboration"@en ;
-		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> ;
-		<http://www.w3.org/2004/02/skos/core#narrower> <https://meta.linked.archi/bpmn/onto#Collaboration> .
-	<https://meta.linked.archi/bpmn/tax#ChoreographyConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
-		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#Collaborations> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Choreography"@en ;
-		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> ;
-		<http://www.w3.org/2004/02/skos/core#narrower> <https://meta.linked.archi/bpmn/onto#Choreography> , <https://meta.linked.archi/bpmn/onto#ChoreographyTask> .
-	<https://meta.linked.archi/bpmn/tax#ConversationConcept> a <http://www.w3.org/2004/02/skos/core#Concept> ;
-		<http://www.w3.org/2004/02/skos/core#broader> <https://meta.linked.archi/bpmn/tax#Collaborations> ;
-		<http://www.w3.org/2004/02/skos/core#prefLabel> "Conversation"@en ;
-		<http://www.w3.org/2004/02/skos/core#inScheme> <https://meta.linked.archi/bpmn/tax#> ;
-		<http://www.w3.org/2004/02/skos/core#narrower> <https://meta.linked.archi/bpmn/onto#Conversation> , <https://meta.linked.archi/bpmn/onto#ConversationNode> .
+	bpmn:Process a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "Process"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:FlowElementsContainer , bpmn:CallableElement , arch:Element .
+	bpmn:SubProcess a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "SubProcess"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:Activity , bpmn:FlowElementsContainer .
+	bpmn:Task a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "Task"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:Activity , bpmn:InteractionNode .
+	bpmn:UserTask a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "UserTask"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:Task .
+	bpmn:ServiceTask a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "ServiceTask"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:Task .
+	bpmn:SendTask a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "SendTask"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:Task .
+	bpmn:ReceiveTask a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "ReceiveTask"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:Task .
+	bpmn:ScriptTask a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "ScriptTask"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:Task .
+	bpmn:BusinessRuleTask a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "BusinessRuleTask"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:Task .
+	bpmn:ManualTask a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "ManualTask"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:Task .
+	bpmn:CallActivity a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "CallActivity"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:Activity .
+	bpmn:AdHocSubProcess a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "AdHocSubProcess"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:SubProcess .
+	bpmn:Transaction a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "Transaction"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:SubProcess .
+	bpmn:StartEvent a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "StartEvent"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:CatchEvent .
+	bpmn:EndEvent a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "EndEvent"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:ThrowEvent .
+	bpmn:IntermediateCatchEvent a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "IntermediateCatchEvent"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:CatchEvent .
+	bpmn:IntermediateThrowEvent a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "IntermediateThrowEvent"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:ThrowEvent .
+	bpmn:BoundaryEvent a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "BoundaryEvent"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:CatchEvent .
+	bpmn:ExclusiveGateway a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "ExclusiveGateway"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:Gateway .
+	bpmn:ParallelGateway a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "ParallelGateway"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:Gateway .
+	bpmn:InclusiveGateway a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "InclusiveGateway"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:Gateway .
+	bpmn:EventBasedGateway a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "EventBasedGateway"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:Gateway .
+	bpmn:ComplexGateway a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "ComplexGateway"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:Gateway .
+	bpmn:Participant a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "Participant"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:InteractionNode , bpmn:BaseElement , arch:Element .
+	bpmn:Lane a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "Lane"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:BaseElement , arch:Element .
+	bpmn:DataObject a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "DataObject"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:FlowElement , bpmn:ItemAwareElement , arch:Element .
+	bpmn:DataObjectReference a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "DataObjectReference"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:ItemAwareElement , bpmn:FlowElement , arch:Element .
+	bpmn:DataStoreReference a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "DataStoreReference"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:ItemAwareElement , bpmn:FlowElement , arch:Element .
+	bpmn:Message a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "Message"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:RootElement , arch:Element .
+	bpmn:Group a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "Group"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:Artifact .
+	bpmn:TextAnnotation a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "TextAnnotation"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:Artifact .
+	bpmn:Collaboration a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "Collaboration"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:RootElement , arch:Element .
+	bpmn:Choreography a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "Choreography"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:FlowElementsContainer , bpmn:Collaboration .
+	bpmn:ChoreographyTask a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "ChoreographyTask"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:ChoreographyActivity .
+	bpmn:Conversation a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "Conversation"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:ConversationNode .
+	bpmn:ConversationNode a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "ConversationNode"@en ;
+		<http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:InteractionNode , bpmn:BaseElement , arch:Element .
+	<https://meta.linked.archi/bpmn/tax#FlowObjects> a skos:Concept ;
+		skos:prefLabel "Flow Objects"@en ;
+		skos:definition "The main graphical elements within a process flow: activities, events, and gateways."@en ;
+		skos:inScheme <https://meta.linked.archi/bpmn/tax#> .
+	<https://meta.linked.archi/bpmn/tax#ConnectingObjects> a skos:Concept ;
+		skos:prefLabel "Connecting Objects"@en ;
+		skos:definition "Elements connecting flow objects: sequence flows, message flows, associations."@en ;
+		skos:inScheme <https://meta.linked.archi/bpmn/tax#> .
+	<https://meta.linked.archi/bpmn/tax#SwimLanes> a skos:Concept ;
+		skos:prefLabel "Swim Lanes"@en ;
+		skos:definition "Organizational groupings: pools and lanes."@en ;
+		skos:inScheme <https://meta.linked.archi/bpmn/tax#> .
+	<https://meta.linked.archi/bpmn/tax#Artifacts> a skos:Concept ;
+		skos:prefLabel "Artifacts"@en ;
+		skos:definition "Data-related and annotation elements: data objects, data stores, groups, text annotations."@en ;
+		skos:inScheme <https://meta.linked.archi/bpmn/tax#> .
+	<https://meta.linked.archi/bpmn/tax#Collaborations> a skos:Concept ;
+		skos:prefLabel "Collaborations"@en ;
+		skos:definition "Collaboration, choreography, and conversation elements."@en ;
+		skos:inScheme <https://meta.linked.archi/bpmn/tax#> .
+	<https://meta.linked.archi/bpmn/tax#Activities> a skos:Concept ;
+		skos:broader <https://meta.linked.archi/bpmn/tax#FlowObjects> ;
+		skos:prefLabel "Activities"@en ;
+		skos:definition "Work performed within a business process — tasks and sub-processes."@en ;
+		skos:inScheme <https://meta.linked.archi/bpmn/tax#> ;
+		skos:narrower bpmn:Process , bpmn:SubProcess , bpmn:Task , bpmn:UserTask , bpmn:ServiceTask , bpmn:SendTask , bpmn:ReceiveTask , bpmn:ScriptTask , bpmn:BusinessRuleTask , bpmn:ManualTask , bpmn:CallActivity , bpmn:AdHocSubProcess , bpmn:Transaction .
+	<https://meta.linked.archi/bpmn/tax#Events> a skos:Concept ;
+		skos:broader <https://meta.linked.archi/bpmn/tax#FlowObjects> ;
+		skos:prefLabel "Events"@en ;
+		skos:definition "Things that happen during a process: start, intermediate, and end events."@en ;
+		skos:inScheme <https://meta.linked.archi/bpmn/tax#> ;
+		skos:narrower bpmn:StartEvent , bpmn:EndEvent , bpmn:IntermediateCatchEvent , bpmn:IntermediateThrowEvent , bpmn:BoundaryEvent .
+	<https://meta.linked.archi/bpmn/tax#Gateways> a skos:Concept ;
+		skos:broader <https://meta.linked.archi/bpmn/tax#FlowObjects> ;
+		skos:prefLabel "Gateways"@en ;
+		skos:definition "Control flow divergence and convergence."@en ;
+		skos:inScheme <https://meta.linked.archi/bpmn/tax#> ;
+		skos:narrower bpmn:ExclusiveGateway , bpmn:ParallelGateway , bpmn:InclusiveGateway , bpmn:EventBasedGateway , bpmn:ComplexGateway .
+	<https://meta.linked.archi/bpmn/tax#SequenceFlowConcept> a skos:Concept ;
+		skos:broader <https://meta.linked.archi/bpmn/tax#ConnectingObjects> ;
+		skos:prefLabel "Sequence Flow"@en ;
+		skos:inScheme <https://meta.linked.archi/bpmn/tax#> .
+	<https://meta.linked.archi/bpmn/tax#MessageFlowConcept> a skos:Concept ;
+		skos:broader <https://meta.linked.archi/bpmn/tax#ConnectingObjects> ;
+		skos:prefLabel "Message Flow"@en ;
+		skos:inScheme <https://meta.linked.archi/bpmn/tax#> .
+	<https://meta.linked.archi/bpmn/tax#AssociationConcept> a skos:Concept ;
+		skos:broader <https://meta.linked.archi/bpmn/tax#ConnectingObjects> ;
+		skos:prefLabel "Association"@en ;
+		skos:inScheme <https://meta.linked.archi/bpmn/tax#> .
+	<https://meta.linked.archi/bpmn/tax#DataAssociationConcept> a skos:Concept ;
+		skos:broader <https://meta.linked.archi/bpmn/tax#ConnectingObjects> ;
+		skos:prefLabel "Data Association"@en ;
+		skos:inScheme <https://meta.linked.archi/bpmn/tax#> .
+	<https://meta.linked.archi/bpmn/tax#PoolConcept> a skos:Concept ;
+		skos:broader <https://meta.linked.archi/bpmn/tax#SwimLanes> ;
+		skos:prefLabel "Pool (Participant)"@en ;
+		skos:inScheme <https://meta.linked.archi/bpmn/tax#> ;
+		skos:narrower bpmn:Participant .
+	<https://meta.linked.archi/bpmn/tax#LaneConcept> a skos:Concept ;
+		skos:broader <https://meta.linked.archi/bpmn/tax#SwimLanes> ;
+		skos:prefLabel "Lane"@en ;
+		skos:inScheme <https://meta.linked.archi/bpmn/tax#> ;
+		skos:narrower bpmn:Lane .
+	<https://meta.linked.archi/bpmn/tax#DataObjectConcept> a skos:Concept ;
+		skos:broader <https://meta.linked.archi/bpmn/tax#Artifacts> ;
+		skos:prefLabel "Data Object"@en ;
+		skos:inScheme <https://meta.linked.archi/bpmn/tax#> ;
+		skos:narrower bpmn:DataObject , bpmn:DataObjectReference .
+	<https://meta.linked.archi/bpmn/tax#DataStoreConcept> a skos:Concept ;
+		skos:broader <https://meta.linked.archi/bpmn/tax#Artifacts> ;
+		skos:prefLabel "Data Store"@en ;
+		skos:inScheme <https://meta.linked.archi/bpmn/tax#> ;
+		skos:narrower bpmn:DataStoreReference .
+	<https://meta.linked.archi/bpmn/tax#MessageConcept> a skos:Concept ;
+		skos:broader <https://meta.linked.archi/bpmn/tax#Artifacts> ;
+		skos:prefLabel "Message"@en ;
+		skos:inScheme <https://meta.linked.archi/bpmn/tax#> ;
+		skos:narrower bpmn:Message .
+	<https://meta.linked.archi/bpmn/tax#GroupConcept> a skos:Concept ;
+		skos:broader <https://meta.linked.archi/bpmn/tax#Artifacts> ;
+		skos:prefLabel "Group"@en ;
+		skos:inScheme <https://meta.linked.archi/bpmn/tax#> ;
+		skos:narrower bpmn:Group .
+	<https://meta.linked.archi/bpmn/tax#TextAnnotationConcept> a skos:Concept ;
+		skos:broader <https://meta.linked.archi/bpmn/tax#Artifacts> ;
+		skos:prefLabel "Text Annotation"@en ;
+		skos:inScheme <https://meta.linked.archi/bpmn/tax#> ;
+		skos:narrower bpmn:TextAnnotation .
+	<https://meta.linked.archi/bpmn/tax#CollaborationConcept> a skos:Concept ;
+		skos:broader <https://meta.linked.archi/bpmn/tax#Collaborations> ;
+		skos:prefLabel "Collaboration"@en ;
+		skos:inScheme <https://meta.linked.archi/bpmn/tax#> ;
+		skos:narrower bpmn:Collaboration .
+	<https://meta.linked.archi/bpmn/tax#ChoreographyConcept> a skos:Concept ;
+		skos:broader <https://meta.linked.archi/bpmn/tax#Collaborations> ;
+		skos:prefLabel "Choreography"@en ;
+		skos:inScheme <https://meta.linked.archi/bpmn/tax#> ;
+		skos:narrower bpmn:Choreography , bpmn:ChoreographyTask .
+	<https://meta.linked.archi/bpmn/tax#ConversationConcept> a skos:Concept ;
+		skos:broader <https://meta.linked.archi/bpmn/tax#Collaborations> ;
+		skos:prefLabel "Conversation"@en ;
+		skos:inScheme <https://meta.linked.archi/bpmn/tax#> ;
+		skos:narrower bpmn:Conversation , bpmn:ConversationNode .
+	arch:ApprovalState a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "Approval State"@en .
+	arch:Architecture a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "Architecture" .
+	arch:ArchitectureState a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "Architecture State"@en .
+	arch:Aspect <http://www.w3.org/2000/01/rdf-schema#subClassOf> arch:Consideration ;
+		a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "Aspect" .
+	arch:Concern <http://www.w3.org/2000/01/rdf-schema#subClassOf> arch:Consideration ;
+		a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "Concern" .
+	arch:Consideration a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "Consideration" .
+	arch:DeliverableTemplate <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://schema.org/CreativeWork> ;
+		a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "DeliverableTemplate"@en .
+	arch:Element <http://www.w3.org/2000/01/rdf-schema#subClassOf> arch:ModelConcept ;
+		a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "Element"@en .
+	arch:Environment a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "Environment" .
+	arch:Framework <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://schema.org/CreativeWork> ;
+		a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "Framework" .
+	arch:Metamodel a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "Metamodel" .
+	arch:Model a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "Model" .
+	arch:ModelConcept a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "ModelConcept" .
+	arch:Perspective <http://www.w3.org/2000/01/rdf-schema#subClassOf> arch:Consideration ;
+		a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "Perspective" .
+	arch:PresentationFormat a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "PresentationFormat"@en .
+	arch:Purpose a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "Purpose" .
+	arch:QualifiedRelationship <http://www.w3.org/2000/01/rdf-schema#subClassOf> arch:ModelConcept ;
+		a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "QualifiedRelationship" .
+	arch:QualityAttribute a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "QualityAttribute" .
+	arch:QualityMeasure a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "QualityMeasure" .
+	arch:Stakeholder <http://www.w3.org/2000/01/rdf-schema#subClassOf> arch:Element ;
+		a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "Stakeholder" .
+	arch:System a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "System" .
+	arch:TemplateSection a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "TemplateSection"@en .
+	arch:View <http://www.w3.org/2000/01/rdf-schema#subClassOf> arch:ModelConcept ;
+		a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "View" .
+	arch:Viewpoint a <http://www.w3.org/2002/07/owl#Class> ;
+		skos:prefLabel "Viewpoint" .
+	arch:altVisNotation <http://www.w3.org/2000/01/rdf-schema#domain> skos:Concept ;
+		<http://www.w3.org/2000/01/rdf-schema#range> <http://schema.org/ImageObject> ;
+		<http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://schema.org/image> ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "alternative Visual Notation"@en .
+	arch:approvalState <http://www.w3.org/2000/01/rdf-schema#range> arch:ApprovalState ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "approval state"@en .
+	arch:architectureState <http://www.w3.org/2000/01/rdf-schema#range> arch:ArchitectureState ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "architecture state"@en .
+	arch:architectureViewpoints <http://www.w3.org/2000/01/rdf-schema#domain> arch:Metamodel ;
+		<http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2002/07/owl#Ontology> ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "architectureViewpoints"@en .
+	arch:architectureViewpointsRestrictions <http://www.w3.org/2000/01/rdf-schema#domain> arch:Metamodel ;
+		<http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2002/07/owl#Ontology> ;
+		<http://www.w3.org/2000/01/rdf-schema#subPropertyOf> sh:shapesGraph ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "architectureViewpointsRestrictions"@en .
+	arch:associatedStandard <http://www.w3.org/2000/01/rdf-schema#domain> arch:ModelConcept ;
+		<http://www.w3.org/2000/01/rdf-schema#range> <http://schema.org/CreativeWork> ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "associatedStandard"@en .
+	arch:basedOnFramework <http://www.w3.org/2000/01/rdf-schema#domain> arch:Metamodel ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Framework ;
+		<http://www.w3.org/2000/01/rdf-schema#subPropertyOf> prov:hadPrimarySource ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "definedByFramework" .
+	arch:conceptClassification <http://www.w3.org/2000/01/rdf-schema#domain> arch:Metamodel ;
+		<http://www.w3.org/2000/01/rdf-schema#range> skos:ConceptScheme ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "conceptClassification"@en .
+	arch:conceptOwner <http://www.w3.org/2000/01/rdf-schema#domain> arch:ModelConcept ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Stakeholder ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "Concept Owner"@en .
+	arch:contains <http://www.w3.org/2000/01/rdf-schema#domain> arch:Model ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:View ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "contains"@en .
+	arch:crossLanguageMappings <http://www.w3.org/2000/01/rdf-schema#domain> arch:Metamodel ;
+		<http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2002/07/owl#Ontology> ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "crossLanguageMappings"@en .
+	arch:deliverableTemplateUsed <http://www.w3.org/2000/01/rdf-schema#domain> arch:Model ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:DeliverableTemplate ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "deliverableTemplateUsed"@en .
+	arch:derivationRules <http://www.w3.org/2000/01/rdf-schema#domain> arch:Metamodel ;
+		<http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2002/07/owl#Ontology> ;
+		<http://www.w3.org/2000/01/rdf-schema#subPropertyOf> sh:shapesGraph ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "derivationRules"@en .
+	arch:environment <http://www.w3.org/2000/01/rdf-schema#domain> arch:System ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Environment ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "environment"@en .
+	arch:exposedInView <http://www.w3.org/2000/01/rdf-schema#domain> arch:ModelConcept ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:View ;
+		<http://www.w3.org/2000/01/rdf-schema#subPropertyOf> arch:inView ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "exposedInView"@en .
+	arch:formalRules <http://www.w3.org/2000/01/rdf-schema#domain> arch:Metamodel ;
+		<http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2002/07/owl#Ontology> ;
+		<http://www.w3.org/2000/01/rdf-schema#subPropertyOf> sh:shapesGraph ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "formalRules"@en .
+	arch:generatorCommand <http://www.w3.org/2000/01/rdf-schema#domain> arch:PresentationFormat ;
+		<http://www.w3.org/2000/01/rdf-schema#range> xsd:string ;
+		a <http://www.w3.org/2002/07/owl#DatatypeProperty> ;
+		skos:prefLabel "generatorCommand"@en .
+	arch:hasDeliverableTemplate <http://www.w3.org/2000/01/rdf-schema#domain> arch:Metamodel ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:DeliverableTemplate ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "hasDeliverableTemplate"@en .
+	arch:hasPart <http://www.w3.org/2000/01/rdf-schema#domain> arch:ModelConcept ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:ModelConcept ;
+		a <http://www.w3.org/2002/07/owl#TransitiveProperty> ;
+		skos:prefLabel "hasPart"@en .
+	arch:hasQualifiedRelationship <http://www.w3.org/2000/01/rdf-schema#domain> arch:ModelConcept ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:QualifiedRelationship ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "hasQualifiedRelationship" .
+	arch:hasQualityMeasure <http://www.w3.org/2000/01/rdf-schema#domain> arch:Element ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:QualityMeasure ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "hasQualityMeasure"@en .
+	arch:inModel <http://www.w3.org/2000/01/rdf-schema#domain> arch:ModelConcept ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Model ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "inModel"@en .
+	arch:inView <http://www.w3.org/2000/01/rdf-schema#domain> arch:ModelConcept ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:View ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "inView"@en .
+	arch:includesConcept <http://www.w3.org/2000/01/rdf-schema#domain> arch:Viewpoint ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:ModelConcept ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "includesConcept"@en .
+	arch:isAbstract <http://www.w3.org/2000/01/rdf-schema#domain> arch:Element ;
+		<http://www.w3.org/2000/01/rdf-schema#range> xsd:boolean ;
+		a <http://www.w3.org/2002/07/owl#DatatypeProperty> ;
+		skos:prefLabel "isAbstract" .
+	arch:isAbstractClass <http://www.w3.org/2000/01/rdf-schema#range> xsd:boolean ;
+		a <http://www.w3.org/2002/07/owl#AnnotationProperty> ;
+		skos:prefLabel "isAbstractClass"@en .
+	arch:masterDataSource <http://www.w3.org/2000/01/rdf-schema#domain> arch:ModelConcept ;
+		<http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/ns/dcat#Dataset> ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "Master Data Source"@en .
+	arch:measuredEntity <http://www.w3.org/2000/01/rdf-schema#domain> arch:QualityMeasure ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Element ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "measuredEntity"@en .
+	arch:measuredQualityAttribute <http://www.w3.org/2000/01/rdf-schema#domain> arch:QualityMeasure ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:QualityAttribute ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "measuredQualityAttribute"@en .
+	arch:meetsPurpose <http://www.w3.org/2000/01/rdf-schema#domain> arch:System ;
+		<http://www.w3.org/2000/01/rdf-schema#range> <http://schema.org/Thing> ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "meetsPurpose"@en .
+	arch:metamodelIdentifiesConsideration <http://www.w3.org/2000/01/rdf-schema#domain> arch:Metamodel ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Consideration ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "metamodelIdentifiesConsideration"@en .
+	arch:metamodelIdentifiesStakeholder <http://www.w3.org/2000/01/rdf-schema#domain> arch:Metamodel ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Stakeholder ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "metamodelIdentifiesStakeholder"@en .
+	arch:modelAddressesConsideration <http://www.w3.org/2000/01/rdf-schema#domain> arch:Model ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Consideration ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "modelAddressesConsideration"@en .
+	arch:modelConcepts <http://www.w3.org/2000/01/rdf-schema#domain> arch:Metamodel ;
+		<http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2002/07/owl#Ontology> ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "modelConcepts"@en .
+	arch:modelConformsToMetamodel <http://www.w3.org/2000/01/rdf-schema#domain> arch:Model ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Metamodel ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "modelConformsToMetamodel"@en .
+	arch:modelExpressesArchitecture <http://www.w3.org/2000/01/rdf-schema#domain> arch:Model ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Architecture ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "modelExpressesArchitecture"@en .
+	arch:modelHasPurpose <http://www.w3.org/2000/01/rdf-schema#domain> arch:Model ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Purpose ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "modelHasPurpose"@en .
+	arch:modelRepresentsSystem <http://www.w3.org/2000/01/rdf-schema#domain> arch:Model ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:System ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "modelRepresentsSystem"@en .
+	arch:notationSet <http://www.w3.org/2000/01/rdf-schema#domain> arch:Metamodel ;
+		<http://www.w3.org/2000/01/rdf-schema#range> archvis:NotationSet ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "notationSet"@en .
+	arch:partOf <http://www.w3.org/2000/01/rdf-schema#domain> arch:ModelConcept ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:ModelConcept ;
+		a <http://www.w3.org/2002/07/owl#TransitiveProperty> ;
+		skos:prefLabel "partOf"@en .
+	arch:partOfModel <http://www.w3.org/2000/01/rdf-schema#domain> arch:ModelConcept ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Model ;
+		<http://www.w3.org/2000/01/rdf-schema#subPropertyOf> arch:inModel ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "partOfModel"@en .
+	arch:prefVisNotation <http://www.w3.org/2000/01/rdf-schema#domain> skos:Concept ;
+		<http://www.w3.org/2000/01/rdf-schema#range> <http://schema.org/ImageObject> ;
+		<http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://schema.org/image> ;
+		a <http://www.w3.org/2002/07/owl#FunctionalProperty> , <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "preferred Visual Notation"@en .
+	arch:presentationContextScheme <http://www.w3.org/2000/01/rdf-schema#domain> arch:Metamodel ;
+		<http://www.w3.org/2000/01/rdf-schema#range> skos:ConceptScheme ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "presentationContextScheme"@en .
+	arch:purposeRelevantViewpoint <http://www.w3.org/2000/01/rdf-schema#domain> arch:Purpose ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Viewpoint ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel ":purposeRequiresViewpoints"@en .
+	arch:purposeRequiresViewpoint <http://www.w3.org/2000/01/rdf-schema#domain> arch:Purpose ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Viewpoint ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel ":purposeRequiresViewpoints"@en .
+	arch:referenceData <http://www.w3.org/2000/01/rdf-schema#domain> arch:Metamodel ;
+		<http://www.w3.org/2000/01/rdf-schema#range> skos:ConceptScheme ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "referenceData"@en .
+	arch:referenceModels <http://www.w3.org/2000/01/rdf-schema#domain> arch:Metamodel ;
+		<http://www.w3.org/2000/01/rdf-schema#range> skos:ConceptScheme ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "referenceModels"@en .
+	arch:refinedByAspect <http://www.w3.org/2000/01/rdf-schema#domain> arch:Concern ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Aspect ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "refinedByAspect"@en .
+	arch:refinedInto <http://www.w3.org/2000/01/rdf-schema#domain> arch:ModelConcept ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:ModelConcept ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "refinedInto"@en .
+	arch:refines <http://www.w3.org/2000/01/rdf-schema#domain> arch:ModelConcept ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:ModelConcept ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "refines"@en .
+	arch:resultsIn <http://www.w3.org/2000/01/rdf-schema#domain> arch:Perspective ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Concern ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "resultsIn"@en .
+	arch:sectionOrder <http://www.w3.org/2000/01/rdf-schema#domain> arch:TemplateSection ;
+		<http://www.w3.org/2000/01/rdf-schema#range> xsd:integer ;
+		a <http://www.w3.org/2002/07/owl#DatatypeProperty> ;
+		skos:prefLabel "sectionOrder"@en .
+	arch:sectionQuery <http://www.w3.org/2000/01/rdf-schema#domain> arch:TemplateSection ;
+		<http://www.w3.org/2000/01/rdf-schema#range> xsd:string ;
+		a <http://www.w3.org/2002/07/owl#DatatypeProperty> ;
+		skos:prefLabel "sectionQuery"@en .
+	arch:sectionResultKey <http://www.w3.org/2000/01/rdf-schema#domain> arch:TemplateSection ;
+		<http://www.w3.org/2000/01/rdf-schema#range> xsd:string ;
+		a <http://www.w3.org/2002/07/owl#DatatypeProperty> ;
+		skos:prefLabel "sectionResultKey"@en .
+	arch:sectionViewpoint <http://www.w3.org/2000/01/rdf-schema#domain> arch:TemplateSection ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Viewpoint ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "sectionViewpoint"@en .
+	arch:source <http://www.w3.org/2000/01/rdf-schema#domain> arch:QualifiedRelationship ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:ModelConcept ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "source" .
+	arch:stakeholderHasConcern <http://www.w3.org/2000/01/rdf-schema#domain> arch:Stakeholder ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Concern ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "stakeholderHasConcern"@en .
+	arch:stakeholderHasInterestIn <http://www.w3.org/2000/01/rdf-schema#domain> arch:Stakeholder ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Model , arch:Architecture , arch:System ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "stakeholderHasInterestIn"@en .
+	arch:stakeholderHasPerspective <http://www.w3.org/2000/01/rdf-schema#domain> arch:Stakeholder ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Perspective ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "stakeholderHasPerspective"@en .
+	arch:standardsInformationBase <http://www.w3.org/2000/01/rdf-schema#domain> arch:Metamodel ;
+		<http://www.w3.org/2000/01/rdf-schema#range> skos:ConceptScheme ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "standardsInformationBase"@en .
+	arch:systemHasArchitecture <http://www.w3.org/2000/01/rdf-schema#domain> arch:System ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Architecture ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "systemHasArchitecture"@en .
+	arch:target <http://www.w3.org/2000/01/rdf-schema#domain> arch:QualifiedRelationship ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:ModelConcept ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "target" .
+	arch:targetsStakeholder <http://www.w3.org/2000/01/rdf-schema#domain> arch:Viewpoint ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Stakeholder ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "viewpointTargetsStakeholder"@en .
+	arch:templateHasFormat <http://www.w3.org/2000/01/rdf-schema#domain> arch:DeliverableTemplate ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:PresentationFormat ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "templateHasFormat"@en .
+	arch:templateHasSection <http://www.w3.org/2000/01/rdf-schema#domain> arch:DeliverableTemplate ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:TemplateSection ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "templateHasSection"@en .
+	arch:templateRequiresViewpoint <http://www.w3.org/2000/01/rdf-schema#domain> arch:DeliverableTemplate ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Viewpoint ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "templateRequiresViewpoint"@en .
+	arch:templateResource <http://www.w3.org/2000/01/rdf-schema#domain> arch:PresentationFormat ;
+		<http://www.w3.org/2000/01/rdf-schema#range> xsd:anyURI ;
+		a <http://www.w3.org/2002/07/owl#DatatypeProperty> ;
+		skos:prefLabel "templateResource"@en .
+	arch:templateTargetsPurpose <http://www.w3.org/2000/01/rdf-schema#domain> arch:DeliverableTemplate ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Purpose ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "templateTargetsPurpose"@en .
+	arch:usesNotationSet <http://www.w3.org/2000/01/rdf-schema#domain> skos:Concept ;
+		<http://www.w3.org/2000/01/rdf-schema#range> archvis:NotationSet ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "usesNotationSet"@en .
+	arch:viewConformsToViewpoint <http://www.w3.org/2000/01/rdf-schema#domain> arch:View ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Viewpoint ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "viewConformsToViewpoint"@en .
+	arch:viewType <http://www.w3.org/2000/01/rdf-schema#domain> arch:Viewpoint ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "view type"@en .
+	arch:viewpointAddressesPerspective <http://www.w3.org/2000/01/rdf-schema#domain> arch:Viewpoint ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Perspective ;
+		<http://www.w3.org/2000/01/rdf-schema#subPropertyOf> arch:viewpointFramesConcern ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "viewpoint addresses perspective"@en .
+	arch:viewpointCoversAspect <http://www.w3.org/2000/01/rdf-schema#domain> arch:Viewpoint ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Aspect ;
+		<http://www.w3.org/2000/01/rdf-schema#subPropertyOf> arch:viewpointFramesConcern ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "viewpoint covers aspect"@en .
+	arch:viewpointFramesConcern <http://www.w3.org/2000/01/rdf-schema#domain> arch:Viewpoint ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Consideration ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "viewpointFramesConcern"@en .
+	arch:viewpointHasPurpose <http://www.w3.org/2000/01/rdf-schema#domain> arch:Viewpoint ;
+		<http://www.w3.org/2000/01/rdf-schema#range> arch:Purpose ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "viewpointHasPurpose"@en .
+	arch:viewpointLibrary <http://www.w3.org/2000/01/rdf-schema#domain> arch:Metamodel ;
+		<http://www.w3.org/2000/01/rdf-schema#range> skos:ConceptScheme ;
+		a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+		skos:prefLabel "viewpointLibrary"@en .
 }

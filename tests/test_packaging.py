@@ -1257,6 +1257,11 @@ class TestNoPrivateHostsShip(unittest.TestCase):
         "agentskills.io", "kiro.dev",
         "acme.leanix.net",            # a vendor endpoint shape, in an example profile
         "e.org",                      # a stub target in the transport tests
+        "arxiv.org",                  # papers the design cites
+        # A `dct:source` inside the extracted Backstage shape, citing the upstream docs
+        # for the relation it constrains. Extracted content, not authored here - the
+        # provenance of a published constraint is part of the constraint.
+        "backstage.io",
     }
 
     #: Reserved for documentation and testing, so allowed by suffix.

@@ -27,10 +27,16 @@ FLAT = FIXTURES / "flat.ttl"
 #: Both files carry the same ``schema:softwareVersion``, which is why fixtures are
 #: told apart by shape - see ``tests/test_fixtures.py`` and ``fixtures/PROVENANCE.md``.
 CONVERTER_13 = FIXTURES / "converter-1.3.trig"
-#: Published vocabulary - the BPMN taxonomy and the classes it groups - in one named
-#: graph, for attaching beside a dataset. Not converter output: the converters emit no
-#: ontology, which is why a template that needs the class hierarchy has to be given it.
+#: Published vocabulary - the BPMN taxonomy and the classes it groups, plus the core
+#: property axioms - in one named graph, for attaching beside a dataset. Not converter
+#: output: the converters emit no ontology, which is why a template that needs the class
+#: hierarchy has to be given it.
 VOCABULARY = FIXTURES / "vocabulary.trig"
+#: Published SHACL, in one named graph. Which relationship may connect which element
+#: types, which no conversion emits and which `rdfs:domain`/`rdfs:range` cannot express
+#: for the unqualified (direct triple) forms - those carry neither. See
+#: ``fixtures/PROVENANCE.md``.
+SHAPES = FIXTURES / "shapes.trig"
 
 #: Real IRIs from real converter output, present in the committed fixtures. Tests
 #: assert against these rather than inventing IRIs, so a test that passes is

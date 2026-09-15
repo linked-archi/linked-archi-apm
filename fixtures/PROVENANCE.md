@@ -53,11 +53,17 @@ Consequences, all of which the tests encode:
 
 | File | Quads | Graphs | What it is |
 |---|---|---|---|
-| `base.trig` | 1282 | 17 | Real converter output, trimmed. The default case. |
-| `augmented.trig` | 1425 | 19 | `base` plus what converters never emit. |
-| `flat.ttl` | 1282 | 0 | `base` with graph identity discarded. |
+| `base.trig` | 3320 | 17 | Real converter output, trimmed. The default case. |
+| `augmented.trig` | 3433 | 19 | `base` plus what converters never emit. |
+| `flat.ttl` | 3320 | 0 | `base` with graph identity discarded. |
 | `converter-1.3.trig` | 284 | 4 | Real converter output, **verbatim**. The one PARTITIONED fixture. |
+| `vocabulary.trig` | 623 | 1 | Published vocabulary: BPMN taxonomy, plus the core property axioms. |
+| `shapes.trig` | 2630 | 1 | Published SHACL: which relationship may connect which types. |
 | `unqualified-forms.json` | 75 pairs | — | Extracted `arch:unqualifiedForm` mappings. Not RDF. |
+
+Those quad counts are asserted, not annotated: `tests/test_fixtures.py` reads this table and
+fails when a fixture stops matching it. They were wrong before that existed — three of them
+still said what the fixtures held two thousand quads ago.
 
 All of them carry the layout the converters emit today: `arch:Model` and its folder tree
 in `graph/model`, membership as a direct `arch:inModel` edge. What still differs
@@ -423,3 +429,75 @@ the wrong vocabulary version derives from the wrong hierarchy, silently. The dat
 what it conforms to in `arch:modelConformsToMetamodel`; the vocabulary attached beside it
 should be that version. Checking the pairing is verification work this package has not done
 yet — recorded in `PROPOSAL.md` B5.
+
+## `shapes.trig`: what says a relationship is allowed
+
+Published, not converted, like `vocabulary.trig` — and it exists because the vocabulary
+cannot answer this. `rdfs:domain` and `rdfs:range` say that `arch:source` starts at a
+`QualifiedRelationship` and ends at a `ModelConcept`. They cannot say that a Serving from a
+Business Actor to a Value is not a thing the metamodel allows. For the **unqualified**
+(direct triple) forms they say nothing at all: `am:flowsTo`, `bs:ownedBy` and the other 73
+predicates in `unqualified-forms.json` carry no domain and no range anywhere in the
+ontologies.
+
+Which relationship may connect which element types is declared **only as SHACL**. That is
+what makes reading it new work rather than a configuration change: an Ontology-Based Query
+Check as published (Allemang & Sequeda, [arXiv:2405.11706](https://arxiv.org/abs/2405.11706))
+walks `rdfs:domain`, `rdfs:range` and `rdfs:subClassOf`, and on this data three of those six
+rules would find nothing to check on the form most estates query most.
+
+**Two shapes of the same fact.** The published shapes state it twice, in two vocabularies:
+
+```turtle
+# qualified: per relationship class, source pinned and targets enumerated
+amsh:AggregationShape sh:targetClass am:Aggregation ; sh:or (
+    [ sh:and ( [ sh:property [ sh:path arch:source ; sh:class am:ApplicationComponent ] ]
+               [ sh:property [ sh:path arch:target ; sh:or ( [ sh:class am:ApplicationComponent ] … ) ] ] ) ] … ) .
+
+# unqualified: per source class, one sh:property per direct predicate
+amsh:BusinessRoleRelShape sh:targetClass am:BusinessRole ; sh:property
+    [ sh:path am:flowsTo ; sh:or ( [ sh:class am:BusinessActor ] … ) ] .
+```
+
+Both reduce to the same `(source, predicate, target)` table a query check needs. Verified on
+this fixture: 361 valid triples out of the qualified shape — matching the count its own
+source comment claims — and 213 out of the unqualified one.
+
+**Only ArchiMate publishes the unqualified form.** Backstage, LeanIX and C4 constrain
+`arch:source` and `arch:target` and stop there; their other `sh:path` shapes are attribute
+constraints — lifecycle state, API visibility — not relationship rules. BPMN publishes none.
+So for every notation except ArchiMate the unqualified constraint has to be **derived**, by
+following `arch:unqualifiedForm` from the relationship class to its direct predicate and
+reusing the qualified shape's classes. `bs:Ownership` allowing `Element → Group | User`
+becomes the constraint on `bs:ownedBy`. A checker that finds no shape for a class must report
+that it has **no constraint**, never that the query is fine.
+
+**Source.** `linked-archi-meta/modelingLanguages/archimate/3.2/archimate3.2-relationship-shapes.ttl`
+(itself generated from the ArchiMate relationship validity matrix), plus
+`backstage/backstage-shapes.ttl`, `leanIX/leanIX-shapes.ttl`, `c4/c4-shapes.ttl` and
+`core/core-shapes.ttl`. Refresh with
+`python3 fixtures/build_fixtures.py --refresh-shapes`, which needs a `linked-archi-meta`
+checkout — `LINKED_ARCHI_META` if it is not a sibling.
+
+**Selection rule**, so a regeneration is reproducible:
+
+- **Whole node shapes, never a slice of one.** This is the one place where trimming is not
+  the same operation it is everywhere else in this file. Dropping quads from instance data
+  leaves true quads; dropping alternatives from an `sh:or` list makes something the
+  metamodel *permits* look *forbidden*. So a shape is carried complete or left out.
+- **Four shapes, named in `SHAPE_SELECTION`, one per SHACL construct a reader must handle:**
+  the unqualified form as published, the qualified form's `sh:or` over `sh:and` nesting, a
+  qualified shape whose unqualified form must be derived, and the core shape every
+  relationship is subject to. Selecting by "every class the data uses" was tried first: it
+  returned 45 shapes, mostly attribute constraints, in a 586 kB file.
+- Named rather than matched, so a shape that moves upstream is a **refusal**, not a quietly
+  smaller fixture with a construct no longer covered.
+
+**Why it is 34 kB and not 261 kB.** A node shape is almost all blank nodes, and pyoxigraph's
+serialiser writes each as explicit `rdf:first`/`rdf:rest` statements: the same 2630 quads came
+to 261 kB, 58% list plumbing, 2603 of 2630 subjects a generated label. Correct RDF that no
+reviewer could check against the published source. `_write_nested_trig` serialises through
+rdflib so blank nodes nest and lists print as collections, then parses the result back and
+compares quad for quad, because the graph wrapper around it is text assembly. Blank-node
+names are content hashes — without that, two runs over identical shapes differed by 34 lines
+of reordered constraints, and a rebuild that cannot diff clean hides real changes in noise.

@@ -524,6 +524,374 @@ def refresh_unqualified_forms(meta_root: Path) -> int:
     return len(pairs)
 
 
+# --------------------------------------------------------------------------
+# Published constraints - what says whether a query's PATH makes sense
+# --------------------------------------------------------------------------
+#
+# A conversion emits instances. Nothing in it says which relationship may connect
+# which element type, so a query can traverse a path the metamodel forbids, return
+# nothing, and read as evidence of absence. Two published artifacts answer that, and
+# they answer it for different relationship forms:
+#
+#   rdfs:domain / rdfs:range   in `core/core-onto.ttl`. Covers the core predicates -
+#                              arch:source, arch:target, arch:inModel and the rest -
+#                              which is what an Ontology-Based Query Check walks
+#                              (Allemang & Sequeda, arXiv:2405.11706).
+#
+#   SHACL node shapes          in `modelingLanguages/**/-shapes.ttl`. The UNQUALIFIED
+#                              (direct triple) forms have no domain or range at all,
+#                              so RDFS says nothing about them whatsoever. Validity is
+#                              declared only as SHACL: a node shape per source class,
+#                              one sh:property per predicate, and sh:or over the target
+#                              classes allowed. That is the same (source, predicate,
+#                              target) table the RDFS rules need, in a different
+#                              vocabulary - and extending the check to read it is what
+#                              the paper does not do.
+#
+# Both are PUBLISHED, never converted, so they are paired at query time by the
+# operator - like `vocabulary.trig` and for the same reason. These fixtures exist so
+# the check is testable, not so it ships with a metamodel baked in.
+
+VOCABULARY_FILE = FIXTURES / "vocabulary.trig"
+VOCABULARY_GRAPH = "https://meta.linked.archi/graph/vocabulary"
+SHAPES_FILE = FIXTURES / "shapes.trig"
+SHAPES_GRAPH = "https://meta.linked.archi/graph/shapes"
+
+RDFS = "http://www.w3.org/2000/01/rdf-schema#"
+RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+SH = "http://www.w3.org/ns/shacl#"
+
+#: The axioms a query check reads, and nothing else. Labels are included because a
+#: violation naming `arch:source` is less use than one naming "source".
+AXIOM_PREDICATES = (
+    f"{RDFS}domain", f"{RDFS}range", f"{RDFS}subPropertyOf",
+    f"{RDFS}subClassOf", f"{RDF_NS}type", f"{RDFS}label", f"{SKOS}prefLabel",
+)
+
+#: Which shapes to carry, named rather than matched.
+#:
+#: Selecting by "every class the fixture data uses" was tried and is wrong twice over.
+#: It pulled in 45 shapes, most of them attribute constraints - API visibility,
+#: lifecycle state, entity labels - which say nothing about whether a relationship is
+#: allowed, and it produced a 586 kB file of blank-node soup that no reader could check
+#: by eye. Both defeat the purpose.
+#:
+#: So the selection covers every SHACL CONSTRUCT a shape reader has to handle, one
+#: instance each, and nothing else:
+SHAPE_SELECTION = {
+    # Unqualified, published directly: sh:property per direct predicate, sh:or over
+    # the allowed target classes. Only ArchiMate publishes this form.
+    "https://meta.linked.archi/archimate3/shapes#BusinessRoleRelShape":
+        "unqualified predicates, published (ArchiMate only)",
+    # Qualified: sh:or over sh:and pairs, each pinning arch:source to one class and
+    # arch:target to an sh:or list. The nesting is what makes ArchiMate's matrix
+    # distinctive, and Aggregation is the smallest of the eleven that augmented.trig
+    # exercises - 361 valid pairs against Association's 3600.
+    "https://meta.linked.archi/archimate3/shapes#AggregationShape":
+        "qualified relationship, sh:or over sh:and source/target pairs",
+    # Qualified with a flat sh:class on the source: the shape most notations publish.
+    # Backstage declares no unqualified constraint, so bs:ownedBy has to be DERIVED
+    # from this shape through arch:unqualifiedForm. That derivation is the reason this
+    # one is here.
+    "https://meta.linked.archi/backstage/shapes#OwnershipShape":
+        "qualified relationship, unqualified form must be derived",
+    # The shared shape every relationship is subject to, whatever the notation.
+    "https://meta.linked.archi/core-shapes#QualifiedRelationshipShape":
+        "core constraint on every qualified relationship",
+}
+
+#: Where the shapes come from. ArchiMate is the only notation that publishes the
+#: unqualified form as well as the qualified one; for the others the unqualified
+#: constraint has to be DERIVED, by following `arch:unqualifiedForm` from the
+#: relationship class to its direct predicate and reusing the qualified shape's
+#: source and target classes. Carrying both kinds here is what makes that
+#: derivation testable against a notation that publishes the answer directly.
+SHAPE_SOURCES = (
+    "modelingLanguages/archimate/3.2/archimate3.2-relationship-shapes.ttl",
+    "modelingLanguages/backstage/backstage-shapes.ttl",
+    "modelingLanguages/leanIX/leanIX-shapes.ttl",
+    "modelingLanguages/c4/c4-shapes.ttl",
+    "core/core-shapes.ttl",
+)
+
+
+def _describe(store, subject, into: set, seen: set | None = None) -> None:
+    """Add ``subject``'s triples to ``into``, following blank nodes to the end.
+
+    A node shape is mostly blank nodes: every ``sh:property`` is one, every
+    ``sh:or`` is an RDF list of them. Copying the named subject's triples alone
+    would produce a shape whose constraints all dangle.
+    """
+    from pyoxigraph import BlankNode
+
+    seen = seen if seen is not None else set()
+    key = subject.value if hasattr(subject, "value") else str(subject)
+    if key in seen:
+        return
+    seen.add(key)
+    for quad in store.quads_for_pattern(subject, None, None):
+        into.add((quad.subject, quad.predicate, quad.object))
+        if isinstance(quad.object, BlankNode):
+            _describe(store, quad.object, into, seen)
+
+
+def _load_all(paths) -> object:
+    from pyoxigraph import RdfFormat, Store
+
+    store = Store()
+    for path in paths:
+        store.load(path=str(path), format=RdfFormat.TURTLE)
+    return store
+
+
+def refresh_vocabulary_axioms(meta_root: Path) -> int:
+    """Add `core-onto.ttl`'s property axioms to the vocabulary fixture.
+
+    Additive on purpose. The BPMN taxonomy already in the fixture is what
+    `core/elements-by-category` reads, and rebuilding it from the published
+    selection rule produces 298 triples rather than the committed 253 - the
+    subClassOf walk reaches further than the original selection did. Replacing it
+    would move a template's row floor as a side effect of adding axioms, so this
+    only ever adds, and only in the core namespace it owns.
+    """
+    from pyoxigraph import NamedNode, Quad, RdfFormat, Store
+
+    source = meta_root / "core/core-onto.ttl"
+    if not source.is_file():
+        print(f"no core ontology at {source}", file=sys.stderr)
+        return 0
+    onto = _load_all([source])
+
+    fixture = Store()
+    if VOCABULARY_FILE.is_file():
+        fixture.load(path=str(VOCABULARY_FILE), format=RdfFormat.TRIG)
+    before = len(fixture)
+
+    # Idempotent: drop what a previous run of this function put here. Nothing else
+    # in the fixture has a core-namespace subject - the committed content is all
+    # bpmn/tax and bpmn/onto - so ownership is unambiguous.
+    for quad in list(fixture):
+        if quad.subject.value.startswith(CORE):
+            fixture.remove(quad)
+
+    graph = NamedNode(VOCABULARY_GRAPH)
+    terms: set[str] = set()
+    for predicate in (f"{RDFS}domain", f"{RDFS}range"):
+        for row in onto.query(f"SELECT ?p ?o WHERE {{ ?p <{predicate}> ?o }}"):
+            if not str(row["p"]).startswith(f"<{CORE}"):
+                continue
+            terms.add(str(row["p"]))
+            if isinstance(row["o"], NamedNode) and row["o"].value.startswith(CORE):
+                terms.add(f"<{row['o'].value}>")
+
+    added = 0
+    for term in sorted(terms):
+        for predicate in AXIOM_PREDICATES:
+            for row in onto.query(f"SELECT ?o WHERE {{ {term} <{predicate}> ?o }}"):
+                quad = Quad(NamedNode(term[1:-1]), NamedNode(predicate), row["o"], graph)
+                if quad not in fixture:
+                    fixture.add(quad)
+                    added += 1
+
+    write(fixture, VOCABULARY_FILE, "TRIG")
+    print(f"{VOCABULARY_FILE.name}: {before} -> {len(fixture)} quads "
+          f"({added} axiom quad(s) for {len(terms)} core term(s))")
+    return added
+
+
+def refresh_shapes(meta_root: Path) -> int:
+    """Extract the SHACL relationship constraints the fixtures exercise.
+
+    Whole node shapes, never a slice of one. Narrowing an ``sh:or`` list is not
+    taking a subset of the truth the way trimming instance data is - it makes
+    something the metamodel permits look forbidden. So a shape is either carried
+    complete or left out, and a checker that finds no shape for a class must report
+    that it has no constraint rather than that the query is fine.
+
+    Which shapes, and why each one, is :data:`SHAPE_SELECTION`. A missing shape is an
+    error rather than a smaller fixture: a selection that silently shrinks because an
+    ontology moved would leave a construct untested and nothing would say so.
+    """
+    from pyoxigraph import NamedNode, Quad, Store
+
+    missing = [p for p in SHAPE_SOURCES if not (meta_root / p).is_file()]
+    if missing:
+        for path in missing:
+            print(f"no shapes at {meta_root / path}", file=sys.stderr)
+        return 0
+    shapes = _load_all([meta_root / p for p in SHAPE_SOURCES])
+
+    triples: set = set()
+    kept: list[str] = []
+    for shape, why in SHAPE_SELECTION.items():
+        node = NamedNode(shape)
+        found = list(shapes.quads_for_pattern(node, None, None))
+        if not found:
+            print(f"REFUSED: {shape} is not in the published shapes", file=sys.stderr)
+            return 0
+        targets = [
+            str(quad.object.value) for quad in found
+            if quad.predicate.value == f"{SH}targetClass"
+        ]
+        _describe(shapes, node, triples)
+        kept.append(f"{shape.rsplit('#', 1)[-1]:<28} {why}\n"
+                    f"{'':30}targets {', '.join(t.rsplit('#', 1)[-1] for t in targets)}")
+
+    graph = NamedNode(SHAPES_GRAPH)
+    fixture = Store()
+    for subject, predicate, obj in triples:
+        fixture.add(Quad(subject, predicate, obj, graph))
+
+    written = _write_nested_trig(fixture, SHAPES_FILE, graph)
+    size = SHAPES_FILE.stat().st_size
+    print(f"{SHAPES_FILE.name}: {written} quads, {len(kept)} shape(s), {size // 1024} kB")
+    for line in kept:
+        print(f"  {line}")
+    return written
+
+
+#: Prefixes only these fixtures need. The shape namespaces are where the node shapes
+#: themselves live; without them every shape name is written out in full.
+SHAPE_PREFIXES = {
+    "amsh": "https://meta.linked.archi/archimate3/shapes#",
+    "bssh": "https://meta.linked.archi/backstage/shapes#",
+    "lxsh": "https://meta.linked.archi/leanix/shapes#",
+    "c4sh": "https://meta.linked.archi/c4/shapes#",
+    "coresh": "https://meta.linked.archi/core-shapes#",
+}
+
+
+def _write_nested_trig(store, path: Path, graph) -> int:
+    """Write one named graph as TriG, with blank nodes nested and lists as collections.
+
+    Worth the extra step because of what a shape IS. A node shape is almost entirely
+    blank nodes - every ``sh:property`` is one, every ``sh:or`` is an RDF list of them -
+    and pyoxigraph's serialiser writes each one as explicit ``rdf:first``/``rdf:rest``
+    statements with generated labels. The same four shapes came to 261 kB that way, 58%
+    of it list plumbing and 2,603 of 2,630 subjects a blank node: correct RDF that no
+    reviewer could check against the published source. Nested, it is 33 kB and reads
+    like the document it was extracted from.
+
+    Verified rather than trusted: the result is parsed back and compared quad for quad,
+    because the graph wrapper here is text assembly around a serialiser's output.
+    """
+    try:
+        from rdflib import Dataset, Graph, URIRef  # noqa: F401
+    except ModuleNotFoundError:
+        print("nested output needs rdflib (a maintainer-only dependency, and already "
+              "present with pyshacl):  pip install rdflib", file=sys.stderr)
+        raise
+
+    from pyoxigraph import RdfFormat, Store
+
+    labels = _canonical_blank_labels(store)
+    flat = Graph()
+    for quad in store:
+        # Every term goes through the same conversion. A pyoxigraph BlankNode also has
+        # `.value`, so testing for that attribute silently turned each one into a
+        # relative IRI - `<a006b55…>` instead of `_:a006b55…` - which is unparseable
+        # and, worse, stops the serialiser nesting anything.
+        flat.add((
+            _rdflib_term(quad.subject, labels),
+            _rdflib_term(quad.predicate, labels),
+            _rdflib_term(quad.object, labels),
+        ))
+    for prefix, namespace in {**DUMP_PREFIXES, **SHAPE_PREFIXES}.items():
+        flat.bind(prefix, namespace)
+
+    turtle = flat.serialize(format="turtle")
+    header = [line for line in turtle.splitlines() if line.startswith("@prefix")]
+    body = [line for line in turtle.splitlines() if not line.startswith("@prefix")]
+    document = (
+        "\n".join(header)
+        + f"\n\n<{graph.value}> {{\n"
+        + "\n".join(f"    {line}" if line.strip() else "" for line in body).strip("\n")
+        + "\n}\n"
+    )
+    path.write_text(document, encoding="utf-8")
+
+    check = Store()
+    check.load(path=str(path), format=RdfFormat.TRIG)
+    if len(check) != len(store):
+        raise SystemExit(
+            f"REFUSED: {path.name} round-tripped to {len(check)} quads, not {len(store)}"
+        )
+    return len(check)
+
+
+def _canonical_blank_labels(store) -> dict[str, str]:
+    """Stable names for blank nodes, so a refresh diffs cleanly.
+
+    Without this the file is correct and unreviewable: a store assigns fresh blank-node
+    ids on every load, the serialiser orders sibling ``sh:property`` values by node
+    identity, and so two runs over identical shapes produced 34 changed lines of
+    reordered constraints. A rebuild has to diff clean or nobody can see a real change
+    inside the noise.
+
+    The name comes from the content - a hash over each node's own triples, with nested
+    blank nodes contributing their hash - so equal structure always gets an equal name,
+    and structure is all a blank node has. Memoised, because an ``sh:or`` list of 361
+    entries is a 700-link chain and recomputing the tail per link is quadratic.
+    """
+    import hashlib
+    from pyoxigraph import BlankNode
+
+    outgoing: dict[str, list] = {}
+    for quad in store:
+        if isinstance(quad.subject, BlankNode):
+            outgoing.setdefault(quad.subject.value, []).append(
+                (quad.predicate.value, quad.object)
+            )
+
+    cache: dict[str, str] = {}
+
+    def digest(label: str, guard: tuple[str, ...] = ()) -> str:
+        if label in cache:
+            return cache[label]
+        if label in guard:  # shapes are trees today; a cycle must not hang the build
+            return "cycle"
+        parts = []
+        for predicate, obj in outgoing.get(label, ()):
+            if isinstance(obj, BlankNode):
+                parts.append(f"{predicate} [{digest(obj.value, guard + (label,))}]")
+            else:
+                parts.append(f"{predicate} {obj}")
+        value = hashlib.sha256("|".join(sorted(parts)).encode()).hexdigest()[:16]
+        cache[label] = value
+        return value
+
+    # Deeply nested lists outrun the default recursion limit long before they outrun
+    # memory, and this is a maintainer-only build step.
+    previous = sys.getrecursionlimit()
+    sys.setrecursionlimit(max(previous, 10_000))
+    try:
+        ordered = sorted(outgoing, key=lambda label: (digest(label), label))
+    finally:
+        sys.setrecursionlimit(previous)
+    width = len(str(len(ordered)))
+    return {
+        label: f"b{index:0{width}d}" for index, label in enumerate(ordered, start=1)
+    }
+
+
+def _rdflib_term(term, labels: dict[str, str] | None = None):
+    """One pyoxigraph term as its rdflib equivalent."""
+    from rdflib import BNode, Literal as RdfLiteral, URIRef
+
+    kind = type(term).__name__
+    if kind == "BlankNode":
+        return BNode((labels or {}).get(term.value, term.value))
+    if kind == "Literal":
+        if term.language:
+            return RdfLiteral(term.value, lang=term.language)
+        datatype = getattr(term, "datatype", None)
+        return RdfLiteral(
+            term.value,
+            datatype=URIRef(datatype.value) if datatype is not None else None,
+        )
+    return URIRef(term.value)
+
+
 def augment(store) -> list[str]:
     """Add what the converters never emit, so the gated templates are testable."""
     from pyoxigraph import BlankNode, Literal, NamedNode, Quad, Store, Triple
@@ -794,6 +1162,17 @@ def main() -> int:
             print(f"no linked-archi-meta checkout at {META_ROOT}", file=sys.stderr)
             return 2
         return 0 if refresh_unqualified_forms(META_ROOT) else 2
+    if "--refresh-axioms" in sys.argv:
+        if not META_ROOT.is_dir():
+            print(f"no linked-archi-meta checkout at {META_ROOT}", file=sys.stderr)
+            return 2
+        refresh_vocabulary_axioms(META_ROOT)
+        return 0
+    if "--refresh-shapes" in sys.argv:
+        if not META_ROOT.is_dir():
+            print(f"no linked-archi-meta checkout at {META_ROOT}", file=sys.stderr)
+            return 2
+        return 0 if refresh_shapes(META_ROOT) else 2
 
     if "--emit-13-inputs" in sys.argv:
         index = sys.argv.index("--emit-13-inputs")

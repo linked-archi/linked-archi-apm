@@ -21,8 +21,10 @@ graph layouts, which is the fact that made every other assertion here necessary.
 
 from __future__ import annotations
 
+import re
 import unittest
 
+import support
 from support import (
     AUGMENTED,
     BASE,
@@ -297,3 +299,53 @@ class TestRebuildGateRefusesTheWrongShape(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestProvenanceTableMatchesTheFixtures(unittest.TestCase):
+    """The file table in `PROVENANCE.md` is a claim about every fixture's size.
+
+    It was wrong for three of them. `base.trig` was documented at 1282 quads while
+    holding 3320, `augmented.trig` at 1425 while holding 3433, and `flat.ttl` the same
+    as base - numbers true of fixtures two thousand quads ago. Nothing read them, so
+    nothing failed, and a reader sizing up the fixtures got a number off by 2.6x.
+
+    The counts themselves are not the point. The table is the first thing anyone reads
+    to find out what these files are, and a table that can drift is a table that will.
+    """
+
+    #: `| `name` | quads | graphs | ... |` - the quads column may say "75 pairs" for the
+    #: one fixture that is not RDF, which is not a count of anything and is skipped.
+    ROW = re.compile(r"^\|\s*`([^`]+)`\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|")
+
+    @classmethod
+    def setUpClass(cls):
+        cls.rows = {}
+        for line in (support.FIXTURES / "PROVENANCE.md").read_text("utf-8").splitlines():
+            found = cls.ROW.match(line)
+            if found:
+                cls.rows[found.group(1)] = (int(found.group(2)), int(found.group(3)))
+
+    def test_the_table_covers_every_rdf_fixture(self):
+        actual = {
+            path.name for path in support.FIXTURES.iterdir()
+            if path.suffix in {".trig", ".ttl"}
+        }
+        self.assertEqual(set(self.rows), actual, "PROVENANCE.md file table is out of step")
+
+    @requires_pyoxigraph
+    def test_every_documented_count_is_the_real_one(self):
+        from pyoxigraph import RdfFormat, Store
+
+        for name, (quads, graphs) in sorted(self.rows.items()):
+            with self.subTest(name):
+                store = Store()
+                store.load(
+                    path=str(support.FIXTURES / name),
+                    format=RdfFormat.TRIG if name.endswith(".trig") else RdfFormat.TURTLE,
+                )
+                self.assertEqual(len(store), quads, f"{name} quad count")
+                named = {
+                    q.graph_name.value for q in store
+                    if type(q.graph_name).__name__ == "NamedNode"
+                }
+                self.assertEqual(len(named), graphs, f"{name} named graph count")
