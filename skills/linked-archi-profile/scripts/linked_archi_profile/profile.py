@@ -45,6 +45,21 @@ DEFAULT_PROFILE = "linked-archi-default"
 #: Graph layouts a profile may declare. See ``graphs.layout`` in the profiles.
 LAYOUTS = frozenset({"per-model-triple", "explicit", "single"})
 
+#: Reserved binding for ``graphs.roles.<role>``: these triples are in the DEFAULT graph,
+#: not a named one, so the role is read unscoped rather than by a suffix test.
+#:
+#: It exists because published schema has no graph. An ontology, a taxonomy and a SHACL
+#: shape set are Turtle documents; `la-connect` loads a Turtle file into the default
+#: graph, so that is where a paired vocabulary actually lands. The consequence of not
+#: having this was measured on the shipped fixture: identical triples returned five rows
+#: from a named graph and none from the default graph, with no error either way.
+#:
+#: Reserving the word costs one thing, stated here so it is not a surprise: a named graph
+#: whose IRI ends in exactly ``default`` cannot be selected by suffix. Give it a longer
+#: suffix - the IRIs the converters emit end in ``graph/semantic`` and the like, so
+#: nothing real collides.
+DEFAULT_GRAPH = "default"
+
 #: Capability values. ``partial`` means "present for some models, absent for
 #: others" - true of the views graph, which exists only where a source had
 #: diagrams. A template requiring a partial capability is allowed to run but
@@ -303,6 +318,22 @@ class GraphLayout:
     def role_names(self) -> list[str]:
         return sorted(k for k, v in self.roles.items() if v is not None)
 
+    def named_graph_roles(self) -> list[str]:
+        """Bound roles that live in a named graph, so have a suffix to test."""
+        return [role for role in self.role_names() if not self.is_default_graph(role)]
+
+    def is_default_graph(self, role: str) -> bool:
+        """Whether this role's triples are in the default graph rather than a named one.
+
+        Published schema is the case that needs this. An ontology, a SKOS taxonomy and a
+        SHACL shape set are Turtle documents with no graph in them, and pairing one with
+        `la-connect` puts its triples in the default graph. Binding a suffix instead only
+        worked if the operator first wrapped the fetched file in a named graph by hand,
+        and every template that read it returned nothing when they did not - measured, on
+        the fixture this package ships.
+        """
+        return self.roles.get(role) == DEFAULT_GRAPH
+
     def is_required(self, role: str) -> bool:
         return role in self.required
 
@@ -318,6 +349,11 @@ class GraphLayout:
         this is its one definition, and ``references/machine-contract.md`` publishes
         the same rule for any other consumer.
         """
+        if self.is_default_graph(role):
+            raise ProfileError(
+                f"graph role {role!r} is bound to the default graph, which has no IRI to "
+                "test. Check is_default_graph() before asking for a suffix test"
+            )
         binding = self.roles[role]
         suffixes = binding if isinstance(binding, list) else [binding]
         tests = []
@@ -1048,7 +1084,7 @@ def _verify_against_dataset(profile: Profile, adapter) -> list[Finding]:
             )
         else:
             findings.append(Finding("info", "graphs.named_graphs", f"{graph_count} named graph(s)"))
-            for role in profile.graphs.role_names():
+            for role in profile.graphs.named_graph_roles():
                 suffix = profile.graphs.roles[role]
                 descendants = False
                 if profile.graphs.layout == "per-model-triple":
@@ -1151,7 +1187,18 @@ def _verify_vocabulary_pairing(profile: Profile, adapter) -> list[Finding]:
         return []
 
     p = profile.prefix_block()
-    vocabulary = profile.graphs.suffix_test("vocabulary", "?g")
+    # Where to look for the vocabulary, in the shape the probe's ASK needs. A Turtle
+    # document paired with `la-connect` is in the default graph, so the pattern is
+    # unscoped; a dataset that carries its vocabulary in a named graph gets the suffix
+    # test. Same question either way - "does the attached vocabulary describe this
+    # notation's types" - so only the scoping differs.
+    if profile.graphs.is_default_graph("vocabulary"):
+        described_pattern = "?class a ?meta ."
+    else:
+        described_pattern = (
+            f"GRAPH ?g {{ ?class a ?meta . "
+            f"FILTER({profile.graphs.suffix_test('vocabulary', '?g')}) }}"
+        )
     findings: list[Finding] = []
     uncovered: list[str] = []
 
@@ -1166,8 +1213,8 @@ def _verify_vocabulary_pairing(profile: Profile, adapter) -> list[Finding]:
             f'FILTER(STRSTARTS(STR(?type), "{namespace}")) }} }}'
         )
         described = adapter.ask(
-            f"{p}\nASK {{ GRAPH ?g {{ ?class a ?meta . FILTER({vocabulary}) "
-            f'FILTER(STRSTARTS(STR(?class), "{namespace}")) }} }}'
+            f"{p}\nASK {{ {described_pattern} "
+            f'FILTER(STRSTARTS(STR(?class), "{namespace}")) }}'
         )
         if used and not described:
             uncovered.append(f"{slug} ({namespace})")

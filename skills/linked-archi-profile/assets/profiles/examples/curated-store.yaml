@@ -33,10 +33,14 @@ graphs:
     # Published ontologies and taxonomies, attached beside the data rather than emitted
     # into it - `la-connect` takes several files. Bound here because this profile is the
     # one that has to support every template, and a schema-level question cannot be
-    # answered from instances alone. Its own graph, never `semantic`: ontology classes
-    # carry skos:prefLabel, and in the semantic graph they would come back as candidates
-    # from core/resolve-element. See examples/with-vocabulary for the reasoning in full.
-    vocabulary: graph/vocabulary
+    # answered from instances alone.
+    #
+    # `default`: a published ontology is a Turtle document with no graph, and Turtle loads
+    # into the default graph. Not `semantic`, which is the point that matters - ontology
+    # classes carry skos:prefLabel, and sharing the semantic graph would make them come
+    # back as candidates from core/resolve-element. The default graph keeps them out of it
+    # because instance templates are scoped. See examples/with-vocabulary in full.
+    vocabulary: default
 
 capabilities:
   direct_rel_triples: true

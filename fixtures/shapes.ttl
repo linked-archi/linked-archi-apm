@@ -1,0 +1,206 @@
+@prefix am: <https://meta.linked.archi/archimate3/onto#> .
+@prefix amsh: <https://meta.linked.archi/archimate3/shapes#> .
+@prefix arch: <https://meta.linked.archi/core#> .
+@prefix bs: <https://meta.linked.archi/backstage/onto#> .
+@prefix bssh: <https://meta.linked.archi/backstage/shapes#> .
+@prefix coresh: <https://meta.linked.archi/core-shapes#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+amsh:AggregationShape a sh:NodeShape ;
+    sh:message "Invalid Aggregation: this source-target pair is not permitted by the ArchiMate specification."@en ;
+    sh:or ( [ sh:and ( [ sh:property [ sh:class am:ApplicationCollaboration ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:ApplicationCollaboration ] [ sh:class am:ApplicationComponent ] [ sh:class am:ApplicationInterface ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:ApplicationComponent ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:ApplicationComponent ] [ sh:class am:ApplicationInterface ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:ApplicationEvent ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:ApplicationEvent ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:ApplicationFunction ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:ApplicationFunction ] [ sh:class am:ApplicationInteraction ] [ sh:class am:ApplicationProcess ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:ApplicationInteraction ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:ApplicationFunction ] [ sh:class am:ApplicationInteraction ] [ sh:class am:ApplicationProcess ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:ApplicationInterface ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:ApplicationInterface ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:ApplicationProcess ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:ApplicationFunction ] [ sh:class am:ApplicationInteraction ] [ sh:class am:ApplicationProcess ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:ApplicationService ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:ApplicationService ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Artifact ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Artifact ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Assessment ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Assessment ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:BusinessActor ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:BusinessActor ] [ sh:class am:BusinessInterface ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:BusinessCollaboration ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:BusinessActor ] [ sh:class am:BusinessCollaboration ] [ sh:class am:BusinessInterface ] [ sh:class am:BusinessRole ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:BusinessEvent ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:BusinessEvent ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:BusinessFunction ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:BusinessFunction ] [ sh:class am:BusinessInteraction ] [ sh:class am:BusinessProcess ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:BusinessInteraction ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:BusinessFunction ] [ sh:class am:BusinessInteraction ] [ sh:class am:BusinessProcess ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:BusinessInterface ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:BusinessInterface ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:BusinessObject ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:BusinessObject ] [ sh:class am:Contract ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:BusinessProcess ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:BusinessFunction ] [ sh:class am:BusinessInteraction ] [ sh:class am:BusinessProcess ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:BusinessRole ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:BusinessInterface ] [ sh:class am:BusinessRole ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:BusinessService ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:BusinessService ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Capability ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Capability ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:CommunicationNetwork ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:CommunicationNetwork ] [ sh:class am:Device ] [ sh:class am:Grouping ] [ sh:class am:SystemSoftware ] [ sh:class am:TechnologyInterface ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Constraint ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Constraint ] [ sh:class am:Grouping ] [ sh:class am:Requirement ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Contract ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:BusinessObject ] [ sh:class am:Contract ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:CourseOfAction ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:CourseOfAction ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:DataObject ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:DataObject ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Deliverable ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Deliverable ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Device ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Device ] [ sh:class am:Grouping ] [ sh:class am:SystemSoftware ] [ sh:class am:TechnologyInterface ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:DistributionNetwork ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Device ] [ sh:class am:DistributionNetwork ] [ sh:class am:Equipment ] [ sh:class am:Facility ] [ sh:class am:Grouping ] [ sh:class am:Node ] [ sh:class am:SystemSoftware ] [ sh:class am:TechnologyInterface ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Driver ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Driver ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Equipment ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Device ] [ sh:class am:Equipment ] [ sh:class am:Grouping ] [ sh:class am:SystemSoftware ] [ sh:class am:TechnologyInterface ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Facility ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Device ] [ sh:class am:Equipment ] [ sh:class am:Facility ] [ sh:class am:Grouping ] [ sh:class am:Node ] [ sh:class am:SystemSoftware ] [ sh:class am:TechnologyInterface ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Gap ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Gap ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Goal ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Goal ] [ sh:class am:Grouping ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Grouping ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:ApplicationCollaboration ] [ sh:class am:ApplicationComponent ] [ sh:class am:ApplicationEvent ] [ sh:class am:ApplicationFunction ] [ sh:class am:ApplicationInteraction ] [ sh:class am:ApplicationInterface ] [ sh:class am:ApplicationProcess ] [ sh:class am:ApplicationService ] [ sh:class am:Artifact ] [ sh:class am:Assessment ] [ sh:class am:BusinessActor ] [ sh:class am:BusinessCollaboration ] [ sh:class am:BusinessEvent ] [ sh:class am:BusinessFunction ] [ sh:class am:BusinessInteraction ] [ sh:class am:BusinessInterface ] [ sh:class am:BusinessObject ] [ sh:class am:BusinessProcess ] [ sh:class am:BusinessRole ] [ sh:class am:BusinessService ] [ sh:class am:Capability ] [ sh:class am:CommunicationNetwork ] [ sh:class am:Constraint ] [ sh:class am:Contract ] [ sh:class am:CourseOfAction ] [ sh:class am:DataObject ] [ sh:class am:Deliverable ] [ sh:class am:Device ] [ sh:class am:DistributionNetwork ] [ sh:class am:Driver ] [ sh:class am:Equipment ] [ sh:class am:Facility ] [ sh:class am:Gap ] [ sh:class am:Goal ] [ sh:class am:Grouping ] [ sh:class am:ImplementationEvent ] [ sh:class am:Location ] [ sh:class am:Material ] [ sh:class am:Meaning ] [ sh:class am:Node ] [ sh:class am:Outcome ] [ sh:class am:Path ] [ sh:class am:Plateau ] [ sh:class am:Principle ] [ sh:class am:Product ] [ sh:class am:Representation ] [ sh:class am:Requirement ] [ sh:class am:Resource ] [ sh:class am:Stakeholder ] [ sh:class am:SystemSoftware ] [ sh:class am:TechnologyCollaboration ] [ sh:class am:TechnologyEvent ] [ sh:class am:TechnologyFunction ] [ sh:class am:TechnologyInteraction ] [ sh:class am:TechnologyInterface ] [ sh:class am:TechnologyProcess ] [ sh:class am:TechnologyService ] [ sh:class am:Value ] [ sh:class am:ValueStream ] [ sh:class am:WorkPackage ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:ImplementationEvent ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Grouping ] [ sh:class am:ImplementationEvent ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Location ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:ApplicationCollaboration ] [ sh:class am:ApplicationComponent ] [ sh:class am:ApplicationEvent ] [ sh:class am:ApplicationFunction ] [ sh:class am:ApplicationInteraction ] [ sh:class am:ApplicationInterface ] [ sh:class am:ApplicationProcess ] [ sh:class am:ApplicationService ] [ sh:class am:Artifact ] [ sh:class am:Assessment ] [ sh:class am:BusinessActor ] [ sh:class am:BusinessCollaboration ] [ sh:class am:BusinessEvent ] [ sh:class am:BusinessFunction ] [ sh:class am:BusinessInteraction ] [ sh:class am:BusinessInterface ] [ sh:class am:BusinessObject ] [ sh:class am:BusinessProcess ] [ sh:class am:BusinessRole ] [ sh:class am:BusinessService ] [ sh:class am:Capability ] [ sh:class am:CommunicationNetwork ] [ sh:class am:Constraint ] [ sh:class am:Contract ] [ sh:class am:CourseOfAction ] [ sh:class am:DataObject ] [ sh:class am:Deliverable ] [ sh:class am:Device ] [ sh:class am:DistributionNetwork ] [ sh:class am:Driver ] [ sh:class am:Equipment ] [ sh:class am:Facility ] [ sh:class am:Gap ] [ sh:class am:Goal ] [ sh:class am:Grouping ] [ sh:class am:ImplementationEvent ] [ sh:class am:Location ] [ sh:class am:Material ] [ sh:class am:Meaning ] [ sh:class am:Node ] [ sh:class am:Outcome ] [ sh:class am:Path ] [ sh:class am:Plateau ] [ sh:class am:Principle ] [ sh:class am:Product ] [ sh:class am:Representation ] [ sh:class am:Requirement ] [ sh:class am:Resource ] [ sh:class am:Stakeholder ] [ sh:class am:SystemSoftware ] [ sh:class am:TechnologyCollaboration ] [ sh:class am:TechnologyEvent ] [ sh:class am:TechnologyFunction ] [ sh:class am:TechnologyInteraction ] [ sh:class am:TechnologyInterface ] [ sh:class am:TechnologyProcess ] [ sh:class am:TechnologyService ] [ sh:class am:Value ] [ sh:class am:ValueStream ] [ sh:class am:WorkPackage ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Material ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Grouping ] [ sh:class am:Material ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Meaning ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Grouping ] [ sh:class am:Meaning ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Node ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Device ] [ sh:class am:Equipment ] [ sh:class am:Facility ] [ sh:class am:Grouping ] [ sh:class am:Node ] [ sh:class am:SystemSoftware ] [ sh:class am:TechnologyInterface ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Outcome ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Grouping ] [ sh:class am:Outcome ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Path ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Device ] [ sh:class am:Equipment ] [ sh:class am:Facility ] [ sh:class am:Grouping ] [ sh:class am:Node ] [ sh:class am:Path ] [ sh:class am:SystemSoftware ] [ sh:class am:TechnologyCollaboration ] [ sh:class am:TechnologyInterface ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Plateau ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:ApplicationCollaboration ] [ sh:class am:ApplicationComponent ] [ sh:class am:ApplicationEvent ] [ sh:class am:ApplicationFunction ] [ sh:class am:ApplicationInteraction ] [ sh:class am:ApplicationInterface ] [ sh:class am:ApplicationProcess ] [ sh:class am:ApplicationService ] [ sh:class am:Artifact ] [ sh:class am:BusinessActor ] [ sh:class am:BusinessCollaboration ] [ sh:class am:BusinessEvent ] [ sh:class am:BusinessFunction ] [ sh:class am:BusinessInteraction ] [ sh:class am:BusinessInterface ] [ sh:class am:BusinessObject ] [ sh:class am:BusinessProcess ] [ sh:class am:BusinessRole ] [ sh:class am:BusinessService ] [ sh:class am:Capability ] [ sh:class am:CommunicationNetwork ] [ sh:class am:Constraint ] [ sh:class am:Contract ] [ sh:class am:CourseOfAction ] [ sh:class am:DataObject ] [ sh:class am:Device ] [ sh:class am:DistributionNetwork ] [ sh:class am:Equipment ] [ sh:class am:Facility ] [ sh:class am:Goal ] [ sh:class am:Grouping ] [ sh:class am:Location ] [ sh:class am:Material ] [ sh:class am:Node ] [ sh:class am:Outcome ] [ sh:class am:Path ] [ sh:class am:Plateau ] [ sh:class am:Product ] [ sh:class am:Representation ] [ sh:class am:Requirement ] [ sh:class am:Resource ] [ sh:class am:SystemSoftware ] [ sh:class am:TechnologyCollaboration ] [ sh:class am:TechnologyEvent ] [ sh:class am:TechnologyFunction ] [ sh:class am:TechnologyInteraction ] [ sh:class am:TechnologyInterface ] [ sh:class am:TechnologyProcess ] [ sh:class am:TechnologyService ] [ sh:class am:ValueStream ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Principle ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Grouping ] [ sh:class am:Principle ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Product ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:ApplicationService ] [ sh:class am:Artifact ] [ sh:class am:BusinessObject ] [ sh:class am:BusinessService ] [ sh:class am:Contract ] [ sh:class am:DataObject ] [ sh:class am:Grouping ] [ sh:class am:Material ] [ sh:class am:Product ] [ sh:class am:Representation ] [ sh:class am:TechnologyService ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Representation ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Grouping ] [ sh:class am:Representation ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Requirement ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Constraint ] [ sh:class am:Grouping ] [ sh:class am:Requirement ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Resource ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Grouping ] [ sh:class am:Resource ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Stakeholder ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Grouping ] [ sh:class am:Stakeholder ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:SystemSoftware ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Grouping ] [ sh:class am:SystemSoftware ] [ sh:class am:TechnologyInterface ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:TechnologyCollaboration ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Device ] [ sh:class am:Equipment ] [ sh:class am:Facility ] [ sh:class am:Grouping ] [ sh:class am:Node ] [ sh:class am:SystemSoftware ] [ sh:class am:TechnologyCollaboration ] [ sh:class am:TechnologyInterface ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:TechnologyEvent ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Grouping ] [ sh:class am:TechnologyEvent ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:TechnologyFunction ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Grouping ] [ sh:class am:TechnologyFunction ] [ sh:class am:TechnologyInteraction ] [ sh:class am:TechnologyProcess ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:TechnologyInteraction ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Grouping ] [ sh:class am:TechnologyFunction ] [ sh:class am:TechnologyInteraction ] [ sh:class am:TechnologyProcess ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:TechnologyInterface ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Grouping ] [ sh:class am:TechnologyInterface ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:TechnologyProcess ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Grouping ] [ sh:class am:TechnologyFunction ] [ sh:class am:TechnologyInteraction ] [ sh:class am:TechnologyProcess ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:TechnologyService ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Grouping ] [ sh:class am:TechnologyService ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Value ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Grouping ] [ sh:class am:Value ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:ValueStream ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Grouping ] [ sh:class am:ValueStream ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:WorkPackage ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class am:Grouping ] [ sh:class am:WorkPackage ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Junction_And ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:class arch:ModelConcept ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class arch:ModelConcept ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:class am:Junction_And ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class am:Junction_Or ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:class arch:ModelConcept ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class arch:ModelConcept ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:class am:Junction_Or ;
+                                    sh:path arch:target ] ] ) ] ) ;
+    sh:targetClass am:Aggregation .
+
+amsh:BusinessRoleRelShape a sh:NodeShape ;
+    sh:property [ sh:message "BusinessRole cannot use am:aggregates to connect to this target element type."@en ;
+            sh:or ( [ sh:class am:BusinessInterface ] [ sh:class am:BusinessRole ] [ sh:class am:Grouping ] ) ;
+            sh:path am:aggregates ],
+        [ sh:message "BusinessRole cannot use am:composedOf to connect to this target element type."@en ;
+            sh:or ( [ sh:class am:BusinessInterface ] [ sh:class am:BusinessRole ] [ sh:class am:Grouping ] ) ;
+            sh:path am:composedOf ],
+        [ sh:message "BusinessRole cannot use am:triggers to connect to this target element type."@en ;
+            sh:or ( [ sh:class am:ApplicationCollaboration ] [ sh:class am:ApplicationComponent ] [ sh:class am:ApplicationEvent ] [ sh:class am:ApplicationFunction ] [ sh:class am:ApplicationInteraction ] [ sh:class am:ApplicationInterface ] [ sh:class am:ApplicationProcess ] [ sh:class am:ApplicationService ] [ sh:class am:BusinessActor ] [ sh:class am:BusinessCollaboration ] [ sh:class am:BusinessEvent ] [ sh:class am:BusinessFunction ] [ sh:class am:BusinessInteraction ] [ sh:class am:BusinessInterface ] [ sh:class am:BusinessProcess ] [ sh:class am:BusinessRole ] [ sh:class am:BusinessService ] [ sh:class am:CommunicationNetwork ] [ sh:class am:Device ] [ sh:class am:DistributionNetwork ] [ sh:class am:Equipment ] [ sh:class am:Facility ] [ sh:class am:Grouping ] [ sh:class am:Location ] [ sh:class am:Node ] [ sh:class am:Path ] [ sh:class am:Product ] [ sh:class am:SystemSoftware ] [ sh:class am:TechnologyCollaboration ] [ sh:class am:TechnologyEvent ] [ sh:class am:TechnologyFunction ] [ sh:class am:TechnologyInteraction ] [ sh:class am:TechnologyInterface ] [ sh:class am:TechnologyProcess ] [ sh:class am:TechnologyService ] ) ;
+            sh:path am:triggers ],
+        [ sh:message "BusinessRole cannot use am:realizes to connect to this target element type."@en ;
+            sh:or ( [ sh:class am:BusinessService ] [ sh:class am:Capability ] [ sh:class am:Constraint ] [ sh:class am:CourseOfAction ] [ sh:class am:Goal ] [ sh:class am:Grouping ] [ sh:class am:Outcome ] [ sh:class am:Principle ] [ sh:class am:Requirement ] [ sh:class am:Resource ] [ sh:class am:ValueStream ] ) ;
+            sh:path am:realizes ],
+        [ sh:message "BusinessRole cannot use am:serves to connect to this target element type."@en ;
+            sh:or ( [ sh:class am:ApplicationCollaboration ] [ sh:class am:ApplicationComponent ] [ sh:class am:ApplicationEvent ] [ sh:class am:ApplicationFunction ] [ sh:class am:ApplicationInteraction ] [ sh:class am:ApplicationInterface ] [ sh:class am:ApplicationProcess ] [ sh:class am:ApplicationService ] [ sh:class am:BusinessActor ] [ sh:class am:BusinessCollaboration ] [ sh:class am:BusinessEvent ] [ sh:class am:BusinessFunction ] [ sh:class am:BusinessInteraction ] [ sh:class am:BusinessInterface ] [ sh:class am:BusinessProcess ] [ sh:class am:BusinessRole ] [ sh:class am:BusinessService ] [ sh:class am:CommunicationNetwork ] [ sh:class am:Device ] [ sh:class am:DistributionNetwork ] [ sh:class am:Equipment ] [ sh:class am:Facility ] [ sh:class am:Grouping ] [ sh:class am:Location ] [ sh:class am:Node ] [ sh:class am:Path ] [ sh:class am:Product ] [ sh:class am:SystemSoftware ] [ sh:class am:TechnologyCollaboration ] [ sh:class am:TechnologyEvent ] [ sh:class am:TechnologyFunction ] [ sh:class am:TechnologyInteraction ] [ sh:class am:TechnologyInterface ] [ sh:class am:TechnologyProcess ] [ sh:class am:TechnologyService ] ) ;
+            sh:path am:serves ],
+        [ sh:message "BusinessRole cannot use am:associatedWith to connect to this target element type."@en ;
+            sh:or ( [ sh:class am:ApplicationCollaboration ] [ sh:class am:ApplicationComponent ] [ sh:class am:ApplicationEvent ] [ sh:class am:ApplicationFunction ] [ sh:class am:ApplicationInteraction ] [ sh:class am:ApplicationInterface ] [ sh:class am:ApplicationProcess ] [ sh:class am:ApplicationService ] [ sh:class am:Artifact ] [ sh:class am:Assessment ] [ sh:class am:BusinessActor ] [ sh:class am:BusinessCollaboration ] [ sh:class am:BusinessEvent ] [ sh:class am:BusinessFunction ] [ sh:class am:BusinessInteraction ] [ sh:class am:BusinessInterface ] [ sh:class am:BusinessObject ] [ sh:class am:BusinessProcess ] [ sh:class am:BusinessRole ] [ sh:class am:BusinessService ] [ sh:class am:Capability ] [ sh:class am:CommunicationNetwork ] [ sh:class am:Constraint ] [ sh:class am:Contract ] [ sh:class am:CourseOfAction ] [ sh:class am:DataObject ] [ sh:class am:Deliverable ] [ sh:class am:Device ] [ sh:class am:DistributionNetwork ] [ sh:class am:Driver ] [ sh:class am:Equipment ] [ sh:class am:Facility ] [ sh:class am:Gap ] [ sh:class am:Goal ] [ sh:class am:Grouping ] [ sh:class am:ImplementationEvent ] [ sh:class am:Location ] [ sh:class am:Material ] [ sh:class am:Meaning ] [ sh:class am:Node ] [ sh:class am:Outcome ] [ sh:class am:Path ] [ sh:class am:Plateau ] [ sh:class am:Principle ] [ sh:class am:Product ] [ sh:class am:Representation ] [ sh:class am:Requirement ] [ sh:class am:Resource ] [ sh:class am:Stakeholder ] [ sh:class am:SystemSoftware ] [ sh:class am:TechnologyCollaboration ] [ sh:class am:TechnologyEvent ] [ sh:class am:TechnologyFunction ] [ sh:class am:TechnologyInteraction ] [ sh:class am:TechnologyInterface ] [ sh:class am:TechnologyProcess ] [ sh:class am:TechnologyService ] [ sh:class am:Value ] [ sh:class am:ValueStream ] [ sh:class am:WorkPackage ] ) ;
+            sh:path am:associatedWith ],
+        [ sh:message "BusinessRole cannot use am:assignedTo to connect to this target element type."@en ;
+            sh:or ( [ sh:class am:BusinessEvent ] [ sh:class am:BusinessFunction ] [ sh:class am:BusinessInteraction ] [ sh:class am:BusinessProcess ] [ sh:class am:BusinessService ] [ sh:class am:Grouping ] [ sh:class am:ImplementationEvent ] [ sh:class am:Stakeholder ] [ sh:class am:WorkPackage ] ) ;
+            sh:path am:assignedTo ],
+        [ sh:message "BusinessRole cannot use am:accesses to connect to this target element type."@en ;
+            sh:or ( [ sh:class am:Artifact ] [ sh:class am:BusinessObject ] [ sh:class am:Contract ] [ sh:class am:DataObject ] [ sh:class am:Grouping ] [ sh:class am:Material ] [ sh:class am:Representation ] ) ;
+            sh:path am:accesses ],
+        [ sh:message "BusinessRole cannot use am:flowsTo to connect to this target element type."@en ;
+            sh:or ( [ sh:class am:ApplicationCollaboration ] [ sh:class am:ApplicationComponent ] [ sh:class am:ApplicationEvent ] [ sh:class am:ApplicationFunction ] [ sh:class am:ApplicationInteraction ] [ sh:class am:ApplicationInterface ] [ sh:class am:ApplicationProcess ] [ sh:class am:ApplicationService ] [ sh:class am:BusinessActor ] [ sh:class am:BusinessCollaboration ] [ sh:class am:BusinessEvent ] [ sh:class am:BusinessFunction ] [ sh:class am:BusinessInteraction ] [ sh:class am:BusinessInterface ] [ sh:class am:BusinessProcess ] [ sh:class am:BusinessRole ] [ sh:class am:BusinessService ] [ sh:class am:CommunicationNetwork ] [ sh:class am:Device ] [ sh:class am:DistributionNetwork ] [ sh:class am:Equipment ] [ sh:class am:Facility ] [ sh:class am:Grouping ] [ sh:class am:Location ] [ sh:class am:Node ] [ sh:class am:Path ] [ sh:class am:Product ] [ sh:class am:SystemSoftware ] [ sh:class am:TechnologyCollaboration ] [ sh:class am:TechnologyEvent ] [ sh:class am:TechnologyFunction ] [ sh:class am:TechnologyInteraction ] [ sh:class am:TechnologyInterface ] [ sh:class am:TechnologyProcess ] [ sh:class am:TechnologyService ] ) ;
+            sh:path am:flowsTo ],
+        [ sh:message "BusinessRole cannot use am:specializes to connect to this target element type."@en ;
+            sh:or ( [ sh:class am:BusinessRole ] [ sh:class am:Grouping ] ) ;
+            sh:path am:specializes ],
+        [ sh:message "BusinessRole cannot use am:influences to connect to this target element type."@en ;
+            sh:or ( [ sh:class am:Assessment ] [ sh:class am:Constraint ] [ sh:class am:Driver ] [ sh:class am:Goal ] [ sh:class am:Grouping ] [ sh:class am:Meaning ] [ sh:class am:Outcome ] [ sh:class am:Principle ] [ sh:class am:Requirement ] [ sh:class am:Stakeholder ] [ sh:class am:Value ] ) ;
+            sh:path am:influences ] ;
+    sh:targetClass am:BusinessRole .
+
+bssh:OwnershipShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/well-known-relations#ownedby-and-ownerof> ;
+    rdfs:comment """The owner is usually a Group, but the well-known-relations spec says "User or
+Group" and User owners are ordinary Backstage in smaller organisations, so both are admitted."""@en ;
+    sh:property [ sh:class arch:Element ;
+            sh:message "Ownership source must be an Element."@en ;
+            sh:path arch:source ],
+        [ sh:message "Ownership target must be a Group or a User."@en ;
+            sh:or ( [ sh:class bs:Group ] [ sh:class bs:User ] ) ;
+            sh:path arch:target ] ;
+    sh:targetClass bs:Ownership .
+
+coresh:QualifiedRelationshipShape a sh:NodeShape ;
+    sh:property [ sh:class arch:ModelConcept ;
+            sh:maxCount 1 ;
+            sh:message "Every QualifiedRelationship must have exactly one arch:target pointing to a ModelConcept."@en ;
+            sh:minCount 1 ;
+            sh:path arch:target ],
+        [ sh:class arch:ModelConcept ;
+            sh:maxCount 1 ;
+            sh:message "Every QualifiedRelationship must have exactly one arch:source pointing to a ModelConcept."@en ;
+            sh:minCount 1 ;
+            sh:path arch:source ] ;
+    sh:targetClass arch:QualifiedRelationship .
+

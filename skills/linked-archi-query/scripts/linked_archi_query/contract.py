@@ -66,6 +66,12 @@ class ContractError(ValueError):
     """A companion emitted an unsupported or malformed contract."""
 
 
+#: Reserved role binding meaning "the default graph". Must match the profile owner's
+#: constant of the same name; it travels in the profile snapshot as a plain string, so
+#: the two skills agree by using the same reserved word rather than by sharing code.
+DEFAULT_GRAPH = "default"
+
+
 @dataclass(frozen=True)
 class GraphLayout:
     layout: str
@@ -85,6 +91,16 @@ class GraphLayout:
     def matches_descendants(self, role: str) -> bool:
         return role in self.descendants
 
+    def is_default_graph(self, role: str) -> bool:
+        """Whether this role is read unscoped, because its triples have no graph.
+
+        Mirrors the profile owner's method of the same name, and must agree with it for
+        the same reason :meth:`suffix_test` must: the two skills share no code, so the
+        behaviour is the contract. Published schema - an ontology, a taxonomy, a shape
+        set - is a Turtle document, and a Turtle document loads into the default graph.
+        """
+        return self.roles.get(role) == DEFAULT_GRAPH
+
     def suffix_test(self, role: str, variable: str) -> str:
         """The filter that scopes ``variable`` to this role under ``per-model-triple``.
 
@@ -94,6 +110,11 @@ class GraphLayout:
         disagree, ``verify`` passes and every scoped query still returns nothing -
         which is the failure this package exists to prevent.
         """
+        if self.is_default_graph(role):
+            raise ContractError(
+                f"graph role {role!r} is bound to the default graph, which has no IRI to "
+                "test. Check is_default_graph() before asking for a suffix test"
+            )
         binding = self.roles[role]
         suffixes = binding if isinstance(binding, list) else [binding]
         tests = []

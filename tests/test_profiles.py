@@ -470,6 +470,42 @@ class TestDriftDetection(unittest.TestCase):
             "BPMN vocabulary IS attached, so it must not be reported as uncovered",
         )
 
+    def test_vocabulary_is_readable_where_a_turtle_file_actually_lands(self):
+        """Paired vocabulary must work as fetched, not only after hand-editing it.
+
+        This is the test that was missing. `meta.linked.archi` serves every ontology,
+        taxonomy and shape set as `text/turtle`, and `la-connect` loads a Turtle file into
+        the default graph - so binding the role to a named-graph suffix asked for a graph
+        the artifact does not have. Measured on this same fixture before the fix: five rows
+        when the vocabulary sat in a named graph, none when the identical triples sat in the
+        default graph, and no error in either direction.
+
+        Asserted through the probe rather than a template so it holds for every consumer of
+        the role: a covered notation must not be reported as uncovered.
+        """
+        profile = load_profile("curated-store")
+        self.assertTrue(
+            profile.graphs.is_default_graph("vocabulary"),
+            "published vocabulary is Turtle, so the role belongs in the default graph",
+        )
+        findings = verify_against_dataset(
+            profile, support.load_fixture(AUGMENTED, support.VOCABULARY)
+        )
+        warnings = [f for f in findings
+                    if f.subject == "graphs.roles.vocabulary" and f.severity == "warning"]
+        self.assertTrue(warnings, format_findings(findings))
+        self.assertNotIn(
+            "bpmn/onto#", warnings[0].message,
+            "BPMN vocabulary is attached and readable, so it is not uncovered - if this "
+            "fails, the role is being scoped to a graph the Turtle file does not have",
+        )
+
+    def test_a_default_graph_role_has_no_suffix_to_test(self):
+        """Asking for one is a programming error, not a filter on the word 'default'."""
+        profile = load_profile("curated-store")
+        with self.assertRaises(ProfileError):
+            profile.graphs.suffix_test("vocabulary", "?g")
+
     def test_no_vocabulary_role_means_no_pairing_findings(self):
         """Silence where there is nothing to pair, or every profile gains noise."""
         findings = verify_against_dataset(

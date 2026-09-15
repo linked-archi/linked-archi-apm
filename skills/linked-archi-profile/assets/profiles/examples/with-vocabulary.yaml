@@ -10,7 +10,7 @@
 # This profile is the other option. `la-connect` accepts several files, so the vocabulary
 # is paired with the data at query time:
 #
-#   la-connect connect --data graph/merged/merged-graph.trig --data vocabulary.trig
+#   la-connect connect --data graph/merged/merged-graph.trig --data bpmn-tax.ttl
 #
 # Query time rather than conversion time, deliberately. Baking the ontology into every
 # export couples each artifact to a vocabulary version it must then be kept in step with,
@@ -22,15 +22,26 @@ extends: ../linked-archi-default.yaml
 profile: with-vocabulary
 version: 1
 description: >-
-  Converter output plus the published ontologies and taxonomies, loaded into their own
-  named graph so schema-level questions become answerable without changing the export.
+  Converter output plus the published ontologies and taxonomies, paired as Turtle beside
+  it, so schema-level questions become answerable without changing the export.
 
 graphs:
   roles:
-    # Suffix-matched like every other role. One graph for all vocabulary rather than one
-    # per notation or per model: it is shared reference data, and a copy per model would
-    # multiply it by however many models a store holds.
-    vocabulary: graph/vocabulary
+    # `default`, not a suffix, and that is not a shortcut. A published ontology, taxonomy
+    # or shape set is a Turtle document with no graph in it - `meta.linked.archi` serves
+    # every one of them as `text/turtle` - and `la-connect` loads a Turtle file into the
+    # default graph. Binding a suffix here asks for a named graph the artifact does not
+    # have, so every template reading it returns nothing: measured at five rows against
+    # zero on identical triples, with no error in either direction.
+    #
+    # Isolation still holds, which was the reason for wanting a separate graph. Instance
+    # templates scope to `semantic`, so a class carrying `skos:prefLabel "Task"` cannot
+    # come back as a candidate from `core/resolve-element` - verified, not assumed.
+    #
+    # The exception is `layout: single`, where instances are flattened into the default
+    # graph too and share it with the schema. Flattening gives up the separation; nothing
+    # here can recover it.
+    vocabulary: default
 
 # ---------------------------------------------------------------------------
 # What this does NOT claim

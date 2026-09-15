@@ -11,7 +11,8 @@
 # REQUIRES the vocabulary graph role, which converter output does not have: a conversion
 # emits instances, not the ontologies and taxonomies they conform to. Attach the published
 # vocabulary beside the data - `la-connect` takes several files - and bind
-# `graphs.roles.vocabulary`. See examples/with-vocabulary. Without it this template is
+# `graphs.roles.vocabulary: default`, since the published files are Turtle and Turtle
+# loads into the default graph. See examples/with-vocabulary. Without it this template is
 # refused rather than returning nothing, and notation/bpmn/process-components is the
 # fallback: same question, answered from a hand-maintained list of types.
 #

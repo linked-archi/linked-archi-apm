@@ -209,6 +209,17 @@ class TestDescendantGraphMatching(unittest.TestCase):
             resolved = ResolvedProfile(profile.resolved_snapshot())
             for role in profile.graphs.role_names():
                 with self.subTest(profile=name, role=role):
+                    # Where a role lives is part of the same contract as how it is
+                    # matched. A role in the default graph has no suffix to compare, and
+                    # the owners disagreeing about WHICH roles those are would put a
+                    # `GRAPH` clause around triples that have no graph - returning
+                    # nothing, silently, which is the failure this test exists for.
+                    self.assertEqual(
+                        profile.graphs.is_default_graph(role),
+                        resolved.graphs.is_default_graph(role),
+                    )
+                    if profile.graphs.is_default_graph(role):
+                        continue
                     self.assertEqual(
                         profile.graphs.suffix_test(role, "?g"),
                         resolved.graphs.suffix_test(role, "?g"),

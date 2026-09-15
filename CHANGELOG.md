@@ -10,6 +10,28 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 
+### Fixed
+- **Paired vocabulary was unreadable in the shape it is actually published in.** Every
+  ontology, taxonomy and shape set on `meta.linked.archi` is served as `text/turtle`, and
+  `la-connect` loads a Turtle file into the default graph — but `graphs.roles.vocabulary`
+  was bound to a named-graph suffix, so a scoped query asked for a graph the artifact does
+  not have. Measured on the shipped fixture: identical triples returned five rows from a
+  named graph and **none** from the default graph, with no error in either direction. So
+  the documented workflow — fetch the published ontology, pair it with `la-connect` —
+  silently answered "this model has none of those". A role can now be bound to `default`,
+  meaning its triples are read unscoped, and the shipped profiles bind vocabulary that way.
+  Isolation is unaffected, which was the original reason for a separate graph: instance
+  templates are graph-scoped, so a class carrying `skos:prefLabel "Task"` still cannot come
+  back as a candidate from `core/resolve-element` — verified rather than assumed. Under
+  `layout: single` schema and instances share the default graph, which flattening always
+  implied and nothing here can recover.
+- **`fixtures/vocabulary.trig` and `shapes.trig` are now `.ttl`, in the default graph.**
+  They were the reason the bug above went unnoticed: a named-graph fixture is easier than
+  the published file, and a fixture that passes where the real artifact fails is the exact
+  defect `fixtures/PROVENANCE.md` opens by describing. The builder is simpler for it —
+  no graph wrapper, so no text assembly around the serialiser — and `test_profiles.py` now
+  pairs the vocabulary the way a fetch delivers it.
+
 ### Changed
 - **HTTPS acquisition negotiates for Turtle first, and asks one type at a time.** The
   published assets a query check needs turn out to be reachable only this way. Asking
@@ -38,9 +60,9 @@ workflow publishes exactly this text, so what is written here is what a consumer
 - **The fixtures now carry what says whether a query's path is possible.** Groundwork for
   checking a hand-written or generated query against the metamodel instead of running it and
   reading an empty result as absence. Two artifacts, because the two relationship forms
-  declare validity in different places: `vocabulary.trig` gains the 75 `rdfs:domain` /
+  declare validity in different places: `vocabulary.ttl` gains the 75 `rdfs:domain` /
   `rdfs:range` axioms from the core ontology, which is what an Ontology-Based Query Check
-  walks ([arXiv:2405.11706](https://arxiv.org/abs/2405.11706)); and a new `shapes.trig`
+  walks ([arXiv:2405.11706](https://arxiv.org/abs/2405.11706)); and a new `shapes.ttl`
   carries published SHACL, because the **unqualified** (direct triple) forms have no domain
   or range anywhere — `am:flowsTo`, `bs:ownedBy` and the other 73 predicates in
   `unqualified-forms.json` are constrained only by node shapes. Reading those is new work

@@ -28,15 +28,18 @@ FLAT = FIXTURES / "flat.ttl"
 #: told apart by shape - see ``tests/test_fixtures.py`` and ``fixtures/PROVENANCE.md``.
 CONVERTER_13 = FIXTURES / "converter-1.3.trig"
 #: Published vocabulary - the BPMN taxonomy and the classes it groups, plus the core
-#: property axioms - in one named graph, for attaching beside a dataset. Not converter
-#: output: the converters emit no ontology, which is why a template that needs the class
-#: hierarchy has to be given it.
-VOCABULARY = FIXTURES / "vocabulary.trig"
-#: Published SHACL, in one named graph. Which relationship may connect which element
-#: types, which no conversion emits and which `rdfs:domain`/`rdfs:range` cannot express
-#: for the unqualified (direct triple) forms - those carry neither. See
-#: ``fixtures/PROVENANCE.md``.
-SHAPES = FIXTURES / "shapes.trig"
+#: property axioms. Not converter output: the converters emit no ontology, which is why a
+#: template that needs the class hierarchy has to be given it.
+#:
+#: Turtle, deliberately, because that is what `meta.linked.archi` serves and therefore
+#: what an operator actually pairs. It was a named-graph `.trig` first, which made the
+#: fixture easier than reality: the same triples returned five rows from a named graph and
+#: none from the default graph a Turtle file loads into, with no error either way.
+VOCABULARY = FIXTURES / "vocabulary.ttl"
+#: Published SHACL: which relationship may connect which element types. No conversion
+#: emits it, and `rdfs:domain`/`rdfs:range` cannot express it for the unqualified (direct
+#: triple) forms - those carry neither. See ``fixtures/PROVENANCE.md``.
+SHAPES = FIXTURES / "shapes.ttl"
 
 #: Real IRIs from real converter output, present in the committed fixtures. Tests
 #: assert against these rather than inventing IRIs, so a test that passes is
@@ -108,7 +111,7 @@ def load_fixture(*paths: Path):
     read-only so sharing one is safe.
 
     Several paths is how a dataset is paired with published vocabulary at query time:
-    the converters emit no ontology, so `vocabulary.trig` is attached beside the data
+    the converters emit no ontology, so `vocabulary.ttl` is attached beside the data
     rather than baked into it. The adapter already accepted a list; only this helper
     insisted on one file.
     """

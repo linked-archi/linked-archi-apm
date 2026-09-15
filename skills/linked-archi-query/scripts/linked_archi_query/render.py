@@ -368,6 +368,13 @@ def graph_open(profile: ResolvedProfile, role: str) -> str:
     if role == "any":
         return f"GRAPH {variable} {{"
 
+    # A role can be in the default graph while the dataset beside it uses named graphs.
+    # That is the normal case for published schema: the converters emit TriG, the
+    # ontology arrives as Turtle, and `la-connect` puts Turtle in the default graph.
+    # Scoping it to a named graph returns nothing, silently, which is what happened.
+    if profile.graphs.is_default_graph(role):
+        return "{"
+
     if not profile.graphs.has_role(role):
         available = ", ".join(profile.graphs.role_names()) or "none"
         raise RenderError(

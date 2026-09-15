@@ -57,8 +57,8 @@ Consequences, all of which the tests encode:
 | `augmented.trig` | 3433 | 19 | `base` plus what converters never emit. |
 | `flat.ttl` | 3320 | 0 | `base` with graph identity discarded. |
 | `converter-1.3.trig` | 284 | 4 | Real converter output, **verbatim**. The one PARTITIONED fixture. |
-| `vocabulary.trig` | 623 | 1 | Published vocabulary: BPMN taxonomy, plus the core property axioms. |
-| `shapes.trig` | 2630 | 1 | Published SHACL: which relationship may connect which types. |
+| `vocabulary.ttl` | 623 | 0 | Published vocabulary: BPMN taxonomy, plus the core property axioms. |
+| `shapes.ttl` | 2630 | 0 | Published SHACL: which relationship may connect which types. |
 | `unqualified-forms.json` | 75 pairs | — | Extracted `arch:unqualifiedForm` mappings. Not RDF. |
 
 Those quad counts are asserted, not annotated: `tests/test_fixtures.py` reads this table and
@@ -76,9 +76,9 @@ All 39 catalogued templates return rows against `augmented.trig` under the
 `curated-store` profile committed at
 `skills/linked-archi-profile/assets/profiles/examples/curated-store.yaml` — with one
 pairing: `core/elements-by-category` reads published vocabulary, which no conversion
-emits, so the suite loads `vocabulary.trig` beside the dataset exactly as an operator
+emits, so the suite loads `vocabulary.ttl` beside the dataset exactly as an operator
 would (`la-connect` takes several files). See
-[vocabulary.trig](#vocabularytrig-published-not-converted) below. That is
+[vocabulary.ttl](#vocabularyttl-published-not-converted) below. That is
 the bar the selection rules below
 are tuned to: a fixture on which a template returns nothing is a template the test
 suite cannot distinguish from a broken one.
@@ -373,7 +373,7 @@ conversion, so re-running `make fixtures` produces a semantically identical file
 that does not diff cleanly. Assert on shape and counts, never on bytes.
 
 
-## `vocabulary.trig`: published, not converted
+## `vocabulary.ttl`: published, not converted
 
 The only fixture here that is not converter output, and the distinction matters more than
 its size suggests. Every other file answers "what does a conversion emit". This one answers
@@ -408,16 +408,29 @@ only the selection is ours, on the same terms as every other fixture here.
   `skos:prefLabel` and `rdfs:subClassOf` chain — so a query can walk the hierarchy rather
   than trust a flat list.
 
-253 quads, all in one named graph: `https://meta.linked.archi/graph/vocabulary`. One graph
-rather than one per notation or per model, because it is shared reference data — a copy per
-model would multiply it by however many models a store holds.
+623 triples of Turtle in the **default graph**, and both halves of that matter. Turtle
+because that is what is published: `meta.linked.archi` serves every ontology, taxonomy and
+shape set as `text/turtle`. The default graph because that is where a Turtle file goes —
+`la-connect` loads one without naming a graph — so this is the shape an operator pairs.
 
-**Its own graph is load-bearing, not tidiness.** Ontology classes carry `skos:prefLabel`.
-Merged into the semantic graph they would surface as candidates from
+It was a named-graph `.trig` first, which made the fixture easier than the real artifact.
+Measured on this dataset: the same triples returned five rows from a named graph and
+**none** from the default graph, with no error either way, because the profile bound the
+role to a suffix that a graphless file cannot match. A fixture that passes where the
+published file fails is exactly the defect the top of this document describes. The role is
+bound to `default` now, and `test_profiles.py` asserts the pairing works in the shape a
+fetch delivers.
+
+**Keeping it out of the semantic graph is load-bearing, not tidiness.** Ontology classes
+carry `skos:prefLabel`. Merged into the semantic graph they would surface as candidates from
 `core/resolve-element` and as collisions from `core/label-collisions`: a class offered as
-an answer to "which element did you mean". Every existing template scopes to a graph role
-and none scopes to `vocabulary`, so attaching this file changes no other answer — which is
-also why the suite can load it beside `augmented.trig` without adjusting any other floor.
+an answer to "which element did you mean". The default graph gives that separation for free,
+because every instance template is graph-scoped — verified rather than assumed: a lookup for
+"Task" against this fixture returns three instances and no class. The exception is `layout:
+single`, where instances are flattened into the default graph too and share it with the
+schema; flattening gives the separation up and nothing here recovers it. Attaching this file
+changes no other answer, which is why the suite loads it beside `augmented.trig` without
+adjusting any other floor.
 
 **What it does not add.** Axioms, not entailment. `?e a bpmn:Task` still does not match a
 `bpmn:UserTask` instance; a query walks `rdfs:subClassOf*` itself. Materialising supertypes
@@ -430,9 +443,9 @@ what it conforms to in `arch:modelConformsToMetamodel`; the vocabulary attached 
 should be that version. Checking the pairing is verification work this package has not done
 yet — recorded in `PROPOSAL.md` B5.
 
-## `shapes.trig`: what says a relationship is allowed
+## `shapes.ttl`: what says a relationship is allowed
 
-Published, not converted, like `vocabulary.trig` — and it exists because the vocabulary
+Published, not converted, like `vocabulary.ttl` — and it exists because the vocabulary
 cannot answer this. `rdfs:domain` and `rdfs:range` say that `arch:source` starts at a
 `QualifiedRelationship` and ends at a `ModelConcept`. They cannot say that a Serving from a
 Business Actor to a Value is not a thing the metamodel allows. For the **unqualified**

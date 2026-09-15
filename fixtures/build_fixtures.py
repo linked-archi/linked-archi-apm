@@ -549,13 +549,17 @@ def refresh_unqualified_forms(meta_root: Path) -> int:
 #                              the paper does not do.
 #
 # Both are PUBLISHED, never converted, so they are paired at query time by the
-# operator - like `vocabulary.trig` and for the same reason. These fixtures exist so
+# operator - like `vocabulary.ttl` and for the same reason. These fixtures exist so
 # the check is testable, not so it ships with a metamodel baked in.
 
-VOCABULARY_FILE = FIXTURES / "vocabulary.trig"
-VOCABULARY_GRAPH = "https://meta.linked.archi/graph/vocabulary"
-SHAPES_FILE = FIXTURES / "shapes.trig"
-SHAPES_GRAPH = "https://meta.linked.archi/graph/shapes"
+# Turtle, in the default graph, because that is what a published asset IS. These are
+# fetched as `text/turtle` and `la-connect` loads a Turtle file into the default graph,
+# so a fixture in a named graph would be easier than reality - and it was: the committed
+# named-graph fixture returned five rows where the same triples as Turtle returned none,
+# with no error either way. A fixture that passes where the real artifact fails is the
+# failure this whole file exists to prevent.
+VOCABULARY_FILE = FIXTURES / "vocabulary.ttl"
+SHAPES_FILE = FIXTURES / "shapes.ttl"
 
 RDFS = "http://www.w3.org/2000/01/rdf-schema#"
 RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -664,7 +668,7 @@ def refresh_vocabulary_axioms(meta_root: Path) -> int:
 
     fixture = Store()
     if VOCABULARY_FILE.is_file():
-        fixture.load(path=str(VOCABULARY_FILE), format=RdfFormat.TRIG)
+        fixture.load(path=str(VOCABULARY_FILE), format=RdfFormat.TURTLE)
     before = len(fixture)
 
     # Idempotent: drop what a previous run of this function put here. Nothing else
@@ -674,7 +678,6 @@ def refresh_vocabulary_axioms(meta_root: Path) -> int:
         if quad.subject.value.startswith(CORE):
             fixture.remove(quad)
 
-    graph = NamedNode(VOCABULARY_GRAPH)
     terms: set[str] = set()
     for predicate in (f"{RDFS}domain", f"{RDFS}range"):
         for row in onto.query(f"SELECT ?p ?o WHERE {{ ?p <{predicate}> ?o }}"):
@@ -688,12 +691,12 @@ def refresh_vocabulary_axioms(meta_root: Path) -> int:
     for term in sorted(terms):
         for predicate in AXIOM_PREDICATES:
             for row in onto.query(f"SELECT ?o WHERE {{ {term} <{predicate}> ?o }}"):
-                quad = Quad(NamedNode(term[1:-1]), NamedNode(predicate), row["o"], graph)
+                quad = Quad(NamedNode(term[1:-1]), NamedNode(predicate), row["o"])
                 if quad not in fixture:
                     fixture.add(quad)
                     added += 1
 
-    write(fixture, VOCABULARY_FILE, "TRIG")
+    write_flat(fixture, VOCABULARY_FILE)
     print(f"{VOCABULARY_FILE.name}: {before} -> {len(fixture)} quads "
           f"({added} axiom quad(s) for {len(terms)} core term(s))")
     return added
@@ -737,12 +740,11 @@ def refresh_shapes(meta_root: Path) -> int:
         kept.append(f"{shape.rsplit('#', 1)[-1]:<28} {why}\n"
                     f"{'':30}targets {', '.join(t.rsplit('#', 1)[-1] for t in targets)}")
 
-    graph = NamedNode(SHAPES_GRAPH)
     fixture = Store()
     for subject, predicate, obj in triples:
-        fixture.add(Quad(subject, predicate, obj, graph))
+        fixture.add(Quad(subject, predicate, obj))
 
-    written = _write_nested_trig(fixture, SHAPES_FILE, graph)
+    written = _write_nested_turtle(fixture, SHAPES_FILE)
     size = SHAPES_FILE.stat().st_size
     print(f"{SHAPES_FILE.name}: {written} quads, {len(kept)} shape(s), {size // 1024} kB")
     for line in kept:
@@ -761,8 +763,8 @@ SHAPE_PREFIXES = {
 }
 
 
-def _write_nested_trig(store, path: Path, graph) -> int:
-    """Write one named graph as TriG, with blank nodes nested and lists as collections.
+def _write_nested_turtle(store, path: Path) -> int:
+    """Write as Turtle, with blank nodes nested and lists as collections.
 
     Worth the extra step because of what a shape IS. A node shape is almost entirely
     blank nodes - every ``sh:property`` is one, every ``sh:or`` is an RDF list of them -
@@ -772,8 +774,9 @@ def _write_nested_trig(store, path: Path, graph) -> int:
     reviewer could check against the published source. Nested, it is 33 kB and reads
     like the document it was extracted from.
 
-    Verified rather than trusted: the result is parsed back and compared quad for quad,
-    because the graph wrapper here is text assembly around a serialiser's output.
+    Verified rather than trusted: the result is parsed back and compared triple for
+    triple. Cheap, and it is the check that would catch a serialiser dropping something
+    while making it pretty.
     """
     try:
         from rdflib import Dataset, Graph, URIRef  # noqa: F401
@@ -799,19 +802,10 @@ def _write_nested_trig(store, path: Path, graph) -> int:
     for prefix, namespace in {**DUMP_PREFIXES, **SHAPE_PREFIXES}.items():
         flat.bind(prefix, namespace)
 
-    turtle = flat.serialize(format="turtle")
-    header = [line for line in turtle.splitlines() if line.startswith("@prefix")]
-    body = [line for line in turtle.splitlines() if not line.startswith("@prefix")]
-    document = (
-        "\n".join(header)
-        + f"\n\n<{graph.value}> {{\n"
-        + "\n".join(f"    {line}" if line.strip() else "" for line in body).strip("\n")
-        + "\n}\n"
-    )
-    path.write_text(document, encoding="utf-8")
+    path.write_text(flat.serialize(format="turtle"), encoding="utf-8")
 
     check = Store()
-    check.load(path=str(path), format=RdfFormat.TRIG)
+    check.load(path=str(path), format=RdfFormat.TURTLE)
     if len(check) != len(store):
         raise SystemExit(
             f"REFUSED: {path.name} round-tripped to {len(check)} quads, not {len(store)}"
