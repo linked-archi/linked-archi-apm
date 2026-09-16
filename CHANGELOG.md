@@ -11,6 +11,20 @@ workflow publishes exactly this text, so what is written here is what a consumer
 ## [Unreleased]
 
 ### Added
+- **`verify` reports the published assets a dataset declares conformance to but has not
+  been given.** Every model states its metamodel through `arch:modelConformsToMetamodel`,
+  and each of the eleven published `arch:Metamodel` manifests names its own ontology,
+  taxonomy and SHACL shapes — so the dataset can be asked whether what it points at is
+  actually attached, and nobody has to remember which files to pair. Two findings, because
+  the fixes differ: `metamodel.manifest` when the manifest itself is absent, naming the
+  dereferenceable IRI and the `la-source url` command for it, and `metamodel.assets` when
+  the manifest is attached but what it names is not. This is what stops a schema-level
+  check from reporting "no violations" on an estate where the shapes were never loaded —
+  the shipped fixtures declare five metamodels and carry shapes for two. Verified end to
+  end against the publisher: fetching `archimate3/metamodel` moved ArchiMate from the first
+  finding to the second, and fetching the ontology, taxonomy and shapes it names silenced
+  both. Per notation and per asset kind rather than per document, because a probe adapter
+  has only `ASK` and `COUNT`.
 - **The fixtures now carry what says whether a query's path is possible.** Groundwork for
   checking a hand-written or generated query against the metamodel instead of running it and
   reading an empty result as absence. Two artifacts, because the two relationship forms

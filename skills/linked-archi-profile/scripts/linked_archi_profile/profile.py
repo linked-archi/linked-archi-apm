@@ -1159,6 +1159,128 @@ def _verify_against_dataset(profile: Profile, adapter) -> list[Finding]:
     # --- capabilities ------------------------------------------------------
     findings += _verify_capabilities(profile, adapter)
     findings += _verify_vocabulary_pairing(profile, adapter)
+    findings += _verify_metamodel_pairing(profile, adapter)
+    return findings
+
+
+#: The manifest properties that name a published asset, and what each one carries. A
+#: metamodel manifest declares more than these - viewpoints, deliverable templates,
+#: reference data - but these three are what a query or a check reads.
+MANIFEST_ASSETS: tuple[tuple[str, str], ...] = (
+    ("modelConcepts", "the ontology: classes, and the domain/range axioms"),
+    ("conceptClassification", "the taxonomy: which category covers which class"),
+    ("formalRules", "the SHACL shapes: which relationship may connect which types"),
+)
+
+
+def _verify_metamodel_pairing(profile: Profile, adapter) -> list[Finding]:
+    """Does the dataset have the published assets it says it conforms to?
+
+    Every model states its metamodel through ``arch:modelConformsToMetamodel``, and each
+    published ``arch:Metamodel`` manifest names its own assets - the ontology, the
+    taxonomy, the SHACL shapes. So the dataset can be asked whether what it points at is
+    actually here, without anyone having to remember which files to attach.
+
+    Worth asking because of how the answer fails otherwise. A check that walks shapes to
+    decide whether a query's path is possible finds no shape for an unattached notation,
+    and "no constraint published for this class" is indistinguishable from "this query is
+    fine" unless something says the shapes were never loaded. The measured gap is real:
+    the shipped fixtures declare five metamodels and carry shapes for two of them.
+
+    Deliberately per notation and per asset KIND, not per document. ArchiMate 3.2 declares
+    three ``formalRules`` namespaces; this reports whether shapes for ArchiMate are present
+    at all, which is the signal that decides how to read a clean result. Enumerating the
+    individual documents needs SELECT, and a probe adapter has only ASK and COUNT.
+
+    Every query is derived from the profile - the notation namespaces it declares - never
+    from another probe's answer, so the set stays deterministic for the batch planner. The
+    joins that would otherwise need a second round happen inside SPARQL instead.
+    """
+    conforms = profile.roles.get("conforms_to_metamodel")
+    if not conforms:
+        return []
+
+    p = profile.prefix_block()
+    findings: list[Finding] = []
+    roots: dict[str, str] = {}
+    for slug in sorted(profile.notations):
+        spec = profile.notations.get(slug) or {}
+        namespace = profile.namespaces.get(str(spec.get("namespace", "")))
+        if not namespace:
+            continue
+        # `https://meta.linked.archi/archimate3/onto#` -> `.../archimate3/`, which is what
+        # this notation's metamodel, taxonomy and shape namespaces also sit under. A
+        # notation published one level deeper - `leanix/v3/onto#` - reports no manifest
+        # rather than matching the wrong one, which is the safe direction.
+        roots[slug] = namespace.rsplit("/", 1)[0] + "/"
+
+    # Every question is asked for every notation, and the answers are read afterwards.
+    # Skipping the rest once `declared` came back false would plan a smaller query set
+    # than replay goes on to need - the planner answers False to everything, so the
+    # branch is not taken while planning and is taken for real later. That is the
+    # "unplanned probe" error, and asking unconditionally is what avoids it.
+    answers: dict[str, dict[str, bool]] = {}
+    for slug, root in roots.items():
+        answers[slug] = {
+            "declared": adapter.ask(
+                f"{p}\nASK {{ GRAPH ?g {{ ?m {conforms} ?mm . "
+                f'FILTER(STRSTARTS(STR(?mm), "{root}")) }} }}'
+            ),
+            # Unscoped OR scoped: a manifest fetched as Turtle lands in the default graph,
+            # one a pipeline emitted into the dataset is in a named graph. Both count.
+            "attached": adapter.ask(
+                f"{p}\nASK {{ {{ ?mm a arch:Metamodel "
+                f'FILTER(STRSTARTS(STR(?mm), "{root}")) }} UNION '
+                f"{{ GRAPH ?g {{ ?mm a arch:Metamodel "
+                f'FILTER(STRSTARTS(STR(?mm), "{root}")) }} }} }}'
+            ),
+            **{
+                prop: adapter.ask(
+                    f"{p}\nASK {{ ?mm a arch:Metamodel ; arch:{prop} ?asset . "
+                    f'FILTER(STRSTARTS(STR(?mm), "{root}")) '
+                    f"?s ?ap ?ao . FILTER(STRSTARTS(STR(?s), STR(?asset))) }}"
+                )
+                for prop, _ in MANIFEST_ASSETS
+            },
+        }
+
+    missing_manifest: list[str] = []
+    incomplete: list[str] = []
+    for slug, root in roots.items():
+        answer = answers[slug]
+        if not answer["declared"]:
+            continue
+        if not answer["attached"]:
+            missing_manifest.append(f"{slug} ({root}metamodel)")
+            continue
+        absent = [label for prop, label in MANIFEST_ASSETS if not answer[prop]]
+        if absent:
+            incomplete.append(f"{slug}: {'; '.join(absent)}")
+
+    if missing_manifest:
+        findings.append(Finding(
+            "warning", "metamodel.manifest",
+            "the data declares conformance to metamodels whose manifest is not attached: "
+            f"{', '.join(missing_manifest)}. Until it is, nothing can say which published "
+            "assets those models expect, so an empty schema-level result cannot be told "
+            "apart from an unattached one. Each IRI dereferences - acquire it with "
+            "`la-source url <iri>` and pair it with `la-connect`. Note that a manifest for "
+            "the wrong release reads as an absent one wherever the version is part of the "
+            "IRI, which covers ArchiMate and BPMN but not C4 or Backstage.",
+        ))
+    if incomplete:
+        findings.append(Finding(
+            "warning", "metamodel.assets",
+            "a manifest is attached but the assets it names are not: "
+            f"{', '.join(incomplete)}. A check that reads them will report nothing found "
+            "rather than nothing wrong.",
+        ))
+    if not missing_manifest and not incomplete:
+        findings.append(Finding(
+            "info", "metamodel.manifest",
+            "every metamodel the data declares has its manifest and named assets attached"
+            if roots else "no metamodel conformance declared",
+        ))
     return findings
 
 

@@ -122,6 +122,21 @@ partitioned**. A dataset that splits a role across descendant graphs
 identical to one that lacks the role entirely — so the report says which it is, because
 the two need opposite fixes.
 
+**`verify` also reports what the data says it conforms to but has not been given.** Every
+model declares `arch:modelConformsToMetamodel`, and each published `arch:Metamodel`
+manifest names its own ontology, taxonomy and SHACL shapes — so nobody has to remember
+which files to attach. Two findings, because they need different actions:
+
+| | |
+|---|---|
+| `metamodel.manifest` | the data declares a metamodel whose manifest is not attached. The IRI dereferences: `la-source url <iri>`, then pair it with `la-connect`. Where the version is part of the IRI — ArchiMate, BPMN — a manifest for the wrong release reads as an absent one. C4 and Backstage are not versioned that way. |
+| `metamodel.assets` | the manifest is attached and the assets it names are not. |
+
+Worth reading before trusting any schema-level answer. A check that walks shapes to decide
+whether a query's path is possible finds nothing for a notation whose shapes were never
+attached, and "no constraint published" is indistinguishable from "no problem" unless
+something says they were never loaded.
+
 Exit code is `1` when any error is found, so this is safe to gate a pipeline on.
 
 **Acting on drift is one command, not an editing exercise.** When a capability claim is

@@ -506,6 +506,67 @@ class TestDriftDetection(unittest.TestCase):
         with self.assertRaises(ProfileError):
             profile.graphs.suffix_test("vocabulary", "?g")
 
+    def test_a_declared_metamodel_with_no_manifest_is_reported(self):
+        """"No constraint found" must never be readable as "nothing is wrong".
+
+        Every model declares `arch:modelConformsToMetamodel`, and each published
+        `arch:Metamodel` manifest names its own ontology, taxonomy and shapes. A check
+        that walks those to decide whether a query's path is possible finds nothing for a
+        notation whose shapes were never attached - identical, from the inside, to a query
+        with no violations. So the gap is reported before anything relies on it.
+
+        The fixtures make the case concrete: they declare five metamodels and no manifest
+        for any of them.
+        """
+        findings = verify_against_dataset(
+            load_profile("curated-store"),
+            support.load_fixture(AUGMENTED, support.VOCABULARY),
+        )
+        warnings = [f for f in findings if f.subject == "metamodel.manifest"
+                    and f.severity == "warning"]
+        self.assertTrue(warnings, format_findings(findings))
+        message = warnings[0].message
+        for notation in ("backstage", "bpmn", "c4", "leanix", "model"):
+            self.assertIn(notation, message)
+        self.assertIn("la-source url", message, "the fix has to name the command")
+
+    def test_the_report_distinguishes_a_missing_manifest_from_missing_assets(self):
+        """Two different gaps needing two different actions.
+
+        Verified end to end against the live publisher while this was written: fetching
+        `archimate3/metamodel` alone moved ArchiMate out of the manifest warning and into
+        the assets one, and fetching the ontology, taxonomy and shapes it names silenced
+        both. Here the manifest is synthesised so the test needs no network.
+        """
+        import tempfile
+        from pathlib import Path
+
+        from linked_archi_connect.adapters import open_adapter
+
+        # Paired as a file, like the real thing, rather than by mutating a cached adapter
+        # other tests share. Two triples are enough: the manifest exists and names one
+        # asset namespace that is not attached.
+        manifest = (
+            "@prefix arch: <https://meta.linked.archi/core#> .\n"
+            "<https://meta.linked.archi/archimate3/metamodel#ArchiMate3.2>\n"
+            "    a arch:Metamodel ;\n"
+            "    arch:formalRules <https://meta.linked.archi/archimate3/shapes#> .\n"
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "archimate3-metamodel.ttl"
+            path.write_text(manifest, encoding="utf-8")
+            adapter = open_adapter(data=[AUGMENTED, support.VOCABULARY, path])
+            findings = verify_against_dataset(load_profile("curated-store"), adapter)
+        subjects = {f.subject for f in findings if f.severity == "warning"}
+        self.assertIn("metamodel.assets", subjects, format_findings(findings))
+        reported = [f for f in findings if f.subject == "metamodel.manifest"
+                    and f.severity == "warning"]
+        self.assertTrue(reported)
+        self.assertNotIn(
+            "model (", reported[0].message,
+            "ArchiMate's manifest IS attached now, so only its assets are missing",
+        )
+
     def test_no_vocabulary_role_means_no_pairing_findings(self):
         """Silence where there is nothing to pair, or every profile gains noise."""
         findings = verify_against_dataset(
