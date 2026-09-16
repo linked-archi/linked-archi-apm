@@ -165,11 +165,17 @@ class Envelope:
             # evidence of absence, and the honest framing above reads as permission to
             # report "none". One field session took it that way, then re-ran a template
             # four times instead of linting the query it had just invented.
+            # Naming --data is the point of this hint now. Without it lint only reports
+            # read-only, which a query that just ran obviously is; with it, the published
+            # shapes answer whether the path was possible at all - which is the actual
+            # question behind an empty result, and the one that used to be left to the
+            # reader as "check the direction of every relationship".
             hint = (
-                "If this query was hand-written or adapted, lint it before concluding "
-                "anything: `la-query lint --query '...'`. Check the graph scope and the "
-                "direction of every relationship too - the qualified form is the default, "
-                "and reversing source and target returns nothing silently."
+                "If this query was hand-written or adapted, lint it against the shapes "
+                "before concluding anything: `la-query lint --query '...' --data <the same "
+                "data>`. That reports whether the path is one the metamodel permits - "
+                "reversing source and target returns nothing silently, and the qualified "
+                "form is the default. Graph scope is worth checking by eye either way."
                 if self.template is None
                 else ""
             )

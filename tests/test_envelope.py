@@ -221,10 +221,18 @@ class TestEmptyResultGuidance(unittest.TestCase):
             rows=[],
         ).to_table()
 
-    def test_a_hand_written_query_is_told_to_lint_first(self):
+    def test_a_hand_written_query_is_told_to_lint_against_the_data(self):
+        """`--data` is the part that matters, not the word lint.
+
+        Without it the lint only confirms the query is read-only, which a query that already
+        ran obviously is. With it, the published shapes answer whether the path was possible
+        at all - the actual question behind an empty result, and the one this hint used to
+        hand back to the reader as "check the direction of every relationship".
+        """
         output = self._empty(None)
         self.assertIn("lint", output)
-        self.assertIn("direction", output)
+        self.assertIn("--data", output)
+        self.assertIn("metamodel permits", output)
 
     def test_a_catalogued_template_is_not_told_to_lint_itself(self):
         # Templates are executed against the fixtures on every change; suggesting a lint

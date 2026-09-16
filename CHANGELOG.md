@@ -76,6 +76,14 @@ workflow publishes exactly this text, so what is written here is what a consumer
   reported beside the table so a caller cannot silently treat an unattached notation as
   clean.
 
+### Changed
+- **An empty result now points at the check that can explain it.** The guidance already said
+  to lint a hand-written query; it now says to lint it `--data`, which is the part that
+  matters — without it the lint only confirms the query is read-only, which a query that just
+  ran obviously is. With it, the published shapes answer whether the path was possible at all.
+  That was previously handed back to the reader as "check the direction of every relationship",
+  which is work a machine can do.
+
 ### Fixed
 - **The pair count in `fixtures/PROVENANCE.md` was wrong, and agreed with an upstream
   comment that was wrong the same way.** The qualified shape permits 365 pairs, not 361.
