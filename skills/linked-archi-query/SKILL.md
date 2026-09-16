@@ -185,6 +185,32 @@ python3 scripts/la-query query render core/coverage-gaps --profile acme \
 Parameters are typed and escaped. An IRI is accepted with or without angle brackets,
 and a relative IRI is refused.
 
+**`lint --data` also asks whether the query's paths are possible.** A path the metamodel
+forbids returns nothing rather than failing, and an empty result reads as absence — so this
+is the first thing to run on a hand-written query that came back empty:
+
+```bash
+python3 scripts/la-query lint --query '...' --profile curated-store \
+  --data graph.trig --data shapes.ttl --data vocabulary.ttl
+```
+
+It answers from the published SHACL: which relationship may connect which element types.
+Only on `lint`, never on `run` — the check costs a parse and a store read, and the moment
+worth paying for them is before running a query, not on every execution of one that works.
+
+It reports rather than refuses, and **says when it did not judge**:
+
+| | |
+|---|---|
+| `impossible path` | the shapes forbid it. The message names what is permitted instead. |
+| `not checked` | the shape set for that notation is not known complete, or the query types neither end of a pattern, or nothing could be parsed. |
+
+That second row is load-bearing. A violation is only asserted where the metamodel manifest
+shows every declared shape asset is attached and the class hierarchy is present. On a partial
+set a missing shape is indistinguishable from a prohibition — and reading absence as
+prohibition is the same mistake as reading an empty result as absence. `la-profile verify`
+reports which assets are missing.
+
 **Do not pipe a result through `jq` to get a column.** The default output is already
 tab-separated rows, so `cut -f2` works and the parse step is not needed:
 

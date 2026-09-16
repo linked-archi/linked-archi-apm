@@ -11,6 +11,27 @@ workflow publishes exactly this text, so what is written here is what a consumer
 ## [Unreleased]
 
 ### Added
+- **`lint --data` checks whether a query's paths are possible.** A path the metamodel forbids
+  returns nothing rather than failing, so this answers "is this absence real?" before the
+  query runs. Judged against the published SHACL, reporting what is permitted instead of what
+  was asked. On `lint` only: the check costs a parse and a store read, and the moment worth
+  paying for them is before running a query rather than on every execution of one that works.
+- **A violation is only asserted where the evidence supports one.** Two conditions, both
+  learned by getting them wrong: the shape set for that notation must be **known complete** —
+  the metamodel manifest's `arch:formalRules` names every published namespace, so a namespace
+  with nothing attached means partial — and the class hierarchy must be present, so that
+  "unrelated to any constrained class" is a fact rather than a gap. The first draft accused a
+  Business Actor of an impossible `am:flowsTo` because the fixture carried one ArchiMate shape
+  of 73, and accused `arch:Element` of not being a permitted source when it sits *above* the
+  permitted classes. Both are absence-means-prohibition, which is the reasoning this package
+  exists to refuse — pointed inward. Anything unjudged is reported with its reason, and a
+  report where nothing was judged is not a clean bill.
+- **One notation is carried whole in the fixtures.** A slice proves the constraints can be
+  read; it cannot support a check that accuses. Backstage, because it declares a single
+  `arch:formalRules` namespace so completeness is reachable at 57 kB, and because it publishes
+  no unqualified form — every direct predicate it has must come through
+  `arch:unqualifiedForm`, which is the path every other notation depends on. Its class
+  hierarchy is extracted too, without the 143 kB ontology around it.
 - **The published constraints are readable as a table: which relationship may connect which
   element types.** Groundwork for checking a query's path instead of running it and reading
   an empty result as absence. `constraints.py` reduces both published forms to

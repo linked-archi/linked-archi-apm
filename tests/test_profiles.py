@@ -451,9 +451,14 @@ class TestDriftDetection(unittest.TestCase):
         fewer categories, with every element of an uncovered notation absent. That reads
         as "this model has none of those".
 
-        The fixture pairs a five-notation dataset with BPMN vocabulary only, so the four
-        uncovered notations must be named. A notation ontology carries its version in its
-        namespace, so this same probe is what pairing the wrong version looks like.
+        The fixture pairs a five-notation dataset with BPMN vocabulary and the Backstage
+        class hierarchy, so the three still-uncovered notations must be named. A notation
+        ontology carries its version in its namespace, so this same probe is what pairing
+        the wrong version looks like.
+
+        Backstage was in this list until its hierarchy was added for the path check, which
+        needs it to tell "unrelated to any constrained class" from "the hierarchy is not
+        attached". Its leaving the list is the probe working, not a regression.
         """
         findings = verify_against_dataset(
             load_profile("curated-store"),
@@ -463,12 +468,15 @@ class TestDriftDetection(unittest.TestCase):
                     if f.subject == "graphs.roles.vocabulary" and f.severity == "warning"]
         self.assertTrue(relevant, format_findings(findings))
         message = relevant[0].message
-        for namespace in ("archimate3/onto#", "c4/onto#", "backstage/onto#", "leanix/onto#"):
+        for namespace in ("archimate3/onto#", "c4/onto#", "leanix/onto#"):
             self.assertIn(namespace, message)
-        self.assertNotIn(
-            "bpmn/onto#", message,
-            "BPMN vocabulary IS attached, so it must not be reported as uncovered",
-        )
+        for attached, why in (
+            ("bpmn/onto#", "BPMN vocabulary is attached"),
+            ("backstage/onto#", "the Backstage hierarchy is attached for the path check"),
+        ):
+            self.assertNotIn(
+                attached, message, f"{why}, so it must not be reported as uncovered"
+            )
 
     def test_vocabulary_is_readable_where_a_turtle_file_actually_lands(self):
         """Paired vocabulary must work as fetched, not only after hand-editing it.

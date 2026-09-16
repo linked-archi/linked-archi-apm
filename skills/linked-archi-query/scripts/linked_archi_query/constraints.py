@@ -46,6 +46,11 @@ from typing import Any, Callable, Iterable, Mapping
 Runner = Callable[[str], Iterable[Mapping[str, Any]]]
 
 SH = "http://www.w3.org/ns/shacl#"
+#: The core namespace, for the two terms read straight from published metadata rather than
+#: through a profile role: `arch:Metamodel` and `arch:formalRules`. Both are fixed by the
+#: publishing convention - a manifest that called them something else would not be a
+#: manifest - so binding them would add a knob with one correct setting.
+CORE = "https://meta.linked.archi/core#"
 RDF_FIRST = "http://www.w3.org/1999/02/22-rdf-syntax-ns#first"
 RDF_REST = "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest"
 
@@ -83,6 +88,15 @@ class Constraints:
     #: Namespaces some carried shape constrains. A predicate outside these is unchecked
     #: because nothing was published or nothing was attached - not because it is valid.
     covered: frozenset[str] = frozenset()
+    #: Notation roots - ``https://meta.linked.archi/backstage/`` - whose attached manifest
+    #: declares shape assets and every one of them is present. Only here may a checker
+    #: conclude that something is forbidden.
+    #:
+    #: Everywhere else, a missing shape is indistinguishable from a prohibition. Found by
+    #: accusation: against four ArchiMate shapes out of 73, a Business Actor traversing
+    #: ``am:flowsTo`` was reported impossible because the one unqualified shape carried was
+    #: BusinessRole's. That is "empty means none" reasoning inside the checker.
+    complete: frozenset[str] = frozenset()
     #: Predicates whose constraint was derived through ``arch:unqualifiedForm`` rather
     #: than published directly. Worth reporting: the derivation assumes the direct form
     #: means the same as the qualified one, which is the ontology's claim, not a
@@ -251,6 +265,47 @@ def read_qualified(run: Runner, legs: Legs) -> dict[str, set[tuple[str, str]]]:
     return table
 
 
+def notation_root(iri: str) -> str:
+    """``.../backstage/onto#Component`` -> ``.../backstage/``.
+
+    The level a metamodel, its ontology, its taxonomy and its shapes all sit under, which
+    is what lets a predicate be matched to the manifest that declares its shapes.
+    """
+    namespace = _namespace(iri)
+    trimmed = namespace.rstrip("#")
+    return trimmed.rsplit("/", 1)[0] + "/" if "/" in trimmed else namespace
+
+
+def read_complete_notations(run: Runner) -> frozenset[str]:
+    """Notation roots whose declared shape assets are all attached.
+
+    The manifest is the only statement of what a complete shape set is: ``arch:formalRules``
+    names each published namespace, so a namespace with no shape present means the set is
+    partial and nothing may be called forbidden.
+
+    A notation with no attached manifest is not complete - not because it is wrong, but
+    because nothing says what it should contain.
+    """
+    declared: dict[str, set[str]] = {}
+    for row in run(
+        f"SELECT ?m ?asset WHERE {{ ?m a <{CORE}Metamodel> ; <{CORE}formalRules> ?asset }}"
+    ):
+        declared.setdefault(notation_root(str(row["m"])), set()).add(str(row["asset"]))
+    if not declared:
+        return frozenset()
+
+    present = {
+        str(row["shape"]) for row in run(
+            f"SELECT ?shape WHERE {{ ?shape a <{SH}NodeShape> }}"
+        )
+    }
+    complete = set()
+    for root, assets in declared.items():
+        if all(any(shape.startswith(asset) for shape in present) for asset in assets):
+            complete.add(root)
+    return frozenset(complete)
+
+
 def read_unqualified_forms(run: Runner, predicate: str) -> dict[str, str]:
     """``relationship class -> direct predicate``, from the attached ontology.
 
@@ -303,5 +358,6 @@ def read_constraints(
         allowed={key: frozenset(value) for key, value in allowed.items()},
         qualified={key: frozenset(value) for key, value in qualified.items()},
         covered=frozenset(covered),
+        complete=read_complete_notations(run),
         derived=frozenset(derived),
     )

@@ -9,6 +9,7 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 amsh: a owl:Ontology ;
@@ -186,11 +187,500 @@ amsh:BusinessRoleRelShape a sh:NodeShape ;
             sh:path am:influences ] ;
     sh:targetClass am:BusinessRole .
 
-bssh: a owl:Ontology ;
-    dct:modified "2026-08-24"^^xsd:date ;
-    dct:title "Linked.Archi Backstage SHACL Shapes"@en ;
-    owl:versionIRI <https://meta.linked.archi/backstage/shapes/0.2.0#> ;
-    owl:versionInfo "0.2.0"@en .
+<https://meta.linked.archi/backstage/metamodel#BackstageCatalog> a arch:Metamodel ;
+    dct:description """The complete Backstage Software Catalog metamodel definition,
+aggregating the element/relationship ontology, SHACL shapes, SKOS taxonomy,
+viewpoints, deliverable templates, reference data, and presentation contexts."""@en ;
+    skos:prefLabel "Backstage Catalog Metamodel"@en ;
+    arch:architectureViewpoints <https://meta.linked.archi/backstage/viewpoints#> ;
+    arch:basedOnFramework <https://meta.linked.archi/backstage/metamodel#BackstageFramework> ;
+    arch:conceptClassification <https://meta.linked.archi/backstage/tax#> ;
+    arch:formalRules bssh: ;
+    arch:hasDeliverableTemplate <https://meta.linked.archi/backstage/deliverable-templates#OrganizationStructureDocument>,
+        <https://meta.linked.archi/backstage/deliverable-templates#ServiceCatalogDocument>,
+        <https://meta.linked.archi/backstage/deliverable-templates#SystemArchitectureDocument> ;
+    arch:metamodelIdentifiesConsideration <https://meta.linked.archi/core-viewpoints#DependencyConcern>,
+        <https://meta.linked.archi/core-viewpoints#GovernanceConcern>,
+        <https://meta.linked.archi/core-viewpoints#IntegrationConcern>,
+        <https://meta.linked.archi/core-viewpoints#StructureConcern> ;
+    arch:metamodelIdentifiesStakeholder <https://meta.linked.archi/core-viewpoints#OperationsManager>,
+        <https://meta.linked.archi/core-viewpoints#ProductManager>,
+        <https://meta.linked.archi/core-viewpoints#SoftwareDeveloper>,
+        <https://meta.linked.archi/core-viewpoints#SolutionArchitect> ;
+    arch:modelConcepts bs: ;
+    arch:notationSet <https://meta.linked.archi/backstage/notation#BackstageStandardNotation> ;
+    arch:presentationContextScheme <https://meta.linked.archi/backstage/presentation-contexts#BackstagePresentationContexts> ;
+    arch:referenceData <https://meta.linked.archi/backstage/reference-data#BackstageReferenceData> ;
+    arch:viewpointLibrary <https://meta.linked.archi/backstage/viewpoints#ViewpointCatalog> .
+
+bssh:APIConsumptionShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/well-known-relations#consumesapi-and-apiconsumedby> ;
+    rdfs:comment "Mirrors APIProvisionShape: spec.consumesApis is declared on Component and System alike."@en ;
+    sh:property [ sh:class bs:API ;
+            sh:message "APIConsumption target must be an API."@en ;
+            sh:path arch:target ],
+        [ sh:message "APIConsumption source must be a Component or a System."@en ;
+            sh:or ( [ sh:class bs:Component ] [ sh:class bs:System ] ) ;
+            sh:path arch:source ] ;
+    sh:targetClass bs:APIConsumption .
+
+bssh:APIProvisionShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/well-known-relations#providesapi-and-apiprovidedby> ;
+    rdfs:comment """providesApi is generated from spec.providesApis "of the component or system in
+question", and the system model defines a System as exposing one or several public APIs, so a System
+source is ordinary Backstage rather than an error."""@en ;
+    sh:property [ sh:message "APIProvision source must be a Component or a System."@en ;
+            sh:or ( [ sh:class bs:Component ] [ sh:class bs:System ] ) ;
+            sh:path arch:source ],
+        [ sh:class bs:API ;
+            sh:message "APIProvision target must be an API."@en ;
+            sh:path arch:target ] ;
+    sh:targetClass bs:APIProvision .
+
+bssh:ApiDefinitionShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#kind-api> ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:message "An API carries at most one definition literal."@en ;
+            sh:path bs:definition ],
+        [ sh:message "spec.definition is required by the descriptor format. An EA-level lift may deliberately omit the body and keep only the type and a source location."@en ;
+            sh:minCount 1 ;
+            sh:path bs:definition ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass bs:API .
+
+bssh:ApiOnlyPropertiesShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#kind-api> ;
+    sh:class bs:API ;
+    sh:message "spec.definition, spec.type (API) and API visibility belong to an API. A Component that provides an API carries bs:providesAPI; the definition lives on the API entity itself."@en ;
+    sh:targetSubjectsOf bs:apiType,
+        bs:apiVisibility,
+        bs:definition .
+
+bssh:ApiTypeShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#kind-api> ;
+    rdfs:comment """minCount is a Warning rather than a Violation: the descriptor format makes
+spec.type required on an API, but a catalogue that has not filled it in is incomplete rather than
+malformed, and failing the lift on it would block ingestion of data worth having."""@en ;
+    sh:property [ sh:message """An API without a type cannot be parsed by tooling — the system model requires
+API definitions to be in a known machine-readable format, and spec.type is what declares it."""@en ;
+            sh:minCount 1 ;
+            sh:path bs:apiType ;
+            sh:severity sh:Warning ],
+        [ sh:class bs:APIType ;
+            sh:maxCount 1 ;
+            sh:message "An API has at most one spec.type, and it must be a bs:APIType individual (e.g. bs:OpenAPI), not a literal or a value from another vocabulary."@en ;
+            sh:path bs:apiType ] ;
+    sh:targetClass bs:API .
+
+bssh:ApiVisibilityShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/system-model#api> ;
+    rdfs:comment """The system model fixes exactly three visibilities, so unlike the lifecycle set
+this closure is a fact about the language and is enforced as a Violation. It is stated here rather
+than as owl:oneOf in the ontology so that an adopter who needs a fourth value can replace a shape
+instead of forking a published axiom."""@en ;
+    sh:property [ sh:in ( bs:Public bs:Restricted bs:Private ) ;
+            sh:maxCount 1 ;
+            sh:message "API visibility must be exactly one of bs:Public, bs:Restricted or bs:Private."@en ;
+            sh:path bs:apiVisibility ] ;
+    sh:targetClass bs:API .
+
+bssh:BackstageElementLabelShape a sh:NodeShape ;
+    rdfs:comment """Requires a language-tagged skos:prefLabel on every Backstage catalogue
+entity."""@en ;
+    sh:property [ sh:datatype rdf:langString ;
+            sh:message """Every Backstage entity must have at least one skos:prefLabel, and it must
+be language-tagged (rdf:langString), e.g. "payments-api"@en."""@en ;
+            sh:minCount 1 ;
+            sh:path skos:prefLabel ] ;
+    sh:targetClass bs:API,
+        bs:Component,
+        bs:Domain,
+        bs:Group,
+        bs:Resource,
+        bs:System,
+        bs:Template,
+        bs:User .
+
+bssh:BackstageEntityIdentityShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#name-required> ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:message "Materialise the namespace explicitly, as \"default\" where the descriptor omits it, so an entity reference can be rebuilt without knowing the defaulting rule."@en ;
+            sh:path bs:namespace ;
+            sh:severity sh:Warning ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path bs:etag ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:message "Every catalog entity carries exactly one metadata.name — it is half of the entity reference other entities resolve against."@en ;
+            sh:minCount 1 ;
+            sh:path bs:name ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path bs:title ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path bs:uid ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:message """An entity declares at most one apiVersion. No minCount, for the same reason as
+bs:kind — a natively authored model has no descriptor whose schema version there would be to retain."""@en ;
+            sh:path bs:apiVersion ] ;
+    sh:targetClass bs:API,
+        bs:Component,
+        bs:Domain,
+        bs:Group,
+        bs:Resource,
+        bs:System,
+        bs:Template,
+        bs:User .
+
+bssh:ComponentCompositionShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/well-known-relations#partof-and-haspart> ;
+    rdfs:comment """The component-to-component reading of partOf, from spec.subcomponentOf. One of
+four kind-pair readings that Backstage collapses into a single partOf relation; the others are
+SystemMembership, DomainMembership and DomainHierarchy."""@en ;
+    sh:property [ sh:class bs:Component ;
+            sh:message "ComponentComposition target must be a Component."@en ;
+            sh:path arch:target ],
+        [ sh:class bs:Component ;
+            sh:message "ComponentComposition source must be a Component."@en ;
+            sh:path arch:source ] ;
+    sh:targetClass bs:ComponentComposition .
+
+bssh:ComponentOnlyPropertiesShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#kind-component> ;
+    rdfs:comment """bs:componentType left this group in 0.2.0 — it is now legitimate on a Template
+too, so :ComponentTypePropertyShape below carries it. Keeping it here would have reported every typed
+template as an error."""@en ;
+    sh:class bs:Component ;
+    sh:message "spec.subcomponentOf and backstage.io/source-location are declared on a Component."@en ;
+    sh:targetSubjectsOf bs:sourceLocation,
+        bs:subcomponentOf .
+
+bssh:ComponentTypePropertyShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#kind-component> ;
+    rdfs:comment """The one spec.type vocabulary shared by two kinds. A Component's type describes
+itself; a Template's describes the component it creates. Any other subject is a placement error — a System
+with a bs:componentType has had a component's type attached to it."""@en ;
+    rdfs:seeAlso <https://backstage.io/docs/features/software-catalog/descriptor-format#kind-template> ;
+    sh:message "Component type is declared on a Component, or on a Template to declare the type of component it creates. Other kinds have their own spec.type vocabularies."@en ;
+    sh:or ( [ sh:class bs:Component ] [ sh:class bs:Template ] ) ;
+    sh:targetSubjectsOf bs:componentType .
+
+bssh:ComponentTypeShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#kind-component> ;
+    rdfs:comment """Targets Template as well as Component. The descriptor format defines a template's
+spec.type as the type of component the template creates and says it should ideally match that component's
+own spec.type, so one vocabulary serves both ends — see the scope note on bs:componentType for what that
+means for a query joining them."""@en ;
+    rdfs:seeAlso <https://backstage.io/docs/features/software-catalog/descriptor-format#kind-template>,
+        <https://backstage.io/docs/features/software-catalog/system-model#type> ;
+    sh:property [ sh:class bs:ComponentType ;
+            sh:maxCount 1 ;
+            sh:message """A Component or Template has at most one spec.type, and it must be a
+bs:ComponentType individual — bs:ServiceType, bs:WebsiteType, bs:LibraryType, or one your organisation
+minted and typed bs:ComponentType. A bare literal or a value from another vocabulary fails here."""@en ;
+            sh:path bs:componentType ] ;
+    sh:targetClass bs:Component,
+        bs:Template .
+
+bssh:DependencyShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/well-known-relations#dependson-and-dependencyof> ;
+    rdfs:comment """The general dependency relation, from spec.dependsOn. The source constraint is a
+Violation because the descriptor format declares the field on exactly two kinds; the target
+constraint is only a Warning because the spec describes the relation as "a general expression of
+being in need of that other entity" and does not restrict what may be depended upon."""@en ;
+    sh:property [ sh:message "Dependency source must be a Component or a Resource — spec.dependsOn is declared on those two kinds."@en ;
+            sh:or ( [ sh:class bs:Component ] [ sh:class bs:Resource ] ) ;
+            sh:path arch:source ],
+        [ sh:message "Dependency target is normally a Component or a Resource; the spec leaves the relation general, so an unusual target is reported rather than rejected."@en ;
+            sh:or ( [ sh:class bs:Component ] [ sh:class bs:Resource ] ) ;
+            sh:path arch:target ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass bs:Dependency .
+
+bssh:DeprecatedLifecyclePropertyShape a sh:NodeShape ;
+    rdfs:comment """Migration aid, not a conformance rule. bs:lifecycle (a plain string) was
+superseded by bs:lifecycleState in 0.3.0; this shape surfaces converters still emitting the old
+property so the migration is driven by validation findings rather than by grep. Delete it once no
+lift emits bs:lifecycle."""@en ;
+    sh:property [ sh:maxCount 0 ;
+            sh:message "bs:lifecycle (string) is deprecated. Emit bs:lifecycleState pointing at a bs:LifecycleState individual instead."@en ;
+            sh:path bs:lifecycle ;
+            sh:severity sh:Warning ] ;
+    sh:targetSubjectsOf bs:lifecycle .
+
+bssh:DomainHierarchyShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/well-known-relations#partof-and-haspart> ;
+    rdfs:comment "The domain-to-domain reading of partOf, from spec.subdomainOf."@en ;
+    rdfs:seeAlso <https://backstage.io/docs/features/software-catalog/system-model#domain> ;
+    sh:property [ sh:class bs:Domain ;
+            sh:message "DomainHierarchy target must be a Domain."@en ;
+            sh:path arch:target ],
+        [ sh:class bs:Domain ;
+            sh:message "DomainHierarchy source must be a Domain."@en ;
+            sh:path arch:source ] ;
+    sh:targetClass bs:DomainHierarchy .
+
+bssh:DomainMembershipShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/well-known-relations#partof-and-haspart> ;
+    rdfs:comment """The descriptor format declares spec.domain on System only — a Component, API or
+Resource reaches a domain transitively through its system, not directly.
+
+The source constraint is sh:Warning rather than sh:Violation because pre-0.3.0 data was authored
+against a shape that admitted any Element, so promoting it straight to Violation would fail existing
+catalogues on a modelling preference they were never told about. Findings identify edges to re-home
+onto :partOfSystem; promote to Violation once the backlog is clear."""@en ;
+    sh:property [ sh:class bs:Domain ;
+            sh:message "DomainMembership target must be a Domain."@en ;
+            sh:path arch:target ],
+        [ sh:class bs:System ;
+            sh:message """DomainMembership source should be a System — spec.domain is declared on System
+only. Components, APIs and Resources belong to a domain through their system."""@en ;
+            sh:path arch:source ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass bs:DomainMembership .
+
+bssh:DomainOnlyPropertiesShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#kind-domain> ;
+    sh:class bs:Domain ;
+    sh:message "Domain type and spec.subdomainOf are declared on a Domain."@en ;
+    sh:targetSubjectsOf bs:domainType,
+        bs:subdomainOf .
+
+bssh:DomainTypeShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#kind-domain> ;
+    rdfs:seeAlso <https://github.com/backstage/backstage/blob/master/packages/catalog-model/src/schema/kinds/Domain.v1alpha1.schema.json> ;
+    sh:property [ sh:class bs:DomainType ;
+            sh:maxCount 1 ;
+            sh:message "A Domain has at most one spec.type, and it must be a bs:DomainType individual."@en ;
+            sh:path bs:domainType ] ;
+    sh:targetClass bs:Domain .
+
+bssh:EntityRefConsistencyShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/references> ;
+    rdfs:comment """bs:entityRef, bs:kind, bs:namespace and bs:name are four retained fields read
+from one descriptor, and the first is the compact form of the other three. They can only disagree if the
+lift mangled one of them, which makes a mismatch a genuine Violation rather than a modelling preference.
+
+Checked against bs:kind, NOT against rdf:type. The graph type is a modelling decision free to diverge
+from the catalogue kind, so validating the reference against it would report every intentionally retyped
+entity as broken — see KindTypeAlignmentShape, which reports that divergence at sh:Info instead.
+
+Targeted with sh:targetSubjectsOf: an entity with no bs:entityRef is not incomplete, since a natively
+authored model has no catalogue reference to retain.
+
+An entity carrying a reference but no bs:kind contributes no binding and is not reported here; the
+missing field is KindShape's and BackstageEntityIdentityShape's business, and reporting the same
+omission twice as a spurious mismatch would bury the real finding. Absent bs:namespace is read as
+"default", matching the specification, for the same reason."""@en ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:message "An entity carries at most one entity reference."@en ;
+            sh:path bs:entityRef ] ;
+    sh:sparql [ sh:message "bs:entityRef disagrees with the retained bs:kind, bs:namespace and bs:name. Expected kind:namespace/name, compared case-insensitively."@en ;
+            sh:prefixes bssh: ;
+            sh:select """
+            SELECT $this WHERE {
+                $this <https://meta.linked.archi/backstage/onto#entityRef> ?ref .
+                $this <https://meta.linked.archi/backstage/onto#kind> ?kind .
+                $this <https://meta.linked.archi/backstage/onto#name> ?name .
+                OPTIONAL { $this <https://meta.linked.archi/backstage/onto#namespace> ?ns }
+                BIND(LCASE(CONCAT(STR(?kind), ":", COALESCE(STR(?ns), "default"), "/", STR(?name))) AS ?expected)
+                FILTER (LCASE(STR(?ref)) != ?expected)
+            }
+        """^^xsd:string ] ;
+    sh:targetSubjectsOf bs:entityRef .
+
+bssh:GroupMembershipShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/well-known-relations#memberof-and-hasmember> ;
+    sh:property [ sh:class bs:Group ;
+            sh:message "GroupMembership target must be a Group."@en ;
+            sh:path arch:target ],
+        [ sh:class bs:User ;
+            sh:message "GroupMembership source must be a User."@en ;
+            sh:path arch:source ] ;
+    sh:targetClass bs:GroupMembership .
+
+bssh:GroupOnlyPropertiesShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#kind-group> ;
+    sh:class bs:Group ;
+    sh:message "Group type and spec.parent are declared on a Group. spec.parent stores child-to-parent, so the subject is the child."@en ;
+    sh:targetSubjectsOf bs:childOf,
+        bs:groupType .
+
+bssh:GroupParentageShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/well-known-relations#parentof-and-childof> ;
+    rdfs:comment """Organisational hierarchy from spec.parent / spec.children. Stored child-to-parent;
+parentOf edges coming back from the catalog API are normalised onto :childOf with the endpoints
+swapped, per the canonical-direction policy on the ontology header.
+
+The sh:sparql rule catches only self-parenthood. Detecting longer cycles needs a recursive path and
+belongs in a governance shape set, not in the metamodel conformance shapes."""@en ;
+    sh:property [ sh:class bs:Group ;
+            sh:message "GroupParentage source must be a Group."@en ;
+            sh:path arch:source ],
+        [ sh:class bs:Group ;
+            sh:message "GroupParentage target must be a Group."@en ;
+            sh:path arch:target ] ;
+    sh:sparql [ sh:message "A Group cannot be its own parent."@en ;
+            sh:prefixes bssh: ;
+            sh:select """
+            SELECT $this WHERE {
+                $this <https://meta.linked.archi/core#source> ?g .
+                $this <https://meta.linked.archi/core#target> ?g .
+            }
+        """^^xsd:string ] ;
+    sh:targetClass bs:GroupParentage .
+
+bssh:GroupTypeShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#kind-group> ;
+    rdfs:seeAlso <https://github.com/backstage/backstage/blob/master/packages/catalog-model/src/schema/kinds/Group.v1alpha1.schema.json> ;
+    sh:property [ sh:message "spec.type is required on a Group."@en ;
+            sh:minCount 1 ;
+            sh:path bs:groupType ;
+            sh:severity sh:Warning ],
+        [ sh:class bs:GroupType ;
+            sh:maxCount 1 ;
+            sh:message "A Group has at most one spec.type, and it must be a bs:GroupType individual."@en ;
+            sh:path bs:groupType ] ;
+    sh:targetClass bs:Group .
+
+bssh:KindShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#apiversion-and-kind-required> ;
+    rdfs:comment """Cardinality and datatype hygiene on the retained kind token. No minCount:
+the descriptor format requires the field, but a natively authored Linked.Archi model has no descriptor
+to retain and states its kind by rdf:type, so requiring the literal would fail hand-written models on
+ceremony. Contrast bs:name in BackstageEntityIdentityShape, which IS required, because a minted IRI
+cannot yield a name back whereas an element class can yield a kind token."""@en ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:message "An entity carries at most one kind token, as a plain string."@en ;
+            sh:path bs:kind ] ;
+    sh:targetSubjectsOf bs:kind .
+
+bssh:KindTypeAlignmentShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#apiversion-and-kind-required> ;
+    rdfs:comment """Reports an entity whose retained bs:kind matches no Backstage class it is
+typed with, by comparing against the skos:notation on the element classes.
+
+sh:Info, not Violation or Warning, and the severity is the whole point of the shape. bs:kind is what the
+catalogue said and rdf:type is how this graph chooses to classify the entity; the two are allowed to
+diverge, because retyping a lifted entity under a convention adopted later is a legitimate modelling
+act, not a defect. What the shape offers is visibility — a lift that mis-mapped a kind and a deliberate
+retyping look identical in the data, and this surfaces both so a reconciliation pass can tell them
+apart. Switch it off where retyping is standing policy.
+
+Comparison is case-insensitive, matching how the specification compares references, so a lift that
+lowercased the token is not reported here; it is reported by EntityRefConsistencyShape only if the
+reference disagrees too.
+
+An entity carrying no Backstage-classed type at all is reported, since that is the case most likely to
+be an unmapped kind. An entity carrying additional non-Backstage types alongside a matching one is not:
+the FILTER NOT EXISTS asks only whether SOME type matches."""@en ;
+    sh:severity sh:Info ;
+    sh:sparql [ sh:message "Retained bs:kind matches no Backstage class this entity is typed with. Legitimate if the entity was deliberately retyped; otherwise the lift mapped the kind wrongly."@en ;
+            sh:prefixes bssh: ;
+            sh:select """
+            SELECT $this WHERE {
+                $this <https://meta.linked.archi/backstage/onto#kind> ?kind .
+                FILTER NOT EXISTS {
+                    $this a ?class .
+                    ?class <http://www.w3.org/2004/02/skos/core#notation> ?token .
+                    FILTER (LCASE(STR(?token)) = LCASE(STR(?kind)))
+                }
+            }
+        """^^xsd:string ] ;
+    sh:targetSubjectsOf bs:kind .
+
+bssh:LifecyclePropertiesShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#kind-component> ;
+    rdfs:comment """bs:Template joined the permitted subjects in 0.2.0 on the strength of
+Template.v1beta3.schema.json, which declares spec.lifecycle where the rendered descriptor format page does
+not mention it. Without that widening a lifecycle lifted from a real template descriptor was reported as a
+placement error."""@en ;
+    rdfs:seeAlso <https://backstage.io/docs/features/software-catalog/descriptor-format#kind-api>,
+        <https://github.com/backstage/backstage/blob/master/plugins/scaffolder-common/src/Template.v1beta3.schema.json> ;
+    sh:message "spec.lifecycle is defined on Component, API and Template only. Resources, Systems and Domains have no lifecycle field."@en ;
+    sh:or ( [ sh:class bs:Component ] [ sh:class bs:API ] [ sh:class bs:Template ] ) ;
+    sh:targetSubjectsOf bs:lifecycleState .
+
+bssh:LifecycleStateShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#kind-component> ;
+    rdfs:comment """maxCount is a Violation: an entity in two lifecycle states at once is a lift
+error whatever the organisation's vocabulary. Membership is a Warning: the descriptor format accepts
+any lifecycle value and only asks that organisations establish a proper taxonomy for them."""@en ;
+    rdfs:seeAlso <https://backstage.io/docs/features/software-catalog/descriptor-format#kind-api> ;
+    sh:property [ sh:in ( bs:Experimental bs:Production bs:DeprecatedState ) ;
+            sh:message """Lifecycle state outside the well-known set (Experimental, Production,
+DeprecatedState). Organisation-specific states are legitimate — mint them in your own namespace,
+type them bs:LifecycleState, and replace this shape with one listing your vocabulary."""@en ;
+            sh:path bs:lifecycleState ;
+            sh:severity sh:Warning ],
+        [ sh:maxCount 1 ;
+            sh:message "An entity has at most one lifecycle state."@en ;
+            sh:path bs:lifecycleState ] ;
+    sh:targetClass bs:API,
+        bs:Component,
+        bs:Template .
+
+bssh:LinkPropertiesShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#links-optional> ;
+    sh:class bs:Link ;
+    sh:message "Link fields belong to a bs:Link node, reached from the entity by bs:hasLink."@en ;
+    sh:targetSubjectsOf bs:linkIcon,
+        bs:linkTitle,
+        bs:linkType,
+        bs:linkUrl .
+
+bssh:LinkShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#links-optional> ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path bs:linkTitle ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path bs:linkType ],
+        [ sh:datatype xsd:anyURI ;
+            sh:maxCount 1 ;
+            sh:message "A link must have exactly one url — the other three fields are decoration around it."@en ;
+            sh:minCount 1 ;
+            sh:path bs:linkUrl ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path bs:linkIcon ] ;
+    sh:targetClass bs:Link .
+
+bssh:LocationReferenceShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/well-known-annotations#backstageiomanaged-by-location> ;
+    rdfs:comment """Location reference strings keep the specification's <type>:<target> form
+verbatim and stay xsd:string. The type prefix is load-bearing (url:, file:, dir:, bootstrap:) and
+the spec warns that the value cannot be assumed to be a URL at all, so coercing these to xsd:anyURI
+loses information and misrepresents non-url types."""@en ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:message "bs:managedByLocation is a single location reference string in <type>:<target> form."@en ;
+            sh:path bs:managedByLocation ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:message "bs:managedByOriginLocation is a single location reference string in <type>:<target> form."@en ;
+            sh:path bs:managedByOriginLocation ] ;
+    sh:targetSubjectsOf bs:managedByLocation .
+
+bssh:OrphanShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/well-known-annotations#backstageioorphan> ;
+    rdfs:comment """In Backstage the annotation is either absent or the exact string "true".
+The lift maps that to a boolean; absence must lift to no triple at all, never to false, because the
+catalog never asserts that an entity is not an orphan."""@en ;
+    sh:property [ sh:datatype xsd:boolean ;
+            sh:maxCount 1 ;
+            sh:message """bs:orphan must be a single xsd:boolean. The annotation's string "true" is
+converted by the lift; do not carry the literal through."""@en ;
+            sh:path bs:orphan ] ;
+    sh:targetSubjectsOf bs:orphan .
 
 bssh:OwnershipShape a sh:NodeShape ;
     dct:source <https://backstage.io/docs/features/software-catalog/well-known-relations#ownedby-and-ownerof> ;
@@ -199,10 +689,228 @@ Group" and User owners are ordinary Backstage in smaller organisations, so both 
     sh:property [ sh:class arch:Element ;
             sh:message "Ownership source must be an Element."@en ;
             sh:path arch:source ],
+        [ sh:class arch:Element ;
+            sh:message "Ownership source must be an Element."@en ;
+            sh:path arch:source ],
+        [ sh:message "Ownership target must be a Group or a User."@en ;
+            sh:or ( [ sh:class bs:Group ] [ sh:class bs:User ] ) ;
+            sh:path arch:target ],
         [ sh:message "Ownership target must be a Group or a User."@en ;
             sh:or ( [ sh:class bs:Group ] [ sh:class bs:User ] ) ;
             sh:path arch:target ] ;
     sh:targetClass bs:Ownership .
+
+bssh:ProfilePropertiesShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#kind-user> ;
+    rdfs:comment "The only kind-specific group that spans two kinds — spec.profile is defined identically on User and Group."@en ;
+    sh:message "spec.profile fields are declared on a User or a Group."@en ;
+    sh:or ( [ sh:class bs:User ] [ sh:class bs:Group ] ) ;
+    sh:targetSubjectsOf bs:displayName,
+        bs:email,
+        bs:picture .
+
+bssh:ProfileShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#kind-user> ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path bs:displayName ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path bs:email ],
+        [ sh:datatype xsd:anyURI ;
+            sh:maxCount 1 ;
+            sh:path bs:picture ] ;
+    sh:targetClass bs:Group,
+        bs:User .
+
+bssh:ResourceOnlyPropertiesShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#kind-resource> ;
+    sh:class bs:Resource ;
+    sh:message "Resource type is declared on a Resource."@en ;
+    sh:targetSubjectsOf bs:resourceType .
+
+bssh:ResourceTypeShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#kind-resource> ;
+    rdfs:seeAlso <https://github.com/backstage/backstage/blob/master/packages/catalog-model/src/schema/kinds/Resource.v1alpha1.schema.json> ;
+    sh:property [ sh:message "spec.type is required on a Resource."@en ;
+            sh:minCount 1 ;
+            sh:path bs:resourceType ;
+            sh:severity sh:Warning ],
+        [ sh:class bs:ResourceType ;
+            sh:maxCount 1 ;
+            sh:message "A Resource has at most one spec.type, and it must be a bs:ResourceType individual — one of the documented examples or one your organisation minted."@en ;
+            sh:path bs:resourceType ] ;
+    sh:targetClass bs:Resource .
+
+bssh:ResourceUsageShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/well-known-relations#dependson-and-dependencyof> ;
+    rdfs:comment """Resource-facing refinement of Dependency. spec.dependsOn is declared on Resource
+as well as Component, so a resource depending on another resource is a Resource source, and the
+target stays Resource by definition of the subproperty.
+
+The component-targeted reading of spec.dependsOn is no longer homeless: it belongs to bs:dependsOn
+and is checked by DependencyShape. A lift that emits component-to-component dependencies here rather
+than there is the error this shape's target constraint catches."""@en ;
+    sh:property [ sh:message "ResourceUsage source must be a Component or a Resource."@en ;
+            sh:or ( [ sh:class bs:Component ] [ sh:class bs:Resource ] ) ;
+            sh:path arch:source ],
+        [ sh:class bs:Resource ;
+            sh:message "ResourceUsage target must be a Resource."@en ;
+            sh:path arch:target ] ;
+    sh:targetClass bs:ResourceUsage .
+
+bssh:ScaffoldingShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/well-known-annotations#backstageiosource-template> ;
+    rdfs:comment """Creation provenance from backstage.io/source-template, the second annotation whose
+value is an entity reference rather than a literal.
+
+The source stays arch:Element: the Scaffolder is not restricted to producing Components, even though a
+Component is the ordinary case. The target is the constraint worth having — an edge pointing anywhere but a
+Template means the lift resolved the annotation to the wrong entity, which is exactly the mistake that
+otherwise validates clean."""@en ;
+    rdfs:seeAlso <https://backstage.io/docs/features/software-catalog/descriptor-format#kind-template> ;
+    sh:property [ sh:class bs:Template ;
+            sh:message "Scaffolding target must be a Template. An edge to any other kind means the source-template annotation was resolved to the wrong entity."@en ;
+            sh:path arch:target ],
+        [ sh:class arch:Element ;
+            sh:message "Scaffolding source must be an Element — the entity the template created."@en ;
+            sh:path arch:source ] ;
+    sh:targetClass bs:Scaffolding .
+
+bssh:StatusItemPropertiesShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#common-to-all-kinds-status> ;
+    rdfs:comment """Subject-side placement, as :LinkPropertiesShape does for link fields. Catches the
+flattening this vocabulary exists to prevent — status fields asserted straight onto the entity, where two
+items produce two levels and two messages with nothing saying which belongs to which."""@en ;
+    rdfs:seeAlso <https://github.com/backstage/backstage/blob/master/docs/features/software-catalog/well-known-statuses.md> ;
+    sh:class bs:StatusItem ;
+    sh:message "Status fields belong to a bs:StatusItem node, reached from the entity by bs:hasStatusItem — not to the entity itself."@en ;
+    sh:targetSubjectsOf bs:statusLevel,
+        bs:statusMessage,
+        bs:statusType .
+
+bssh:StatusItemShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#common-to-all-kinds-status> ;
+    rdfs:comment """The type is required and the level is not, which follows the specification rather
+than convenience: a contributing system is what an item is FROM, so an item with no type cannot be
+attributed and is not interpretable, whereas an item carrying a type and a message but no level is
+merely uninformative about severity.
+
+Nothing here is required of an entity. status is read-only and absent from authored descriptors, so a
+model with no status items is ordinary rather than incomplete — which is why there is no minCount on
+bs:hasStatusItem anywhere in this file."""@en ;
+    rdfs:seeAlso <https://backstage.io/docs/features/software-catalog/well-known-statuses#common-fields>,
+        <https://github.com/backstage/backstage/blob/master/docs/features/software-catalog/well-known-statuses.md>,
+        <https://github.com/backstage/backstage/blob/master/packages/catalog-model/src/schema/Entity.schema.json> ;
+    sh:property [ sh:in ( bs:InfoLevel bs:WarningLevel bs:ErrorLevel ) ;
+            sh:maxCount 1 ;
+            sh:message """A status item has at most one level, and it must be bs:InfoLevel, bs:WarningLevel
+or bs:ErrorLevel. The descriptor format fixes exactly these three. A bare literal such as "error" fails
+here — the token belongs on skos:notation, and the value is the individual."""@en ;
+            sh:path bs:statusLevel ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:message """A status item carries at most one message, as a plain string. Not language-tagged:
+the catalogue emits no locale, so tagging it would assert something the source does not say."""@en ;
+            sh:path bs:statusMessage ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:message """A status item carries exactly one statusType, naming the system that contributed
+it — e.g. "backstage.io/catalog-processing". An item with no type cannot be attributed to a source."""@en ;
+            sh:minCount 1 ;
+            sh:path bs:statusType ] ;
+    sh:targetClass bs:StatusItem .
+
+bssh:SystemMembershipShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/well-known-relations#partof-and-haspart> ;
+    rdfs:comment """Three kinds may sit in a system. Backstage declares spec.system on Component,
+API and Resource, and each generates the same partOf relation, so a shape that admitted only
+Component reported ordinary catalogues as invalid."""@en ;
+    sh:property [ sh:class bs:System ;
+            sh:message "SystemMembership target must be a System."@en ;
+            sh:path arch:target ],
+        [ sh:message "SystemMembership source must be a Component, an API, or a Resource."@en ;
+            sh:or ( [ sh:class bs:Component ] [ sh:class bs:API ] [ sh:class bs:Resource ] ) ;
+            sh:path arch:source ] ;
+    sh:targetClass bs:SystemMembership .
+
+bssh:SystemOnlyPropertiesShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#kind-system> ;
+    sh:class bs:System ;
+    sh:message "System type and spec.domain are declared on a System — other kinds reach a domain through their system."@en ;
+    sh:targetSubjectsOf bs:belongsToDomain,
+        bs:systemType .
+
+bssh:SystemTypeShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#kind-system> ;
+    rdfs:comment "No minCount — spec.type is optional on System and Domain, unlike Resource and Group."@en ;
+    rdfs:seeAlso <https://github.com/backstage/backstage/blob/master/packages/catalog-model/src/schema/kinds/System.v1alpha1.schema.json> ;
+    sh:property [ sh:class bs:SystemType ;
+            sh:maxCount 1 ;
+            sh:message "A System has at most one spec.type, and it must be a bs:SystemType individual."@en ;
+            sh:path bs:systemType ] ;
+    sh:targetClass bs:System .
+
+bssh:TechDocsDelegationShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/well-known-annotations#backstageiotechdocs-entity> ;
+    rdfs:comment """Documentation ownership from backstage.io/techdocs-entity — the one well-known
+annotation whose value is an entity reference rather than a literal, which is why it is a
+relationship at all.
+
+Endpoints are left at arch:Element because the annotation is not restricted to any kind. The
+constraint worth having is on the path: backstage.io/techdocs-entity-path is meaningful only
+relative to one delegation edge, so it is checked here rather than on either entity."""@en ;
+    rdfs:seeAlso <https://backstage.io/docs/features/software-catalog/well-known-annotations#backstageiotechdocs-entity-path> ;
+    sh:property [ sh:class arch:Element ;
+            sh:message "TechDocsDelegation target must be an Element."@en ;
+            sh:path arch:target ],
+        [ sh:class arch:Element ;
+            sh:message "TechDocsDelegation source must be an Element."@en ;
+            sh:path arch:source ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:message "A TechDocs delegation carries at most one techdocsEntityPath."@en ;
+            sh:path bs:techdocsEntityPath ] ;
+    sh:targetClass bs:TechDocsDelegation .
+
+bssh:TemplateOnlyPropertiesShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#metadataannotationsbackstageiotime-saved-optional> ;
+    rdfs:comment """backstage.io/time-saved is an estimate attached to the template, not to the
+entities it produced. A lift that copies it onto every scaffolded component turns one estimate into a
+per-entity claim the annotation never made — this is the shape that says so."""@en ;
+    sh:class bs:Template ;
+    sh:message "backstage.io/time-saved is declared on a Template. Time saved by using a template belongs to the template; reach the entities it created with bs:scaffoldedFrom."@en ;
+    sh:targetSubjectsOf bs:timeSaved .
+
+bssh:TemplateTypeShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#kind-template> ;
+    rdfs:comment """spec.type is required on a Template by the descriptor format, and reported at Warning
+rather than Violation on the same reasoning as the Resource and Group type shapes: an untyped template is
+incomplete rather than malformed, and refusing it loses the rest of the entity."""@en ;
+    rdfs:seeAlso <https://github.com/backstage/backstage/blob/master/plugins/scaffolder-common/src/Template.v1beta3.schema.json> ;
+    sh:property [ sh:message "spec.type is required on a Template — it declares the type of component the template creates, and is what template filtering reads."@en ;
+            sh:minCount 1 ;
+            sh:path bs:componentType ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass bs:Template .
+
+bssh:TimeSavedShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#metadataannotationsbackstageiotime-saved-optional> ;
+    rdfs:comment """xsd:duration, not a string. The specification fixes the format as ISO 8601, so a
+lift that passes "PT4H" through as a plain literal puts a parse between the graph and every aggregate over
+it — the same silent-wrong-type error the catalog provenance shapes below exist for."""@en ;
+    sh:property [ sh:datatype xsd:duration ;
+            sh:maxCount 1 ;
+            sh:message """bs:timeSaved is a single xsd:duration, e.g. "PT4H"^^xsd:duration. Carry the ISO 8601
+value as a typed literal rather than as a string."""@en ;
+            sh:path bs:timeSaved ] ;
+    sh:targetSubjectsOf bs:timeSaved .
+
+bssh:UserOnlyPropertiesShape a sh:NodeShape ;
+    dct:source <https://backstage.io/docs/features/software-catalog/descriptor-format#kind-user> ;
+    sh:class bs:User ;
+    sh:message "spec.memberOf is declared on a User. A Group's place in the hierarchy is bs:childOf, not membership."@en ;
+    sh:targetSubjectsOf bs:memberOf .
 
 coresh: a owl:Ontology ;
     dct:modified "2026-09-07"^^xsd:date ;
@@ -222,4 +930,10 @@ coresh:QualifiedRelationshipShape a sh:NodeShape ;
             sh:minCount 1 ;
             sh:path arch:source ] ;
     sh:targetClass arch:QualifiedRelationship .
+
+bssh: a owl:Ontology ;
+    dct:modified "2026-08-24"^^xsd:date ;
+    dct:title "Linked.Archi Backstage SHACL Shapes"@en ;
+    owl:versionIRI <https://meta.linked.archi/backstage/shapes/0.2.0#> ;
+    owl:versionInfo "0.2.0"@en .
 

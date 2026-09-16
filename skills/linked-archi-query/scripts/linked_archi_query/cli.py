@@ -930,12 +930,51 @@ def cmd_batch(args: argparse.Namespace) -> int:
     return OK
 
 
+def _path_report(text: str, args: argparse.Namespace):
+    """Check the query's paths against the attached shapes, or say why not.
+
+    Only here, not on `run`. A wrong path returns nothing rather than failing, so the
+    moment worth paying for a parse and a store read is before running the query - not on
+    every execution of one that already works.
+    """
+    from .constraints import ConstraintError, constraints_from_profile
+    from .paths import check_query, read_subclasses
+
+    target = _target(args)
+    if not target["data"] and not target["endpoint"]:
+        return None
+
+    def run(query: str):
+        return _execute(query, target).get("rows") or []
+
+    profile = _profile(args.profile)
+    try:
+        constraints = constraints_from_profile(run, profile)
+    except ConstraintError as exc:
+        from .paths import Report
+
+        return Report(refused=str(exc))
+    return check_query(text, constraints, read_subclasses(run))
+
+
 def cmd_lint(args: argparse.Namespace) -> int:
     text = Path(args.file).read_text(encoding="utf-8") if args.file else args.query
     if not text:
         raise QueryError("Give a file or --query")
     validate_readonly(text)
     print(f"OK: read-only ({args.file or 'inline query'})")
+
+    report = _path_report(text, args)
+    if report is None:
+        print("paths: not checked (no --data or --endpoint given)")
+        return OK
+    print(f"paths: {report.summary()}")
+    for violation in report.violations:
+        print(f"  ! {violation.message}")
+    for note in report.unchecked:
+        print(f"  ~ {note}")
+    # Read-only is a refusal; an impossible path is a finding. The query is still legal
+    # SPARQL and the caller may have reason to run it, so this reports rather than refuses.
     return OK
 
 
@@ -1321,6 +1360,8 @@ def build_parser() -> argparse.ArgumentParser:
     lint.add_argument("file", nargs="?", metavar="FILE",
                       help="file holding the query; omit when using --query")
     lint.add_argument("--query", metavar="SPARQL", help="the query text to check")
+    _profile_arg(lint)
+    _target_args(lint)
     _output_arg(lint)
     lint.set_defaults(func=cmd_lint)
     doctor = commands.add_parser(

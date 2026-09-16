@@ -604,6 +604,26 @@ SHAPE_SELECTION = {
         "core constraint on every qualified relationship",
 }
 
+#: Notations carried WHOLE, with the metamodel manifest that says what whole means.
+#:
+#: A slice is enough to test that the constraints can be READ. It is not enough to test a
+#: check that ACCUSES, and the difference was found the hard way: against four shapes out
+#: of 73, a query traversing `am:flowsTo` from a Business Actor was reported impossible
+#: because the only unqualified shape carried was BusinessRole's. Absence of a shape read
+#: as prohibition - the same "empty means none" reasoning this package exists to refuse,
+#: inside the checker itself.
+#:
+#: So one notation is complete. Backstage, because it declares a single `arch:formalRules`
+#: namespace, so completeness is reachable at 57 kB, and because it publishes no
+#: unqualified form - every direct predicate it has must come through
+#: `arch:unqualifiedForm`, which is the path the other notations depend on.
+WHOLE_NOTATIONS = (
+    (
+        "modelingLanguages/backstage/backstage-shapes.ttl",
+        "modelingLanguages/backstage/backstage-metamodel.ttl",
+    ),
+)
+
 #: Where the shapes come from. ArchiMate is the only notation that publishes the
 #: unqualified form as well as the qualified one; for the others the unqualified
 #: constraint has to be DERIVED, by following `arch:unqualifiedForm` from the
@@ -733,6 +753,7 @@ def refresh_vocabulary_axioms(meta_root: Path) -> int:
             quad.subject.value.startswith(CORE)
             or quad.subject.value in headers
             or quad.predicate == unqualified_form
+            or quad.subject.value.startswith("https://meta.linked.archi/backstage/onto#")
         ):
             fixture.remove(quad)
 
@@ -753,6 +774,28 @@ def refresh_vocabulary_axioms(meta_root: Path) -> int:
                 if quad not in fixture:
                     fixture.add(quad)
                     added += 1
+
+    # The class hierarchy of the notation carried whole in shapes.ttl.
+    #
+    # A path check needs it to tell "unrelated to any constrained class" from "related but
+    # the hierarchy is not attached". Without it the checker accused `arch:Element` of not
+    # being a permitted source, when Element sits ABOVE the permitted classes and an
+    # instance may well be one of them. Only the hierarchy, not the 143 kB ontology: the
+    # subclass edges and the class declarations they connect.
+    hierarchy = 0
+    notation_onto = meta_root / "modelingLanguages/backstage/backstage-onto.ttl"
+    if notation_onto.is_file():
+        published = _load_all([notation_onto])
+        for row in published.query(
+            f"SELECT ?c ?p WHERE {{ ?c <{RDFS}subClassOf> ?p }}"
+        ):
+            for quad in (
+                Quad(row["c"], NamedNode(f"{RDFS}subClassOf"), row["p"]),
+                Quad(row["c"], NamedNode(f"{RDF_NS}type"), NamedNode(f"{OWL}Class")),
+            ):
+                if quad not in fixture:
+                    fixture.add(quad)
+                    hierarchy += 1
 
     # The qualified-to-direct mapping, complete rather than sliced.
     #
@@ -838,11 +881,33 @@ def refresh_shapes(meta_root: Path) -> int:
         kept.append(f"{shape.rsplit('#', 1)[-1]:<28} {why}\n"
                     f"{'':30}targets {', '.join(t.rsplit('#', 1)[-1] for t in targets)}")
 
+    # One notation whole, plus the manifest that declares what whole is. Without the
+    # manifest a checker cannot tell a complete shape set from a partial one, and on a
+    # partial set a missing shape is indistinguishable from a prohibition.
+    whole: list[str] = []
+    for shapes_file, manifest_file in WHOLE_NOTATIONS:
+        for path in (shapes_file, manifest_file):
+            if not (meta_root / path).is_file():
+                print(f"no document at {meta_root / path}", file=sys.stderr)
+                return 0
+        store = _load_all([meta_root / shapes_file])
+        count = 0
+        for row in store.query(f"SELECT ?shape WHERE {{ ?shape a <{SH}NodeShape> }}"):
+            _describe(store, row["shape"], triples)
+            count += 1
+        manifest = _load_all([meta_root / manifest_file])
+        for row in manifest.query(f"SELECT ?m WHERE {{ ?m a <{CORE}Metamodel> }}"):
+            _describe(manifest, row["m"], triples)
+        if shapes_file not in contributed:
+            contributed.append(shapes_file)
+        whole.append(f"{shapes_file.rsplit('/', 1)[-1]}: {count} shape(s), complete")
+
     # Only the documents a carried shape actually came from. Four shapes out of 73 is a
     # slice, and the release each was sliced from is not optional information.
     stamps: list[str] = []
     for path in contributed:
-        stamps += _ontology_headers(sources[path], triples)
+        stamps += _ontology_headers(sources.get(path) or _load_all([meta_root / path]),
+                                    triples)
 
     fixture = Store()
     for subject, predicate, obj in triples:
@@ -850,8 +915,11 @@ def refresh_shapes(meta_root: Path) -> int:
 
     written = _write_nested_turtle(fixture, SHAPES_FILE)
     size = SHAPES_FILE.stat().st_size
-    print(f"{SHAPES_FILE.name}: {written} quads, {len(kept)} shape(s), {size // 1024} kB")
+    print(f"{SHAPES_FILE.name}: {written} quads, {len(kept)} named shape(s), "
+          f"{size // 1024} kB")
     for line in kept:
+        print(f"  {line}")
+    for line in whole:
         print(f"  {line}")
     print(f"  extracted from {len(stamps)} published document(s):")
     for stamp in stamps:
