@@ -727,8 +727,13 @@ def refresh_vocabulary_axioms(meta_root: Path) -> int:
             None, NamedNode(f"{RDF_NS}type"), ontology
         )
     }
+    unqualified_form = NamedNode(f"{CORE}unqualifiedForm")
     for quad in list(fixture):
-        if quad.subject.value.startswith(CORE) or quad.subject.value in headers:
+        if (
+            quad.subject.value.startswith(CORE)
+            or quad.subject.value in headers
+            or quad.predicate == unqualified_form
+        ):
             fixture.remove(quad)
 
     terms: set[str] = set()
@@ -749,6 +754,25 @@ def refresh_vocabulary_axioms(meta_root: Path) -> int:
                     fixture.add(quad)
                     added += 1
 
+    # The qualified-to-direct mapping, complete rather than sliced.
+    #
+    # Needed because it is the only thing that constrains a direct triple outside
+    # ArchiMate. Backstage, LeanIX and C4 publish shapes for the qualified form alone, so
+    # the rule for `bs:ownedBy` has to be DERIVED - follow arch:unqualifiedForm from
+    # bs:Ownership to its predicate and reuse the qualified shape's classes. Without these
+    # triples that derivation has nothing to walk, and the code path went untested.
+    #
+    # All 75 pairs, not a selection. One triple each, so the whole published mapping costs
+    # less than the paragraph that would be needed to justify a subset.
+    forms = 0
+    for cls, direct in sorted(load_unqualified_forms().items()):
+        quad = Quad(
+            NamedNode(cls), NamedNode(f"{CORE}unqualifiedForm"), NamedNode(direct)
+        )
+        if quad not in fixture:
+            fixture.add(quad)
+            forms += 1
+
     stamped: set = set()
     stamps = _ontology_headers(onto, stamped) + _ontology_headers(bpmn, stamped)
     for subject, predicate, obj in stamped:
@@ -756,7 +780,8 @@ def refresh_vocabulary_axioms(meta_root: Path) -> int:
 
     write_flat(fixture, VOCABULARY_FILE)
     print(f"{VOCABULARY_FILE.name}: {before} -> {len(fixture)} quads "
-          f"({added} axiom quad(s) for {len(terms)} core term(s))")
+          f"({added} axiom quad(s) for {len(terms)} core term(s), "
+          f"{forms} unqualifiedForm pair(s))")
     print(f"  extracted from {len(stamps)} published document(s):")
     for stamp in stamps:
         print(f"    {stamp}")

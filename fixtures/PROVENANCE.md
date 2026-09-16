@@ -57,7 +57,7 @@ Consequences, all of which the tests encode:
 | `augmented.trig` | 3433 | 19 | `base` plus what converters never emit. |
 | `flat.ttl` | 3320 | 0 | `base` with graph identity discarded. |
 | `converter-1.3.trig` | 284 | 4 | Real converter output, **verbatim**. The one PARTITIONED fixture. |
-| `vocabulary.ttl` | 632 | 0 | Published vocabulary: BPMN taxonomy, plus the core property axioms. |
+| `vocabulary.ttl` | 707 | 0 | Published vocabulary: BPMN taxonomy, plus the core property axioms. |
 | `shapes.ttl` | 2645 | 0 | Published SHACL: which relationship may connect which types. |
 | `unqualified-forms.json` | 75 pairs | — | Extracted `arch:unqualifiedForm` mappings. Not RDF. |
 
@@ -408,7 +408,7 @@ only the selection is ours, on the same terms as every other fixture here.
   `skos:prefLabel` and `rdfs:subClassOf` chain — so a query can walk the hierarchy rather
   than trust a flat list.
 
-632 triples of Turtle in the **default graph**, and both halves of that matter. Turtle
+707 triples of Turtle in the **default graph**, and both halves of that matter. Turtle
 because that is what is published: `meta.linked.archi` serves every ontology, taxonomy and
 shape set as `text/turtle`. The default graph because that is where a Turtle file goes —
 `la-connect` loads one without naming a graph — so this is the shape an operator pairs.
@@ -420,6 +420,15 @@ role to a suffix that a graphless file cannot match. A fixture that passes where
 published file fails is exactly the defect the top of this document describes. The role is
 bound to `default` now, and `test_profiles.py` asserts the pairing works in the shape a
 fetch delivers.
+
+**It also carries the whole `arch:unqualifiedForm` mapping**, all 75 pairs, because that is
+the only thing constraining a direct triple outside ArchiMate. Backstage, LeanIX and C4
+publish shapes for the qualified form alone, so the rule for `bs:ownedBy` has to be derived
+— follow `arch:unqualifiedForm` from `bs:Ownership` to its predicate and reuse the qualified
+shape's classes. The fixture had none of these pairs, which left that derivation with
+nothing to walk and the only code path constraining a non-ArchiMate direct triple untested.
+All of them rather than a selection: one triple each, so the complete published mapping
+costs less than the paragraph justifying a subset would.
 
 **Keeping it out of the semantic graph is load-bearing, not tidiness.** Ontology classes
 carry `skos:prefLabel`. Merged into the semantic graph they would surface as candidates from

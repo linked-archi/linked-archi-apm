@@ -10,6 +10,39 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 
+### Added
+- **The published constraints are readable as a table: which relationship may connect which
+  element types.** Groundwork for checking a query's path instead of running it and reading
+  an empty result as absence. `constraints.py` reduces both published forms to
+  `(source class, predicate) -> allowed target classes`. The direct predicates are the ones
+  that need it: `am:flowsTo`, `bs:ownedBy` and the other 73 in the `arch:unqualifiedForm`
+  mapping carry no `rdfs:domain` and no `rdfs:range` anywhere, so shapes are the only
+  statement of their validity — which is the part an Ontology-Based Query Check as published
+  does not cover.
+- **Constraints for notations that publish only the qualified form are derived.** Only
+  ArchiMate states the direct form outright. Elsewhere the rule follows
+  `arch:unqualifiedForm` from the relationship class to its predicate and reuses the
+  qualified shape's classes, so `bs:Ownership` permitting `Element -> Group | User` becomes
+  the rule for `bs:ownedBy`. A published constraint is never overwritten by a derived one.
+  `fixtures/vocabulary.ttl` gains all 75 mapping pairs, without which that path had nothing
+  to walk and no test.
+- **"Unchecked" and "forbidden" are different answers and stay that way.** No constraint
+  published, or none attached, returns `None`; an empty set would mean the metamodel permits
+  nothing there. Conflating them turns "we do not know" into "your query is wrong" — the
+  same mistake as reading an empty result as absence, pointed the other way. Coverage is
+  reported beside the table so a caller cannot silently treat an unattached notation as
+  clean.
+
+### Fixed
+- **The pair count in `fixtures/PROVENANCE.md` was wrong, and agreed with an upstream
+  comment that was wrong the same way.** The qualified shape permits 365 pairs, not 361.
+  Four in every ArchiMate relationship shape are the junction rules, which have exactly one
+  permitted target each and are therefore written as a bare `sh:class` rather than a
+  one-element `sh:or`; a reader walking only `sh:or` misses them. Both the shape's own header
+  comment and the query this package verified with made that omission, so their agreement
+  read as confirmation. Fixed at source in `linked-archi-meta` (`7431007`), where 21 comments
+  across ArchiMate 3.2 and 4.0 understated their own shapes.
+
 ## [0.5.0] - 2026-09-16
 Published schema became usable. Every ontology, taxonomy and SHACL shape set on
 `meta.linked.archi` can now be fetched, lands where a Turtle file actually goes, carries the
