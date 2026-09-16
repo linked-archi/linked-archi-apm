@@ -197,5 +197,61 @@ class TestUncheckedIsNotTheSameAsForbidden(unittest.TestCase):
         self.assertEqual(empty.covered, frozenset())
 
 
+class TestAnUnreadableConstraintSetIsRefused(unittest.TestCase):
+    """Refusing beats an empty table, because an empty table looks like a clean bill.
+
+    This is the same argument the package makes about empty query results, applied to its
+    own machinery: a check that could not read its inputs and says nothing is
+    indistinguishable from a check that read them and found no problem.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        requires_pyoxigraph(cls)
+        from linked_archi_profile.profile import load_profile
+
+        cls.snapshot = load_profile("curated-store").resolved_snapshot()
+        cls.sparql = staticmethod(_runner(support.SHAPES, support.VOCABULARY))
+
+    def _profile(self, without: str | None = None):
+        import copy
+
+        from linked_archi_query import ResolvedProfile
+
+        snapshot = copy.deepcopy(self.snapshot)
+        if without:
+            snapshot["roles"].pop(without, None)
+        return ResolvedProfile(snapshot)
+
+    def test_a_bound_profile_reads_the_table(self):
+        from linked_archi_query.constraints import constraints_from_profile
+
+        constraints = constraints_from_profile(self.sparql, self._profile())
+        self.assertTrue(constraints.allowed)
+        self.assertIn(f"{BS}ownedBy", constraints.derived)
+
+    def test_an_unbound_unqualified_form_refuses_and_says_what_is_lost(self):
+        from linked_archi_query.constraints import ConstraintError, constraints_from_profile
+
+        with self.assertRaises(ConstraintError) as caught:
+            constraints_from_profile(self.sparql, self._profile(without="unqualified_form"))
+        message = str(caught.exception)
+        self.assertIn("unqualified_form", message)
+        self.assertIn("except ArchiMate", message, "the consequence has to be named")
+
+    def test_the_relationship_legs_are_guaranteed_by_the_contract(self):
+        """So `constraints.py` does not guard them, and this pins that assumption.
+
+        If `rel_source` ever stops being contract-required, the reader needs its own check
+        and this test is where that shows up.
+        """
+        from linked_archi_query.contract import ContractError
+
+        for role in ("rel_source", "rel_target"):
+            with self.subTest(role):
+                with self.assertRaises(ContractError):
+                    self._profile(without=role)
+
+
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()

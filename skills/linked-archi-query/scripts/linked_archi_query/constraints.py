@@ -104,6 +104,68 @@ class Constraints:
         return bool(self.allowed or self.qualified)
 
 
+class ConstraintError(RuntimeError):
+    """The constraints cannot be read, so no verdict is available.
+
+    Raised rather than returning an empty table, because the two are opposite answers and
+    an empty table is indistinguishable from "this query breaks nothing".
+    """
+
+
+#: Roles this needs that a profile is not obliged to bind, and what each absence costs.
+#:
+#: ``rel_source`` and ``rel_target`` are deliberately absent from this list: the resolved
+#: profile contract already requires them, so a ``ResolvedProfile`` cannot exist without
+#: them and re-checking here would be a guard for a state that cannot occur.
+OPTIONAL_ROLES: tuple[tuple[str, str], ...] = (
+    (
+        "unqualified_form",
+        "how a relationship class maps to its direct predicate. Without it every notation "
+        "except ArchiMate has no constraint on its direct triples at all, because only "
+        "ArchiMate publishes that form - so the table would be silently empty where it "
+        "matters most",
+    ),
+)
+
+
+def constraints_from_profile(run: Runner, profile: Any) -> Constraints:
+    """Read the constraints, refusing when the profile does not say how.
+
+    The first draft did the opposite and was worse: an unbound ``unqualified_form`` skipped
+    the derivation without comment, so a dataset whose shapes cover only the qualified form
+    produced a table with nothing in it for direct triples - and a caller reading that table
+    would have found no violations and reported none. A missing binding is a reason to
+    refuse, not a reason to go quiet.
+    """
+    missing = [
+        f"{role} - {why}" for role, why in OPTIONAL_ROLES if not profile.has_role(role)
+    ]
+    if missing:
+        raise ConstraintError(
+            f"cannot read relationship constraints: profile "
+            f"{getattr(profile, 'name', '?')!r} does not bind "
+            + "; ".join(missing)
+            + ". Bind it, or do not ask for a path check: an unread constraint set finds "
+            "no violations, which reads exactly like a query that has none."
+        )
+
+    bindings: dict[str, str] = {}
+    for role in ("rel_source", "rel_target", *(name for name, _ in OPTIONAL_ROLES)):
+        expanded = profile.expand_role(role)
+        if len(expanded) != 1:
+            raise ConstraintError(
+                f"role {role!r} expands to {len(expanded)} IRIs; the path check reads one "
+                "and would silently ignore the rest"
+            )
+        bindings[role] = expanded[0]
+
+    return read_constraints(
+        run,
+        Legs(bindings["rel_source"], bindings["rel_target"]),
+        bindings["unqualified_form"],
+    )
+
+
 def _namespace(iri: str) -> str:
     for separator in ("#", "/"):
         if separator in iri:
