@@ -280,7 +280,8 @@ class TemplateEntry:
         # consulting it. Matching is on the vocabulary's namespace IRI rather than that
         # label, because a profile's slug for a notation is its own choice.
         if self.notation_namespace:
-            if profile.notation_for_namespace(self.notation_namespace) is None:
+            slug = profile.notation_for_namespace(self.notation_namespace)
+            if slug is None:
                 declared = ", ".join(sorted(profile.notations)) or "none"
                 unmet.append(
                     f"profile {profile.name!r} declares no notation using the vocabulary "
@@ -289,6 +290,29 @@ class TemplateEntry:
                     "return nothing, which is not the same as an empty answer. Add the "
                     "notation to the profile if the dataset does carry it."
                 )
+            else:
+                # Declaring a notation says the profile speaks it. Presence says the data
+                # holds a model in it, and only the second decides whether this template
+                # can answer. Both are gated here rather than in a `requires` key, because
+                # every notation template already names its vocabulary and none of them
+                # should have to opt in to being refused against a dataset that lacks it.
+                present = profile.notation_present(slug)
+                if present is False:
+                    unmet.append(
+                        f"profile {profile.name!r} declares notation {slug!r} but records it "
+                        f"as absent from this dataset, so no model this {self.notation} "
+                        "template asks about is here. Refused rather than answered with no "
+                        "rows, which would read as 'none exist'. Confirm with "
+                        "core/inventory-summary, and if the notation is in fact loaded, set "
+                        f"notations.{slug}.present true - `la-profile verify` reports which "
+                        "notations have models here."
+                    )
+                elif present == "partial":
+                    warnings.append(
+                        f"notation {slug!r} is present for some models in this dataset and "
+                        "absent for others, so rows here cover part of it. "
+                        "core/inventory-summary reports which models carry it."
+                    )
 
         return Verdict(ok=not unmet, unmet=tuple(unmet), warnings=tuple(warnings))
 

@@ -608,6 +608,23 @@ class Profile:
             for key, value in self.notations.items()
         ):
             raise ProfileError(f"{where}: notations must map names to mappings")
+        # `present` is a claim about the dataset, so it obeys the same tristate a capability
+        # does. Validated because an unrecognised value would otherwise reach the query side
+        # and read as false, refusing every template for that notation over a typo.
+        for slug, spec in self.notations.items():
+            declared = (spec or {}).get("present")
+            # `not in TRISTATE` would let `1` through: it hashes equal to True in Python, so
+            # `present: 1` would silently mean present. The capability check above spells it
+            # this way for the same reason.
+            if (
+                declared is not None
+                and not isinstance(declared, bool)
+                and declared != "partial"
+            ):
+                raise ProfileError(
+                    f"{where}: notation {slug!r} declares present={declared!r}; "
+                    "expected true, false or 'partial'"
+                )
         if any(
             not isinstance(item, Mapping)
             or any(not isinstance(key, str) or not key for key in item)
@@ -1158,6 +1175,7 @@ def _verify_against_dataset(profile: Profile, adapter) -> list[Finding]:
 
     # --- capabilities ------------------------------------------------------
     findings += _verify_capabilities(profile, adapter)
+    findings += _verify_notation_presence(profile, adapter)
     findings += _verify_vocabulary_pairing(profile, adapter)
     findings += _verify_metamodel_pairing(profile, adapter)
     return findings
@@ -1222,9 +1240,17 @@ def _verify_metamodel_pairing(profile: Profile, adapter) -> list[Finding]:
     answers: dict[str, dict[str, bool]] = {}
     for slug, root in roots.items():
         answers[slug] = {
+            # Unscoped OR scoped, for the same reason `attached` is: Turtle carries no
+            # graph identity, so a flattened dataset holds its models in the default
+            # graph. Asked with `GRAPH ?g` alone this answered false for every notation
+            # on flat.ttl, every branch below was skipped, and the pass reported "every
+            # metamodel the data declares has its manifest attached" about a dataset it
+            # had not managed to look at.
             "declared": adapter.ask(
-                f"{p}\nASK {{ GRAPH ?g {{ ?m {conforms} ?mm . "
-                f'FILTER(STRSTARTS(STR(?mm), "{root}")) }} }}'
+                f"{p}\nASK {{ {{ ?m {conforms} ?mm . "
+                f'FILTER(STRSTARTS(STR(?mm), "{root}")) }} UNION '
+                f"{{ GRAPH ?g {{ ?m {conforms} ?mm . "
+                f'FILTER(STRSTARTS(STR(?mm), "{root}")) }} }} }}'
             ),
             # Unscoped OR scoped: a manifest fetched as Turtle lands in the default graph,
             # one a pipeline emitted into the dataset is in a named graph. Both count.
@@ -1281,6 +1307,102 @@ def _verify_metamodel_pairing(profile: Profile, adapter) -> list[Finding]:
             "every metamodel the data declares has its manifest and named assets attached"
             if roots else "no metamodel conformance declared",
         ))
+    return findings
+
+
+def _verify_notation_presence(profile: Profile, adapter) -> list[Finding]:
+    """Which declared notations the dataset actually holds a model in.
+
+    Declaring a notation says the profile speaks it. It says nothing about whether the data
+    has any of it, and the two were previously indistinguishable: a BPMN question against a
+    dataset holding no BPMN model ran, joined nothing, and answered with no rows. An empty
+    table reads as "there are no gateways", not as "you asked a dataset that has never seen
+    a process".
+
+    So presence becomes a claim the profile can carry - ``notations.<slug>.present`` - and a
+    template written against a notation recorded absent is refused instead of answered.
+    This pass is what turns the measurement into that claim.
+
+    Unstated stays unstated. Nothing is refused on the strength of an unknown, so a profile
+    that never mentions presence behaves as it always did; what changes is that verify now
+    says which notations can answer and which cannot.
+
+    ``arch:modelConformsToMetamodel`` is the signal, matched on the notation's root by
+    prefix so a release bump does not read as an absent notation - the same derivation
+    :func:`_verify_metamodel_pairing` uses, and asked unconditionally for every notation for
+    the same reason: a probe set that varies with a probe answer is the "unplanned probe"
+    error.
+    """
+    conforms = profile.roles.get("conforms_to_metamodel")
+    if not conforms:
+        return []
+    p = profile.prefix_block()
+    roots: dict[str, str] = {}
+    for slug in sorted(profile.notations):
+        spec = profile.notations.get(slug) or {}
+        namespace = profile.namespaces.get(str(spec.get("namespace", "")))
+        if namespace:
+            roots[slug] = namespace.rsplit("/", 1)[0] + "/"
+    if not roots:
+        return []
+    observed = {
+        slug: adapter.ask(
+            f"{p}\nASK {{ {{ ?m {conforms} ?mm . "
+            f'FILTER(STRSTARTS(STR(?mm), "{root}")) }} UNION '
+            f"{{ GRAPH ?g {{ ?m {conforms} ?mm . "
+            f'FILTER(STRSTARTS(STR(?mm), "{root}")) }} }} }}'
+        )
+        for slug, root in roots.items()
+    }
+
+    findings: list[Finding] = []
+    present = sorted(slug for slug, seen in observed.items() if seen)
+    contradicted: list[str] = []
+    understated: list[str] = []
+    unstated_absent: list[str] = []
+    for slug in sorted(roots):
+        claimed = (profile.notations.get(slug) or {}).get("present")
+        if claimed == "partial":
+            continue          # a boolean ASK cannot contradict "some models, not others"
+        if claimed is True and not observed[slug]:
+            contradicted.append(slug)
+        elif claimed is False and observed[slug]:
+            understated.append(slug)
+        elif claimed is None and not observed[slug]:
+            unstated_absent.append(slug)
+
+    # No `fix` pairs here, deliberately. `emit_fix_profile` splits a fix key once, into
+    # section and key, so it can write `capabilities.<name>` and nothing deeper;
+    # `notations.<slug>.present` would come out as a literal dotted key and produce an
+    # invalid profile. The edit is named in the message instead.
+    if contradicted:
+        findings.append(Finding(
+            "warning", "notations.present",
+            f"declared present but no model conforming to them is here: {', '.join(contradicted)}. "
+            "Templates written against them will run and return nothing, which reads as an "
+            "answer. Set notations.<name>.present false to have them refused instead, or "
+            "load the models.",
+        ))
+    if understated:
+        findings.append(Finding(
+            "warning", "notations.present",
+            f"recorded absent but models conforming to them are here: {', '.join(understated)}. "
+            "Templates written against them are being refused unnecessarily - set "
+            "notations.<name>.present true.",
+        ))
+    if unstated_absent:
+        findings.append(Finding(
+            "warning", "notations.present",
+            "declared by the profile with no model conforming to them in this dataset: "
+            f"{', '.join(unstated_absent)}. Questions about them can only ever come back "
+            "empty. Recording notations.<name>.present false turns that empty answer into a "
+            "refusal that says which dataset to ask instead.",
+        ))
+    findings.append(Finding(
+        "info", "notations.present",
+        f"models present for: {', '.join(present)}" if present
+        else "no model declares conformance to any notation the profile knows",
+    ))
     return findings
 
 
@@ -1786,6 +1908,35 @@ def _observe_dataset(adapter) -> tuple[Observation, ...]:
             "membership", "folder chain walks" if folder_walk else "co-location only",
             "'bounded-folder-tree' possible, if it holds for EVERY notation"
             if folder_walk else "keep 'same-graph-colocation'",
+        ))
+    # Which notations are actually in here, so the recommendation says what the dataset can
+    # answer rather than only which profile to start from. Reported, never used to pick a
+    # profile: every bundled profile declares the same notation set, so presence cannot
+    # discriminate between them - it tells the operator which `present:` claims to record.
+    #
+    # Limited to the notations the lens declares, which is what "read through the published
+    # vocabulary" means here: a custom notation is invisible until a profile names it.
+    # Measured the same way `_verify_notation_presence` measures it, because these two
+    # commands must not disagree about one dataset.
+    conforms_role = lens.roles.get("conforms_to_metamodel")
+    notation_roots: dict[str, str] = {}
+    if conforms_role:
+        for slug in sorted(lens.notations):
+            spec = lens.notations.get(slug) or {}
+            namespace = lens.namespaces.get(str(spec.get("namespace", "")))
+            if namespace:
+                notation_roots[slug] = namespace.rsplit("/", 1)[0] + "/"
+    seen_notations = sorted(
+        slug for slug, root in notation_roots.items()
+        if scoped(f'?m {conforms_role} ?mm . FILTER(STRSTARTS(STR(?mm), "{root}"))')
+    )
+    if notation_roots:
+        observations.append(Observation(
+            "notations", ", ".join(seen_notations) if seen_notations else "none declared",
+            "record notations.<name>.present false for the rest, so questions about them "
+            "are refused rather than answered empty"
+            if len(seen_notations) < len(notation_roots)
+            else "every notation the profile knows has a model here",
         ))
     return tuple(observations)
 

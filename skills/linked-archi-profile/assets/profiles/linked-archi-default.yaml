@@ -417,6 +417,17 @@ capabilities:
 #
 # Note ArchiMate's slug is `model`, not `archimate`: its IRI scheme is
 # configurable and `--path-model` defaults to `model`.
+# Each entry may also carry `present:` - true, false or partial - which is a claim
+# about THIS DATASET rather than about the vocabulary. Declaring a notation says the
+# profile can speak it; `present: false` says the data holds none of it, and a
+# template written against that notation is then refused instead of answered with no
+# rows. Nothing is claimed here, because this profile does not know which dataset it
+# will meet: unstated means unknown, and nothing is refused on an unknown.
+#
+# `la-profile verify` measures it and reports which notations have models and which
+# do not, naming the edit. Worth making once per dataset: an empty table from a
+# notation that was never loaded reads as "there are none of those", which is the
+# mistake this package exists to prevent.
 notations:
   model:
     label: ArchiMate

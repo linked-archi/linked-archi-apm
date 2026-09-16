@@ -76,6 +76,22 @@ workflow publishes exactly this text, so what is written here is what a consumer
   reported beside the table so a caller cannot silently treat an unattached notation as
   clean.
 
+- **A notation the dataset does not hold is refused, not answered with an empty table.**
+  Declaring a notation says the profile speaks it; it never said the data had any. The default
+  profile declares six, most datasets hold fewer, and every template for the rest ran, joined
+  nothing and returned no rows — which reads as "this model has no gateways" rather than "there
+  is no BPMN here". A notation spec now takes `present: true | false | partial`, a claim about
+  the dataset in the same sense a capability is: `false` refuses, `partial` warns, `true`
+  changes nothing. `la-profile verify` measures it and reports which notations have models,
+  and `la-profile recommend` reports the same set — measured once, so the two commands cannot
+  disagree about one dataset.
+
+  **Unstated means unknown and refuses nothing**, so profiles written before this key behave
+  exactly as they did; the 796 tests that existed beforehand passed against it unchanged. The
+  gate rides the `notation_namespace` every notation template already declares, so no
+  catalogue entry changed and a new notation template still cannot opt out of its own gate.
+  Closes O2, recorded as D22.
+
 ### Changed
 - **An empty result now points at the check that can explain it.** The guidance already said
   to lint a hand-written query; it now says to lint it `--data`, which is the part that
@@ -85,6 +101,13 @@ workflow publishes exactly this text, so what is written here is what a consumer
   which is work a machine can do.
 
 ### Fixed
+- **`verify` reported a flattened dataset's metamodel assets as attached without having looked
+  at it.** The metamodel pairing probe asked whether the data declares a metamodel inside
+  `GRAPH ?g` only. Turtle carries no graph identity, so on a flattened dataset every notation
+  answered absent, every branch below was skipped, and the pass concluded "every metamodel the
+  data declares has its manifest and named assets attached" — the exact shape of mistake this
+  package exists to prevent, made by the check meant to prevent it. Now asked unscoped or
+  scoped, which is how the companion question in the same probe was already asked.
 - **The pair count in `fixtures/PROVENANCE.md` was wrong, and agreed with an upstream
   comment that was wrong the same way.** The qualified shape permits 365 pairs, not 361.
   Four in every ArchiMate relationship shape are the junction rules, which have exactly one

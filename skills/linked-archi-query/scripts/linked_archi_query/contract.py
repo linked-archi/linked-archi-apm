@@ -303,6 +303,16 @@ class ResolvedProfile:
             for key, value in notations.items()
         ):
             raise ContractError("linked-archi-profile returned a malformed snapshot: invalid notations")
+        # `present` is the only key inside a notation spec this side interprets, so it is
+        # the only one worth validating. A typo in a value here would otherwise read as
+        # `False` and refuse every template for that notation.
+        for slug, spec in notations.items():
+            declared = (spec or {}).get("present")
+            if declared is not None and not isinstance(declared, bool) and declared != "partial":
+                raise ContractError(
+                    "linked-archi-profile returned a malformed snapshot: notation "
+                    f"{slug!r} declares present={declared!r}; expected true, false or 'partial'"
+                )
 
         taxonomies = snapshot["taxonomies"]
         if not isinstance(taxonomies, list) or any(
@@ -432,6 +442,26 @@ class ResolvedProfile:
             if prefix and self.namespaces.get(prefix) == namespace_iri:
                 return slug
         return None
+
+    def notation_present(self, slug: str) -> bool | str | None:
+        """Whether the dataset holds a model in ``slug``: ``True``, ``False``, ``partial``
+        or ``None`` for unstated.
+
+        A claim about the DATA, like a capability, not a claim about the vocabulary. The
+        notation block otherwise says only "this profile can speak BPMN"; a dataset with no
+        BPMN model in it answers every BPMN template with no rows, which reads as "there
+        are no gateways" rather than "you asked the wrong dataset".
+
+        Unstated is not absent. Nothing may be refused on the strength of an unknown - the
+        same rule ``_verify_capabilities`` follows when a probe cannot answer - so a profile
+        that never mentions presence behaves exactly as it did before this existed, and
+        ``la-profile verify`` is what turns the unknown into a claim.
+        """
+        spec = self.notations.get(slug) or {}
+        declared = spec.get("present")
+        if declared is None or isinstance(declared, bool):
+            return declared
+        return str(declared)
 
     def row_limit(self, requested: int | None = None) -> int:
         default = int(self.limits.get("default_row_limit", 200))

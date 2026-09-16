@@ -420,6 +420,97 @@ class TestGating(unittest.TestCase):
             f"the refusal must name the vocabulary: {verdict.unmet}",
         )
 
+    def _with_presence(self, slug: str, present):
+        """The default profile with one notation's dataset presence recorded.
+
+        Edited through a resolved snapshot for the same reason the test above does it:
+        notation maps merge key by key on inheritance, so a child profile cannot narrow
+        what its parent declares.
+        """
+        snapshot = load_owner_profile("linked-archi-default").resolved_snapshot()
+        snapshot["notations"] = {
+            name: (dict(spec) | {"present": present} if name == slug else spec)
+            for name, spec in snapshot["notations"].items()
+        }
+        return ResolvedProfile(snapshot)
+
+    def test_a_notation_recorded_absent_from_the_dataset_is_refused(self):
+        """Declaring a notation and holding a model in it are different facts.
+
+        The profile still speaks BPMN - the vocabulary is bound, the templates render -
+        but this dataset has none of it, so every BPMN template joins nothing. Answering
+        that with an empty table says "this model has no gateways". Refusing says "ask a
+        dataset that has a process in it", which is the only true statement available.
+        """
+        profile = self._with_presence("bpmn", False)
+        refused = {entry.name for entry, _ in self.catalog.refused(profile)}
+        self.assertIn("notation/bpmn/process-flow", refused)
+        self.assertNotIn("notation/c4/containers", refused)
+
+        verdict = self.catalog.get("notation/bpmn/process-flow").check(profile)
+        reasons = " ".join(verdict.unmet)
+        self.assertIn("absent", reasons)
+        self.assertIn(
+            "core/inventory-summary", reasons,
+            "the refusal has to name how to check, not just that it refused",
+        )
+        self.assertIn(
+            "notations.bpmn.present", reasons,
+            "and it has to name the edit that lifts the refusal",
+        )
+
+    def test_a_notation_present_for_some_models_runs_with_a_caveat(self):
+        """`partial` is not a refusal. Rows exist; they just do not cover the notation."""
+        profile = self._with_presence("bpmn", "partial")
+        verdict = self.catalog.get("notation/bpmn/process-flow").check(profile)
+        self.assertTrue(verdict.ok, verdict.unmet)
+        self.assertTrue(
+            any("some models" in warning for warning in verdict.warnings),
+            f"a partial notation must warn: {verdict.warnings}",
+        )
+
+    def test_recording_a_notation_present_changes_nothing(self):
+        """The claim only ever removes an answer, never adds one.
+
+        Worth pinning because the opposite would be a way to talk a template into running
+        against a dataset that cannot support it.
+        """
+        stated = self._with_presence("bpmn", True)
+        unstated = ResolvedProfile(
+            load_owner_profile("linked-archi-default").resolved_snapshot()
+        )
+        self.assertEqual(
+            {entry.name for entry, _ in self.catalog.refused(stated)},
+            {entry.name for entry, _ in self.catalog.refused(unstated)},
+        )
+
+    def test_an_unstated_presence_refuses_nothing(self):
+        """Unknown is not absent.
+
+        Every profile that predates this key leaves presence unstated, and none of them
+        may start refusing templates because of it. This is the whole reason the gate is
+        opt-in rather than measured at render time.
+        """
+        profile = ResolvedProfile(
+            load_owner_profile("linked-archi-default").resolved_snapshot()
+        )
+        for slug in profile.notations:
+            self.assertIsNone(profile.notation_present(slug))
+        refused = {entry.name for entry, _ in self.catalog.refused(profile)}
+        self.assertNotIn("notation/bpmn/process-flow", refused)
+
+    def test_a_presence_value_that_is_not_a_tristate_is_rejected(self):
+        """A typo must not read as absent and refuse a notation silently."""
+        from linked_archi_query.contract import ContractError
+
+        snapshot = load_owner_profile("linked-archi-default").resolved_snapshot()
+        snapshot["notations"]["bpmn"] = dict(snapshot["notations"]["bpmn"]) | {
+            "present": "yes"
+        }
+        with self.assertRaises(ContractError) as caught:
+            ResolvedProfile(snapshot)
+        self.assertIn("present", str(caught.exception))
+
     def test_the_bundled_profiles_refuse_no_notation_template(self):
         """The trap this gate had to avoid: a slug is not a notation's identity.
 

@@ -93,6 +93,11 @@ with no matching elements look identical from every later query.
 `arch:modelConformsToMetamodel`. If only one loaded, no cross-notation question can
 be answered.
 
+A notation template can also be refused outright, saying the profile records that notation
+as absent from this dataset. That is not a missing feature: it means the question needs a
+different dataset, and an empty table would have said "there are none of those" instead.
+`la-profile verify` reports which notations have models here.
+
 Then resolve every name the user typed:
 
 ```bash

@@ -480,11 +480,17 @@ most likely to be descoped; say so rather than half-building it.
 Touches `skills/linked-archi-source/`, `skills/linked-archi-profile/`, and possibly
 `assets/templates/metamodel/`.
 
-**O2. Notation presence as a runtime gate.** `notations` is metadata. A question about BPMN
-against a dataset holding no BPMN model is answerable only by orientation, and nothing gates
-it. Treat notation presence like a capability: probed by `verify`, reported by `recommend`,
-and available to a template's `requires`. `core/inventory-summary` already measures it; this
-makes the measurement enforceable.
+~~**O2. Notation presence as a runtime gate.**~~ **Done**, as **D22**. `notations` was
+metadata: a question about BPMN against a dataset holding no BPMN model ran, joined nothing
+and answered with an empty table. Presence is now a claim a profile carries, measured by
+`verify`, reported by `recommend`, and enforced as a refusal.
+
+One deviation from the wording above, and it made the change smaller rather than larger: the
+gate is **not** a new `requires` key. Every notation template already declares
+`notation_namespace` for **D20**, so the presence check rides that same field and no catalogue
+entry changed. A `requires.notations` key would have needed new branches in two parsers and a
+third validator, and would have let a new notation template opt out of its own gate — which
+**D20** deliberately made impossible.
 
 ---
 
@@ -795,6 +801,40 @@ what its own comments always described.
 The same two-ASK shape extends to `views_graph`, `view_geometry` and `element_lifecycle`,
 which are all documented as partial and still probed existentially. Not done here, so their
 `partial` claims are accepted rather than confirmed.
+
+**D22. Whether a notation is DECLARED and whether the dataset HOLDS any of it are two facts,
+and only the second decides whether a template can answer.** **D20** gated a notation template
+on the vocabulary its profile binds, which catches the wrong-dataset case only when the profile
+was narrowed to match. The common case is the opposite: a profile declares every notation
+Linked.Archi publishes — the default one declares six — and the dataset holds two. Every
+template for the other four then ran, joined nothing, and returned an empty table, which reads
+as "this model has no gateways" rather than "there is no BPMN here".
+
+So a notation spec may carry `present: true | false | partial`, a claim about the dataset in
+exactly the sense a capability is, gated the same way: `false` refuses, `partial` warns, `true`
+changes nothing. It lives inside the notation spec rather than in a top-level list because
+notation maps merge key by key on inheritance, so a child profile can record presence for one
+notation without restating the parent's set — the same reason the gating test has to narrow a
+resolved snapshot instead of authoring a child.
+
+**Unstated means unknown, and nothing is refused on an unknown.** That is what makes this
+safe to add to a released package: every profile written before the key existed behaves
+exactly as it did, and the 796 tests that existed before this change passed against it
+unmodified. It also matches `_verify_capabilities`, which never contradicts a claim on the
+strength of a probe that could not answer.
+
+Presence is a **warning** in `verify`, never an error. Only an error moves the exit code, and
+no dataset is obliged to hold all six notations the default profile declares — an error here
+would make every bundled profile fail verification against every real store. `_verify_metamodel_pairing`
+made the same call for the same reason. The finding carries no `fix` pair either, because
+`emit_fix_profile` splits a fix key once and can write `capabilities.<name>` but not
+`notations.<slug>.present`; the message names the edit instead.
+
+Found while building it, and the reason the pass measures with a UNION rather than a scoped
+ASK: `_verify_metamodel_pairing` asked its `declared` question inside `GRAPH ?g` only. Turtle
+carries no graph identity, so on a flattened dataset every notation answered absent, every
+branch below was skipped, and the pass reported "every metamodel the data declares has its
+manifest attached" about a dataset it had not managed to look at. Fixed there too.
 
 ### Requests deliberately not adopted as stated
 

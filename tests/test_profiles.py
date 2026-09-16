@@ -169,6 +169,33 @@ class TestValidation(unittest.TestCase):
     def test_minimal_profile_is_valid(self):
         Profile(self.MINIMAL)
 
+    def test_notation_presence_must_be_a_tristate(self):
+        """A typo must not read as absent.
+
+        `present` is the one key inside a notation spec that changes behaviour, and the
+        behaviour it changes is refusal. An unrecognised value reaching the query side would
+        be neither true nor "partial", so every template for that notation would be refused
+        over a spelling.
+        """
+        for value in ("yes", "true", 1, 0, "absent", []):
+            with self.subTest(value=value):
+                with self.assertRaises(ProfileError) as caught:
+                    Profile(self._with(
+                        notations={"bpmn": {"namespace": "ex", "present": value}}
+                    ))
+                self.assertIn("present", str(caught.exception))
+
+    def test_notation_presence_accepts_the_tristate(self):
+        for value in (True, False, "partial"):
+            with self.subTest(value=value):
+                Profile(self._with(
+                    notations={"bpmn": {"namespace": "ex", "present": value}}
+                ))
+
+    def test_a_notation_may_omit_presence(self):
+        """Unstated is the default and has to stay valid: it means unknown."""
+        Profile(self._with(notations={"bpmn": {"namespace": "ex"}}))
+
     def test_namespace_bindings_must_be_stripped_and_non_empty(self):
         for namespaces in (
             {"ex": "  "},
@@ -400,6 +427,139 @@ class TestDriftDetection(unittest.TestCase):
         findings = verify_against_dataset(profile, support.load_fixture(AUGMENTED))
         errors = [f for f in findings if f.severity == "error"]
         self.assertEqual(errors, [], format_findings(findings))
+
+    def _presence(self, profile_name, fixture, **overrides):
+        """Findings from the notation-presence pass, with `present` claims applied.
+
+        Overrides are written onto the loaded profile's notation specs, because presence is
+        a fact about a dataset and no bundled profile states one - they cannot know which
+        dataset they will meet.
+        """
+        from linked_archi_profile.profile import _verify_notation_presence, _batched
+
+        profile = load_profile(profile_name)
+        for slug, value in overrides.items():
+            profile.notations[slug] = dict(profile.notations.get(slug) or {})
+            profile.notations[slug]["present"] = value
+        return _batched(
+            lambda probe: _verify_notation_presence(profile, probe),
+            support.load_fixture(fixture),
+        )
+
+    def test_a_declared_notation_with_no_model_is_reported(self):
+        """The fixtures carry five notations. The default profile declares six.
+
+        PlantUML is the sixth, and nothing in the dataset conforms to the UML metamodel, so
+        every UML question here can only come back empty. Reporting it is what lets an
+        operator record the claim that turns those empty answers into refusals.
+        """
+        findings = self._presence("linked-archi-default", BASE)
+        warnings = [f for f in findings if f.severity == "warning"]
+        self.assertTrue(warnings, format_findings(findings))
+        self.assertTrue(
+            any("plantuml" in f.message for f in warnings),
+            format_findings(findings),
+        )
+        present = next(f for f in findings if f.severity == "info")
+        for slug in ("backstage", "bpmn", "c4", "leanix", "model"):
+            self.assertIn(slug, present.message)
+
+    def test_presence_is_measured_in_a_dataset_with_no_named_graphs(self):
+        """The regression this pass was written around.
+
+        Turtle carries no graph identity, so a flattened dataset holds its models in the
+        default graph. Asked with `GRAPH ?g` alone - which is how the neighbouring metamodel
+        pairing probe asked it - every notation on flat.ttl came back absent, and a pass
+        that cannot see a single model would have declared five notations missing. The
+        UNION form is not a nicety here; it is the difference between measuring and
+        guessing.
+        """
+        findings = self._presence("examples/flattened-turtle", FLAT)
+        present = next(f for f in findings if f.severity == "info")
+        for slug in ("backstage", "bpmn", "c4", "leanix", "model"):
+            self.assertIn(slug, present.message)
+
+    def test_claiming_a_notation_the_dataset_lacks_is_reported(self):
+        findings = self._presence("linked-archi-default", BASE, plantuml=True)
+        self.assertTrue(
+            any(
+                f.severity == "warning"
+                and "declared present" in f.message
+                and "plantuml" in f.message
+                for f in findings
+            ),
+            format_findings(findings),
+        )
+
+    def test_recording_a_notation_absent_when_it_is_here_is_reported(self):
+        """The direction that costs answers rather than inventing them.
+
+        A stale `present: false` refuses templates the dataset can support, which is a
+        quieter failure than the other way round: the operator sees a refusal naming a
+        notation and has no reason to doubt it.
+        """
+        findings = self._presence("linked-archi-default", BASE, bpmn=False)
+        self.assertTrue(
+            any(
+                f.severity == "warning"
+                and "recorded absent" in f.message
+                and "bpmn" in f.message
+                for f in findings
+            ),
+            format_findings(findings),
+        )
+
+    def test_a_partial_notation_is_not_contradicted(self):
+        """An ASK answers yes or no and cannot speak to "some models, not others"."""
+        findings = self._presence("linked-archi-default", BASE, bpmn="partial")
+        self.assertFalse(
+            any(f.severity == "warning" and "bpmn" in f.message for f in findings),
+            format_findings(findings),
+        )
+
+    def test_verify_and_recommend_agree_about_which_notations_are_here(self):
+        """Two commands measuring one dataset must not contradict each other.
+
+        The precedent is `direct_rel_triples`, where `recommend` reported a form as
+        converted while `verify` called the same capability unverifiable - and a reader
+        given two answers has no way to choose. Presence is measured twice for good
+        reasons: `verify` reads through the user's profile, `recommend` through the
+        published vocabulary as a lens. The measurement has to match where the two
+        overlap.
+        """
+        from linked_archi_profile.profile import observe_dataset
+
+        for fixture in (BASE, FLAT):
+            with self.subTest(fixture=fixture.name):
+                observed = next(
+                    o for o in observe_dataset(support.load_fixture(fixture))
+                    if o.subject == "notations"
+                )
+                from_recommend = set(observed.value.split(", "))
+                info = next(
+                    f for f in self._presence("linked-archi-default", fixture)
+                    if f.severity == "info"
+                )
+                from_verify = set(info.message.removeprefix("models present for: ").split(", "))
+                self.assertEqual(from_recommend, from_verify)
+
+    def test_notation_presence_never_fails_verification(self):
+        """Presence is drift to report, not a broken profile.
+
+        The default profile declares six notations and no dataset is obliged to hold all
+        six, so an error here would make every bundled profile fail against any real store.
+        The metamodel pairing probe made the same call for the same reason.
+        """
+        for profile_name, fixture in (
+            ("linked-archi-default", BASE),
+            ("curated-store", AUGMENTED),
+            ("examples/flattened-turtle", FLAT),
+        ):
+            findings = self._presence(profile_name, fixture)
+            self.assertEqual(
+                [f for f in findings if f.severity == "error"], [],
+                f"{profile_name}: {format_findings(findings)}",
+            )
 
     def test_claiming_a_capability_the_dataset_lacks_is_an_error(self):
         """The direct-triples profile against default-flag output. The whole point."""

@@ -137,6 +137,29 @@ whether a query's path is possible finds nothing for a notation whose shapes wer
 attached, and "no constraint published" is indistinguishable from "no problem" unless
 something says they were never loaded.
 
+**`verify` also says which notations the dataset actually holds a model in**, reported as
+`notations.present`. Declaring a notation says the profile speaks it, which is not the same
+as the data having any of it — the default profile declares six, and most datasets hold
+fewer. Templates for the rest run and return nothing, which reads as "there are none of
+those".
+
+Record the answer and that stops happening. A notation spec takes `present`:
+
+```yaml
+notations:
+  bpmn:
+    present: false      # this dataset holds no BPMN
+```
+
+`false` refuses every template written against that notation, with a refusal naming the
+notation instead of an empty table implying absence. `partial` — present for some models,
+absent for others — runs with a caveat. `true` changes nothing; the claim only ever removes
+an answer.
+
+Leaving it out means unknown, and nothing is refused on an unknown, so an existing profile
+behaves exactly as it did. This is a warning rather than an error for the same reason: no
+dataset is obliged to carry every notation a profile can read.
+
 Exit code is `1` when any error is found, so this is safe to gate a pipeline on.
 
 **Acting on drift is one command, not an editing exercise.** When a capability claim is
