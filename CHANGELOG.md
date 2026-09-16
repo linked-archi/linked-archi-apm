@@ -8,7 +8,7 @@ A section here is not optional at release time: `make release-notes` reads it, a
 `make release-check` refuses to declare a version ready without one. The release
 workflow publishes exactly this text, so what is written here is what a consumer reads.
 
-## [Unreleased]
+## [0.6.0] - 2026-09-17
 
 ### Added
 - **`lint --data` checks whether a query's paths are possible.** A path the metamodel forbids
@@ -93,6 +93,19 @@ workflow publishes exactly this text, so what is written here is what a consumer
   Closes O2, recorded as D22.
 
 ### Changed
+- **Two standing rules the query skill implied but never stated.** Orientation is a
+  once-per-session step, not a once-per-question one: the dataset does not change between two
+  questions about it, so re-running `core/inventory-summary` before each buys nothing and costs
+  a round trip — orient at the start, on a dataset change, and before reporting absence. And a
+  dataset refresh invalidates the verification, because a profile is a set of claims about data
+  that was just replaced; every result already carries `has not been verified against this
+  dataset` until `la-profile verify` is re-run, and that caveat is not decoration to strip when
+  quoting a result.
+
+  Four other candidate rules were checked and dropped as already covered, in some cases word
+  for word: never construct an IRI from a label, do not grep the RDF, a count sitting on the
+  row limit is a floor to report as "at least", and a source that cannot be verified is a stop
+  rather than a fallback.
 - **An empty result now points at the check that can explain it.** The guidance already said
   to lint a hand-written query; it now says to lint it `--data`, which is the part that
   matters — without it the lint only confirms the query is read-only, which a query that just
@@ -515,7 +528,8 @@ converters against the meta.linked.archi ontologies.
   for SHACL validation, and `git` for Git acquisition. Endpoint and HTTPS transport use
   the standard library. No mandatory MCP server.
 
-[Unreleased]: https://github.com/linked-archi/linked-archi-apm/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/linked-archi/linked-archi-apm/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.2.0...v0.3.0

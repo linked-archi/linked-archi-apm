@@ -1,6 +1,6 @@
 # linked-archi-apm: proposal, design record, and progress tracker
 
-**Status:** released, Apache-2.0, installable directly by APM (v0.5.0)
+**Status:** released, Apache-2.0, installable directly by APM (v0.6.0)
 **Last updated:** 2026-09-08
 
 One document, three jobs. It records **why** this package exists, **how** it is

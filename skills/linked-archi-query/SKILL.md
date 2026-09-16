@@ -5,7 +5,7 @@ license: Apache-2.0
 compatibility: Needs Python 3.11 or newer and PyYAML. Rendering delegates profile resolution to linked-archi-profile; execution also delegates transport to linked-archi-connect and needs pyoxigraph for local RDF. Endpoint transport uses the standard library. Read-only throughout.
 metadata:
   author: linked-archi
-  version: "0.5.0"
+  version: "0.6.0"
   homepage: https://meta.linked.archi
 allowed-tools: Read Bash(python3:*)
 ---
@@ -97,6 +97,20 @@ A notation template can also be refused outright, saying the profile records tha
 as absent from this dataset. That is not a missing feature: it means the question needs a
 different dataset, and an empty table would have said "there are none of those" instead.
 `la-profile verify` reports which notations have models here.
+
+**Orient once per session, not once per question.** The dataset does not change between
+two questions about it, so re-running orientation before each one buys nothing and costs a
+round trip. Orient when the session starts, when the dataset changes, and before reporting
+that something is absent — that last one because absence is the claim orientation exists to
+qualify.
+
+**A dataset refresh invalidates the verification.** A profile is a set of claims about the
+data, so reloading the data means nobody has checked them since. Re-run
+`la-profile verify --profile <name> --data <file>` after every refresh. Until you do, every
+result carries `profile ... has not been verified against this dataset`, and that caveat is
+load-bearing: a profile that no longer fits fails silently, returning nothing from a scoped
+query or rows that mean something else. Do not strip the caveat when quoting a result, and
+do not answer around it.
 
 Then resolve every name the user typed:
 
