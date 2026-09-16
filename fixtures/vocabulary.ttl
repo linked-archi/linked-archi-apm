@@ -594,3 +594,12 @@ bpmn:SubProcess <http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:FlowEleme
 bpmn:Process <http://www.w3.org/2000/01/rdf-schema#subClassOf> arch:Element , bpmn:CallableElement , bpmn:FlowElementsContainer ;
 	skos:prefLabel "Process"@en ;
 	a <http://www.w3.org/2002/07/owl#Class> .
+arch: dct:title "Core Linked.Archi Ontology"@en ;
+	<http://www.w3.org/2002/07/owl#versionInfo> "0.4.0"@en ;
+	dct:modified "2026-09-07"^^xsd:date .
+bpmn: a <http://www.w3.org/2002/07/owl#Ontology> .
+arch: <http://www.w3.org/2002/07/owl#versionIRI> arch: .
+bpmn: dct:title "Linked.Archi BPMN 2.0.2 Ontology"@en ;
+	dct:modified "2026-05-06"^^xsd:date ;
+	<http://www.w3.org/2002/07/owl#versionInfo> "2.0.2"@en .
+arch: a <http://www.w3.org/2002/07/owl#Ontology> .

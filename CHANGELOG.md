@@ -11,6 +11,17 @@ workflow publishes exactly this text, so what is written here is what a consumer
 ## [Unreleased]
 
 ### Added
+- **The extracted schema fixtures name the release they were sliced from.**
+  `vocabulary.ttl` and `shapes.ttl` are the only fixtures whose upstream moves
+  independently of this package, and they said nothing about which version they came from:
+  the extraction dropped each document's `owl:Ontology` header. ArchiMate shipping 3.3, or
+  core moving off 0.4.0, would have left them testing yesterday's constraints while looking
+  current — the defect `fixtures/PROVENANCE.md` opens by describing, where `base.trig` was
+  faithfully extracted from output that predated the build beside it. A stamp does not
+  prevent staleness; it makes a stale fixture say so, and a refresh against newer upstream
+  show up as a diff. Only documents that actually contributed a shape are stamped, so the
+  claim cannot over-reach: carrying every source consulted would have named LeanIX and C4
+  shapes that are not in the file.
 - **`verify` reports the published assets a dataset declares conformance to but has not
   been given.** Every model states its metamodel through `arch:modelConformsToMetamodel`,
   and each of the eleven published `arch:Metamodel` manifests names its own ontology,
@@ -58,6 +69,14 @@ workflow publishes exactly this text, so what is written here is what a consumer
   silently flattened.
 
 ### Fixed
+- **A test that checked nothing, for the reason tests usually check nothing.**
+  `support.requires_pyoxigraph` is a helper called with `self`, not a decorator. Written as
+  `@requires_pyoxigraph` it is invoked at class-definition time and its return value —
+  `None` — replaces the method, so `unittest` cannot see the test and the suite reports
+  success with one fewer test than it has. That is how the count half of the
+  `PROVENANCE.md` table check shipped dead in the same commit that documented it as
+  enforced. Both halves run now, verified by breaking a documented count on purpose.
+
 - **Paired vocabulary was unreadable in the shape it is actually published in.** Every
   ontology, taxonomy and shape set on `meta.linked.archi` is served as `text/turtle`, and
   `la-connect` loads a Turtle file into the default graph — but `graphs.roles.vocabulary`

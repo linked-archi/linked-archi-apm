@@ -648,6 +648,44 @@ def _load_all(paths) -> object:
     return store
 
 
+OWL = "http://www.w3.org/2002/07/owl#"
+DCTERMS = "http://purl.org/dc/terms/"
+
+#: What a published document says about itself. Kept because an extract without it cannot
+#: answer the first question anyone asks of a fixture: which release is this?
+#:
+#: These fixtures are the only ones here that are not converter output, and they are the
+#: only ones with an upstream that moves independently. ArchiMate shipping 3.3, or core
+#: moving off 0.4.0, would leave the extract testing yesterday's constraints while looking
+#: current - the same defect the top of PROVENANCE.md describes for `base.trig`, which was
+#: faithfully extracted from output that predated the build beside it. A version stamp does
+#: not prevent staleness; it makes a stale fixture say so.
+PROVENANCE_PREDICATES = (
+    f"{OWL}versionIRI", f"{OWL}versionInfo",
+    f"{DCTERMS}modified", f"{DCTERMS}title",
+)
+
+
+def _ontology_headers(store, into: set) -> list[str]:
+    """Copy each `owl:Ontology` node's identity into ``into``. Returns what it found."""
+    from pyoxigraph import NamedNode
+
+    found: list[str] = []
+    for row in store.query(f"SELECT ?o WHERE {{ ?o a <{OWL}Ontology> }} ORDER BY ?o"):
+        subject = row["o"]
+        version = ""
+        into.add((subject, NamedNode(f"{RDF_NS}type"), NamedNode(f"{OWL}Ontology")))
+        for predicate in PROVENANCE_PREDICATES:
+            for value in store.query(
+                f"SELECT ?v WHERE {{ <{subject.value}> <{predicate}> ?v }}"
+            ):
+                into.add((subject, NamedNode(predicate), value["v"]))
+                if predicate.endswith("versionInfo"):
+                    version = f" {value['v'].value}"
+        found.append(f"{subject.value}{version}")
+    return found
+
+
 def refresh_vocabulary_axioms(meta_root: Path) -> int:
     """Add `core-onto.ttl`'s property axioms to the vocabulary fixture.
 
@@ -665,17 +703,32 @@ def refresh_vocabulary_axioms(meta_root: Path) -> int:
         print(f"no core ontology at {source}", file=sys.stderr)
         return 0
     onto = _load_all([source])
+    # The BPMN documents the committed half of this fixture was extracted from. Loaded
+    # only for their self-description: the taxonomy and classes are already here, but
+    # nothing in the file said which release they came from.
+    bpmn = _load_all([
+        path for path in (
+            meta_root / "modelingLanguages/bpmn/linkedarchi-bpmn-onto.ttl",
+            meta_root / "modelingLanguages/bpmn/bpmn-tax.ttl",
+        ) if path.is_file()
+    ])
 
     fixture = Store()
     if VOCABULARY_FILE.is_file():
         fixture.load(path=str(VOCABULARY_FILE), format=RdfFormat.TURTLE)
     before = len(fixture)
 
-    # Idempotent: drop what a previous run of this function put here. Nothing else
-    # in the fixture has a core-namespace subject - the committed content is all
-    # bpmn/tax and bpmn/onto - so ownership is unambiguous.
+    # Idempotent: drop what a previous run of this function put here - the core-namespace
+    # axioms it owns, and any ontology header it stamped. The rest of the fixture is
+    # bpmn/tax and bpmn/onto CLASS content, which this function never writes.
+    ontology = NamedNode(f"{OWL}Ontology")
+    headers = {
+        quad.subject.value for quad in fixture.quads_for_pattern(
+            None, NamedNode(f"{RDF_NS}type"), ontology
+        )
+    }
     for quad in list(fixture):
-        if quad.subject.value.startswith(CORE):
+        if quad.subject.value.startswith(CORE) or quad.subject.value in headers:
             fixture.remove(quad)
 
     terms: set[str] = set()
@@ -696,9 +749,17 @@ def refresh_vocabulary_axioms(meta_root: Path) -> int:
                     fixture.add(quad)
                     added += 1
 
+    stamped: set = set()
+    stamps = _ontology_headers(onto, stamped) + _ontology_headers(bpmn, stamped)
+    for subject, predicate, obj in stamped:
+        fixture.add(Quad(subject, predicate, obj))
+
     write_flat(fixture, VOCABULARY_FILE)
     print(f"{VOCABULARY_FILE.name}: {before} -> {len(fixture)} quads "
           f"({added} axiom quad(s) for {len(terms)} core term(s))")
+    print(f"  extracted from {len(stamps)} published document(s):")
+    for stamp in stamps:
+        print(f"    {stamp}")
     return added
 
 
@@ -722,23 +783,41 @@ def refresh_shapes(meta_root: Path) -> int:
         for path in missing:
             print(f"no shapes at {meta_root / path}", file=sys.stderr)
         return 0
-    shapes = _load_all([meta_root / p for p in SHAPE_SOURCES])
+    # One store per document, so a shape can be traced back to the file it came from.
+    # Loading them together would stamp every source consulted, including ones that
+    # contributed nothing - which reads as "leanIX shapes are in here" when none are.
+    sources = {path: _load_all([meta_root / path]) for path in SHAPE_SOURCES}
 
     triples: set = set()
     kept: list[str] = []
+    contributed: list[str] = []
     for shape, why in SHAPE_SELECTION.items():
         node = NamedNode(shape)
-        found = list(shapes.quads_for_pattern(node, None, None))
-        if not found:
+        origin = next(
+            (path for path, store in sources.items()
+             if any(store.quads_for_pattern(node, None, None))),
+            None,
+        )
+        if origin is None:
             print(f"REFUSED: {shape} is not in the published shapes", file=sys.stderr)
             return 0
+        store = sources[origin]
         targets = [
-            str(quad.object.value) for quad in found
+            str(quad.object.value)
+            for quad in store.quads_for_pattern(node, None, None)
             if quad.predicate.value == f"{SH}targetClass"
         ]
-        _describe(shapes, node, triples)
+        _describe(store, node, triples)
+        if origin not in contributed:
+            contributed.append(origin)
         kept.append(f"{shape.rsplit('#', 1)[-1]:<28} {why}\n"
                     f"{'':30}targets {', '.join(t.rsplit('#', 1)[-1] for t in targets)}")
+
+    # Only the documents a carried shape actually came from. Four shapes out of 73 is a
+    # slice, and the release each was sliced from is not optional information.
+    stamps: list[str] = []
+    for path in contributed:
+        stamps += _ontology_headers(sources[path], triples)
 
     fixture = Store()
     for subject, predicate, obj in triples:
@@ -749,6 +828,9 @@ def refresh_shapes(meta_root: Path) -> int:
     print(f"{SHAPES_FILE.name}: {written} quads, {len(kept)} shape(s), {size // 1024} kB")
     for line in kept:
         print(f"  {line}")
+    print(f"  extracted from {len(stamps)} published document(s):")
+    for stamp in stamps:
+        print(f"    {stamp}")
     return written
 
 

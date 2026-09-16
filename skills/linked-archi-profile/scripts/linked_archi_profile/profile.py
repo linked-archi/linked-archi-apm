@@ -1314,11 +1314,20 @@ def _verify_vocabulary_pairing(profile: Profile, adapter) -> list[Finding]:
     # unscoped; a dataset that carries its vocabulary in a named graph gets the suffix
     # test. Same question either way - "does the attached vocabulary describe this
     # notation's types" - so only the scoping differs.
+    # A CLASS, not merely something with a type. An ontology document declares itself -
+    # `<https://meta.linked.archi/bpmn/onto#> a owl:Ontology` - and that IRI sits inside
+    # the very namespace this probe tests for, so "anything typed here" would count the
+    # document's own header as coverage and report a notation as described when not one
+    # of its classes was attached.
+    class_test = (
+        "FILTER(?meta IN (<http://www.w3.org/2002/07/owl#Class>, "
+        "<http://www.w3.org/2000/01/rdf-schema#Class>))"
+    )
     if profile.graphs.is_default_graph("vocabulary"):
-        described_pattern = "?class a ?meta ."
+        described_pattern = f"?class a ?meta . {class_test}"
     else:
         described_pattern = (
-            f"GRAPH ?g {{ ?class a ?meta . "
+            f"GRAPH ?g {{ ?class a ?meta . {class_test} "
             f"FILTER({profile.graphs.suffix_test('vocabulary', '?g')}) }}"
         )
     findings: list[Finding] = []

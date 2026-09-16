@@ -5,10 +5,17 @@
 @prefix bssh: <https://meta.linked.archi/backstage/shapes#> .
 @prefix coresh: <https://meta.linked.archi/core-shapes#> .
 @prefix dct: <http://purl.org/dc/terms/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+amsh: a owl:Ontology ;
+    dct:modified "2026-05-18"^^xsd:date ;
+    dct:title "Linked.Archi ArchiMate 3.2 SHACL Shapes"@en ;
+    owl:versionIRI <https://meta.linked.archi/archimate3/shapes/3.2.0#> ;
+    owl:versionInfo "3.2.0"@en .
 
 amsh:AggregationShape a sh:NodeShape ;
     sh:message "Invalid Aggregation: this source-target pair is not permitted by the ArchiMate specification."@en ;
@@ -179,6 +186,12 @@ amsh:BusinessRoleRelShape a sh:NodeShape ;
             sh:path am:influences ] ;
     sh:targetClass am:BusinessRole .
 
+bssh: a owl:Ontology ;
+    dct:modified "2026-08-24"^^xsd:date ;
+    dct:title "Linked.Archi Backstage SHACL Shapes"@en ;
+    owl:versionIRI <https://meta.linked.archi/backstage/shapes/0.2.0#> ;
+    owl:versionInfo "0.2.0"@en .
+
 bssh:OwnershipShape a sh:NodeShape ;
     dct:source <https://backstage.io/docs/features/software-catalog/well-known-relations#ownedby-and-ownerof> ;
     rdfs:comment """The owner is usually a Group, but the well-known-relations spec says "User or
@@ -190,6 +203,12 @@ Group" and User owners are ordinary Backstage in smaller organisations, so both 
             sh:or ( [ sh:class bs:Group ] [ sh:class bs:User ] ) ;
             sh:path arch:target ] ;
     sh:targetClass bs:Ownership .
+
+coresh: a owl:Ontology ;
+    dct:modified "2026-09-07"^^xsd:date ;
+    dct:title "Linked.Archi Core SHACL Shapes"@en ;
+    owl:versionIRI <https://meta.linked.archi/core-shapes/0.2.0#> ;
+    owl:versionInfo "0.2.0"@en .
 
 coresh:QualifiedRelationshipShape a sh:NodeShape ;
     sh:property [ sh:class arch:ModelConcept ;

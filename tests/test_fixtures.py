@@ -296,11 +296,6 @@ class TestRebuildGateRefusesTheWrongShape(unittest.TestCase):
             "the gate must reject base.trig on the partitioned semantic graph alone",
         )
 
-
-if __name__ == "__main__":
-    unittest.main()
-
-
 class TestProvenanceTableMatchesTheFixtures(unittest.TestCase):
     """The file table in `PROVENANCE.md` is a claim about every fixture's size.
 
@@ -332,8 +327,8 @@ class TestProvenanceTableMatchesTheFixtures(unittest.TestCase):
         }
         self.assertEqual(set(self.rows), actual, "PROVENANCE.md file table is out of step")
 
-    @requires_pyoxigraph
     def test_every_documented_count_is_the_real_one(self):
+        requires_pyoxigraph(self)
         from pyoxigraph import RdfFormat, Store
 
         for name, (quads, graphs) in sorted(self.rows.items()):
@@ -349,3 +344,75 @@ class TestProvenanceTableMatchesTheFixtures(unittest.TestCase):
                     if type(q.graph_name).__name__ == "NamedNode"
                 }
                 self.assertEqual(len(named), graphs, f"{name} named graph count")
+
+
+class TestTheExtractedSchemaSaysWhereItCameFrom(unittest.TestCase):
+    """`vocabulary.ttl` and `shapes.ttl` name the release they were sliced from.
+
+    They are the only fixtures whose upstream moves independently of this package. The
+    others are converter output, and `base.trig` already showed what an unlabelled extract
+    costs: faithfully taken from a build that predated the one sitting beside it, honest and
+    stale at once, with nothing failing. ArchiMate shipping 3.3, or core moving off 0.4.0,
+    would leave these testing yesterday's constraints while looking current.
+
+    A stamp does not prevent that. It makes the fixture answer "which release is this?" and
+    a refresh against newer upstream show up as a diff rather than as nothing.
+
+    Asserted as "every carried document is stamped", not as a pinned version string. Pinning
+    would make a legitimate upstream bump fail here rather than in the refresh that caused
+    it, and the point is to see the change, not to forbid it.
+    """
+
+    OWL_ONTOLOGY = "http://www.w3.org/2002/07/owl#Ontology"
+    VERSION_INFO = "http://www.w3.org/2002/07/owl#versionInfo"
+
+    def _stamps(self, path) -> dict[str, str]:
+        from pyoxigraph import RdfFormat, Store
+
+        store = Store()
+        store.load(path=str(path), format=RdfFormat.TURTLE)
+        return {
+            str(row["o"].value): str(row["v"].value)
+            for row in store.query(
+                f"SELECT ?o ?v WHERE {{ ?o a <{self.OWL_ONTOLOGY}> ;"
+                f" <{self.VERSION_INFO}> ?v }}"
+            )
+        }
+
+    def test_the_vocabulary_names_its_sources(self):
+        requires_pyoxigraph(self)
+        stamps = self._stamps(support.VOCABULARY)
+        self.assertIn("https://meta.linked.archi/core#", stamps)
+        self.assertIn("https://meta.linked.archi/bpmn/onto#", stamps)
+
+    def test_the_shapes_name_their_sources(self):
+        requires_pyoxigraph(self)
+        stamps = self._stamps(support.SHAPES)
+        self.assertIn("https://meta.linked.archi/archimate3/shapes#", stamps)
+        self.assertIn("https://meta.linked.archi/backstage/shapes#", stamps)
+
+    def test_only_documents_that_contributed_are_stamped(self):
+        """A stamp is a claim about what is here, so it must not over-claim.
+
+        Loading every source into one store stamped all five, including LeanIX and C4,
+        whose shapes were not selected - which reads as "LeanIX shapes are in this file".
+        """
+        requires_pyoxigraph(self)
+        from pyoxigraph import RdfFormat, Store
+
+        store = Store()
+        store.load(path=str(support.SHAPES), format=RdfFormat.TURTLE)
+        for stamped in self._stamps(support.SHAPES):
+            namespace = stamped.rstrip("#")
+            with self.subTest(stamped):
+                carried = store.query(
+                    f"ASK {{ ?shape a <http://www.w3.org/ns/shacl#NodeShape> "
+                    f'FILTER(STRSTARTS(STR(?shape), "{namespace}")) }}'
+                )
+                self.assertTrue(
+                    bool(carried),
+                    f"{stamped} is stamped but no shape of its own is carried",
+                )
+
+if __name__ == "__main__":
+    unittest.main()
