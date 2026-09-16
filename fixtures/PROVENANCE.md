@@ -472,9 +472,21 @@ amsh:BusinessRoleRelShape sh:targetClass am:BusinessRole ; sh:property
     [ sh:path am:flowsTo ; sh:or ( [ sh:class am:BusinessActor ] … ) ] .
 ```
 
-Both reduce to the same `(source, predicate, target)` table a query check needs. Verified on
-this fixture: 361 valid triples out of the qualified shape — matching the count its own
-source comment claims — and 213 out of the unqualified one.
+Both reduce to the same `(source, predicate, target)` table a query check needs. Measured on
+this fixture: **365** valid pairs out of the qualified shape and 213 out of the unqualified
+one.
+
+An earlier version of this paragraph said 361 and called it confirmed, because the shape's
+own header comment said 361 too. Both were wrong in the same way, which is why they agreed.
+Four of the pairs in every ArchiMate relationship shape are the junction rules —
+`Junction_And`/`Junction_Or` to `arch:ModelConcept` and back — and because each has exactly
+one permitted target it is written as a bare `sh:class` rather than a one-element `sh:or`.
+A query that only walked `sh:or` missed them, and so did the generator that wrote the
+comment. Fixed upstream in `.scripts/generate-archimate-shapes.py` and its ArchiMate 4
+counterpart, where `pair_count` was summed from the matrix before the junction pairs were
+appended; all 21 shape comments across the two files were understated by exactly 4. The
+SHACL itself was correct throughout — it was the count that lied, and it read like a
+verified figure, which is how it got quoted here.
 
 **Only ArchiMate publishes the unqualified form.** Backstage, LeanIX and C4 constrain
 `arch:source` and `arch:target` and stop there; their other `sh:path` shapes are attribute

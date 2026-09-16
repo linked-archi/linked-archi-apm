@@ -590,7 +590,7 @@ SHAPE_SELECTION = {
     # Qualified: sh:or over sh:and pairs, each pinning arch:source to one class and
     # arch:target to an sh:or list. The nesting is what makes ArchiMate's matrix
     # distinctive, and Aggregation is the smallest of the eleven that augmented.trig
-    # exercises - 361 valid pairs against Association's 3600.
+    # exercises - 365 valid pairs against Association's 3604.
     "https://meta.linked.archi/archimate3/shapes#AggregationShape":
         "qualified relationship, sh:or over sh:and source/target pairs",
     # Qualified with a flat sh:class on the source: the shape most notations publish.
