@@ -1375,3 +1375,100 @@ class TestOneVersionStatedEverywhereItIsRepeated(unittest.TestCase):
 
     def test_the_manifest_version_is_semver(self):
         self.assertRegex(version_sync.manifest_version(), r"^\d+\.\d+\.\d+$")
+
+
+class TestEveryWrittenTestIsActuallyRunnable(unittest.TestCase):
+    """A test that cannot be collected reports success while checking nothing.
+
+    Found the hard way. `support.requires_pyoxigraph` is a helper called with `self`, not
+    a decorator; written as `@requires_pyoxigraph` it runs at class-definition time and its
+    return value - `None` - replaces the method. `unittest` then cannot see the method, the
+    suite passes with one fewer test than it has, and the only visible symptom is a total
+    that does not move when tests are added. The count half of the `PROVENANCE.md` table
+    check shipped that way, in the same commit whose message said the table was enforced.
+
+    Nothing else in the suite would notice a second instance, which is the whole reason
+    this exists: the failure is silent, and silent failure is the thing this package spends
+    most of its effort refusing to do.
+
+    Two ways a written test goes missing, so two checks. An attribute that is no longer
+    callable, and a name defined twice in one class - where the second definition replaces
+    the first and only one of the two ever runs.
+    """
+
+    #: Modules in `tests/` that are not test modules.
+    HELPERS = frozenset({"support", "validate_skills", "version_sync"})
+
+    def _modules(self):
+        for path in sorted((ROOT / "tests").glob("*.py")):
+            if path.stem not in self.HELPERS:
+                yield path
+
+    def test_every_test_attribute_is_callable(self):
+        import importlib
+
+        offenders = []
+        for path in self._modules():
+            module = importlib.import_module(f"tests.{path.stem}")
+            for name, obj in vars(module).items():
+                if not (isinstance(obj, type) and issubclass(obj, unittest.TestCase)):
+                    continue
+                loadable = set(unittest.TestLoader().getTestCaseNames(obj))
+                for attribute in dir(obj):
+                    if not attribute.startswith("test"):
+                        continue
+                    if not callable(getattr(obj, attribute, None)):
+                        offenders.append(
+                            f"{path.name}::{name}.{attribute} is not callable - a helper "
+                            "used as a decorator overwrites the method with its return value"
+                        )
+                    elif attribute not in loadable:
+                        offenders.append(
+                            f"{path.name}::{name}.{attribute} exists but unittest will not "
+                            "collect it"
+                        )
+        self.assertEqual(offenders, [], "\n".join(offenders))
+
+    def test_no_test_name_is_defined_twice_in_one_class(self):
+        """The second definition wins and the first never runs, with nothing said."""
+        import ast
+
+        offenders = []
+        for path in self._modules():
+            tree = ast.parse(path.read_text("utf-8"))
+            for node in ast.walk(tree):
+                if not isinstance(node, ast.ClassDef):
+                    continue
+                seen: set[str] = set()
+                for item in node.body:
+                    if not isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                        continue
+                    if not item.name.startswith("test"):
+                        continue
+                    if item.name in seen:
+                        offenders.append(
+                            f"{path.name}::{node.name}.{item.name} is defined twice "
+                            f"(line {item.lineno}); only the last one runs"
+                        )
+                    seen.add(item.name)
+        self.assertEqual(offenders, [], "\n".join(offenders))
+
+    def test_the_guard_would_catch_the_defect_it_was_written_for(self):
+        """A guard that cannot fail is decoration - so reproduce the original mistake."""
+        import support
+
+        class Sample(unittest.TestCase):
+            @support.requires_pyoxigraph          # the misuse, verbatim
+            def test_silently_removed(self):      # pragma: no cover - never collected
+                raise AssertionError("unreachable")
+
+        self.assertIsNone(
+            getattr(Sample, "test_silently_removed"),
+            "if this is callable, the helper became a real decorator and this guard is "
+            "checking a defect that can no longer happen",
+        )
+        self.assertNotIn(
+            "test_silently_removed",
+            unittest.TestLoader().getTestCaseNames(Sample),
+            "unittest should not collect it, which is what makes the failure silent",
+        )

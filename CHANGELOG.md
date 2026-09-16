@@ -69,6 +69,14 @@ workflow publishes exactly this text, so what is written here is what a consumer
   silently flattened.
 
 ### Fixed
+- **The suite now refuses to contain a test it cannot run.** Two ways a written test goes
+  missing without anyone noticing: an attribute that is no longer callable — how the
+  `@requires_pyoxigraph` misuse below removed one — and a name defined twice in one class,
+  where the second definition wins and the first never runs. Both are checked across every
+  test module, and the guard is itself checked by reproducing the original mistake, so it
+  cannot quietly stop being able to fail. Verified against a real injected instance too,
+  not only the synthetic one. Nothing else in the suite was affected, which this now
+  establishes rather than assumes.
 - **A test that checked nothing, for the reason tests usually check nothing.**
   `support.requires_pyoxigraph` is a helper called with `self`, not a decorator. Written as
   `@requires_pyoxigraph` it is invoked at class-definition time and its return value —
