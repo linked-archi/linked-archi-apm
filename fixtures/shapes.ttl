@@ -3,8 +3,12 @@
 @prefix arch: <https://meta.linked.archi/core#> .
 @prefix bs: <https://meta.linked.archi/backstage/onto#> .
 @prefix bssh: <https://meta.linked.archi/backstage/shapes#> .
+@prefix c4: <https://meta.linked.archi/c4/onto#> .
+@prefix c4sh: <https://meta.linked.archi/c4/shapes#> .
 @prefix coresh: <https://meta.linked.archi/core-shapes#> .
 @prefix dct: <http://purl.org/dc/terms/> .
+@prefix lmm: <https://meta.linked.archi/leanix/onto#> .
+@prefix lxsh: <https://meta.linked.archi/leanix/shapes#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -912,6 +916,94 @@ bssh:UserOnlyPropertiesShape a sh:NodeShape ;
     sh:message "spec.memberOf is declared on a User. A Group's place in the hierarchy is bs:childOf, not membership."@en ;
     sh:targetSubjectsOf bs:memberOf .
 
+<https://meta.linked.archi/c4/metamodel#C4Model> a arch:Metamodel ;
+    dct:description """The complete C4 model metamodel definition, aggregating the
+element/relationship ontology, deployment extensions (formalized by Structurizr),
+SHACL shapes, SKOS taxonomy, viewpoints, deliverable templates, reference data,
+and presentation contexts."""@en ;
+    skos:prefLabel "C4 Model Metamodel"@en ;
+    arch:architectureViewpoints <https://meta.linked.archi/c4/viewpoints#> ;
+    arch:basedOnFramework <https://meta.linked.archi/c4/metamodel#C4Framework> ;
+    arch:conceptClassification <https://meta.linked.archi/c4/tax#> ;
+    arch:formalRules c4sh:,
+        <https://meta.linked.archi/c4/structurizr-shapes#> ;
+    arch:hasDeliverableTemplate <https://meta.linked.archi/c4/deliverable-templates#ComponentDesignDocument>,
+        <https://meta.linked.archi/c4/deliverable-templates#SystemOverviewDocument> ;
+    arch:metamodelIdentifiesConsideration <https://meta.linked.archi/core-viewpoints#BehaviorConcern>,
+        <https://meta.linked.archi/core-viewpoints#DependencyConcern>,
+        <https://meta.linked.archi/core-viewpoints#DeploymentConcern>,
+        <https://meta.linked.archi/core-viewpoints#IntegrationConcern>,
+        <https://meta.linked.archi/core-viewpoints#StakeholderConcern>,
+        <https://meta.linked.archi/core-viewpoints#StructureConcern> ;
+    arch:metamodelIdentifiesStakeholder <https://meta.linked.archi/core-viewpoints#OperationsManager>,
+        <https://meta.linked.archi/core-viewpoints#ProductManager>,
+        <https://meta.linked.archi/core-viewpoints#SoftwareDeveloper>,
+        <https://meta.linked.archi/core-viewpoints#SolutionArchitect> ;
+    arch:modelConcepts c4:,
+        <https://meta.linked.archi/c4/structurizr#> ;
+    arch:notationSet <https://meta.linked.archi/c4/notation#C4StandardNotation> ;
+    arch:presentationContextScheme <https://meta.linked.archi/c4/presentation-contexts#C4PresentationContexts> ;
+    arch:referenceData <https://meta.linked.archi/c4/reference-data#C4ReferenceData> ;
+    arch:viewpointLibrary <https://meta.linked.archi/c4/viewpoints#ViewpointCatalog> .
+
+c4sh:C4ElementLabelShape a sh:NodeShape ;
+    rdfs:comment "Requires a language-tagged skos:prefLabel on every C4 element."@en ;
+    sh:property [ sh:datatype rdf:langString ;
+            sh:message """Every C4 element must have at least one skos:prefLabel, and it must be
+language-tagged (rdf:langString), e.g. "Billing Service"@en."""@en ;
+            sh:minCount 1 ;
+            sh:path skos:prefLabel ] ;
+    sh:targetClass c4:Component,
+        c4:Container,
+        c4:Person,
+        c4:SoftwareSystem .
+
+c4sh:ComponentContainmentShape a sh:NodeShape ;
+    sh:property [ sh:class c4:Container ;
+            sh:message "ComponentContainment source must be a Container."@en ;
+            sh:path arch:source ],
+        [ sh:class c4:Component ;
+            sh:message "ComponentContainment target must be a Component."@en ;
+            sh:path arch:target ] ;
+    sh:targetClass c4:ComponentContainment .
+
+c4sh:ContainerContainmentShape a sh:NodeShape ;
+    sh:property [ sh:class c4:SoftwareSystem ;
+            sh:message "ContainerContainment source must be a SoftwareSystem."@en ;
+            sh:path arch:source ],
+        [ sh:class c4:Container ;
+            sh:message "ContainerContainment target must be a Container."@en ;
+            sh:path arch:target ] ;
+    sh:targetClass c4:ContainerContainment .
+
+c4sh:UsingShape a sh:NodeShape ;
+    sh:property [ sh:class arch:Element ;
+            sh:message "Using source must be an Element."@en ;
+            sh:path arch:source ],
+        [ sh:class arch:Element ;
+            sh:message "Using target must be an Element."@en ;
+            sh:path arch:target ] ;
+    sh:targetClass c4:Using .
+
+<https://meta.linked.archi/c4/structurizr-shapes#DeploymentShape> a sh:NodeShape ;
+    sh:property [ sh:class <https://meta.linked.archi/c4/structurizr#DeploymentNode> ;
+            sh:message "Deployment target must be a Structurizr DeploymentNode."@en ;
+            sh:path arch:target ],
+        [ sh:class c4:Container ;
+            sh:message "Deployment source must be a C4 Container."@en ;
+            sh:path arch:source ] ;
+    sh:targetClass <https://meta.linked.archi/c4/structurizr#Deployment> .
+
+<https://meta.linked.archi/c4/structurizr-shapes#StructurizrElementLabelShape> a sh:NodeShape ;
+    rdfs:comment """Requires a language-tagged skos:prefLabel on every Structurizr deployment
+element. Reaches structurizr:InfrastructureNode through rdfs:subClassOf reasoning."""@en ;
+    sh:property [ sh:datatype rdf:langString ;
+            sh:message """Every Structurizr deployment element must have at least one
+skos:prefLabel, and it must be language-tagged (rdf:langString), e.g. "eu-west-1"@en."""@en ;
+            sh:minCount 1 ;
+            sh:path skos:prefLabel ] ;
+    sh:targetClass <https://meta.linked.archi/c4/structurizr#DeploymentNode> .
+
 coresh: a owl:Ontology ;
     dct:modified "2026-09-07"^^xsd:date ;
     dct:title "Linked.Archi Core SHACL Shapes"@en ;
@@ -930,6 +1022,289 @@ coresh:QualifiedRelationshipShape a sh:NodeShape ;
             sh:minCount 1 ;
             sh:path arch:source ] ;
     sh:targetClass arch:QualifiedRelationship .
+
+<https://meta.linked.archi/leanix/metamodel#LeanIXv4> a arch:Metamodel ;
+    dct:description """The complete LeanIX Meta Model v4 metamodel definition, aggregating
+the fact sheet ontology, shapes, viewpoints, taxonomy, notation set and deliverable
+templates. Reference data and presentation contexts can be added later."""@en ;
+    owl:versionInfo "4"@en ;
+    skos:prefLabel "LeanIX Meta Model v4 Metamodel"@en ;
+    skos:scopeNote """owl:versionInfo "4" is the meta model version — what a model
+conforms to. The 0.1.0 on the ontology header above is this document's own version. DD-25 puts the
+language version on the arch:Metamodel individual for exactly this reason."""@en ;
+    arch:architectureViewpoints <https://meta.linked.archi/leanix/viewpoints#> ;
+    arch:basedOnFramework <https://meta.linked.archi/leanix/metamodel#LeanIXFramework> ;
+    arch:conceptClassification <https://meta.linked.archi/leanix/tax#> ;
+    arch:formalRules lxsh: ;
+    arch:hasDeliverableTemplate <https://meta.linked.archi/leanix/deliverable-templates#ApplicationPortfolioReport>,
+        <https://meta.linked.archi/leanix/deliverable-templates#TransformationPlanDocument> ;
+    arch:metamodelIdentifiesConsideration <https://meta.linked.archi/core-viewpoints#DependencyConcern>,
+        <https://meta.linked.archi/core-viewpoints#EvolutionConcern>,
+        <https://meta.linked.archi/core-viewpoints#GovernanceConcern>,
+        <https://meta.linked.archi/core-viewpoints#StructureConcern> ;
+    arch:metamodelIdentifiesStakeholder <https://meta.linked.archi/core-viewpoints#ApplicationArchitect>,
+        <https://meta.linked.archi/core-viewpoints#BusinessArchitect>,
+        <https://meta.linked.archi/core-viewpoints#CIO>,
+        <https://meta.linked.archi/core-viewpoints#EnterpriseArchitect> ;
+    arch:modelConcepts lmm: ;
+    arch:notationSet <https://meta.linked.archi/leanix/notation#LeanIXStandardNotation> ;
+    arch:viewpointLibrary <https://meta.linked.archi/leanix/viewpoints#ViewpointCatalog> .
+
+lxsh:CapabilityTargetingEndpointsShape a sh:NodeShape ;
+    sh:property [ sh:class lmm:BusinessCapability ;
+            sh:message "A lmm:CapabilityTargeting must run to a BusinessCapability."@en ;
+            sh:path arch:target ],
+        [ sh:class lmm:Objective ;
+            sh:message "A lmm:CapabilityTargeting must run from an Objective."@en ;
+            sh:path arch:source ] ;
+    sh:targetClass lmm:CapabilityTargeting .
+
+lxsh:CategorizationEndpointsShape a sh:NodeShape ;
+    sh:property [ sh:class lmm:TechCategory ;
+            sh:message "A lmm:Categorization must run to a TechCategory."@en ;
+            sh:path arch:target ],
+        [ sh:class lmm:ITComponent ;
+            sh:message "A lmm:Categorization must run from an ITComponent."@en ;
+            sh:path arch:source ] ;
+    sh:targetClass lmm:Categorization .
+
+lxsh:ContextRealizationEndpointsShape a sh:NodeShape ;
+    sh:property [ sh:class lmm:BusinessContext ;
+            sh:message "A lmm:ContextRealization must run from a BusinessContext."@en ;
+            sh:path arch:source ],
+        [ sh:class lmm:BusinessCapability ;
+            sh:message "A lmm:ContextRealization must run to a BusinessCapability."@en ;
+            sh:path arch:target ] ;
+    sh:targetClass lmm:ContextRealization .
+
+lxsh:ContextSupportEndpointsShape a sh:NodeShape ;
+    sh:property [ sh:class lmm:Application ;
+            sh:message "A lmm:ContextSupport must run from an Application."@en ;
+            sh:path arch:source ],
+        [ sh:class lmm:BusinessContext ;
+            sh:message "A lmm:ContextSupport must run to a BusinessContext — a Process, Product or ValueStream satisfies this."@en ;
+            sh:path arch:target ] ;
+    sh:targetClass lmm:ContextSupport .
+
+lxsh:DataUsageEndpointsShape a sh:NodeShape ;
+    sh:property [ sh:class lmm:DataObject ;
+            sh:message "A lmm:DataUsage must run to a DataObject."@en ;
+            sh:path arch:target ],
+        [ sh:message "A lmm:DataUsage must run from an Application or an Interface."@en ;
+            sh:or ( [ sh:class lmm:Application ] [ sh:class lmm:Interface ] ) ;
+            sh:path arch:source ] ;
+    sh:targetClass lmm:DataUsage .
+
+lxsh:DrivingEndpointsShape a sh:NodeShape ;
+    sh:property [ sh:class lmm:Initiative ;
+            sh:message "A lmm:Driving must run to an Initiative."@en ;
+            sh:path arch:target ],
+        [ sh:class lmm:Objective ;
+            sh:message "A lmm:Driving must run from an Objective."@en ;
+            sh:path arch:source ] ;
+    sh:targetClass lmm:Driving .
+
+lxsh:FactSheetHierarchyEndpointsShape a sh:NodeShape ;
+    sh:property [ sh:class lmm:FactSheet ;
+            sh:message "A lmm:FactSheetHierarchy must run from a fact sheet."@en ;
+            sh:path arch:source ],
+        [ sh:class lmm:FactSheet ;
+            sh:message "A lmm:FactSheetHierarchy must run to a fact sheet of the same type as its parent."@en ;
+            sh:path arch:target ] ;
+    sh:targetClass lmm:FactSheetHierarchy .
+
+lxsh:ImpactEndpointsShape a sh:NodeShape ;
+    sh:property [ sh:message "A lmm:Impact must run to an Application or a Platform."@en ;
+            sh:or ( [ sh:class lmm:Application ] [ sh:class lmm:Platform ] ) ;
+            sh:path arch:target ],
+        [ sh:class lmm:Initiative ;
+            sh:message "A lmm:Impact must run from an Initiative."@en ;
+            sh:path arch:source ] ;
+    sh:targetClass lmm:Impact .
+
+lxsh:InterfaceConsumptionEndpointsShape a sh:NodeShape ;
+    sh:property [ sh:class lmm:Application ;
+            sh:message "A lmm:InterfaceConsumption must run from the consuming Application."@en ;
+            sh:path arch:source ],
+        [ sh:class lmm:Interface ;
+            sh:message "A lmm:InterfaceConsumption must run to an Interface."@en ;
+            sh:path arch:target ] ;
+    sh:targetClass lmm:InterfaceConsumption .
+
+lxsh:InterfaceOwnershipEndpointsShape a sh:NodeShape ;
+    sh:property [ sh:class lmm:Interface ;
+            sh:message "A lmm:InterfaceOwnership must run to an Interface."@en ;
+            sh:path arch:target ],
+        [ sh:class lmm:Application ;
+            sh:message "A lmm:InterfaceOwnership must run from the providing Application."@en ;
+            sh:path arch:source ] ;
+    sh:targetClass lmm:InterfaceOwnership .
+
+lxsh:LeanIXFactSheetAttributeShape a sh:NodeShape ;
+    rdfs:comment """Value-set and cardinality rules for the v4 fact sheet attributes. Says nothing
+about whether an attribute is present: LeanIX requires none of them, and a scope-limited pull
+legitimately returns a fact sheet with only a name."""@en ;
+    sh:property [ sh:datatype xsd:decimal ;
+            sh:maxCount 1 ;
+            sh:maxInclusive 1 ;
+            sh:message """Completion is a single xsd:decimal ratio between 0 and 1. A percentage
+(80) fails the range check; a double fails the datatype check."""@en ;
+            sh:minInclusive 0 ;
+            sh:path lmm:completion ],
+        [ sh:in ( lmm:StatusActive lmm:StatusArchived lmm:StatusBroken ) ;
+            sh:maxCount 1 ;
+            sh:message """A fact sheet has at most one status, drawn from lmm:StatusActive,
+lmm:StatusArchived and lmm:StatusBroken. A string literal such as "ACTIVE" does not satisfy this —
+the value is the individual whose skos:notation is that token."""@en ;
+            sh:path lmm:factSheetStatus ],
+        [ sh:in ( <https://meta.linked.archi/arch-processes#Plan> <https://meta.linked.archi/arch-processes#PhaseIn> <https://meta.linked.archi/arch-processes#Active> <https://meta.linked.archi/arch-processes#PhaseOut> <https://meta.linked.archi/arch-processes#Retired> ) ;
+            sh:maxCount 1 ;
+            sh:message """A fact sheet is in at most one lifecycle stage at a time, drawn from the five
+stages of ap:ApplicationLifecycle. LeanIX fixes this set — plan, phaseIn, active, phaseOut,
+endOfLife — so an unrecognised stage means the phase token was not resolved."""@en ;
+            sh:path <https://meta.linked.archi/arch-processes#atLifecycleStage> ] ;
+    sh:targetClass lmm:FactSheet .
+
+lxsh:LeanIXFactSheetLabelShape a sh:NodeShape ;
+    rdfs:comment """Requires a language-tagged skos:prefLabel on every LeanIX fact sheet, in both
+the v4 and v3 namespaces. Reaches all 34 fact sheet classes via the FactSheet roots."""@en ;
+    sh:property [ sh:datatype rdf:langString ;
+            sh:message """Every LeanIX fact sheet must have at least one skos:prefLabel, and it must
+be language-tagged (rdf:langString), e.g. "Payments Platform"@en."""@en ;
+            sh:minCount 1 ;
+            sh:path skos:prefLabel ] ;
+    sh:targetClass lmm:FactSheet,
+        <https://meta.linked.archi/leanix/v3/onto#FactSheet> .
+
+lxsh:LeanIXLifecyclePhaseShape a sh:NodeShape ;
+    rdfs:comment """A dated phase is only worth emitting if both halves are there — the stage and
+the date it began. Either one alone says nothing a roadmap can use."""@en ;
+    sh:property [ sh:datatype xsd:date ;
+            sh:maxCount 1 ;
+            sh:message """A lifecycle phase carries exactly one start date, as xsd:date. A phase with no
+date is the fact sheet's current stage, which belongs on the fact sheet as ap:atLifecycleStage rather
+than as a phase node."""@en ;
+            sh:minCount 1 ;
+            sh:path lmm:phaseStart ],
+        [ sh:in ( <https://meta.linked.archi/arch-processes#Plan> <https://meta.linked.archi/arch-processes#PhaseIn> <https://meta.linked.archi/arch-processes#Active> <https://meta.linked.archi/arch-processes#PhaseOut> <https://meta.linked.archi/arch-processes#Retired> ) ;
+            sh:maxCount 1 ;
+            sh:message "A lifecycle phase names exactly one stage, drawn from the five stages of ap:ApplicationLifecycle."@en ;
+            sh:minCount 1 ;
+            sh:path <https://meta.linked.archi/arch-processes#atLifecycleStage> ] ;
+    sh:targetClass lmm:LifecyclePhase .
+
+lxsh:LeanIXSubscriptionShape a sh:NodeShape ;
+    rdfs:comment """One subscription is one person's responsibility of one type. Roles are
+many-valued and workspace-defined, so they are unconstrained beyond datatype."""@en ;
+    sh:message """A subscription identifies its subscriber somehow — as an arch:Stakeholder where
+the converter has a stable identity to mint one from, otherwise by email. A subscription naming
+neither records a responsibility belonging to nobody."""@en ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path lmm:subscriber ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path lmm:subscriberEmail ] ] ) ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:message "A subscription carries at most one subscriber email, as a plain xsd:string."@en ;
+            sh:path lmm:subscriberEmail ],
+        [ sh:datatype xsd:string ;
+            sh:message "Subscription roles are plain xsd:string names; a subscription may cover several."@en ;
+            sh:path lmm:subscriptionRole ],
+        [ sh:class arch:Stakeholder ;
+            sh:maxCount 1 ;
+            sh:message "A subscription belongs to at most one subscriber, and a subscriber is an arch:Stakeholder."@en ;
+            sh:path lmm:subscriber ],
+        [ sh:in ( lmm:Responsible lmm:Accountable lmm:Observer ) ;
+            sh:maxCount 1 ;
+            sh:message """A subscription has at most one type, drawn from lmm:Responsible,
+lmm:Accountable and lmm:Observer."""@en ;
+            sh:path lmm:subscriptionType ] ;
+    sh:targetClass lmm:Subscription .
+
+lxsh:LeanIXTagShape a sh:NodeShape ;
+    rdfs:comment """A tag node exists to keep a name and its group together, so the name is
+required. The group is not: LeanIX permits ungrouped tags."""@en ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:message "A tag carries exactly one name, as a plain xsd:string."@en ;
+            sh:minCount 1 ;
+            sh:path lmm:tagName ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:message "A tag belongs to at most one tag group, named as a plain xsd:string."@en ;
+            sh:path lmm:tagGroup ] ;
+    sh:targetClass lmm:Tag .
+
+lxsh:OrganizationalUsageEndpointsShape a sh:NodeShape ;
+    sh:property [ sh:class lmm:Organization ;
+            sh:message "A lmm:OrganizationalUsage must run from an Organization."@en ;
+            sh:path arch:source ],
+        [ sh:class lmm:Application ;
+            sh:message "A lmm:OrganizationalUsage must run to an Application."@en ;
+            sh:path arch:target ] ;
+    sh:targetClass lmm:OrganizationalUsage .
+
+lxsh:PlatformMembershipEndpointsShape a sh:NodeShape ;
+    sh:property [ sh:class lmm:Platform ;
+            sh:message "A lmm:PlatformMembership must run to a Platform — the direction is member to platform."@en ;
+            sh:path arch:target ],
+        [ sh:message "A lmm:PlatformMembership must run from an Application, a BusinessCapability or an ITComponent."@en ;
+            sh:or ( [ sh:class lmm:Application ] [ sh:class lmm:BusinessCapability ] [ sh:class lmm:ITComponent ] ) ;
+            sh:path arch:source ] ;
+    sh:targetClass lmm:PlatformMembership .
+
+lxsh:ProvisionEndpointsShape a sh:NodeShape ;
+    sh:property [ sh:class lmm:Provider ;
+            sh:message "A lmm:Provision must run to a Provider."@en ;
+            sh:path arch:target ],
+        [ sh:class lmm:ITComponent ;
+            sh:message "A lmm:Provision must run from an ITComponent."@en ;
+            sh:path arch:source ] ;
+    sh:targetClass lmm:Provision .
+
+lxsh:RequiringEndpointsShape a sh:NodeShape ;
+    sh:property [ sh:class lmm:Application ;
+            sh:message "A lmm:Requiring must run from an Application."@en ;
+            sh:path arch:source ],
+        [ sh:class lmm:ITComponent ;
+            sh:message "A lmm:Requiring must run to an ITComponent."@en ;
+            sh:path arch:target ] ;
+    sh:targetClass lmm:Requiring .
+
+lxsh:SupportingEndpointsShape a sh:NodeShape ;
+    sh:property [ sh:class lmm:Application ;
+            sh:message "A lmm:Supporting must run from an Application."@en ;
+            sh:path arch:source ],
+        [ sh:class lmm:BusinessCapability ;
+            sh:message "A lmm:Supporting must run to a BusinessCapability."@en ;
+            sh:path arch:target ] ;
+    sh:targetClass lmm:Supporting .
+
+lxsh:SystemCompositionEndpointsShape a sh:NodeShape ;
+    sh:property [ sh:message "A lmm:SystemComposition must run to an Application or an ITComponent."@en ;
+            sh:or ( [ sh:class lmm:Application ] [ sh:class lmm:ITComponent ] ) ;
+            sh:path arch:target ],
+        [ sh:class lmm:System ;
+            sh:message "A lmm:SystemComposition must run from a System."@en ;
+            sh:path arch:source ] ;
+    sh:targetClass lmm:SystemComposition .
+
+c4sh: a owl:Ontology ;
+    dct:modified "2026-08-04"^^xsd:date ;
+    dct:title "Linked.Archi C4 Model SHACL Shapes"@en ;
+    owl:versionIRI <https://meta.linked.archi/c4/shapes/0.2.0#> ;
+    owl:versionInfo "0.2.0"@en .
+
+<https://meta.linked.archi/c4/structurizr-shapes#> a owl:Ontology ;
+    dct:modified "2026-08-04"^^xsd:date ;
+    dct:title "Linked.Archi Structurizr SHACL Shapes"@en ;
+    owl:versionIRI <https://meta.linked.archi/c4/structurizr-shapes/0.1.0#> ;
+    owl:versionInfo "0.1.0"@en .
+
+lxsh: a owl:Ontology ;
+    dct:modified "2026-08-16"^^xsd:date ;
+    dct:title "Linked.Archi LeanIX SHACL Shapes"@en ;
+    owl:versionIRI <https://meta.linked.archi/leanix/shapes/0.1.0#> ;
+    owl:versionInfo "0.1.0"@en .
 
 bssh: a owl:Ontology ;
     dct:modified "2026-08-24"^^xsd:date ;

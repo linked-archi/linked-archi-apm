@@ -122,6 +122,91 @@ class TestPathChecking(unittest.TestCase):
         self.assertIn("no relationship constraints", report.refused or "")
 
 
+class TestTheQualifiedForm(unittest.TestCase):
+    """`?rel a R ; arch:source ?s ; arch:target ?t` - the form the templates use.
+
+    Invisible to the direct-predicate rules, because the legs are deliberately excluded
+    from that table and nothing else looked at them. The check ran over all 39 catalogued
+    templates and judged nothing, which reads as 39 clean templates and was no coverage.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        requires_pyoxigraph(cls)
+        from linked_archi_profile.profile import load_profile
+        from linked_archi_query import ResolvedProfile
+
+        cls.sparql = staticmethod(_sparql(support.SHAPES, support.VOCABULARY))
+        profile = ResolvedProfile(load_profile("curated-store").resolved_snapshot())
+        cls.constraints = constraints_from_profile(cls.sparql, profile)
+        cls.subclasses = read_subclasses(cls.sparql)
+
+    def _check(self, where: str):
+        return check_query(f"{PREFIXES}SELECT * WHERE {{ {where} }}",
+                           self.constraints, self.subclasses)
+
+    RELATION = "?r a bs:Ownership ; arch:source ?s ; arch:target ?t . "
+
+    def test_a_permitted_pair_is_sound(self):
+        report = self._check(f"{self.RELATION}?s a arch:Element . ?t a bs:Group")
+        self.assertTrue(report.sound, report.summary())
+
+    def test_a_forbidden_target_is_reported(self):
+        report = self._check(f"{self.RELATION}?s a arch:Element . ?t a bs:Component")
+        self.assertEqual(len(report.violations), 1, report.summary())
+        self.assertIn("permitted targets", report.violations[0].message)
+
+    def test_a_subclass_of_a_permitted_source_still_applies(self):
+        """`bs:Group` is an `arch:Element`, so Ownership from a Group is permitted.
+
+        The rule is inherited down the hierarchy; only a class ABOVE a permitted one is
+        ambiguous.
+        """
+        report = self._check(f"{self.RELATION}?s a bs:Group . ?t a bs:User")
+        self.assertTrue(report.sound, report.summary())
+
+    def test_an_exact_source_match_does_not_excuse_a_bad_target(self):
+        """The bug this rule was rewritten for.
+
+        Judging both ends in one test excused the whole pattern as soon as either end
+        looked ambiguous - and a class is trivially below itself, so an exact source match
+        hid a forbidden target. The ends are judged independently now.
+        """
+        report = self._check(f"{self.RELATION}?s a arch:Element . ?t a bs:Component")
+        self.assertTrue(report.violations, "an exact source match must not excuse this")
+
+    def test_untyped_ends_are_reported_as_unjudged(self):
+        report = self._check(self.RELATION.rstrip(". "))
+        self.assertEqual(report.violations, ())
+        self.assertFalse(report.sound)
+        self.assertTrue(any("not both typed" in note for note in report.unchecked))
+
+    def test_the_catalogue_offers_nothing_to_judge(self):
+        """Recorded because it looks like a gap and is not.
+
+        Every catalogued template leaves its ends untyped - `notation/backstage/ownership`
+        asks WHICH entities are owned, so typing `?entity` would defeat the question. So
+        this check cannot validate the catalogue, and a sweep reporting "no violations
+        across 39 templates" would be measuring nothing. It is for hand-written and
+        generated queries, where the classes are concrete.
+        """
+        from linked_archi_query.render import render
+
+        report = check_query(
+            render("notation/backstage/ownership", self.constraints_profile(), {}).query,
+            self.constraints,
+            self.subclasses,
+        )
+        self.assertEqual(report.checked, 0)
+        self.assertEqual(report.violations, ())
+
+    def constraints_profile(self):
+        from linked_archi_profile.profile import load_profile
+        from linked_archi_query import ResolvedProfile
+
+        return ResolvedProfile(load_profile("curated-store").resolved_snapshot())
+
+
 class TestCompletenessComesFromTheManifest(unittest.TestCase):
     """Only a manifest can say what a complete shape set is.
 

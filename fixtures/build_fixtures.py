@@ -558,6 +558,15 @@ def refresh_unqualified_forms(meta_root: Path) -> int:
 # named-graph fixture returned five rows where the same triples as Turtle returned none,
 # with no error either way. A fixture that passes where the real artifact fails is the
 # failure this whole file exists to prevent.
+#: Namespaces whose class hierarchy `--refresh-axioms` owns, so a rerun replaces rather
+#: than accumulates. Derived from WHOLE_NOTATIONS, since those are the notations a path
+#: check needs a hierarchy for.
+_HIERARCHY_NAMESPACES = (
+    "https://meta.linked.archi/backstage/onto#",
+    "https://meta.linked.archi/c4/onto#",
+    "https://meta.linked.archi/leanix/onto#",
+)
+
 VOCABULARY_FILE = FIXTURES / "vocabulary.ttl"
 SHAPES_FILE = FIXTURES / "shapes.ttl"
 
@@ -617,10 +626,42 @@ SHAPE_SELECTION = {
 #: namespace, so completeness is reachable at 57 kB, and because it publishes no
 #: unqualified form - every direct predicate it has must come through
 #: `arch:unqualifiedForm`, which is the path the other notations depend on.
+#: ``(label, shape documents, manifest, ontologies)``. Every shape document a manifest
+#: declares has to be here or the notation is not complete and the check will not judge it -
+#: C4 declares two, which is the case that made this a tuple rather than one path.
+#:
+#: The ontologies are read for their class hierarchy alone, never their whole content: the
+#: check needs to tell "unrelated to any constrained class" from "the hierarchy is not
+#: attached", and LeanIX's ontology is 65 kB of which the subclass edges are a few hundred
+#: bytes.
+#:
+#: ArchiMate is deliberately absent. Its relationship shapes are 1.15 MB, so completeness
+#: cannot be reached by carrying the document, and a derived table would be a different kind
+#: of fixture - recorded in PROPOSAL.md rather than bodged in here.
 WHOLE_NOTATIONS = (
     (
-        "modelingLanguages/backstage/backstage-shapes.ttl",
+        "backstage",
+        ("modelingLanguages/backstage/backstage-shapes.ttl",),
         "modelingLanguages/backstage/backstage-metamodel.ttl",
+        ("modelingLanguages/backstage/backstage-onto.ttl",),
+    ),
+    (
+        "c4",
+        (
+            "modelingLanguages/c4/c4-shapes.ttl",
+            "modelingLanguages/c4/structurizr-shapes.ttl",
+        ),
+        "modelingLanguages/c4/c4-metamodel.ttl",
+        (
+            "modelingLanguages/c4/c4-onto.ttl",
+            "modelingLanguages/c4/structurizr-onto.ttl",
+        ),
+    ),
+    (
+        "leanix",
+        ("modelingLanguages/leanIX/leanIX-shapes.ttl",),
+        "modelingLanguages/leanIX/leanIX-metamodel.ttl",
+        ("modelingLanguages/leanIX/leanIX-v4-onto.ttl",),
     ),
 )
 
@@ -753,7 +794,7 @@ def refresh_vocabulary_axioms(meta_root: Path) -> int:
             quad.subject.value.startswith(CORE)
             or quad.subject.value in headers
             or quad.predicate == unqualified_form
-            or quad.subject.value.startswith("https://meta.linked.archi/backstage/onto#")
+            or any(quad.subject.value.startswith(ns) for ns in _HIERARCHY_NAMESPACES)
         ):
             fixture.remove(quad)
 
@@ -783,19 +824,24 @@ def refresh_vocabulary_axioms(meta_root: Path) -> int:
     # instance may well be one of them. Only the hierarchy, not the 143 kB ontology: the
     # subclass edges and the class declarations they connect.
     hierarchy = 0
-    notation_onto = meta_root / "modelingLanguages/backstage/backstage-onto.ttl"
-    if notation_onto.is_file():
-        published = _load_all([notation_onto])
-        for row in published.query(
-            f"SELECT ?c ?p WHERE {{ ?c <{RDFS}subClassOf> ?p }}"
-        ):
-            for quad in (
-                Quad(row["c"], NamedNode(f"{RDFS}subClassOf"), row["p"]),
-                Quad(row["c"], NamedNode(f"{RDF_NS}type"), NamedNode(f"{OWL}Class")),
+    hierarchy_namespaces: set[str] = set()
+    for _, _, _, ontologies in WHOLE_NOTATIONS:
+        for relative in ontologies:
+            path = meta_root / relative
+            if not path.is_file():
+                continue
+            published = _load_all([path])
+            for row in published.query(
+                f"SELECT ?c ?p WHERE {{ ?c <{RDFS}subClassOf> ?p }}"
             ):
-                if quad not in fixture:
-                    fixture.add(quad)
-                    hierarchy += 1
+                hierarchy_namespaces.add(str(row["c"].value).rsplit("#", 1)[0] + "#")
+                for quad in (
+                    Quad(row["c"], NamedNode(f"{RDFS}subClassOf"), row["p"]),
+                    Quad(row["c"], NamedNode(f"{RDF_NS}type"), NamedNode(f"{OWL}Class")),
+                ):
+                    if quad not in fixture:
+                        fixture.add(quad)
+                        hierarchy += 1
 
     # The qualified-to-direct mapping, complete rather than sliced.
     #
@@ -885,22 +931,25 @@ def refresh_shapes(meta_root: Path) -> int:
     # manifest a checker cannot tell a complete shape set from a partial one, and on a
     # partial set a missing shape is indistinguishable from a prohibition.
     whole: list[str] = []
-    for shapes_file, manifest_file in WHOLE_NOTATIONS:
-        for path in (shapes_file, manifest_file):
+    for label, shape_files, manifest_file, _ in WHOLE_NOTATIONS:
+        for path in (*shape_files, manifest_file):
             if not (meta_root / path).is_file():
                 print(f"no document at {meta_root / path}", file=sys.stderr)
                 return 0
-        store = _load_all([meta_root / shapes_file])
         count = 0
-        for row in store.query(f"SELECT ?shape WHERE {{ ?shape a <{SH}NodeShape> }}"):
-            _describe(store, row["shape"], triples)
-            count += 1
+        for shapes_file in shape_files:
+            store = _load_all([meta_root / shapes_file])
+            for row in store.query(f"SELECT ?shape WHERE {{ ?shape a <{SH}NodeShape> }}"):
+                _describe(store, row["shape"], triples)
+                count += 1
+            if shapes_file not in contributed:
+                contributed.append(shapes_file)
         manifest = _load_all([meta_root / manifest_file])
         for row in manifest.query(f"SELECT ?m WHERE {{ ?m a <{CORE}Metamodel> }}"):
             _describe(manifest, row["m"], triples)
-        if shapes_file not in contributed:
-            contributed.append(shapes_file)
-        whole.append(f"{shapes_file.rsplit('/', 1)[-1]}: {count} shape(s), complete")
+        whole.append(
+            f"{label}: {count} shape(s) from {len(shape_files)} document(s), complete"
+        )
 
     # Only the documents a carried shape actually came from. Four shapes out of 73 is a
     # slice, and the release each was sliced from is not optional information.

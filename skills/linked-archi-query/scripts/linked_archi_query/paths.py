@@ -210,11 +210,120 @@ def check_query(
                 Violation("path", str(subject), term, str(obj), judged)
             )
 
+    qualified_violations, qualified_checked, qualified_notes = _check_qualified(
+        patterns, declared, constraints, subclasses
+    )
+    violations += qualified_violations
+    checked += qualified_checked
+    for note in qualified_notes:
+        unchecked[note] = None
+
     return Report(
         violations=tuple(violations),
         checked=checked,
         unchecked=tuple(unchecked),
     )
+
+
+def _check_qualified(
+    patterns: Sequence[tuple[Any, Any, Any]],
+    declared: Mapping[str, set[str]],
+    constraints: Constraints,
+    subclasses: Mapping[str, frozenset[str]],
+) -> tuple[list[Violation], int, list[str]]:
+    """Judge the qualified form: ``?rel a R ; arch:source ?s ; arch:target ?t``.
+
+    This is the shape the catalogued templates use, and it was invisible to the direct-
+    predicate rules - the legs are deliberately excluded from that table, and nothing else
+    looked at them. So the check ran over the whole catalogue and judged nothing, which
+    looked like 39 clean templates and was in fact no coverage at all.
+    """
+    legs = constraints.legs
+    if legs is None or not constraints.qualified:
+        return [], 0, []
+
+    ends: dict[str, dict[str, Any]] = {}
+    for subject, predicate, obj in patterns:
+        term = _iri(predicate)
+        if term == legs.source:
+            ends.setdefault(str(subject), {})["source"] = obj
+        elif term == legs.target:
+            ends.setdefault(str(subject), {})["target"] = obj
+
+    violations: list[Violation] = []
+    notes: list[str] = []
+    checked = 0
+    for variable, sides in ends.items():
+        relationship_types = [
+            cls for cls in declared.get(variable, ()) if cls in constraints.qualified
+        ]
+        if not relationship_types or "source" not in sides or "target" not in sides:
+            continue
+        for relationship in relationship_types:
+            if notation_root(relationship) not in constraints.complete:
+                notes.append(
+                    f"{_short(relationship)}: the shapes attached for this notation are "
+                    "not known to be complete, so a missing rule cannot be told from a "
+                    "prohibition"
+                )
+                continue
+            pairs = constraints.qualified[relationship]
+            source_types = declared.get(str(sides["source"]), set())
+            target_types = declared.get(str(sides["target"]), set())
+            if not source_types or not target_types:
+                notes.append(
+                    f"{_short(relationship)}: its ends are not both typed in the query, so "
+                    "which pair applies cannot be identified"
+                )
+                continue
+            # Each end is judged on its own, exactly as the direct-predicate rules do. A
+            # combined "either end looks ambiguous" test excused the whole pattern the
+            # moment one end matched exactly, because a class is trivially below itself:
+            # `arch:Element` matching the permitted source hid a forbidden target.
+            applicable = [
+                (permitted_source, permitted_target)
+                for permitted_source, permitted_target in pairs
+                if any(is_below(source, permitted_source, subclasses)
+                       for source in source_types)
+            ]
+            if not applicable:
+                if _above_any(source_types, {s for s, _ in pairs}, subclasses):
+                    notes.append(
+                        f"{_short(relationship)}: its source is typed above the permitted "
+                        "classes, so an instance of a permitted subclass would be judged "
+                        "wrongly"
+                    )
+                    continue
+                checked += 1
+                violations.append(Violation(
+                    "qualified", str(sides["source"]), relationship,
+                    str(sides["target"]),
+                    f"{_short(relationship)} may not start at {_names(source_types)}; "
+                    f"permitted: {_names({s for s, _ in pairs})}",
+                ))
+                continue
+
+            permitted_targets = {target for _, target in applicable}
+            if any(
+                is_below(target, permitted, subclasses)
+                for target in target_types
+                for permitted in permitted_targets
+            ):
+                checked += 1
+                continue
+            if _above_any(target_types, permitted_targets, subclasses):
+                notes.append(
+                    f"{_short(relationship)}: its target is typed above the permitted "
+                    "classes, so an instance of a permitted subclass would be judged wrongly"
+                )
+                continue
+            checked += 1
+            violations.append(Violation(
+                "qualified", str(sides["source"]), relationship, str(sides["target"]),
+                f"{_short(relationship)} may not go from {_names(source_types)} to "
+                f"{_names(target_types)}; permitted targets: {_names(permitted_targets)}",
+            ))
+    return violations, checked, notes
 
 
 def _short(iri: str) -> str:
@@ -232,6 +341,24 @@ def is_below(
 ) -> bool:
     """``declared`` is ``constrained`` or a class beneath it, so it inherits the rule."""
     return declared == constrained or declared in subclasses.get(constrained, frozenset())
+
+
+def _above_any(
+    declared: Iterable[str],
+    constrained: Iterable[str],
+    subclasses: Mapping[str, frozenset[str]],
+) -> bool:
+    """Whether a declared class is a STRICT ancestor of something constrained.
+
+    Strict matters: a class is trivially below itself, so a non-strict test excuses an
+    exact match as ambiguous and hides the violation on the other end.
+    """
+    constrained = set(constrained)
+    return any(
+        candidate != cls and candidate in subclasses.get(cls, frozenset())
+        for cls in declared
+        for candidate in constrained
+    )
 
 
 def _judge(

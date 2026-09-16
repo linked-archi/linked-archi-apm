@@ -85,6 +85,9 @@ class Constraints:
     allowed: Mapping[tuple[str, str], frozenset[str]] = field(default_factory=dict)
     #: ``relationship class IRI -> allowed (source, target) pairs``, the qualified form.
     qualified: Mapping[str, frozenset[tuple[str, str]]] = field(default_factory=dict)
+    #: The predicates a qualified relationship hangs its ends off, as this table was read.
+    #: Carried so a checker can find those patterns without being told twice.
+    legs: Legs | None = None
     #: Namespaces some carried shape constrains. A predicate outside these is unchecked
     #: because nothing was published or nothing was attached - not because it is valid.
     covered: frozenset[str] = frozenset()
@@ -357,6 +360,7 @@ def read_constraints(
     return Constraints(
         allowed={key: frozenset(value) for key, value in allowed.items()},
         qualified={key: frozenset(value) for key, value in qualified.items()},
+        legs=legs,
         covered=frozenset(covered),
         complete=read_complete_notations(run),
         derived=frozenset(derived),

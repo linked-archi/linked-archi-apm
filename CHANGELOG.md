@@ -26,12 +26,27 @@ workflow publishes exactly this text, so what is written here is what a consumer
   permitted classes. Both are absence-means-prohibition, which is the reasoning this package
   exists to refuse — pointed inward. Anything unjudged is reported with its reason, and a
   report where nothing was judged is not a clean bill.
-- **One notation is carried whole in the fixtures.** A slice proves the constraints can be
-  read; it cannot support a check that accuses. Backstage, because it declares a single
-  `arch:formalRules` namespace so completeness is reachable at 57 kB, and because it publishes
-  no unqualified form — every direct predicate it has must come through
-  `arch:unqualifiedForm`, which is the path every other notation depends on. Its class
-  hierarchy is extracted too, without the 143 kB ontology around it.
+- **The qualified form is checked too: `?rel a R ; arch:source ?s ; arch:target ?t`.** It was
+  invisible at first, because the relationship legs are deliberately excluded from the
+  direct-predicate table and nothing else looked at them — so the check ran over all 39
+  catalogued templates and judged nothing, which reads as 39 clean templates and was no
+  coverage at all. Each end is judged separately: judging them together excused the whole
+  pattern as soon as either looked ambiguous, and since a class is trivially below itself, an
+  exact source match hid a forbidden target.
+- **Three notations are carried whole in the fixtures:** Backstage, C4 and LeanIX, with their
+  manifests and class hierarchies. A slice proves the constraints can be read; it cannot
+  support a check that accuses, since a missing shape would read as a prohibition. C4 declares
+  two `arch:formalRules` namespaces, which is why completeness is per document set rather than
+  per file. Hierarchies are extracted without the ontologies around them — LeanIX's is 65 kB
+  of which the subclass edges are a few hundred bytes. ArchiMate is deliberately left out: its
+  relationship shapes are 1.15 MB, so completeness cannot be reached by carrying the document,
+  and a derived table would be a different kind of fixture.
+- **What this check cannot do, recorded so it is not mistaken for a gap.** It cannot validate
+  the catalogue. Every catalogued template leaves its ends untyped — `notation/backstage/
+  ownership` asks *which* entities are owned, so typing them would defeat the question — and
+  without a concrete class there is nothing to judge. A sweep reporting "no violations across
+  39 templates" would be measuring nothing. The check is for hand-written and generated
+  queries, where the classes are concrete.
 - **The published constraints are readable as a table: which relationship may connect which
   element types.** Groundwork for checking a query's path instead of running it and reading
   an empty result as absence. `constraints.py` reduces both published forms to

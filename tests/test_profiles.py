@@ -451,14 +451,16 @@ class TestDriftDetection(unittest.TestCase):
         fewer categories, with every element of an uncovered notation absent. That reads
         as "this model has none of those".
 
-        The fixture pairs a five-notation dataset with BPMN vocabulary and the Backstage
-        class hierarchy, so the three still-uncovered notations must be named. A notation
+        The fixture pairs a five-notation dataset with BPMN vocabulary and the class
+        hierarchies of the three notations carried whole for the path check, so ArchiMate is
+        the one still uncovered and must be named. A notation
         ontology carries its version in its namespace, so this same probe is what pairing
         the wrong version looks like.
 
-        Backstage was in this list until its hierarchy was added for the path check, which
-        needs it to tell "unrelated to any constrained class" from "the hierarchy is not
-        attached". Its leaving the list is the probe working, not a regression.
+        Backstage, C4 and LeanIX were in this list until their hierarchies were added for
+        the path check, which needs them to tell "unrelated to any constrained class" from
+        "the hierarchy is not attached". Their leaving it is the probe working, not a
+        regression.
         """
         findings = verify_against_dataset(
             load_profile("curated-store"),
@@ -468,11 +470,12 @@ class TestDriftDetection(unittest.TestCase):
                     if f.subject == "graphs.roles.vocabulary" and f.severity == "warning"]
         self.assertTrue(relevant, format_findings(findings))
         message = relevant[0].message
-        for namespace in ("archimate3/onto#", "c4/onto#", "leanix/onto#"):
-            self.assertIn(namespace, message)
+        self.assertIn("archimate3/onto#", message)
         for attached, why in (
             ("bpmn/onto#", "BPMN vocabulary is attached"),
             ("backstage/onto#", "the Backstage hierarchy is attached for the path check"),
+            ("c4/onto#", "the C4 hierarchy is attached for the path check"),
+            ("leanix/onto#", "the LeanIX hierarchy is attached for the path check"),
         ):
             self.assertNotIn(
                 attached, message, f"{why}, so it must not be reported as uncovered"
