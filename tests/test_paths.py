@@ -16,7 +16,7 @@ from support import requires_pyoxigraph
 
 from linked_archi_query.constraints import (
     constraints_from_profile,
-    read_complete_notations,
+    read_represented_notations,
 )
 from linked_archi_query.paths import check_query, read_subclasses
 
@@ -207,12 +207,12 @@ class TestTheQualifiedForm(unittest.TestCase):
         return ResolvedProfile(load_profile("curated-store").resolved_snapshot())
 
 
-class TestCompletenessComesFromTheManifest(unittest.TestCase):
-    """Only a manifest can say what a complete shape set is.
+class TestWhatTheManifestCanAndCannotEstablish(unittest.TestCase):
+    """`arch:formalRules` proves a set is PARTIAL; it cannot prove one is whole.
 
-    `arch:formalRules` names every published shape namespace for a metamodel, so a
-    namespace with no shape present means the set is partial. A notation with no manifest
-    attached is not complete either - nothing says what it should hold.
+    A namespace with nothing attached is decisive - the shapes are missing. The converse
+    does not follow, and this class pins both halves so the weaker guarantee is not mistaken
+    for the stronger one later.
     """
 
     @classmethod
@@ -220,16 +220,65 @@ class TestCompletenessComesFromTheManifest(unittest.TestCase):
         requires_pyoxigraph(cls)
         cls.sparql = staticmethod(_sparql(support.SHAPES, support.VOCABULARY))
 
-    def test_the_notation_carried_whole_is_complete(self):
-        complete = read_complete_notations(self.sparql)
-        self.assertIn("https://meta.linked.archi/backstage/", complete)
+    def test_a_notation_with_every_namespace_attached_is_represented(self):
+        represented = read_represented_notations(self.sparql)
+        self.assertIn("https://meta.linked.archi/backstage/", represented)
 
-    def test_the_notation_carried_as_a_slice_is_not(self):
-        complete = read_complete_notations(self.sparql)
-        self.assertNotIn("https://meta.linked.archi/archimate3/", complete)
+    def test_a_notation_missing_a_declared_namespace_is_not(self):
+        represented = read_represented_notations(self.sparql)
+        self.assertNotIn("https://meta.linked.archi/archimate3/", represented)
 
-    def test_no_manifest_means_nothing_is_complete(self):
-        self.assertEqual(read_complete_notations(_sparql(support.BASE)), frozenset())
+    def test_no_manifest_means_nothing_is_represented(self):
+        self.assertEqual(read_represented_notations(_sparql(support.BASE)), frozenset())
+
+    def test_one_shape_of_many_still_counts_as_represented(self):
+        """The known limitation, asserted rather than left as a comment.
+
+        Nothing published states how many shapes a document declares, so presence of one
+        shape per declared namespace is all that can be verified. This test exists so the
+        gap is visible, and so that publishing a count upstream turns it into a failure that
+        has to be dealt with rather than a silent improvement nobody notices.
+        """
+        import tempfile
+        from pathlib import Path
+
+        manifest = (
+            "@prefix arch: <https://meta.linked.archi/core#> .\n"
+            "<https://meta.linked.archi/example/metamodel#X> a arch:Metamodel ;\n"
+            "    arch:formalRules <https://meta.linked.archi/example/shapes#> .\n"
+        )
+        one_shape = (
+            "@prefix sh: <http://www.w3.org/ns/shacl#> .\n"
+            "<https://meta.linked.archi/example/shapes#Only> a sh:NodeShape .\n"
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            paths = []
+            for name, text in (("m.ttl", manifest), ("s.ttl", one_shape)):
+                path = Path(directory) / name
+                path.write_text(text, encoding="utf-8")
+                paths.append(path)
+            represented = read_represented_notations(_sparql(*paths))
+        self.assertIn(
+            "https://meta.linked.archi/example/",
+            represented,
+            "if this now fails, wholeness became verifiable - tighten the gate and drop "
+            "the provisional caveat from Report",
+        )
+
+    def test_any_verdict_carries_the_provisional_caveat(self):
+        from linked_archi_profile.profile import load_profile
+        from linked_archi_query import ResolvedProfile
+        from linked_archi_query.constraints import constraints_from_profile
+
+        sparql = _sparql(support.SHAPES, support.VOCABULARY)
+        profile = ResolvedProfile(load_profile("curated-store").resolved_snapshot())
+        report = check_query(
+            f"{PREFIXES}SELECT * WHERE {{ ?s a bs:Component ; bs:ownedBy ?o . ?o a bs:Group }}",
+            constraints_from_profile(sparql, profile),
+            read_subclasses(sparql),
+        )
+        self.assertTrue(report.checked)
+        self.assertTrue(any("whole" in caveat for caveat in report.caveats))
 
 
 if __name__ == "__main__":  # pragma: no cover

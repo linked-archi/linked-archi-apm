@@ -17,15 +17,22 @@ workflow publishes exactly this text, so what is written here is what a consumer
   was asked. On `lint` only: the check costs a parse and a store read, and the moment worth
   paying for them is before running a query rather than on every execution of one that works.
 - **A violation is only asserted where the evidence supports one.** Two conditions, both
-  learned by getting them wrong: the shape set for that notation must be **known complete** —
-  the metamodel manifest's `arch:formalRules` names every published namespace, so a namespace
-  with nothing attached means partial — and the class hierarchy must be present, so that
+  learned by getting them wrong: every shape namespace the notation's manifest declares must
+  have shapes attached — `arch:formalRules` names them, so a namespace with nothing attached
+  proves the set is partial — and the class hierarchy must be present, so that
   "unrelated to any constrained class" is a fact rather than a gap. The first draft accused a
   Business Actor of an impossible `am:flowsTo` because the fixture carried one ArchiMate shape
   of 73, and accused `arch:Element` of not being a permitted source when it sits *above* the
   permitted classes. Both are absence-means-prohibition, which is the reasoning this package
   exists to refuse — pointed inward. Anything unjudged is reported with its reason, and a
   report where nothing was judged is not a clean bill.
+- **A verdict is provisional, and every report that judges anything says so.** The condition
+  above is necessary and not sufficient: nothing published states how many shapes a document
+  declares, so presence of each declared namespace is all that can be verified — one shape of
+  28 passes it, and `versionIRI` does not help since extracting a single shape with the ontology
+  header carries a matching version. A partial attachment can therefore still produce a wrong
+  verdict. A test pins that limitation so publishing a count upstream turns it into a failure
+  someone must address rather than a silent improvement.
 - **The qualified form is checked too: `?rel a R ; arch:source ?s ; arch:target ?t`.** It was
   invisible at first, because the relationship legs are deliberately excluded from the
   direct-predicate table and nothing else looked at them — so the check ran over all 39

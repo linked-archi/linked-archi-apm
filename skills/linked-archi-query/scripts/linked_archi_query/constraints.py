@@ -92,14 +92,22 @@ class Constraints:
     #: because nothing was published or nothing was attached - not because it is valid.
     covered: frozenset[str] = frozenset()
     #: Notation roots - ``https://meta.linked.archi/backstage/`` - whose attached manifest
-    #: declares shape assets and every one of them is present. Only here may a checker
-    #: conclude that something is forbidden.
+    #: declares shape namespaces and every one of them has at least one shape attached.
     #:
-    #: Everywhere else, a missing shape is indistinguishable from a prohibition. Found by
-    #: accusation: against four ArchiMate shapes out of 73, a Business Actor traversing
-    #: ``am:flowsTo`` was reported impossible because the one unqualified shape carried was
-    #: BusinessRole's. That is "empty means none" reasoning inside the checker.
-    complete: frozenset[str] = frozenset()
+    #: **This is a necessary condition, not a sufficient one, and the difference matters.**
+    #: Nothing published says how many shapes a document declares, so "every namespace is
+    #: represented" is all that can be verified from inside a store: one shape of 28 passes
+    #: this test. ``versionIRI`` does not help either - extracting a single shape with the
+    #: ontology header carries a matching version.
+    #:
+    #: So a verdict resting on this is provisional, and :class:`~.paths.Report` says so.
+    #: Making it sufficient needs the publisher to state a shape count or a digest, which is
+    #: recorded as an upstream gap rather than guessed at here.
+    #:
+    #: Even the weak form earns its place: without it, four ArchiMate shapes out of 73 were
+    #: enough to report a Business Actor as unable to flow anywhere, because the only
+    #: unqualified shape carried was BusinessRole's.
+    represented: frozenset[str] = frozenset()
     #: Predicates whose constraint was derived through ``arch:unqualifiedForm`` rather
     #: than published directly. Worth reporting: the derivation assumes the direct form
     #: means the same as the qualified one, which is the ontology's claim, not a
@@ -279,15 +287,16 @@ def notation_root(iri: str) -> str:
     return trimmed.rsplit("/", 1)[0] + "/" if "/" in trimmed else namespace
 
 
-def read_complete_notations(run: Runner) -> frozenset[str]:
-    """Notation roots whose declared shape assets are all attached.
+def read_represented_notations(run: Runner) -> frozenset[str]:
+    """Notation roots whose every declared shape namespace has shapes attached.
 
-    The manifest is the only statement of what a complete shape set is: ``arch:formalRules``
-    names each published namespace, so a namespace with no shape present means the set is
-    partial and nothing may be called forbidden.
+    ``arch:formalRules`` names each published namespace, so a namespace with nothing
+    attached proves the set is partial. The converse does not follow: presence of one shape
+    per namespace does not make the set whole, and nothing published says how many there
+    should be. See :attr:`Constraints.represented`.
 
-    A notation with no attached manifest is not complete - not because it is wrong, but
-    because nothing says what it should contain.
+    A notation with no attached manifest fails this - not because it is wrong, but because
+    nothing says what it should contain.
     """
     declared: dict[str, set[str]] = {}
     for row in run(
@@ -362,6 +371,6 @@ def read_constraints(
         qualified={key: frozenset(value) for key, value in qualified.items()},
         legs=legs,
         covered=frozenset(covered),
-        complete=read_complete_notations(run),
+        represented=read_represented_notations(run),
         derived=frozenset(derived),
     )

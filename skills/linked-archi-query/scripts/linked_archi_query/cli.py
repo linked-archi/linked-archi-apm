@@ -973,6 +973,8 @@ def cmd_lint(args: argparse.Namespace) -> int:
         print(f"  ! {violation.message}")
     for note in report.unchecked:
         print(f"  ~ {note}")
+    for caveat in report.caveats:
+        print(f"  caveat: {caveat}")
     # Read-only is a refusal; an impossible path is a finding. The query is still legal
     # SPARQL and the caller may have reason to run it, so this reports rather than refuses.
     return OK

@@ -62,6 +62,10 @@ class Report:
     checked: int = 0
     #: Why a pattern was skipped, once per distinct reason, for a caller to relay.
     unchecked: tuple[str, ...] = ()
+    #: What a verdict here rests on that could not be verified. Present whenever anything
+    #: was judged, because judging depends on the attached shape documents being whole and
+    #: only their namespaces being represented could be checked.
+    caveats: tuple[str, ...] = ()
     #: Set when no verdict was possible at all - unparseable, or no parser installed.
     refused: str | None = None
 
@@ -190,7 +194,7 @@ def check_query(
 
         # Nothing may be called forbidden where the shape set is partial: a missing shape
         # would read as a prohibition. The manifest is what says whether it is partial.
-        if notation_root(term) not in constraints.complete:
+        if notation_root(term) not in constraints.represented:
             unchecked[
                 f"{term.rsplit('#', 1)[-1]}: the shapes attached for this notation are not "
                 "known to be complete, so a missing rule cannot be told from a prohibition"
@@ -222,7 +226,19 @@ def check_query(
         violations=tuple(violations),
         checked=checked,
         unchecked=tuple(unchecked),
+        caveats=(PROVISIONAL,) if checked else (),
     )
+
+
+#: Attached once to any report that judged something. The check can verify that every shape
+#: namespace a manifest declares has shapes attached; it cannot verify that those documents
+#: are whole, because nothing published states how many shapes they hold. So a verdict is
+#: as good as the attachment, and saying so is cheaper than being wrong quietly.
+PROVISIONAL = (
+    "verdicts assume each attached shape document is whole. Only the presence of every "
+    "declared shape namespace could be verified - one shape of 28 would pass that test - so "
+    "a partial attachment can still produce a wrong verdict"
+)
 
 
 def _check_qualified(
@@ -260,7 +276,7 @@ def _check_qualified(
         if not relationship_types or "source" not in sides or "target" not in sides:
             continue
         for relationship in relationship_types:
-            if notation_root(relationship) not in constraints.complete:
+            if notation_root(relationship) not in constraints.represented:
                 notes.append(
                     f"{_short(relationship)}: the shapes attached for this notation are "
                     "not known to be complete, so a missing rule cannot be told from a "

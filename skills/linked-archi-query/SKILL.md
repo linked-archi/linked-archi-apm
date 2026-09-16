@@ -205,11 +205,18 @@ It reports rather than refuses, and **says when it did not judge**:
 | `impossible path` | the shapes forbid it. The message names what is permitted instead. |
 | `not checked` | the shape set for that notation is not known complete, or the query types neither end of a pattern, or nothing could be parsed. |
 
-That second row is load-bearing. A violation is only asserted where the metamodel manifest
-shows every declared shape asset is attached and the class hierarchy is present. On a partial
-set a missing shape is indistinguishable from a prohibition — and reading absence as
-prohibition is the same mistake as reading an empty result as absence. `la-profile verify`
-reports which assets are missing.
+That second row is load-bearing. A violation is only asserted where every shape namespace the
+metamodel manifest declares has shapes attached, and the class hierarchy is present. Where a
+namespace is missing entirely, nothing is judged: a missing shape is indistinguishable from a
+prohibition, and reading absence as prohibition is the same mistake as reading an empty result
+as absence. `la-profile verify` reports which assets are missing.
+
+**A verdict is provisional, and says so.** What can be verified is that each declared shape
+namespace is represented — not that those documents are whole, because nothing published states
+how many shapes they hold. One shape of 28 would pass. So every report that judged anything
+carries a caveat, and a partial attachment can still produce a wrong verdict. Making this sound
+needs a published shape count or digest; until then the attachment is the operator's
+responsibility.
 
 **Do not pipe a result through `jq` to get a column.** The default output is already
 tab-separated rows, so `cut -f2` works and the parse step is not needed:
