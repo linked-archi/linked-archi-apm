@@ -8,6 +8,27 @@ A section here is not optional at release time: `make release-notes` reads it, a
 `make release-check` refuses to declare a version ready without one. The release
 workflow publishes exactly this text, so what is written here is what a consumer reads.
 
+## [Unreleased]
+
+### Added
+- **A documentation site, published to GitHub Pages from CI.** `mkdocs.yml` plus `docs/`: the
+  package overview, one page per skill, the graph profile and the evidence model as concepts, all
+  39 templates, all nine analysis patterns, a CLI and exit-code reference, and an end-to-end
+  walkthrough of ontology-driven conversational analysis — a question routed to a pattern, planned
+  as catalogued queries, bundled, and rendered as an answer where every claim cites its step.
+
+  Two things keep it honest rather than decorative. `mkdocs build --strict` runs on every push and
+  pull request, so a broken internal link fails the build instead of shipping; and
+  `tests/test_docs.py` checks the countable claims against the shipped assets — every template in
+  `catalog.json` has a section, every pattern in `patterns.json` has one, the per-stage counts in
+  the table match, every page is reachable from the nav, and every skill has a page. Prose is where
+  a number goes stale first, so the numbers are asserted.
+
+  Every command shown in the site was run against the bundled fixtures, and the outputs, messages
+  and field orders are copied from those runs or from the source rather than illustrated.
+  `make docs` builds it, `make docs-serve` serves it locally, and `docs/requirements.txt` pins the
+  build exactly so an upstream release cannot redden a pipeline on a day nothing here changed.
+
 ## [0.6.0] - 2026-09-17
 
 ### Added

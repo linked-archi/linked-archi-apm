@@ -5,6 +5,9 @@ ArchiMate, BPMN, C4/Structurizr, Backstage and LeanIX models into RDF against th
 [meta.linked.archi](https://meta.linked.archi) ontologies with the
 [Linked.Archi converters](https://gitlab.com/linked-archi/linked-archi-tools/converters/converters).
 
+**Documentation: <https://linked-archi.github.io/linked-archi-apm/>** — the skills, all 39
+templates, the analysis patterns, and a worked conversational-analysis walkthrough.
+
 There is no application here, and that is deliberate. Given the graph's conventions
 as skills and a tested query library, a coding agent in an ordinary IDE becomes a
 competent architecture analyst. The artifact is the context and the templates.

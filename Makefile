@@ -14,7 +14,7 @@ BIN_DIR ?= $(HOME)/.local/bin
 
 .PHONY: help check test test-quiet catalog profile verify verify-curated fixtures \
         skills install-local uninstall-local link-cli unlink-cli dist version bump \
-        release-notes release-check clean
+        release-notes release-check clean docs docs-serve
 
 help:
 	@echo "check          validate skills and run the tests"
@@ -29,6 +29,8 @@ help:
 	@echo "install-local  symlink committed skill directories into SKILLS_DIR"
 	@echo "uninstall-local remove those symlinks"
 	@echo "link-cli       symlink the repository la-kg dispatcher into BIN_DIR"
+	@echo "docs           build the documentation site (strict)"
+	@echo "docs-serve     serve the documentation site locally"
 	@echo "catalog        list query templates"
 	@echo "profile        show the default profile"
 	@echo "verify         verify the default profile against the base fixture"
@@ -81,6 +83,16 @@ test-quiet:
 
 skills:
 	$(PY) tests/validate_skills.py
+
+# The same command CI runs. --strict fails on a broken internal link rather than publishing
+# one, and tests/test_docs.py checks the countable claims against catalog.json and
+# patterns.json - the site states "39 templates" and "nine patterns" in prose, and prose is
+# where a number goes stale first.
+docs:
+	$(PY) -m mkdocs build --strict
+
+docs-serve:
+	$(PY) -m mkdocs serve
 
 catalog:
 	skills/linked-archi-query/scripts/la-query catalog list

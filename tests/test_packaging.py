@@ -1262,6 +1262,9 @@ class TestNoPrivateHostsShip(unittest.TestCase):
         # for the relation it constrains. Extracted content, not authored here - the
         # provenance of a published constraint is part of the constraint.
         "backstage.io",
+        # This package's own documentation site, as `site_url` in mkdocs.yml. Material needs
+        # the canonical URL to emit correct sitemap and social-card links.
+        "linked-archi.github.io",
     }
 
     #: Reserved for documentation and testing, so allowed by suffix.

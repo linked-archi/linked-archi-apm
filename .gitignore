@@ -14,6 +14,8 @@ out/
 
 # Distribution artifacts from make dist.
 dist/
+# Rendered documentation site from mkdocs build. docs/ is the source; site/ is output.
+site/
 
 # Rendered queries and saved result envelopes from ad-hoc runs.
 *.rendered.rq

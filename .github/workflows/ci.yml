@@ -60,6 +60,44 @@ jobs:
       - run: python --version && git --version && ps --version | head -1
       - run: make check
 
+  # Built on every push and pull request, published only from main. --strict turns a broken
+  # internal link into a failed build, which is the whole reason the site is built in CI at all:
+  # the pages make countable claims about the package, and tests/test_docs.py checks the counts
+  # against catalog.json and patterns.json rather than trusting the prose.
+  docs:
+    name: docs (build, strict)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install --quiet -r docs/requirements.txt
+      - run: mkdocs build --strict
+      - uses: actions/upload-pages-artifact@v3
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        with:
+          path: site
+
+  # Deploys the artifact the docs job built. Separate because publishing is the only step here
+  # that needs write scope, so it is the only job that gets it - the same split the release job
+  # uses. Needs the test job too: a site describing a tree whose suite fails is documentation of
+  # something that does not work.
+  pages:
+    name: pages
+    needs: [docs, test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
   package:
     name: package
     needs: [test, slim]

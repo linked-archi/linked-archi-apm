@@ -1,0 +1,8 @@
+# Documentation build only. Not a runtime dependency of any skill: the skills need PyYAML,
+# pyoxigraph and pyshacl, and nothing here.
+#
+# Pinned exactly. An unpinned docs build breaks on someone else's release, on a day when nothing
+# in this repository changed, which is the most confusing kind of red pipeline.
+mkdocs==1.6.1
+mkdocs-material==9.7.6
+pymdown-extensions==10.21.2
