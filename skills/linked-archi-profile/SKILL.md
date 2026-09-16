@@ -5,7 +5,7 @@ license: Apache-2.0
 compatibility: Needs Python 3.11 or newer and PyYAML. Verifying a dataset delegates transport to linked-archi-connect and read-only enforcement to linked-archi-query; local files additionally need pyoxigraph. Install those companion skills for verification. Works offline with local files.
 metadata:
   author: linked-archi
-  version: "0.4.0"
+  version: "0.5.0"
   homepage: https://meta.linked.archi
 allowed-tools: Read Bash(python3:*)
 ---

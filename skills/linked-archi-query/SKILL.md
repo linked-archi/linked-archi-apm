@@ -5,7 +5,7 @@ license: Apache-2.0
 compatibility: Needs Python 3.11 or newer and PyYAML. Rendering delegates profile resolution to linked-archi-profile; execution also delegates transport to linked-archi-connect and needs pyoxigraph for local RDF. Endpoint transport uses the standard library. Read-only throughout.
 metadata:
   author: linked-archi
-  version: "0.4.0"
+  version: "0.5.0"
   homepage: https://meta.linked.archi
 allowed-tools: Read Bash(python3:*)
 ---

@@ -10,6 +10,30 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-16
+Published schema became usable. Every ontology, taxonomy and SHACL shape set on
+`meta.linked.archi` can now be fetched, lands where a Turtle file actually goes, carries the
+constraints a query check needs, says which release it came from, and `verify` reports when
+what a dataset declares conformance to has not been attached.
+
+None of that was true a release ago, and one measurement explains why it went unnoticed:
+asking the publisher for RDF with a full weighted `Accept` list returns 404 for ten of
+twelve assets, while asking the same IRIs for `text/turtle` alone returns all twelve —
+1.15 MB of ArchiMate relationship shapes among them. A publisher that answers 404 rather
+than 406 for a serialisation it does not hold makes a broader request the less useful one.
+
+**Two changes can surprise an upgrade.** `query run` and `query literal` print
+tab-separated rows rather than a markdown table, so anything parsing stdout needs
+`--format md`. And `graphs.roles.vocabulary` in the shipped profiles is `default` rather
+than a graph suffix: a profile of your own binding a suffix keeps working unchanged, but a
+Turtle vocabulary paired against a suffix binding returns nothing, silently — which is the
+defect being fixed here, and worth recognising if you have hit it.
+
+Three of the fixes below are for silent failures in this package's own work, two of them
+introduced earlier in the same development cycle. They are written up in full rather than
+summarised away, because a package whose argument is "an empty result is not evidence of
+absence" has no business hiding its own.
+
 ### Added
 - **The extracted schema fixtures name the release they were sliced from.**
   `vocabulary.ttl` and `shapes.ttl` are the only fixtures whose upstream moves
@@ -384,7 +408,8 @@ converters against the meta.linked.archi ontologies.
   for SHACL validation, and `git` for Git acquisition. Endpoint and HTTPS transport use
   the standard library. No mandatory MCP server.
 
-[Unreleased]: https://github.com/linked-archi/linked-archi-apm/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/linked-archi/linked-archi-apm/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.1.0...v0.2.0

@@ -5,7 +5,7 @@ license: Apache-2.0
 compatibility: Needs Python 3.11 or newer and pyshacl, which installs rdflib. SHACL runs in-process, so no converter, Java runtime or network access is required. Shape documents are published separately and never bundled here, so pass local shape files or acquire them once with linked-archi-source. Reading a report already loaded into a dataset needs linked-archi-query instead.
 metadata:
   author: linked-archi
-  version: "0.4.0"
+  version: "0.5.0"
   homepage: https://meta.linked.archi
 allowed-tools: Read Bash(python3:*)
 ---
