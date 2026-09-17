@@ -17,14 +17,17 @@ scope and the direction of every edge. Each guess fails the same way: zero rows,
 answer that reads as "there are none of those". Routing removes the guessing:
 
 ```mermaid
-flowchart LR
-  Q["question"] --> R["route to a pattern<br/><small>trigger match</small>"]
+flowchart TB
+  Q["<b>question</b><br/><small>what depends on Payments Gateway?</small>"]
+  Q --> R["route to a pattern<br/><small>trigger match — no SPARQL written</small>"]
   R --> T["the pattern's templates<br/><small>already written and tested</small>"]
-  T --> G["gate against the profile<br/><small>roles, capabilities, notation presence</small>"]
-  G --> S["ordered steps,<br/>each a literal command"]
+  T --> G{"gate against<br/>the profile"}
+  G -->|"supported"| S
+  G -->|"refused"| ALT["named alternative<br/><small>substituted at planning time</small>"]
+  ALT --> S["ordered steps<br/><small>each a literal command</small>"]
   S --> E["envelopes<br/><small>rows + query + dataset + profile</small>"]
-  E --> B["bundle<br/><small>coherence checked</small>"]
-  B --> A["answer<br/><small>every claim cites a step</small>"]
+  E --> B["bundle<br/><small>one dataset, one profile, coherence checked</small>"]
+  B --> A["<b>answer</b><br/><small>every claim cites a step</small>"]
 ```
 
 ## Step 1 — plan

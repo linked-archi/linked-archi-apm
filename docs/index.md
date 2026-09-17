@@ -23,27 +23,31 @@ Every design decision here follows from refusing to let those two look like answ
 ## The six skills
 
 ```mermaid
-flowchart LR
-  subgraph acquire["Acquire and attach"]
+flowchart TB
+  subgraph acquire["1 · Acquire and attach"]
+    direction LR
     S["linked-archi-source<br/><small>verified bytes</small>"]
-    C["linked-archi-connect<br/><small>one dataset identity</small>"]
-  end
-  subgraph describe["Describe"]
-    P["linked-archi-profile<br/><small>what this data calls things</small>"]
-  end
-  subgraph answer["Answer"]
-    Q["linked-archi-query<br/><small>catalogued SPARQL + envelope</small>"]
-    V["linked-archi-validate<br/><small>SHACL conformance</small>"]
-    A["linked-archi-analyse<br/><small>plan and bundle</small>"]
+    C["linked-archi-connect<br/><small>one dataset, one identity</small>"]
+    S -->|"target: data[] or endpoint"| C
   end
 
-  S -->|"target: data[] / endpoint"| C
-  C -->|"adapter, dataset_id"| Q
+  subgraph describe["2 · Describe"]
+    P["linked-archi-profile<br/><small>what this data calls things</small>"]
+  end
+
+  subgraph answer["3 · Answer"]
+    direction LR
+    Q["linked-archi-query<br/><small>templates, SPARQL, envelope</small>"]
+    A["linked-archi-analyse<br/><small>plans and bundles<br/>executes nothing</small>"]
+    V["linked-archi-validate<br/><small>SHACL with coverage</small>"]
+  end
+
   C -->|"probes"| P
   P -->|"resolved profile snapshot"| Q
-  Q -->|"result envelopes"| A
-  A -->|"la-query commands to run"| Q
+  C -->|"adapter, dataset_id"| Q
   C --> V
+  Q -->|"result envelopes"| A
+  A -->|"the commands to run"| Q
   Q -.->|"read-only lint"| C
 ```
 
