@@ -15,7 +15,69 @@ schema metadata to ground generation, and agentic exploration of an unfamiliar g
 | **SPARQL-LLM** ([2410.06062](https://arxiv.org/abs/2410.06062), [2512.14277](https://arxiv.org/abs/2512.14277)) | LLM writes SPARQL, RAG over examples + schema | validate against endpoint schema, correct | endpoints publish rich metadata |
 | **SPINACH** ([2407.11417](https://arxiv.org/abs/2407.11417)) | agent explores and executes iteratively | the agent's own observation of results | little; discovers the schema |
 | **ARUQULA** ([2510.02200](https://arxiv.org/abs/2510.02200)) | as SPINACH, generalised with ReAct + exploration tools | same, plus tool feedback | little; portable across graphs |
-| **Linked.Archi APM** | routes to a tested template; renders roles via a profile | the profile gates before running; refusal instead of empty rows | graph came from known converters against a published ontology |
+| **Linked.Archi APM** | routes to a tested template, rendered through a profile; ad-hoc SPARQL also runs, with or without profile directives | two: the profile gates before running (refusal, not empty rows), and an OBQC-style ontology path check for the ad-hoc case via `lint` | graph came from known converters against a published ontology |
+
+The bottom row has two entries in each of the first two columns, and they pair up.
+
+**The catalogued path** is the one the package is built around: `la-query query run <template>`,
+rendered through the profile, gated before it runs. This is where "the dataset cannot support that"
+becomes a refusal with a named alternative rather than an empty table.
+
+**The ad-hoc path** exists for the question no template covers: `la-query query literal
+--query '…'`. It is not a fallback to raw string handling — profile directives still resolve, so a
+hand-written query can take the same namespace map, graph scoping and role bindings as a template:
+
+```bash
+python3 scripts/la-query query literal --data graph.trig --query '{{PREFIXES}}
+SELECT ?s ?l WHERE { {{GRAPH_OPEN:semantic}} ?s {{PATH:label}} ?l {{GRAPH_CLOSE}} } LIMIT 2'
+```
+
+Plain SPARQL naming IRIs directly works too. Either way the query is linted read-only and gets a
+full envelope, cited as `ad-hoc query` rather than a template name.
+
+What the ad-hoc path does **not** get is the gating, because there is no catalogue entry declaring
+what it needs — so nothing can refuse it on this dataset's behalf. That gap is exactly what the
+**path check** fills, and why it is OBQC's mechanism that covers this case rather than the profile's:
+`la-query lint --data` reads the published shapes and reports whether the path the query walks is one
+the metamodel permits. A catalogued template does not need it, having been checked against the
+fixtures already, which is why it is not on the execution path. The
+[OBQC section](#obqc-implemented-without-the-repair-loop) covers what it does and where it declines
+to judge.
+
+One asymmetry between the two paths shows the split cleanly. Under a profile that cannot express
+"belongs to this model" — co-location as the membership mode, but no named graphs to co-locate in —
+the same judgement reaches two different outcomes:
+
+=== "Catalogued template: refused"
+
+    ```console
+    $ la-query query run core/orphans --profile flat-colo --data flat.ttl
+    Template 'core/orphans' cannot run against profile 'flat-colo':
+      - profile 'flat-colo' places membership by graph co-location
+        ('navigation.model_membership.mode') but has no named graphs, so 'belongs to this
+        model' cannot be expressed: the pattern would match every model in the dataset and
+        report the wrong one. Set 'mode: bounded-folder-tree' if the folder chain is complete
+        here, or query a dataset that kept its named graphs.
+    This is a refusal, not an empty result: running it anyway would return no rows and read as
+    'nothing exists'.
+    ```
+
+=== "Ad-hoc query: runs, with the caveat attached"
+
+    ```console
+    $ la-query query literal --profile flat-colo --data flat.ttl \
+        --query 'SELECT ?e WHERE { ?e a <…backstage/onto#Component> . {{MEMBERSHIP:e}} } LIMIT 1'
+    …
+    # 1 row(s)
+    # caveat: profile 'flat-colo' places membership by graph co-location
+    ('navigation.model_membership.mode') but has no named graphs, so 'belongs to this model'
+    cannot be expressed: the pattern would match every model in the dataset and report the
+    wrong one. …
+    ```
+
+One implementation of the judgement, two consumers — duplicating it would let the two disagree. The
+ad-hoc query is not refused on the grounds that its author may know something the profile does not,
+but it is not answered silently either.
 
 The bottom row is a narrower assumption than any of the others, and the whole design exploits it.
 When the graph is converter-generated against an ontology you control, the failure modes are
