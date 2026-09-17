@@ -27,10 +27,13 @@ warn notations.present                  declared by the profile with no model co
 70 check(s): 0 error(s), 12 warning(s), 58 confirmed (--all to show)
 ```
 
-Zero errors, so the profile fits. Two of the warnings are worth reading rather than skipping:
-`roles.reifies` and `roles.unqualified_form` are bound but unused, which is this dataset saying it
-carries only the qualified relationship form — the fact that makes Step 3 choose the template it
-does, and makes the refusal further down inevitable.
+Zero errors, so the profile fits. One warning is worth reading rather than skipping: `roles.reifies`
+is bound but unused, which is this dataset saying it carries no RDF 1.2 reification bridge — part of
+the same picture as the refusal further down, that only the qualified relationship form is here.
+
+The neighbouring `roles.unqualified_form`, `roles.subclass_of` and `roles.narrower` warnings say
+something duller: those are schema-level predicates, and no ontology or taxonomy is attached to this
+dataset. `examples/with-vocabulary` is the profile for when they are.
 
 !!! warning "Skipping this step is not neutral"
     Without it every later result carries `profile 'linked-archi-default' has not been verified
@@ -51,7 +54,7 @@ https://meta.linked.archi/bpmn/metamodel#BPMN2	1	1	10
 https://meta.linked.archi/c4/metamodel#C4Model	1	1	5
 #
 # 5 row(s)
-# core/inventory-summary | query 37548aa0dea1 | dataset base.trig | profile linked-archi-default v2 | 5 row(s)
+# core/inventory-summary | query 37548aa0dea1 | dataset base.trig | profile linked-archi-default v2 | 2026-09-17T05:25:12.443019+00:00 | 5 row(s)
 ```
 
 Five notations, 81 concepts. This is what licenses every later claim about absence: from here on,
@@ -72,7 +75,7 @@ rank	matched	value	element	type	g_semantic
 1 exact	1 name	Order Service	https://example.org/la/backstage/commerce-catalog/element/component/default/order-service	https://meta.linked.archi/backstage/onto#Component	…/commerce-catalog/graph/semantic
 #
 # 1 row(s)
-# core/resolve-element | query dd2a68512fc7 | dataset base.trig | profile linked-archi-default v2 | 1 row(s)
+# core/resolve-element | query dd2a68512fc7 | dataset base.trig | profile linked-archi-default v2 | 2026-09-17T05:25:32.926862+00:00 | 1 row(s)
 ```
 
 One exact match, on the name, in the **Backstage** graph — a `bs:Component`. That last part is the
@@ -99,7 +102,7 @@ outgoing	…/relationship/ownedBy--component-default-order-service--group-defaul
 outgoing	…/relationship/partOfSystem--component-default-order-service--system-default-commerce-platform	bs:SystemMembership	…/element/system/default/commerce-platform	Commerce Platform
 #
 # 3 row(s)
-# core/neighbours-qualified | query ab5908f90b11 | dataset base.trig | profile linked-archi-default v2 | 3 row(s)
+# core/neighbours-qualified | query ab5908f90b11 | dataset base.trig | profile linked-archi-default v2 | 2026-09-17T05:25:33.251556+00:00 | 3 row(s)
 ```
 
 Three relationships, all outgoing: it provides the Orders REST API, it is owned by Commerce Team,
@@ -121,7 +124,7 @@ model	source	generated	startedAt	agentName	agentVersion	title	creator
 https://example.org/la/backstage/commerce-catalog	catalog-info.yaml	2026-09-08T10:18:37.984495922Z	2026-09-08T10:18:37.927286839Z	backstage2linkedarchi	1.3.0-SNAPSHOT	Commerce Platform Catalog	Commerce Team
 #
 # 1 row(s)
-# core/provenance | query 167ff1bf3a10 | dataset base.trig | profile linked-archi-default v2 | 1 row(s)
+# core/provenance | query 167ff1bf3a10 | dataset base.trig | profile linked-archi-default v2 | 2026-09-17T05:25:51.192108+00:00 | 1 row(s)
 ```
 
 The three relationships come from `catalog-info.yaml`, converted by `backstage2linkedarchi`
@@ -145,10 +148,11 @@ Try instead: core/dependents-qualified, core/neighbours-qualified (same question
 This is a refusal, not an empty result: running it anyway would return no rows and read as 'nothing exists'.
 ```
 
-Exit 1, and nothing ran. This traces straight back to Step 0: `roles.unqualified_form` was
-reported as bound but unused, because the direct `{source} {predicate} {target}` triple is opt-in
-at conversion time and this dataset was converted without it. The template needs a form the data
-does not have, so it is refused and its alternatives are named.
+Exit 1, and nothing ran. The gate is the `direct_rel_triples` capability, false in this profile
+because the direct `{source} {predicate} {target}` triple is opt-in at conversion time and this
+dataset was converted without it. Step 0 is what makes that trustworthy: `verify` checked the claim
+against the data instead of taking it on trust. The template needs a form the data does not have, so
+it is refused and its alternatives are named.
 
 The investigation loses nothing — Step 3 answered the question through the qualified form. What it
 gains is that nobody reported "nothing depends on Order Service" on the strength of an empty table.

@@ -50,9 +50,10 @@ Three rules decide the rest.
 questions about it. Re-run orientation when the dataset changes, and before reporting that
 something is absent — that last one because absence is the claim orientation exists to qualify.
 
-**Prefer the qualified form.** Where a question has `-qualified`, `-direct` and `-reified`
-variants, they are the same question against different evidence, and `-qualified` is the one a
-default converter run supports. The others need capabilities most datasets do not have.
+**Prefer the qualified form.** Two questions ship in variants: `core/dependents` as `-qualified` and
+`-direct`, `core/neighbours` as `-qualified` and `-reified`. Each pair asks one question against
+different evidence, and `-qualified` is the one a default converter run supports. The others need
+capabilities — `direct_rel_triples`, `rdf_reifies` — that are opt-in at conversion time.
 
 **A refusal is an answer.** If the profile cannot support a template, `la-query` says so and
 names alternatives rather than running it. See [Evidence and refusal](concepts/evidence.md).

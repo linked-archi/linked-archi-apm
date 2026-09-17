@@ -56,7 +56,11 @@ $ python3 scripts/la-query lint good.rq --profile curated-store \
     --data fixtures/augmented.trig --data fixtures/shapes.ttl --data fixtures/vocabulary.ttl
 OK: read-only (good.rq)
 paths: 1 pattern(s) checked, all permitted
+  caveat: verdicts assume each attached shape document is whole. Only the presence of every declared shape namespace could be verified - one shape of 28 would pass that test - so a partial attachment can still produce a wrong verdict
 ```
+
+The caveat rides on the clean verdict too, deliberately. It qualifies the basis of the judgement,
+not its outcome.
 
 Two deliberate departures from the paper.
 
@@ -130,9 +134,12 @@ agent loop, which caps both the cost and the variance: the flow in
 [Answering a question](answering-a-question.md) is four queries, and it is four queries every time.
 
 That cap is the tradeoff, and it cuts both ways. Agentic designs handle questions no template
-anticipated; a [recent survey](https://arxiv.org/html/2604.21133v1) notes they can also take
-minutes per query. A fixed library cannot answer the unanticipated question at all — it refuses and
-says which template comes closest.
+anticipated, at a cost in latency that other work measures directly: the
+[GRISP paper](https://arxiv.org/abs/2604.21133) reports its own generate-then-retrieve method
+averaging 2.3 to 14 seconds per question and being *much faster than current agentic methods*,
+while also finding those agentic methods ahead on the hardest low-training-data benchmarks. A fixed
+library cannot answer the unanticipated question at all — it refuses and says which template comes
+closest.
 
 Where SPINACH and ARUQULA fit best: open graphs such as Wikidata, where the schema genuinely must
 be discovered per question and no one controls how the data was produced. That is the opposite of
