@@ -8,6 +8,20 @@ template written against one of them returns nothing against the other — silen
 what makes a template portable, and what lets the catalogue refuse a template the dataset cannot
 support instead of running it into an empty result.
 
+Concretely, a profile decides five things, and a template can express none of them itself:
+
+1. **Which IRI each vocabulary term is** — the [roles](#what-a-role-is). A template says "the label
+   predicate", the profile says `skos:prefLabel`.
+2. **Where the facts live** — the graph layout and graph roles, which decide whether a query is
+   wrapped in `GRAPH ?g_semantic { … }` or left unscoped.
+3. **What the dataset can support** — the capabilities and notation presence, which decide whether a
+   template runs, runs with a caveat, or is refused.
+4. **What "belongs to a model" means** — the membership mode: a direct edge, co-location in a graph,
+   or a bounded folder path.
+5. **How big an answer may get** — the row limits and timeout.
+
+Everything else in the file is naming and provenance around those five.
+
 ## What a profile document contains
 
 Every section is optional, and `extends` is resolved depth-first before validation.
@@ -35,22 +49,163 @@ The bundled `linked-archi-default` binds **59 roles**, 4 graph roles and 14 capa
     Anything else under `graphs` is folded in as a graph role, which is how `validation:` and
     `vocabulary:` are declared unbound in the default profile.
 
-## Roles, not literal IRIs
+## What a role is
 
-A template names a role; the profile binds it. `core/resolve-element` asks for `label`, and the
-default profile answers `skos:prefLabel`. A role may bind a **list** in preference order —
-`native_id` is `[skos:notation, bpmn:id]`, because BPMN carries its own identifier predicate —
-and a role bound to `null` is declared-but-unbound, which is how a template gets refused rather
-than rendered against nothing.
+**A role is a name a template uses instead of a vocabulary term.** The template says "the label
+predicate"; the profile says which IRI that is for this dataset. No template in the catalogue names
+`skos:prefLabel`, `arch:source` or `bpmn:id` directly — that is the rule the whole design rests on,
+because a template that names a term is a template that works on one dataset.
 
 ```yaml
 roles:
-  label: skos:prefLabel
-  native_id: [skos:notation, bpmn:id]
-  rel_source: arch:source
-  rel_target: arch:target
-  owner: null            # nothing in converter output carries ownership
+  label: skos:prefLabel                    # one IRI
+  native_id: [skos:notation, bpmn:id]      # a list, in preference order
+  owner: null                              # declared, deliberately unbound
 ```
+
+Three binding shapes, and the difference between them is behaviour, not style:
+
+| Binding | Means | Effect at render time |
+|---|---|---|
+| one IRI | this dataset uses exactly that term | substituted directly |
+| a list | several terms mean this, in preference order | becomes a SPARQL alternative path |
+| `null` | this dataset has nothing for it | any template requiring the role is **refused** |
+
+`native_id` is a list because BPMN carries its own identifier predicate while every other notation
+uses `skos:notation`. `owner` is `null` because converter output records no ownership — so
+`core/coverage-gaps` asking about owners is refused with a reason, rather than run to return nothing.
+
+### The 59 roles the default profile binds
+
+Grouped by what they describe. This is the whole vocabulary surface a template is allowed to touch.
+
+| Group | Roles |
+|---|---|
+| **Naming** | `label`, `alt_label`, `definition`, `native_id` |
+| **Classes** | `concept_class`, `element_class`, `relationship_class`, `model_class`, `view_class`, `diagram_class`, `folder_class` |
+| **Relationship form** | `rel_source`, `rel_target`, `rel_type`, `has_qualified_rel`, `reifies`, `unqualified_form` |
+| **Containment** | `part_of_model`, `part_of`, `has_part`, `folder_name` |
+| **Source description** | `bundle_class`, `qualified_derivation`, `source_path`, `source_repo`, `source_digest`, `source_alternate`, `source_url`, `source_email` |
+| **Conformance** | `conforms_to_metamodel`, `conforms_to_viewpoint` |
+| **Views and geometry** | `view_node_class`, `view_link_class`, `view_ref`, `node_element`, `in_view`, `link_relationship`, `link_source`, `link_target`, `bounds_x`, `bounds_y` |
+| **Provenance** | `derived_from`, `generated_by`, `generated_at`, `attributed_to`, `source_file`, `agent_name`, `agent_version` |
+| **Taxonomy and schema** | `broader`, `narrower`, `in_scheme`, `keywords`, `subclass_of` |
+| **Lifecycle** | `model_status`, `element_lifecycle`, `architecture_state` |
+| **Unbound by default** | `owner`, `same_as`, `exact_match` |
+
+`la-profile show` prints the bindings for any profile, and `la-query catalog show <template>` lists
+the roles a given template requires.
+
+## How a template becomes SPARQL
+
+A template is not a query. It is a query with holes, and the profile fills them. Eight directives
+exist, and nothing else is substituted:
+
+| Directive | Expands to |
+|---|---|
+| `{{PREFIXES}}` | the profile's whole namespace map as `PREFIX` lines |
+| `{{ROLE:x}}` | the primary IRI bound to role `x` |
+| `{{ROLES:x}}` | every IRI bound to `x`, space-separated, for a `VALUES` block |
+| `{{PATH:x}}` | every IRI bound to `x` as an alternative path, `a|b` |
+| `{{GRAPH_OPEN:role}}` / `{{GRAPH_CLOSE}}` | the graph wrapper this profile's layout calls for |
+| `{{GRAPH_VAR:role}}` | the variable that scope binds, `?g_<role>` |
+| `{{MEMBERSHIP:var}}` | the "belongs to a model" pattern for this profile's membership mode |
+
+Plus `{{PARAM}}` for typed user input, which is type-checked and escaped rather than pasted — a raw
+string replace on user input is an injection hole, and it also forces the caller to supply their own
+angle brackets.
+
+!!! note "One graph variable per role, not one per template"
+    `{{GRAPH_VAR:semantic}}` is `?g_semantic`. A template scoping to two roles — an element's facts
+    in the semantic graph, its provenance in the provenance graph — would otherwise bind both with
+    `?g` and require one graph IRI to end in two different suffixes at once. That is unsatisfiable,
+    so the query runs and returns nothing: exactly the failure this package exists to remove,
+    reintroduced by the mechanism meant to prevent it.
+
+### Seen concretely
+
+`core/neighbours-qualified`, as shipped (`la-query catalog show core/neighbours-qualified --source`):
+
+```sparql
+{{PREFIXES}}
+SELECT ?direction ?rel ?relType ?other ?otherLabel
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    VALUES ?focus { {{FOCUS_IRI}} }
+    ?rel a {{ROLE:relationship_class}} .
+    {
+      ?rel {{ROLE:rel_source}} ?focus ; {{ROLE:rel_target}} ?other .
+      BIND("outgoing" AS ?direction)
+    }
+    ...
+    OPTIONAL { ?other {{PATH:label}} ?otherLabel }
+  {{GRAPH_CLOSE}}
+}
+LIMIT {{LIMIT}}
+```
+
+The same template, rendered under two profiles. Comments and the 30 injected `PREFIX` lines are
+trimmed; nothing else is edited.
+
+=== "linked-archi-default"
+
+    ```sparql
+    SELECT ?direction ?rel ?relType ?other ?otherLabel
+    WHERE {
+      GRAPH ?g_semantic {
+        FILTER(STRENDS(STR(?g_semantic), "graph/semantic") || CONTAINS(STR(?g_semantic), "graph/semantic/"))
+        VALUES ?focus { <https://example.org/x> }
+        ?rel a <https://meta.linked.archi/core#QualifiedRelationship> .
+        {
+          ?rel <https://meta.linked.archi/core#source> ?focus ; <https://meta.linked.archi/core#target> ?other .
+          BIND("outgoing" AS ?direction)
+        }
+    ```
+
+=== "examples/flattened-turtle"
+
+    ```sparql
+    SELECT ?direction ?rel ?relType ?other ?otherLabel
+    WHERE {
+      {
+        VALUES ?focus { <https://example.org/x> }
+        ?rel a <https://meta.linked.archi/core#QualifiedRelationship> .
+        {
+          ?rel <https://meta.linked.archi/core#source> ?focus ; <https://meta.linked.archi/core#target> ?other .
+          BIND("outgoing" AS ?direction)
+        }
+    ```
+
+    Rendering also emits a caveat, because answering unscoped is a compromise rather than a
+    preference:
+
+    ```
+    caveat: profile has no named graphs, so the 'semantic' scope cannot be applied. The query
+    will run unscoped, which mixes semantic, view and provenance facts in one result.
+    ```
+
+`{{GRAPH_OPEN:semantic}}` became a `GRAPH` block with a suffix filter under one profile and a plain
+group under the other. Roles expanded to full IRIs in both. One template, two datasets, no edit.
+
+### A list-bound role and a membership mode
+
+`{{PATH:native_id}}` under the default profile, where `native_id` binds two IRIs:
+
+```sparql
+OPTIONAL { ?element <http://www.w3.org/2004/02/skos/core#notation>|<https://meta.linked.archi/bpmn/onto#id> ?nativeId }
+```
+
+`{{MEMBERSHIP:element}}` is the clearest case of the profile carrying a *decision* rather than a
+term. Same template, three `navigation.model_membership.mode` values:
+
+| Mode | Renders as |
+|---|---|
+| `direct-predicate` | `OPTIONAL { ?element <…core#inModel> ?model . }` |
+| `same-graph-colocation` | `OPTIONAL { ?model a <…core#Model> . }` |
+| `bounded-folder-tree` | `OPTIONAL { ?element (<dct:isPartOf>\|<dct:isPartOf>/<dct:isPartOf>\|<dct:isPartOf>/<dct:isPartOf>/<dct:isPartOf>) ?model . }` |
+
+A one-hop edge, co-location in a graph, or a bounded path of up to `max_depth` folder hops. The
+template asks "which model does this belong to" and never learns which of the three answered.
 
 ## Graph layout
 

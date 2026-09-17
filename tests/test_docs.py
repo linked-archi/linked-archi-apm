@@ -63,6 +63,49 @@ class TestTemplateCatalogueIsDocumentedWhole(unittest.TestCase):
             )
 
 
+class TestTheRoleTableMatchesTheDefaultProfile(unittest.TestCase):
+    """The profile page lists every role by group, and claims a count in its heading.
+
+    A role added to the default profile and not to the page leaves a reader with a list that
+    looks complete and is not, which is worse than no list: the roles table is the only place
+    the whole vocabulary surface is written down in one view.
+    """
+
+    def setUp(self):
+        import yaml
+
+        document = yaml.safe_load(
+            (
+                ROOT / "skills/linked-archi-profile/assets/profiles/linked-archi-default.yaml"
+            ).read_text(encoding="utf-8")
+        )
+        self.roles = set(document["roles"])
+        page = (DOCS / "concepts/profile.md").read_text(encoding="utf-8")
+        self.heading, _, rest = page.partition("### The ")[2].partition("\n")
+        self.table, _, _ = rest.partition("`la-profile show`")
+
+    def test_every_bound_role_appears_in_the_table(self):
+        named = set(re.findall(r"`([a-z_]+)`", self.table))
+        self.assertEqual(
+            self.roles - named, set(),
+            "roles bound by linked-archi-default but absent from the table in "
+            "docs/concepts/profile.md",
+        )
+
+    def test_the_table_invents_no_role(self):
+        named = set(re.findall(r"`([a-z_]+)`", self.table))
+        self.assertEqual(
+            named - self.roles, set(),
+            "the table names a role the default profile does not bind",
+        )
+
+    def test_the_heading_states_the_real_count(self):
+        self.assertTrue(
+            self.heading.startswith(f"{len(self.roles)} roles"),
+            f"the default profile binds {len(self.roles)} roles; the heading says {self.heading!r}",
+        )
+
+
 class TestAnalysisPatternsAreDocumentedWhole(unittest.TestCase):
     def setUp(self):
         self.patterns = json.loads(PATTERNS.read_text(encoding="utf-8"))["patterns"]
