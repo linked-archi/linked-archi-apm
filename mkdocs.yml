@@ -71,7 +71,9 @@ nav:
       - linked-archi-analyse: skills/analyse.md
   - Template catalogue: templates.md
   - Analysis patterns: patterns.md
+  - Answering a question: answering-a-question.md
   - Conversational analysis: walkthrough.md
+  - Related work: related-work.md
   - Reference:
       - CLI: reference/cli.md
       - Exit codes: reference/exit-codes.md

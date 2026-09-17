@@ -25,6 +25,152 @@ python3 scripts/la-query catalog show core/traceability --profile linked-archi-d
 
 Thirty-three are cross-notation. Six are notation-specific: one each for ArchiMate, C4, Backstage and LeanIX, and two for BPMN. A notation template is gated on the vocabulary IRI it is written against, never on a notation label.
 
+## Which one to reach for
+
+The stages are an order, not a menu. Most questions cross four of them: orient so a later
+absence can be trusted, resolve the names the user typed, run the analysis template, then cite
+where the answer came from. [Answering a question](answering-a-question.md) walks one question
+through that sequence end to end.
+
+| If the question is… | Reach for | Because |
+|---|---|---|
+| "what is loaded?", "how much of X?" | `core/inventory-summary`, then `core/inventory` | a count means nothing until you know the dataset is whole |
+| "what does *Order Service* mean here?" | `core/resolve-element`, then `core/define-term` | a label is not an IRI, and one label often matches several |
+| "what does X relate to?" | `core/neighbours-qualified` | the qualified form is what converters emit by default |
+| "what breaks if X changes?" | `core/dependents-qualified` | bounded to two hops, and answers reachability rather than impact |
+| "what connects capabilities to applications?" | `core/traceability` | the question is about two *types*, not two named things |
+| "which predicate should I even use?" | `core/discover-relationship-types` | what was modelled, as against what the metamodel permits |
+| "who owns this?" | `notation/backstage/ownership`, `core/lifecycle` | ownership is notation-specific, so a cross-notation template would under-report |
+| "can I trust this model?" | `core/coverage-gaps`, `core/orphans`, `core/validation-summary` | a gap in the model is not a gap in the estate, and only these say which |
+| "where did this claim come from?" | `core/provenance` | turns an answer into evidence |
+
+Three rules decide the rest.
+
+**Orient once per session, not once per question.** The dataset does not change between two
+questions about it. Re-run orientation when the dataset changes, and before reporting that
+something is absent — that last one because absence is the claim orientation exists to qualify.
+
+**Prefer the qualified form.** Where a question has `-qualified`, `-direct` and `-reified`
+variants, they are the same question against different evidence, and `-qualified` is the one a
+default converter run supports. The others need capabilities most datasets do not have.
+
+**A refusal is an answer.** If the profile cannot support a template, `la-query` says so and
+names alternatives rather than running it. See [Evidence and refusal](concepts/evidence.md).
+
+## Worked examples
+
+Every command and every row below was run against `fixtures/base.trig`, which ships with the
+package. Output is copied from those runs.
+
+### Reading a template before you use it
+
+`catalog show` is authoritative. It carries the parameter typing, the caveats and the profile
+verdict, none of which are in the `.rq` file:
+
+```console
+$ python3 scripts/la-query catalog show core/traceability --profile linked-archi-default
+name            core/traceability
+file            core/traceability.rq
+stage           analysis
+purpose         Paths of one or two hops between two kinds of element.
+answers         Which elements of one type connect to which of another, and how.
+does not prove  That an unlisted pair is unconnected. Deeper paths are out of scope.
+parameters
+  SOURCE_TYPE      iri
+                   class at one end
+  TARGET_TYPE      iri
+                   class at the other end
+  LIMIT            integer default=300 range=1..3000
+                   maximum rows
+requires
+  roles          relationship_class, rel_source, rel_target, label, concept_class
+  graph roles    semantic
+alternatives    core/coverage-gaps
+under profile 'linked-archi-default': available
+```
+
+The last line is the part worth reading first. `available` means this profile can support the
+template; the alternative is a refusal naming what to run instead.
+
+### An orientation query
+
+```console
+$ python3 scripts/la-query query run core/inventory-summary \
+    --profile linked-archi-default --data fixtures/base.trig
+metamodel	models	graphs	concepts
+https://meta.linked.archi/archimate3/metamodel#ArchiMate3.2	1	1	38
+https://meta.linked.archi/leanix/metamodel#LeanIXv4	1	1	15
+https://meta.linked.archi/backstage/metamodel#BackstageCatalog	1	1	13
+https://meta.linked.archi/bpmn/metamodel#BPMN2	1	1	10
+https://meta.linked.archi/c4/metamodel#C4Model	1	1	5
+#
+# 5 row(s)
+# core/inventory-summary | query 37548aa0dea1 | dataset base.trig | profile linked-archi-default v2 | 5 row(s)
+```
+
+Five notations loaded, so cross-notation questions are answerable here. The footer is on every
+result: template, query hash, dataset, profile and row count travel with the rows.
+
+### A discovery query
+
+Before writing a predicate into anything by hand, ask what this dataset actually uses. Truncated
+here to the first rows of each notation:
+
+```console
+$ python3 scripts/la-query query run core/discover-relationship-types \
+    --profile linked-archi-default --data fixtures/base.trig
+relType	count	sourceType	targetType
+https://meta.linked.archi/archimate3/onto#Flow	2	…onto#BusinessFunction	…onto#BusinessRole
+https://meta.linked.archi/archimate3/onto#UsedBy	2	…onto#BusinessInterface	…onto#BusinessRole
+https://meta.linked.archi/archimate3/onto#Aggregation	1	…onto#BusinessCollaboration	…onto#BusinessRole
+https://meta.linked.archi/backstage/onto#APIProvision	1	…onto#Component	…onto#API
+https://meta.linked.archi/backstage/onto#Ownership	1	…onto#Component	…onto#Group
+https://meta.linked.archi/backstage/onto#DomainMembership	1	…onto#System	…onto#Domain
+```
+
+This is what was modelled, with the endpoint types each relationship actually joins. It is not
+what the metamodel permits — for that, ask [`la-query lint`](related-work.md#obqc-implemented-without-the-repair-loop).
+
+### An analysis query about two types
+
+`core/traceability` takes types rather than instances, which is the right shape for "what connects
+these two kinds of thing":
+
+```console
+$ python3 scripts/la-query query run core/traceability \
+    --profile linked-archi-default --data fixtures/base.trig \
+    --set SOURCE_TYPE="<https://meta.linked.archi/backstage/onto#Component>" \
+    --set TARGET_TYPE="<https://meta.linked.archi/backstage/onto#Group>"
+source	sourceLabel	direction	hops	target	targetLabel	relType	relType2
+…/component/default/order-service	Order Service	source-to-target	1	…/group/default/team-commerce	Commerce Team	bs:Ownership	
+…/component/default/order-service	Order Service	source-to-mid, mid-to-target	2	…/group/default/team-commerce	Commerce Team	bs:APIProvision	bs:Ownership
+…/component/default/order-service	Order Service	source-to-mid, mid-to-target	2	…/group/default/team-commerce	Commerce Team	bs:SystemMembership	bs:Ownership
+#
+# 3 row(s)
+# core/traceability | query fc8a3f481374 | dataset base.trig | profile linked-archi-default v2 | 3 row(s)
+```
+
+One direct ownership edge, and two two-hop paths reaching the same team through the API and the
+system. Note `hops` and both `relType` columns: the template reports the shape of each path rather
+than flattening them, because a one-hop ownership and a two-hop inherited one are different claims.
+
+### A refusal
+
+```console
+$ python3 scripts/la-query query run core/dependents-direct \
+    --profile linked-archi-default --data fixtures/base.trig \
+    --set FOCUS_IRI="<…/element/component/default/order-service>" \
+    --set PREDICATE_PATH="bs:ownedBy"
+Template 'core/dependents-direct' cannot run against profile 'linked-archi-default':
+  - capability 'direct_rel_triples' is False in profile 'linked-archi-default' but this template needs True
+Try instead: core/dependents-qualified, core/neighbours-qualified (same question, different evidence).
+This is a refusal, not an empty result: running it anyway would return no rows and read as 'nothing exists'.
+```
+
+Exit 1, and it is routing rather than a crash. The direct triple is opt-in at conversion time, so
+on a default dataset this template has nothing to traverse — and an empty table would have read as
+"nothing depends on it".
+
 ## orientation
 
 Run these first, every session. They establish what is actually loaded, so an empty later result can be told from a partial export.
