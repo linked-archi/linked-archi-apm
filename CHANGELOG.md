@@ -11,6 +11,11 @@ workflow publishes exactly this text, so what is written here is what a consumer
 ## [Unreleased]
 
 ### Added
+- **Repeatable local query-workflow benchmarks.** `make benchmark` measures selective metadata,
+  render-only generation, saved previews, analyse planning and independent orientation batches.
+  It checks evidence equivalence, isolates companion/state settings, records reproducible input
+  identities and reports CLI timings/output bytes without treating bytes as model tokens.
+  The default dataset is the bundled test fixture; real datasets must be explicitly selected.
 - **Selective query metadata and compact evidence previews.** `catalog dump` accepts repeated
   `--template`, `--stage` and `--notation` filters without dropping selected entries' gates or
   caveats. `query run|literal -o FILE --preview` saves the complete envelope while printing a

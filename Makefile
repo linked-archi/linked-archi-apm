@@ -11,15 +11,17 @@ CONV    ?= ../converters/example-architecture-project
 BASE_IRI?= https://example.org/la/
 SKILLS_DIR ?= $(HOME)/.kiro/skills
 BIN_DIR ?= $(HOME)/.local/bin
+BENCH_ARGS ?= --output out/query-benchmark.json
 
 .PHONY: help check test test-quiet catalog profile verify verify-curated fixtures \
         skills install-local uninstall-local link-cli unlink-cli dist version bump \
-        release-notes release-check clean docs docs-serve
+        release-notes release-check clean docs docs-serve benchmark
 
 help:
 	@echo "check          validate skills and run the tests"
 	@echo "test           run the test suite (verbose)"
 	@echo "test-quiet     run the test suite (summary only)"
+	@echo "benchmark      measure query workflows on the test fixture (override BENCH_ARGS)"
 	@echo "skills         validate SKILL.md frontmatter"
 	@echo "dist           archive the committed package directly"
 	@echo "version        print the manifest version"
@@ -40,6 +42,9 @@ help:
 	@echo "                converter jars - see fixtures/PROVENANCE.md)"
 
 check: skills test
+
+benchmark:
+	$(PY) tests/benchmark_queries.py $(BENCH_ARGS)
 
 # Installation links exactly what is committed. It never generates or copies runtime.
 install-local:

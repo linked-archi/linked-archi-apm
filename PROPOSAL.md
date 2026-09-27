@@ -886,6 +886,20 @@ refusal decisions and generated-manifest execution through query followed by ana
 Output-size reductions are measurable; they are not claims about billed model tokens or a
 universal latency multiplier.
 
+The maintainer harness `tests/benchmark_queries.py` makes those measurements repeatable,
+through existing owner CLIs rather than imports or a new execution route. Full/filtered
+metadata, render-only generation, JSON/saved-preview lookups and separate/batched orientation
+are measured on identical inputs, with analyse planning timed separately. It executes only
+the two known ready orientation templates, never the remaining investigation automatically.
+The default fixture is labelled test-only; custom data requires a supplied term and profile
+selection remains the caller's responsibility. Data hashes and resolved-profile snapshots
+are compared before/after; complete result evidence must agree before timings are reported.
+Temporary artifacts cannot mask missing writes, and each batch entry keeps its own caveats.
+Medians and samples report output bytes and top-level CLI calls, not invented token counts
+or nested subprocess counts. Isolated verification state, explicit memory stores, preserved
+resource bounds and alternating order reduce contamination without claiming cold-cache or
+end-to-end agent performance. No skill runtime or public contract changes for this harness.
+
 ### Requests deliberately not adopted as stated
 
 Carried here from the agent-usability plan when that plan was retired, because each of these
