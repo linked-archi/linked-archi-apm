@@ -251,6 +251,23 @@ class Envelope:
             ]
         )
 
+    def to_preview(self, limit: int = 100) -> str:
+        """A bounded display of saved evidence, including CONSTRUCT output."""
+        if self.triples is None:
+            return self.to_tsv(limit=limit)
+        lines = self.triples.splitlines()
+        note = (
+            [f"NOTE: showing {limit} of {len(lines)} CONSTRUCT output lines; "
+             "the saved envelope contains the complete result. This display is not "
+             "a complete RDF document."]
+            if len(lines) > limit else []
+        )
+        return "\n".join([
+            *self._commented(note),
+            *lines[:limit],
+            *self._commented([*self._caveat_lines(), self.citation()]),
+        ])
+
     @staticmethod
     def _tsv_cell(value: object) -> str:
         """Escape a value so it cannot invent a column or a row."""

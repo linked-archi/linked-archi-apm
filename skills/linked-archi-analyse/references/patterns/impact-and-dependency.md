@@ -11,7 +11,10 @@ Triggers: retire, replace, change, migrate, fail, affected by, depends on, blast
 
 Templates: `core/neighbours-qualified`, `core/dependents-qualified`, `core/provenance`.
 With `direct_rel_triples`, `core/dependents-direct` gives unbounded-depth traversal along a
-chosen predicate set.
+chosen predicate set, subject to query-owner predicate, result and execution limits. A row
+cap does not bound traversal work. Prefer the bounded qualified route unless transitive
+reachability is required and the capability is verified; the two routes do not establish
+the same depth of evidence.
 
 **The mistake this pattern exists to prevent:** labelling everything reachable "impacted".
 A two-hop path may compose relationship types whose combination means nothing — "A is

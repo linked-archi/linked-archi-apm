@@ -55,8 +55,8 @@ already gathered:
 
 | Reading | Requires |
 |---|---|
-| Nothing of this kind is modelled | `core/inventory` showing the type has members |
-| The data is not loaded | `core/inventory` showing it does not |
+| No matching fact in the inspected models | An established population, correct scope/predicates/direction and an untruncated query result |
+| No population of this type was found in scope | Orientation and type inventory; whether this is an omitted export remains a separate question |
 | The question is not answerable here | A refusal naming the missing capability |
 | The query is wrong | A term check with `core/element-detail` |
 

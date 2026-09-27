@@ -9,6 +9,8 @@ file, because it carries the typing and the caveats the file does not.
 ```bash
 python3 scripts/la-query catalog list --profile linked-archi-default --why
 python3 scripts/la-query catalog show core/traceability --profile linked-archi-default
+python3 scripts/la-query catalog dump --profile linked-archi-default \
+  --template core/traceability --template core/coverage-gaps
 ```
 
 ## By stage
@@ -27,10 +29,11 @@ Thirty-three are cross-notation. Six are notation-specific: one each for ArchiMa
 
 ## Which one to reach for
 
-The stages are an order, not a menu. Most questions cross four of them: orient so a later
-absence can be trusted, resolve the names the user typed, run the analysis template, then cite
-where the answer came from. [Answering a question](answering-a-question.md) walks one question
-through that sequence end to end.
+For investigations the stages establish evidence order, not a requirement to execute every
+template: orient so a later absence can be trusted, resolve names, run the needed analysis,
+then cite its sources. Analyse owns that orchestration. Render-only work needs metadata and
+`query render`, not dataset access; a bounded lookup does not need the whole investigation.
+[Answering a question](answering-a-question.md) walks an investigation through that sequence.
 
 | If the question is… | Reach for | Because |
 |---|---|---|
@@ -46,9 +49,10 @@ through that sequence end to end.
 
 Three rules decide the rest.
 
-**Orient once per session, not once per question.** The dataset does not change between two
-questions about it. Re-run orientation when the dataset changes, and before reporting that
-something is absent — that last one because absence is the claim orientation exists to qualify.
+**Reuse orientation only when freshness is known.** Do not assume a dataset stays unchanged
+between questions, or treat filenames or a verification marker as a revision check. Refresh
+orientation when data/profile changes and before absence claims. Analyse conservatively plans
+fresh orientation; its two independent queries can share one batch.
 
 **Prefer the qualified form.** Two questions ship in variants: `core/dependents` as `-qualified` and
 `-direct`, `core/neighbours` as `-qualified` and `-reified`. Each pair asks one question against
@@ -885,4 +889,3 @@ SHACL verdict with violations by severity and shape, from a report in the datase
 **Requires.** `validation_in_graph: true`
 
 **Instead, when refused.** `core/coverage-gaps`, `core/orphans`
-

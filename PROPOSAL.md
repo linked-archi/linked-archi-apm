@@ -551,9 +551,10 @@ one role.
 **D6. Fixtures extracted from real output, not authored.** An authored fixture is written to
 satisfy the queries under test, so it cannot detect a vocabulary that does not exist. See §7.
 
-**D7. Method separated from mechanism.** `analyse` and `query` install
-independently; `query` alone is useful, `analyse` alone is not, and its
-`compatibility` says so.
+**D7. Method separated from mechanism.** `analyse` and `query` install independently.
+Query owns execution; analyse owns investigation and orchestration. Analyse originally
+needed query for all useful work; D16 adds standalone planning and bundling with reduced
+metadata, while execution still requires query and its companions.
 
 **D8. No mandatory MCP dependency.** The package works
 against local files, verified HTTPS/Git artifacts, or an endpoint. GitLab MCP is an
@@ -645,8 +646,10 @@ the sources and queries" — depended on the agent remembering to keep one.
 `la-analyse` now owns two operations and neither of them touches a dataset. **`plan`** routes
 a question to an analysis pattern from `assets/patterns.json`, then emits the numbered
 `la-query` commands in doctrine order with their purposes, parameters, stop conditions and —
-when query is installed — each template's availability under the chosen profile, so a refused
-template is replaced by its documented alternative *at planning time*. **`bundle`** consumes
+when query is installed — each template's availability under the chosen profile. Refused
+candidates are explicit decisions, with alternatives to assess rather than silently substitute
+(D23); the earlier wording claiming automatic replacement overstated the implementation.
+**`bundle`** consumes
 the envelopes those commands wrote and assembles one artifact, refusing envelopes from two
 datasets or two profiles, carrying truncation and caveats forward, and requiring every claim
 except an unknown to cite a step.
@@ -835,6 +838,53 @@ ASK: `_verify_metamodel_pairing` asked its `declared` question inside `GRAPH ?g`
 carries no graph identity, so on a flattened dataset every notation answered absent, every
 branch below was skipped, and the pass reported "every metamodel the data declares has its
 manifest attached" about a dataset it had not managed to look at. Fixed there too.
+
+**D23. Pay for the question, not the entire investigation protocol.** The method/mechanism
+split in D7 and D10 is a performance boundary as well as an ownership boundary. Render-only
+work needs profile-resolved template metadata, not orientation queries. One bounded lookup
+needs its inputs and evidence, not every analysis pattern. An investigation still belongs to
+analyse: framing, orchestration, dependencies, budgets, interpretation and the final answer
+must not migrate into query to make the entry instructions shorter.
+
+The two skill entrypoints now route those cases before loading depth. Graph-shape rules,
+read-only enforcement, scope, refusal handling and evidence attribution remain mandatory;
+mode-specific execution and bundling details move to conditional references. The full query
+remains in every saved envelope. Ordinary template answers can cite the template, parameters
+or query hash and that artifact, matching analyse's output contract; render-only, adapted and
+ad-hoc queries still show their SPARQL. This reduces repeated context, not auditability.
+
+`catalog dump` gains repeatable template, stage and notation filters, preserving every field
+and gate verdict for selected entries and leaving the unfiltered version-1 document unchanged.
+Analyse asks for its shortlist in one subprocess, with fallback for older query installations.
+`query run|literal -o FILE --preview` writes the exact full envelope and prints bounded TSV
+with warnings, truncation and citation. Batch preview does the same per entry; batch-level
+output remains a summary, so each evidence entry needs its own `out`. Display caps never
+change saved evidence, query hashes or query truncation.
+
+Planning no longer defines every resolved term automatically. Definitions are requested by
+the question or `--definitions`, and the analyst adds them when ambiguity or pattern semantics
+require them. Refused candidates move out of executable steps into explicit `decisions`,
+retaining reasons, alternatives and semantic limits. No alternative is automatically assumed
+equivalent. Version 1 keeps the existing step fields and string command representation;
+dependencies, unresolved parameters, review status, decisions and batch manifests are additive.
+Placeholder commands remain candidates, not executable instructions. Query budgets count query
+steps, not refusal decisions, and remain advisory.
+
+Independent, fully bound steps can share a query-owned batch (D19). Fresh orientation is the
+first batch; later batches require review of their prerequisites. Unknown availability,
+unbound parameters, unresolved decisions and over-budget steps cannot enter a manifest.
+An explicit data path or endpoint is required for emitted batches. The CLI can write manifests
+with `--batch-dir`, but neither it nor the machine planner executes them. Sequential pattern
+review barriers remain: batching cannot erase a judgement that determines the next query.
+
+Rejected: trusting a verification marker or equal filenames to skip fresh orientation. Current
+dataset identity does not prove revision freshness. Also rejected: removing refusal/provenance
+metadata, truncating saved artifacts, switching the default store mode, importing a sibling's
+runtime, or making analyse an executor. Those trade correctness or ownership for apparent speed.
+Tests cover unchanged filtered entries and envelopes, preview caveats, dependency barriers,
+refusal decisions and generated-manifest execution through query followed by analyse bundling.
+Output-size reductions are measurable; they are not claims about billed model tokens or a
+universal latency multiplier.
 
 ### Requests deliberately not adopted as stated
 

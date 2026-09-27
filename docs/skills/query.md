@@ -25,7 +25,9 @@ la-query
 ```bash
 python3 scripts/la-query catalog list --profile linked-archi-default --why
 python3 scripts/la-query catalog show core/traceability --profile linked-archi-default
-python3 scripts/la-query catalog dump --profile linked-archi-default
+python3 scripts/la-query catalog dump --profile linked-archi-default \
+  --template core/neighbours-qualified --template core/dependents-qualified
+python3 scripts/la-query catalog dump --profile linked-archi-default --stage analysis --notation bpmn
 ```
 
 In `catalog list`, `x` marks a template this profile refuses, `!` one that runs with a caveat, and
@@ -37,8 +39,32 @@ carries the typing, what the template does not prove, and its alternatives. Fiel
 `requires` (roles, graph roles, capability, membership), `alternatives`, then availability under the
 named profile.
 
-`catalog dump` emits the whole catalogue as JSON with per-template `available`, `unmet` and
-`profile_caveats`. This is exactly the call `la-analyse` makes to annotate a plan.
+`catalog dump` retrieves full metadata for selected entries as JSON. Repeat `--template` to request
+known candidates together; use `--stage` or `--notation` to narrow discovery. Repeated values of the
+same filter match any value; different filter kinds must all match. For example, two `--template`
+values select either template, while `--stage analysis --notation bpmn` selects only BPMN analysis
+templates. Unknown filter values fail rather than silently returning a partial catalogue.
+
+With `--profile`, each selected entry also carries `available`, `unmet` and `profile_caveats`.
+`la-analyse` requests the entries needed to annotate its investigation plan. The `schema_version: 1`
+payload and complete entry metadata remain the same with filters; without filters, `catalog dump`
+still emits the whole catalogue. Prefer a selected dump when only a few templates are relevant.
+
+## Generating SPARQL without execution
+
+For a known profile and template, inspect its parameter contract and render it directly:
+
+```bash
+python3 scripts/la-query catalog show core/neighbours-qualified --profile linked-archi-default
+python3 scripts/la-query query render core/neighbours-qualified --profile linked-archi-default \
+  --set FOCUS_IRI=https://example.org/la/bpmn/order-fulfillment/element/Task_Payment -o neighbours.rq
+```
+
+Rendering checks typed parameters, profile capability gates and query safety without opening a
+dataset. It produces candidate SPARQL, not findings about a graph. Question investigation,
+orientation, evidence review and orchestration belong to [linked-archi-analyse](analyse.md); they
+are not prerequisites for generating a requested query. Resolve an unknown identifier before
+execution rather than inventing it from a label.
 
 ## Running a query
 
@@ -60,7 +86,7 @@ flowchart LR
 | `query literal --query/--file` | The same for an ad-hoc query. Cited as `ad-hoc query`. |
 | `query batch <manifest>` | Several queries from a JSON manifest, one store load. |
 
-Flags on `run` and `literal`:
+Flags on `run` and `literal` (`--set` applies to `run` only):
 
 | Flag | Default | Purpose |
 |---|---|---|
@@ -70,15 +96,63 @@ Flags on `run` and `literal`:
 | `--json` | off | The same as `--format json`. `--format` wins if both appear. |
 | `--limit N` | `100` | Rows to **print**. A display cap only. |
 | `-o, --output FILE` | stdout | Writes the envelope as JSON regardless of `--format`. |
+| `--preview` | off | With `-o`, also print a bounded preview with caveats and citation. |
 
 !!! warning "`--limit` is not the query's limit"
     `--limit` bounds what is printed. It does not bound the query, the work, or what `-o` and
     `--json` write. The query's own cap is `--set LIMIT=N`, and hitting it is what sets `truncated`.
 
+### Save evidence and inspect it in one call
+
+```bash
+python3 scripts/la-query query run core/inventory-summary --data architecture.trig \
+  -o steps/inventory.json --preview --limit 20
+```
+
+For `run` and `literal`, `--preview` requires `-o` and a positive `--limit`; invalid combinations
+are refused before profile resolution or query execution. The file retains the full JSON envelope,
+including the query, every returned row, warnings, truncation and provenance. The preview uses TSV
+regardless of `--format` or `--json`, and displays at most `--limit` rows with the existing caveats,
+truncation warning and citation. ASK and empty results retain their existing guidance. CONSTRUCT
+previews limit physical output lines and warn when the displayed fragment is not a complete RDF
+document; the saved triples remain intact.
+
+Without `--preview`, `-o` keeps its existing behavior: save the envelope and print the file location.
+Saving all returned rows does not make a query capped by `LIMIT` complete; its `truncated` warning
+still applies.
+
 ### `query batch`
 
 A manifest with `schema_version: 1` and a non-empty `queries` array; each entry takes exactly one of
 `template`, `file` or `query`, plus optional `id`, `set` and `out`. One store load serves them all.
+
+```json
+{
+  "schema_version": 1,
+  "queries": [
+    {"id": "models", "template": "core/models", "out": "steps/models.json"},
+    {"id": "inventory", "template": "core/inventory-summary", "out": "steps/inventory.json"}
+  ]
+}
+```
+
+Save that manifest as `batch.json`, then:
+
+```bash
+python3 scripts/la-query query batch batch.json --data architecture.trig --preview --limit 20 \
+  -o batch-summary.txt
+```
+
+Each manifest `out` saves that result's complete JSON envelope. Batch `-o` saves the run summary,
+not an envelope or the previews. `--preview` additionally prints each result's bounded evidence,
+caveats and citation to stdout, even when the summary is saved. Batch previews do not require `-o`;
+use manifest `out` entries to retain evidence for `la-analyse bundle`. Without `--preview`, batch
+output remains the summary. `--limit` is per preview and does not change query limits or saved data.
+
+Batch independent queries whose parameters are already known. Investigations use
+`la-analyse plan --batch-dir DIR` to prepare eligible manifests; review prerequisite results before
+running later groups, and run each batch instead of its individual commands. Analyse plans and
+orchestrates; query owns execution, safety checks and envelopes.
 
 ## `lint`
 

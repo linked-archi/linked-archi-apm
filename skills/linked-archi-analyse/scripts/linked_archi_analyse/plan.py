@@ -7,6 +7,7 @@ with the query owner, which is where read-only enforcement and result provenance
 
 from __future__ import annotations
 
+import re
 import shlex
 from dataclasses import dataclass, field
 from typing import Any, Mapping, Sequence
@@ -46,6 +47,29 @@ _ORIENTATION = (
 )
 
 
+def definitions_needed(question: str, definitions: bool = False) -> bool:
+    """Select definition evidence only when the question or caller requests it."""
+    wording = re.sub(r'["\'\u201c\u2018][^"\'\u201d\u2019]+["\'\u201d\u2019]', "TERM", question)
+    return definitions or bool(re.search(
+        r"\b(?:define|definition|meaning)\b|\bwhat (?:does|do)\b.*\bmean\b|"
+        r"\bwhat (?:is|are)\s+TERM\b", wording, re.IGNORECASE,
+    ))
+
+
+def required_templates(question: str, pattern: Pattern | None,
+                       definitions: bool = False) -> list[str]:
+    """The metadata this investigation needs, before any dataset is consulted."""
+    names = [template for template, _purpose in _ORIENTATION]
+    names.append("core/resolve-element")
+    if definitions_needed(question, definitions):
+        names.append("core/define-term")
+    if pattern is not None:
+        names.extend(template for template in pattern.templates
+                     if template != "core/define-term" or definitions_needed(question, definitions))
+    names.append("core/provenance")
+    return list(dict.fromkeys(names))
+
+
 @dataclass
 class Step:
     """One planned command."""
@@ -62,9 +86,30 @@ class Step:
     alternatives: list[str] = field(default_factory=list)
     over_budget: bool = False
     note: str = ""
+    depends_on: list[int] = field(default_factory=list)
+    review_decisions: list[str] = field(default_factory=list)
+
+    @property
+    def unresolved_parameters(self) -> list[str]:
+        return [name for name, value in self.parameters.items()
+                if value.startswith("<") and value.endswith(">")]
+
+    @property
+    def status(self) -> str:
+        if self.availability not in ("available", "caveat"):
+            return self.availability
+        if self.review_decisions:
+            return "review-required"
+        if self.unresolved_parameters:
+            return "awaiting-parameters"
+        return "awaiting-evidence" if self.depends_on else "ready"
+
+    def output_path(self, steps_dir: str) -> str:
+        slug = self.template.split("/")[-1]
+        return f"{steps_dir}/{self.number:02d}-{slug}.json"
 
     def command(self, *, profile: str | None, data: Sequence[str], endpoint: str | None,
-                steps_dir: str) -> str:
+                steps_dir: str, preview: bool = False) -> str:
         """The exact command to run, with the output path already chosen.
 
         Every step writes an envelope from the first step onward, because the envelope IS the
@@ -72,16 +117,17 @@ class Step:
         """
         parts = ["la-query", "query", "run", self.template]
         if profile:
-            parts += ["--profile", shlex.quote(profile)]
+            parts += ["--profile", profile]
         for path in data:
-            parts += ["--data", shlex.quote(path)]
+            parts += ["--data", path]
         if endpoint:
-            parts += ["--endpoint", shlex.quote(endpoint)]
+            parts += ["--endpoint", endpoint]
         for name, value in self.parameters.items():
-            parts += ["--set", f"{name}={_render_value(value)}"]
-        slug = self.template.split("/")[-1]
-        parts += ["--json", "-o", f"{steps_dir}/{self.number:02d}-{slug}.json"]
-        return " ".join(parts)
+            parts += ["--set", f"{name}={value}"]
+        parts += ["--json", "-o", self.output_path(steps_dir)]
+        if preview:
+            parts += ["--preview", "--limit", "20"]
+        return shlex.join(parts)
 
     def as_dict(self, **command_context: Any) -> dict[str, Any]:
         return {
@@ -97,15 +143,12 @@ class Step:
             "alternatives": list(self.alternatives),
             "over_budget": self.over_budget,
             "note": self.note,
+            "depends_on": list(self.depends_on),
+            "review_decisions": list(self.review_decisions),
+            "unresolved_parameters": self.unresolved_parameters,
+            "status": self.status,
             "command": self.command(**command_context),
         }
-
-
-def _render_value(value: str) -> str:
-    """A supplied value is quoted; a placeholder is left visibly unresolved."""
-    if value.startswith("<") and value.endswith(">"):
-        return value
-    return shlex.quote(value)
 
 
 @dataclass
@@ -129,6 +172,9 @@ class Plan:
     #: are conditions on the investigation, and pairing "reachability is not criticality"
     #: with whichever step happened to be third reads as a per-step rule and is nonsense.
     pattern_stop_when: list[str] = field(default_factory=list)
+    decisions: list[dict[str, Any]] = field(default_factory=list)
+    batch_dir: str | None = None
+    preview: bool = False
 
     def _context(self) -> dict[str, Any]:
         return {
@@ -136,6 +182,7 @@ class Plan:
             "data": self.data,
             "endpoint": self.endpoint,
             "steps_dir": self.steps_dir,
+            "preview": self.preview,
         }
 
     def as_dict(self) -> dict[str, Any]:
@@ -155,8 +202,53 @@ class Plan:
             "steps_dir": self.steps_dir,
             "notes": list(self.notes),
             "pattern_stop_when": list(self.pattern_stop_when),
+            "decisions": list(self.decisions),
+            "batches": self.batches(),
             "steps": [step.as_dict(**self._context()) for step in self.steps],
         }
+
+    def batches(self) -> list[dict[str, Any]]:
+        """Group concrete independent commands; evidence review remains a boundary."""
+        if not self.data and not self.endpoint:
+            return []
+        groups: dict[tuple[str, tuple[int, ...]], list[Step]] = {}
+        for step in self.steps:
+            if (step.availability not in ("available", "caveat")
+                    or step.unresolved_parameters or step.review_decisions or step.over_budget):
+                continue
+            groups.setdefault((step.stage, tuple(step.depends_on)), []).append(step)
+        batches = []
+        for (stage, depends_on), steps in groups.items():
+            if len(steps) < 2:
+                continue
+            manifest_path = f"{self.batch_dir or self.steps_dir + '/batches'}/{steps[0].number:02d}-{stage}.json"
+            command = ["la-query", "query", "batch", manifest_path]
+            if self.profile:
+                command += ["--profile", self.profile]
+            for path in self.data:
+                command += ["--data", path]
+            if self.endpoint:
+                command += ["--endpoint", self.endpoint]
+            if self.preview:
+                command += ["--preview", "--limit", "20"]
+            batches.append({
+                "stage": stage,
+                "steps": [step.number for step in steps],
+                "depends_on": list(depends_on),
+                "status": "awaiting-evidence" if depends_on else "ready",
+                "manifest_path": manifest_path,
+                "manifest": {
+                    "schema_version": 1,
+                    "queries": [{
+                        "id": f"step-{step.number:02d}",
+                        "template": step.template,
+                        "set": dict(step.parameters),
+                        "out": step.output_path(self.steps_dir),
+                    } for step in steps],
+                },
+                "command": shlex.join(command),
+            })
+        return batches
 
     def to_text(self) -> str:
         lines: list[str] = [f"question   {self.question}"]
@@ -182,12 +274,32 @@ class Plan:
         for note in self.notes:
             lines.append(f"note       {note}")
         lines.append("")
+        for decision in self.decisions:
+            lines.append(f"{decision['id']} [REFUSED] {decision['template']}")
+            lines.append(f"   reason: {decision['reason']}")
+            lines.append(f"   alternatives to assess: {', '.join(decision['alternatives'])}")
+            lines.append("   Alternatives are not assumed to answer the same question.")
+            lines.append("")
+        for batch in self.batches():
+            lines.append(f"batch      steps {', '.join(map(str, batch['steps']))} [{batch['status']}]")
+            if batch["depends_on"]:
+                lines.append(f"   review first: steps {', '.join(map(str, batch['depends_on']))}")
+            if not self.batch_dir:
+                lines.append("   write manifests with --batch-dir DIR before using this command")
+            lines.append(f"   $ {batch['command']}")
+        if self.batches():
+            lines.append("   Run each batch instead of its individual commands; review results before continuing.")
+            lines.append("")
         for step in self.steps:
             flag = "  [OVER BUDGET]" if step.over_budget else ""
             mark = {"available": "", "refused": "  [REFUSED by this profile]",
                     "caveat": "  [runs with a caveat]"}.get(step.availability, "")
             lines.append(f"{step.number:02d} {step.stage:12} {step.purpose}{mark}{flag}")
             lines.append(f"   $ {step.command(**self._context())}")
+            if step.depends_on:
+                lines.append(f"   review first: steps {', '.join(map(str, step.depends_on))}")
+            if step.review_decisions:
+                lines.append(f"   decision required: {', '.join(step.review_decisions)}")
             if step.establishes:
                 lines.append(f"   establishes: {step.establishes}")
             for name, value in step.parameters.items():
@@ -249,14 +361,17 @@ def build_plan(
     endpoint: str | None = None,
     budget: int = DEFAULT_BUDGET,
     steps_dir: str = "steps",
+    definitions: bool = False,
+    batch_dir: str | None = None,
+    preview: bool = False,
 ) -> Plan:
     """Assemble the plan. Reads no dataset; runs nothing.
 
     ``catalogue`` is the query owner's `catalog dump` output when that skill is installed, and
     ``None`` when it is not. With it, each step carries real parameter names and this
-    profile's availability, so **a refused template is replaced by its documented alternative
-    at planning time** rather than being discovered mid-investigation. Without it the plan is
-    still ordered and still names templates, and says it is unannotated.
+    profile's availability. Refused candidates become explicit decisions, never commands or
+    silent substitutions. Without metadata the plan still names templates and says that its
+    availability and required parameters need checking.
     """
     if not question.strip():
         raise AnalyseError("a plan needs a question")
@@ -288,6 +403,7 @@ def build_plan(
         )
 
     steps: list[Step] = []
+    decisions: list[dict[str, Any]] = []
     number = 0
     planned: set[tuple[str, tuple[tuple[str, str], ...]]] = set()
 
@@ -317,6 +433,21 @@ def build_plan(
         if signature in planned:
             return
         planned.add(signature)
+        if metadata is not None and metadata.get("available") is False:
+            decisions.append({
+                "id": f"decision-{len(decisions) + 1}",
+                "stage": stage,
+                "template": template,
+                "purpose": purpose,
+                "availability": "refused",
+                "reason": "; ".join(metadata.get("unmet") or []),
+                "alternatives": list(metadata.get("alternatives") or []),
+                "answers": metadata.get("answers", ""),
+                "does_not_prove": metadata.get("does_not_prove", ""),
+                "caveats": ([metadata["caveat"]] if metadata.get("caveat") else [])
+                           + list(metadata.get("profile_caveats") or []),
+            })
+            return
         number += 1
         step = Step(
             number=number,
@@ -327,14 +458,14 @@ def build_plan(
             establishes=establishes,
             stop_when=stop_when,
             over_budget=number > budget,
+            review_decisions=[decision["id"] for decision in decisions],
         )
         if metadata is not None:
             available = metadata.get("available")
             profile_caveats = list(metadata.get("profile_caveats") or [])
             caveat = metadata.get("caveat")
-            if available is False:
-                step.availability = "refused"
-                step.note = "; ".join(metadata.get("unmet") or [])
+            if available is not True:
+                step.availability = "unknown"
             elif profile_caveats:
                 step.availability = "caveat"
             else:
@@ -362,16 +493,19 @@ def build_plan(
             "several candidates match and the choice changes the answer - ask instead of picking",
             term=term,
         )
-        add(
-            "core/define-term", "resolve",
-            f"Explain what {subject} means here, and how ambiguous it is.",
-            "whether the name means one thing in this dataset",
-            "the candidates column is greater than one - name them and ask",
-            term=term,
-        )
+        if definitions_needed(question, definitions):
+            add(
+                "core/define-term", "resolve",
+                f"Explain what {subject} means here, and how ambiguous it is.",
+                "whether the name means one thing in this dataset",
+                "the candidates column is greater than one - name them and ask",
+                term=term,
+            )
 
     if pattern is not None:
         for template in pattern.templates:
+            if template == "core/define-term" and not definitions_needed(question, definitions):
+                continue
             add(
                 template, "pattern",
                 f"{pattern.title}: evidence from {template}.",
@@ -385,6 +519,16 @@ def build_plan(
         "that every load-bearing element can be traced to a source",
         "an element the conclusion depends on has no provenance - say so in the answer",
     )
+
+    orientation = [step.number for step in steps if step.stage == "orient"]
+    resolution = [step.number for step in steps if step.stage == "resolve"]
+    previous_pattern: int | None = None
+    for step in steps:
+        if step.stage == "resolve":
+            step.depends_on = list(orientation)
+        elif step.stage in ("pattern", "quality"):
+            step.depends_on = [previous_pattern] if previous_pattern is not None else orientation + resolution
+            previous_pattern = step.number
 
     if number > budget:
         notes.append(
@@ -411,4 +555,7 @@ def build_plan(
         annotated=annotated,
         notes=notes,
         pattern_stop_when=list(pattern.stop_when) if pattern else [],
+        decisions=decisions,
+        batch_dir=batch_dir,
+        preview=preview,
     )

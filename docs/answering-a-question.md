@@ -57,11 +57,13 @@ https://meta.linked.archi/c4/metamodel#C4Model	1	1	5
 # core/inventory-summary | query 37548aa0dea1 | dataset base.trig | profile linked-archi-default v2 | 2026-09-17T05:25:12.443019+00:00 | 5 row(s)
 ```
 
-Five notations, 81 concepts. This is what licenses every later claim about absence: from here on,
-an empty result means "the models do not say", and not "the export was partial".
+Five notations, 81 concepts. This establishes the loaded population, not that every export
+is complete. Before an absence claim, also check scope, predicates, relationship direction
+and query truncation.
 
-Do this once per session. It is the same answer for the second question about this dataset as for
-the first.
+Reuse inspected orientation only when the dataset and profile are known unchanged. Refresh
+it when either changes and before absence claims; filenames or verification markers alone
+do not establish freshness. The two orientation queries can share one batch.
 
 ## Step 2 — resolve the name
 

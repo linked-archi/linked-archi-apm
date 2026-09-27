@@ -30,12 +30,12 @@ sequenceDiagram
   participant A as la-analyse
   participant Q as la-query
   U->>A: plan --question '...' --profile P --data G
-  A->>Q: catalog dump --profile P
+  A->>Q: catalog dump --profile P --template NAME ...
   Q-->>A: templates, availability, parameters
-  A-->>U: ordered steps, each a literal la-query command
-  loop each step
-    U->>Q: query run <template> ... --json -o steps/NN-x.json
-    Q-->>U: envelope written
+  A-->>U: steps, refusal decisions, independent batch manifests
+  loop review dependencies and resolve parameters
+    U->>Q: query batch FILE or query run TEMPLATE ... --preview
+    Q-->>U: complete envelopes saved, bounded preview shown
   end
   U->>A: bundle --step steps/01-*.json ... --findings f.json
   A->>A: coherence checks, claim-class validation
@@ -48,7 +48,7 @@ sequenceDiagram
 
 ```bash
 python3 scripts/la-analyse plan --question 'what depends on "Order Service"?' \
-    --profile linked-archi-default --data graph.trig
+    --profile linked-archi-default --data graph.trig --batch-dir batches
 ```
 
 | Flag | Default | Purpose |
@@ -61,13 +61,15 @@ python3 scripts/la-analyse plan --question 'what depends on "Order Service"?' \
 | `--endpoint URL` | — | Not contacted here. |
 | `--budget N` | `12` | Steps beyond it are marked, never dropped. |
 | `--steps-dir DIR` | `steps` | Where the planned commands write envelopes. |
+| `--definitions` | off | Add definition evidence even when the question does not explicitly ask for it. |
+| `--batch-dir DIR` | — | Write manifests for independent concrete steps; execute nothing. |
 | `--json` | off | Emit the plan as JSON. |
 
 ### Step order is doctrine
 
 ```mermaid
 flowchart LR
-  O["orient<br/><small>core/inventory-summary<br/>core/models</small>"] --> R["resolve<br/><small>core/resolve-element<br/>core/define-term<br/>per quoted name</small>"]
+  O["orient<br/><small>core/inventory-summary<br/>core/models</small>"] --> R["resolve<br/><small>core/resolve-element per quoted name<br/>core/define-term when requested</small>"]
   R --> P["pattern<br/><small>the pattern's own templates,<br/>in table order</small>"]
   P --> Q["quality<br/><small>core/provenance</small>"]
 ```
@@ -76,20 +78,36 @@ Orientation always comes first, so an empty later result can be told from a part
 Resolution comes next, so no step takes a hand-written IRI. Then the pattern's evidence. Then
 provenance, so every load-bearing element can be traced to a source.
 
+Orientation is freshly planned on every invocation. No previous envelope or verification
+marker is used to skip it: the existing basename-based dataset identity cannot prove that
+the current data is unchanged.
+
+`core/define-term` is conditional, including when a pattern lists it among its candidates.
+It is included for `--definitions`, or when the wording asks for a definition: `define`,
+`definition`, `meaning`, `what does/do … mean`, or `what is/are "a quoted name"`.
+Words inside quoted names do not trigger this choice, so "Definition Service"
+is still just an entity name. An analyst should add `--definitions` when meaning or ambiguity
+becomes material to the investigation. Name resolution and its stop condition for several
+candidates remain in every plan.
+
 Templates are de-duplicated by `(template, parameters)`, which is why `core/provenance` — named by
 two stages — is planned once and cited twice.
 
-### Every step is a literal command
+### Commands carry evidence and dependencies
 
 ```
 03 resolve      Turn "Order Service" into an IRI.
-   $ la-query query run core/resolve-element --profile linked-archi-default --data graph.trig --set TERM='Order Service' --json -o steps/03-resolve-element.json
+   $ la-query query run core/resolve-element --profile linked-archi-default --data graph.trig --set 'TERM=Order Service' --json -o steps/03-resolve-element.json --preview --limit 20
+   review first: steps 1, 2
    establishes: the focus IRIs later steps take as parameters
    stop if: several candidates match and the choice changes the answer - ask instead of picking
 ```
 
-Every step writes an envelope from step 01 onward, because the envelope *is* the evidence and a
-terminal scroll cannot be turned back into one.
+Every executed step saves the full JSON envelope from step 01 onward, because the envelope
+*is* the evidence. With the current query companion, `--preview --limit 20` shows a bounded
+result with evidence identifiers, caveats and truncation information; it does not reduce
+the saved rows or the query's limit. Legacy companion commands keep `--json -o` without the
+preview flags.
 
 Parameters that cannot be known at planning time appear as visible placeholders naming their source,
 rather than as invented values:
@@ -102,21 +120,68 @@ rather than as invented values:
 `LIMIT` is skipped, and so is any parameter with a documented catalogue default — a documented
 default beats a guess.
 
+Commands containing placeholders are plans, not executable queries yet. Resolve the values,
+check profile availability, and review `depends_on` results and `review_decisions` first.
+Pattern steps keep their evidence order: neighbours precede deeper dependency paths.
+
+The JSON `status` describes planning readiness: `ready`, `awaiting-evidence`,
+`awaiting-parameters`, `review-required`, or `unknown`. A `ready` step has known profile
+availability, bound parameters and no outstanding planning dependencies. It does not certify
+the dataset, enforce stop conditions, or provide a missing execution target. Profile gates
+describe the configured profile; they are not verification against the data.
+
+### Batch independent steps
+
+`batches` groups at least two available steps with the same stage and dependencies. Every
+entry has bound parameters and an individual envelope output path. An explicit `--data` or
+`--endpoint` is required; unresolved, unknown, refused, decision-blocked and over-budget
+steps never enter a manifest. A batch replaces its individual commands; do not execute both.
+
+The two orientation queries are one ready batch. Multiple quoted names, or an explicitly
+requested definition alongside resolution, can form a later resolution batch marked
+`awaiting-evidence`. Review orientation and its stop conditions before running that batch.
+Pattern steps retain separate review boundaries instead of guessing that their evidence is
+independent.
+
+With `--batch-dir batches`, the CLI writes these manifests without touching the dataset:
+
+```bash
+la-query query batch batches/01-orient.json --profile linked-archi-default \
+    --data graph.trig --preview --limit 20
+```
+
+Without `--batch-dir`, manifests are embedded in JSON output and their suggested paths are
+under `steps/batches`; no files are written. The machine plan command also only returns the
+manifests, even when its `batch_dir` field supplies their intended directory. Query owns
+execution, safety checking, and the complete result envelopes consumed by `bundle`.
+
 ### Availability annotation, and its degrade path
 
-With `--profile` and `la-query` reachable, `plan` runs `catalog dump` and annotates each step. A
-refused template is replaced by its documented alternative **at planning time** rather than
-mid-investigation:
+With `--profile` and `la-query` reachable, `plan` requests metadata only for its candidate
+templates using repeated `catalog dump --template NAME` filters. Refused candidates become
+`decisions`, outside the numbered query steps and budget. They never receive a command:
 
 ```
-08 pattern      Impact and dependency: evidence from core/dependents-direct.  [REFUSED by this profile]
-   instead: core/dependents-qualified, core/neighbours-qualified
-   note: capability 'direct_rel_triples' is False in profile 'linked-archi-default' but this template needs True
+decision-1 [REFUSED] core/dependents-direct
+   reason: capability 'direct_rel_triples' is False in profile 'linked-archi-default' but this template needs True
+   alternatives to assess: core/dependents-qualified, core/neighbours-qualified
+   Alternatives are not assumed to answer the same question.
 ```
 
-Every failure to reach the catalogue — companion missing, timeout, non-zero exit, invalid JSON,
-wrong schema version — degrades rather than fails. The plan is still an ordered plan, availability
-reads `unknown`, no `--set` flags are emitted, and the caller is told what is missing:
+There is no automatic substitution. For example, qualified two-hop paths do not establish
+the same reachability as unbounded direct paths. Decisions preserve the reason, alternatives,
+caveats and the requested template's `answers` and `does_not_prove`. Subsequent steps carry
+the decision ID in `review_decisions` so the analyst must decide whether to narrow the
+question, gather different evidence or stop.
+
+A rejected filtered catalogue request retries a full dump for compatibility with older
+query installations. Filtering and preview were introduced together, so a successful
+filtered request enables preview flags. The fallback conservatively omits `--preview` and
+`--limit` from both individual and batch commands while preserving complete saved envelopes.
+If metadata still cannot be obtained — missing companion, timeout,
+non-zero exit, invalid JSON or wrong schema version — the plan degrades rather than fails.
+Availability reads `unknown`, no `--set` flags are emitted, no batches are offered, and the
+caller is told what is missing:
 
 > linked-archi-query was not reachable, so no template parameters or availability could be read.
 > Run `la-query catalog dump --profile P` and re-plan, or take parameters from
@@ -125,8 +190,12 @@ reads `unknown`, no `--set` flags are emitted, and the caller is told what is mi
 A template the routing table names but the installed catalogue lacks is skipped with a note saying
 the two skills are probably different generations.
 
+Without `--profile`, catalogue metadata can still supply parameters, but availability remains
+`unknown` and no batches are offered. `annotated: true` means metadata was read, not that the
+profile or dataset was verified.
+
 The budget is never enforced. Steps past it are marked `[OVER BUDGET]` so what you are giving up
-stays visible.
+stays visible; they remain in the plan but are excluded from generated batches.
 
 ## `bundle`
 

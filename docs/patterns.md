@@ -28,6 +28,11 @@ flowchart TD
 A zero score everywhere is a real answer, not a failure: the question does not look like anything
 this skill has a method for.
 
+The lists below are ordered candidate checklists, not mandatory execution scripts. Analyse
+de-duplicates queries, makes definitions conditional, records refused candidates as decisions,
+and preserves review barriers before dependent work. Stop when the evidence is sufficient;
+do not execute every candidate to complete a checklist. Query remains the execution owner.
+
 !!! note "`capabilities` here is advisory"
     The authoritative gate is the query catalogue's own `requires`, checked at render time. The
     pattern lists capabilities so a planner can say "this dataset cannot answer that" before running
@@ -41,7 +46,7 @@ this skill has a method for.
 
 *Triggers:* `uncovered`, `coverage`, `incomplete`, `gap`, `gaps`, `missing`, `no owner`, `without an owner`, `unowned`, `how many have`
 
-*Templates, in the order the plan runs them:*
+*Candidate templates, in evidence order:*
 
 - `core/inventory`
 - `core/elements-by-type`
@@ -60,7 +65,7 @@ this skill has a method for.
 
 *Triggers:* `reconcile`, `same system`, `same thing`, `both tools`, `across tools`, `bpmn to archimate`, `backstage to c4`, `identity`
 
-*Templates, in the order the plan runs them:*
+*Candidate templates, in evidence order:*
 
 - `core/identity-audit` — gated on `identity_assertions`
 - `core/label-collisions`
@@ -79,7 +84,7 @@ this skill has a method for.
 
 *Triggers:* `decision`, `principle`, `standard`, `policy`, `exception`, `constraint`, `approved`, `governance`, `compliant`
 
-*Templates, in the order the plan runs them:*
+*Candidate templates, in evidence order:*
 
 - `core/discover-predicates`
 - `core/element-detail`
@@ -97,7 +102,7 @@ this skill has a method for.
 
 *Triggers:* `retire`, `replace`, `migrate`, `decommission`, `affected by`, `depends on`, `dependency`, `blast radius`, `impact`
 
-*Templates, in the order the plan runs them:*
+*Candidate templates, in evidence order:*
 
 - `core/resolve-element`
 - `core/discover-relationship-types`
@@ -120,7 +125,7 @@ this skill has a method for.
 
 *Triggers:* `duplicate`, `duplicates`, `overlap`, `rationalise`, `rationalize`, `lifecycle`, `deprecated`, `portfolio`, `strategic importance`
 
-*Templates, in the order the plan runs them:*
+*Candidate templates, in evidence order:*
 
 - `core/lifecycle` — gated on `element_lifecycle`
 - `core/define-term`
@@ -141,7 +146,7 @@ this skill has a method for.
 
 *Triggers:* `what is in`, `what does this model cover`, `take part`, `takes part`, `participate`, `who is involved`, `contents`, `components`
 
-*Templates, in the order the plan runs them:*
+*Candidate templates, in evidence order:*
 
 - `core/inventory-summary`
 - `core/resolve-model`
@@ -161,7 +166,7 @@ this skill has a method for.
 
 *Triggers:* `can we trust`, `trust`, `quality`, `complete`, `wrong with`, `orphan`, `orphans`, `conformance`, `conform`
 
-*Templates, in the order the plan runs them:*
+*Candidate templates, in evidence order:*
 
 - `core/inventory-summary`
 - `core/orphans`
@@ -183,7 +188,7 @@ this skill has a method for.
 
 *Triggers:* `which capability`, `supports`, `realises`, `realizes`, `implements`, `serves`, `cross-layer`, `end to end`, `traceability`, `trace`
 
-*Templates, in the order the plan runs them:*
+*Candidate templates, in evidence order:*
 
 - `core/resolve-element`
 - `core/traceability`
@@ -200,7 +205,7 @@ this skill has a method for.
 
 *Triggers:* `diagram`, `diagrams`, `drawn`, `documented`, `view`, `views`, `what is new in`
 
-*Templates, in the order the plan runs them:*
+*Candidate templates, in evidence order:*
 
 - `core/views` — gated on `views_graph`
 - `core/view-contents` — gated on `views_graph`
@@ -213,4 +218,3 @@ this skill has a method for.
 
 - the notation carries no diagrams at all, which is always true of Backstage and LeanIX
 - a difference between diagrams has been found - it is not yet a difference in the architecture
-

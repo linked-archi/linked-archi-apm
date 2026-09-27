@@ -113,6 +113,22 @@ killed for being large. See
 [connect's machine contract](../../linked-archi-connect/references/machine-contract.md) and
 [profile's](../../linked-archi-profile/references/machine-contract.md).
 
+## Catalogue and evidence CLI artifacts
+
+Analyse obtains metadata through `catalog dump`, not another `_machine` operation. Its
+version-1 JSON (`templates`, and optional `profile`) is unchanged without filters. Repeated
+`--template NAME`, `--stage STAGE` and `--notation NAME` select entries, retaining complete
+metadata, availability, unmet requirements and profile caveats. Repeated values within a
+kind are alternatives; different kinds intersect. Unknown filter values are errors, not
+an empty catalogue that could be mistaken for unavailable evidence.
+
+`query run|literal -o FILE --preview --limit N` saves the same full version-1 envelope
+while printing a bounded TSV view with citation and warnings. Preview requires `-o` and
+a positive display limit; invalid options are rejected before execution. `query batch`
+supports per-entry previews; each manifest `out` saves an envelope, while batch-level
+`-o` saves only the summary. These are display features, not a changed machine contract
+or a second execution/enforcement boundary.
+
 ## Versioning
 
 `schema_version` is checked exactly, on both sides. Fields may be added within version 1

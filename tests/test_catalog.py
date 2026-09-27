@@ -577,12 +577,11 @@ class TestCatalogDump(unittest.TestCase):
     that adds up during template selection. `dump` is the same information at once.
     """
 
-    def _dump(self, *args: str) -> dict:
-        import json
+    def _command(self, *args: str):
         import subprocess
         import sys
 
-        done = subprocess.run(
+        return subprocess.run(
             [
                 sys.executable,
                 str(support.ROOT / "skills" / "linked-archi-query" / "scripts" / "la-query"),
@@ -594,6 +593,11 @@ class TestCatalogDump(unittest.TestCase):
             text=True,
             cwd=support.ROOT,
         )
+
+    def _dump(self, *args: str) -> dict:
+        import json
+
+        done = self._command(*args)
         self.assertEqual(done.returncode, 0, done.stderr)
         return json.loads(done.stdout)
 
@@ -624,3 +628,51 @@ class TestCatalogDump(unittest.TestCase):
         views = payload["templates"]["core/view-contents"]
         self.assertTrue(views["available"])
         self.assertTrue(views["profile_caveats"])
+
+    def test_selected_entries_keep_the_full_contract_and_profile_verdicts(self):
+        full = self._dump("--profile", "linked-archi-default")
+        selected = self._dump(
+            "--profile", "linked-archi-default",
+            "--template", "core/dependents-direct",
+            "--template", "core/view-contents",
+            "--template", "core/view-contents",
+        )
+        self.assertEqual(set(selected), set(full))
+        self.assertEqual(selected["profile"], full["profile"])
+        self.assertEqual(selected["schema_version"], full["schema_version"])
+        self.assertEqual(selected["templates"], {
+            name: full["templates"][name]
+            for name in ("core/dependents-direct", "core/view-contents")
+        })
+        self.assertFalse(selected["templates"]["core/dependents-direct"]["available"])
+        self.assertTrue(selected["templates"]["core/view-contents"]["profile_caveats"])
+
+    def test_stage_and_notation_filters_intersect_and_repeated_values_form_unions(self):
+        selected = self._dump(
+            "--stage", "analysis", "--stage", "enrichment",
+            "--notation", "bpmn", "--notation", "backstage",
+        )
+        expected = {
+            entry.name for entry in load_catalog()
+            if entry.stage in {"analysis", "enrichment"}
+            and entry.notation in {"bpmn", "backstage"}
+        }
+        self.assertTrue(expected)
+        self.assertEqual(set(selected["templates"]), expected)
+        self.assertNotIn("profile", selected)
+
+    def test_template_and_stage_filters_do_not_broaden_each_other(self):
+        selected = self._dump("--template", "core/models", "--stage", "analysis")
+        self.assertEqual(selected["templates"], {})
+
+    def test_unknown_filter_values_fail_without_returning_a_partial_catalogue(self):
+        for flags, value in (
+            (("--template", "core/models", "--template", "core/missing"), "core/missing"),
+            (("--notation", "missing-notation"), "missing-notation"),
+            (("--stage", "missing-stage"), "missing-stage"),
+        ):
+            with self.subTest(flags=flags):
+                done = self._command(*flags)
+                self.assertEqual(done.returncode, 2, done.stderr)
+                self.assertEqual(done.stdout, "")
+                self.assertIn(value, done.stderr)

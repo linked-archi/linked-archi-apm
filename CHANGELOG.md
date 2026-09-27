@@ -11,6 +11,15 @@ workflow publishes exactly this text, so what is written here is what a consumer
 ## [Unreleased]
 
 ### Added
+- **Selective query metadata and compact evidence previews.** `catalog dump` accepts repeated
+  `--template`, `--stage` and `--notation` filters without dropping selected entries' gates or
+  caveats. `query run|literal -o FILE --preview` saves the complete envelope while printing a
+  bounded result, warnings and citation; batch preview works per manifest entry.
+- **Dependency-aware investigation plans.** Analyse records refusals as decisions, never
+  executable commands or silent substitutions. Definition lookups are conditional, and
+  `--batch-dir` writes manifests for independent bound steps while preserving review barriers.
+  Shorter query/analyse entrypoints load detailed guidance only for the selected route;
+  investigation and orchestration remain with analyse. See PROPOSAL D23.
 - **A documentation site, published to GitHub Pages from CI.** `mkdocs.yml` plus `docs/`: the
   package overview, one page per skill, the graph profile and the evidence model as concepts, all
   39 templates, all nine analysis patterns, a CLI and exit-code reference, and an end-to-end

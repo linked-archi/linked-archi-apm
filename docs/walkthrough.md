@@ -7,8 +7,10 @@ This is the "text to SPARQL" path, with the generation step replaced by **routin
 written from the question. The question selects a method, the method names templates that were
 already tested, and the profile decides which of them this dataset can support.
 
-Everything below was run against `fixtures/base.trig`, which ships with the package. The output is
-copied from those runs.
+The planner excerpt below comes from the current runtime for `fixtures/base.trig`, which ships with
+the package. The result tables and bundled evidence preserve an earlier recorded fixture run. That
+run also queried definitions; the current dependency plan omits that extra query unless requested.
+The execution section explains the recorded envelope numbering used by its findings and bundle.
 
 ## Why routing rather than generation
 
@@ -23,8 +25,8 @@ flowchart TB
   R --> T["the pattern's templates<br/><small>already written and tested</small>"]
   T --> G{"gate against<br/>the profile"}
   G -->|"supported"| S
-  G -->|"refused"| ALT["named alternative<br/><small>substituted at planning time</small>"]
-  ALT --> S["ordered steps<br/><small>each a literal command</small>"]
+  G -->|"refused"| ALT["decision with alternatives<br/><small>assess meaning and bounds</small>"]
+  ALT -->|"after evidence review"| S["ordered steps<br/><small>commands + review dependencies</small>"]
   S --> E["envelopes<br/><small>rows + query + dataset + profile</small>"]
   E --> B["bundle<br/><small>one dataset, one profile, coherence checked</small>"]
   B --> A["<b>answer</b><br/><small>every claim cites a step</small>"]
@@ -46,27 +48,48 @@ question   what depends on "Payments Gateway"?
 pattern    impact-and-dependency — Impact and dependency
 read       references/patterns/impact-and-dependency.md
 ranked     impact-and-dependency(1)
-budget     12 queries; 9 step(s) planned
+budget     12 queries; 7 step(s) planned
 annotated  yes, against the profile
 
+decision-1 [REFUSED] core/dependents-direct
+   reason: capability 'direct_rel_triples' is False in profile 'linked-archi-default' but this template needs True
+   alternatives to assess: core/dependents-qualified, core/neighbours-qualified
+   Alternatives are not assumed to answer the same question.
+
+batch      steps 1, 2 [ready]
+   write manifests with --batch-dir DIR before using this command
+   $ la-query query batch /tmp/walk/batches/01-orient.json --profile linked-archi-default --data fixtures/base.trig --preview --limit 20
+   Run each batch instead of its individual commands; review results before continuing.
+
 01 orient       Which notations loaded, and how much of each.
-   $ la-query query run core/inventory-summary --profile linked-archi-default --data fixtures/base.trig --json -o /tmp/walk/01-inventory-summary.json
+   $ la-query query run core/inventory-summary --profile linked-archi-default --data fixtures/base.trig --json -o /tmp/walk/01-inventory-summary.json --preview --limit 20
    establishes: what is actually loaded, so an empty later result can be told from a partial export
    stop if: only one notation loaded and the question needs two
 ...
 03 resolve      Turn "Payments Gateway" into an IRI.
-   $ la-query query run core/resolve-element --profile linked-archi-default --data fixtures/base.trig --set TERM='Payments Gateway' --json -o /tmp/walk/03-resolve-element.json
+   $ la-query query run core/resolve-element --profile linked-archi-default --data fixtures/base.trig --set 'TERM=Payments Gateway' --json -o /tmp/walk/03-resolve-element.json --preview --limit 20
+   review first: steps 1, 2
    establishes: the focus IRIs later steps take as parameters
    stop if: several candidates match and the choice changes the answer - ask instead of picking
 ...
-06 pattern      Impact and dependency: evidence from core/neighbours-qualified.
-   $ la-query query run core/neighbours-qualified --profile linked-archi-default --data fixtures/base.trig --set FOCUS_IRI=<FOCUS_IRI: resolved in the resolve step, from core/resolve-element> --json -o /tmp/walk/06-neighbours-qualified.json
+05 pattern      Impact and dependency: evidence from core/neighbours-qualified.
+   $ la-query query run core/neighbours-qualified --profile linked-archi-default --data fixtures/base.trig --set 'FOCUS_IRI=<FOCUS_IRI: resolved in the resolve step, from core/resolve-element>' --json -o /tmp/walk/05-neighbours-qualified.json --preview --limit 20
+   review first: steps 4
    establishes: the pattern's own evidence
    FOCUS_IRI: <FOCUS_IRI: resolved in the resolve step, from core/resolve-element>
 ...
-08 pattern      Impact and dependency: evidence from core/dependents-direct.  [REFUSED by this profile]
-   instead: core/dependents-qualified, core/neighbours-qualified
-   note: capability 'direct_rel_triples' is False in profile 'linked-archi-default' but this template needs True
+06 pattern      Impact and dependency: evidence from core/dependents-qualified.
+   $ la-query query run core/dependents-qualified --profile linked-archi-default --data fixtures/base.trig --set 'FOCUS_IRI=<FOCUS_IRI: resolved in the resolve step, from core/resolve-element>' --json -o /tmp/walk/06-dependents-qualified.json --preview --limit 20
+   review first: steps 5
+   establishes: the pattern's own evidence
+   FOCUS_IRI: <FOCUS_IRI: resolved in the resolve step, from core/resolve-element>
+...
+07 pattern      Impact and dependency: evidence from core/provenance.
+   $ la-query query run core/provenance --profile linked-archi-default --data fixtures/base.trig --set 'FOCUS_IRI=<FOCUS_IRI: resolved in the resolve step, from core/resolve-element>' --json -o /tmp/walk/07-provenance.json --preview --limit 20
+   review first: steps 6
+   decision required: decision-1
+   establishes: the pattern's own evidence
+   FOCUS_IRI: <FOCUS_IRI: resolved in the resolve step, from core/resolve-element>
 
 stop the investigation when:
   - the relationship semantics on a path stop supporting the claim
@@ -76,21 +99,54 @@ stop the investigation when:
 
 Three things happened here that a generated query cannot do.
 
-**A refusal arrived before any work.** Step 08 wants `core/dependents-direct`, which needs the direct
-relationship triple. This dataset was converted without that flag, so the step is marked refused at
-*planning* time and its documented alternatives are named. The investigation loses nothing: steps 06
-and 07 answer the same question through the qualified form.
+**A refusal arrived before query execution.** `core/dependents-direct` needs direct relationship
+triples, which the selected profile does not declare. The planner records `decision-1` separately
+from executable steps and names alternatives to assess. It does not substitute one automatically:
+step 05 shows immediate qualified neighbours, and step 06 follows incoming qualified relationships
+for at most two hops. Those bounds and relationship meanings must fit the claim being made; they do
+not establish equivalence with an arbitrary direct-predicate traversal. Review the decision before
+continuing past its boundary.
 
-**Unknown parameters are visible.** `FOCUS_IRI` is a placeholder naming where its value comes from,
-not a guess. The plan cannot be executed by accident with an invented IRI.
+**Unknown parameters are visible.** `FOCUS_IRI` is a shell-quoted placeholder naming where its value
+comes from. Typed parameter validation refuses that placeholder until it is replaced with a resolved
+IRI. Evidence-review dependencies remain visible even when a command's parameters are concrete.
 
 **The stopping conditions came with the method.** "Reachability has been established but criticality
 has not" is the mistake this pattern exists to prevent, and it is attached to the plan rather than
 left to the analyst's memory.
 
+The ready orientation queries can share one load. Add `--batch-dir /tmp/walk/batches` to the plan
+command to write their manifest, then run the batch instead of those two individual commands. Review
+both results before resolving names. Planning itself executes no queries. Generated commands use
+`--preview --limit 20` to display bounded evidence while saving complete envelopes; that display cap
+does not change query limits or costs. Add `--definitions` only when definitions are needed beyond
+what the question already requests.
+
 ## Step 2 — execute, in order
 
-Each step writes an envelope. Step 03 produces the IRI that later steps consume:
+Each executed query writes an envelope. The commands and results in this section preserve the earlier
+recorded run, which included `core/define-term` after resolution. Its saved filenames are retained
+for reproducibility; they are not the current seven-step planner's numbering:
+
+| Recorded bundle step | Saved envelope |
+|---|---|
+| 1 | `01-inventory-summary.json` |
+| 2 | `02-models.json` |
+| 3 | `03-resolve-element.json` |
+| 4 | `04-define-term.json` |
+| 5 | `05-discover-relationship-types.json` |
+| 6 | `06-neighbours-qualified.json` |
+| 7 | `07-dependents-qualified.json` |
+| 8 | `09-provenance.json` |
+
+Bundle step numbers follow the order of `--step` inputs, not the numeric prefix of a filename. The
+historical provenance filename contains a gap for a refused template; no query ran in that slot.
+When following the current seven-step plan, write findings against the envelopes actually executed:
+neighbours is step 5 and dependents is step 6 if supplied in plan order. Do not reuse the recorded
+eight-step citations unchanged.
+
+Selected commands from the recorded run follow. Resolution produces candidates to inspect before
+choosing the focus; the IRI shown is the recorded selection, not a rule to choose the first match:
 
 ```bash
 python3 scripts/la-query query run core/resolve-element --data fixtures/base.trig \
@@ -132,8 +188,9 @@ And the dependents step, one row:
 |---|---|---|
 | 1 | Finance | `leanix:OrganizationalUsage` |
 
-Row counts for the whole run: 5, 5, 2, 10, 52, 5, 1, 2 — nothing truncated, so no count in the
-answer is a floor.
+Row counts for the recorded eight-envelope run: 5, 5, 2, 10, 52, 5, 1, 2 — nothing truncated, so
+these result counts are not floors. The 10-row definition result is not part of the current default
+plan. Complete returned rows still describe only each query's graph scope and traversal bounds.
 
 ## Step 3 — interpret, in five separated classes
 
@@ -142,7 +199,7 @@ from what you concluded:
 
 ```json
 {
-  "answer": "One thing depends on Payments Gateway in these models: the Finance organisation uses it. Nothing else reaches it.",
+  "answer": "Within the incoming qualified paths examined, bounded at two hops, Finance is the only returned dependent of Payments Gateway, through OrganizationalUsage. This does not establish runtime impact or exclude longer paths.",
   "graph_facts": [
     {"claim": "One dependent within two hops: Finance, via OrganizationalUsage", "steps": [7]},
     {"claim": "It has 5 direct relationships: 1 incoming from Finance, 4 outgoing", "steps": [6]}
@@ -167,7 +224,14 @@ from what you concluded:
 
 ```bash
 python3 scripts/la-analyse bundle \
-    --step /tmp/walk/01-inventory-summary.json ... --step /tmp/walk/09-provenance.json \
+    --step /tmp/walk/01-inventory-summary.json \
+    --step /tmp/walk/02-models.json \
+    --step /tmp/walk/03-resolve-element.json \
+    --step /tmp/walk/04-define-term.json \
+    --step /tmp/walk/05-discover-relationship-types.json \
+    --step /tmp/walk/06-neighbours-qualified.json \
+    --step /tmp/walk/07-dependents-qualified.json \
+    --step /tmp/walk/09-provenance.json \
     --question 'what depends on "Payments Gateway"?' \
     --findings /tmp/walk/findings.json -o /tmp/walk/bundle.json
 ```
@@ -226,8 +290,9 @@ python3 scripts/la-analyse render --bundle /tmp/walk/bundle.json
   not fit fails silently - scoped queries return nothing, or rows that mean something else.
 
 ## Answer
-One thing depends on Payments Gateway in these models: the Finance organisation uses it. Nothing
-else reaches it.
+Within the incoming qualified paths examined, bounded at two hops, Finance is the only returned
+dependent of Payments Gateway, through OrganizationalUsage. This does not establish runtime impact
+or exclude longer paths.
 
 ## Graph facts
 - One dependent within two hops: Finance, via OrganizationalUsage (step 7)
@@ -267,7 +332,7 @@ before quoting the answer anywhere that matters.
 | The question selected a tested method, not generated SPARQL | routing table, 9 patterns |
 | A template the dataset cannot support was refused before running | profile gating, at planning time |
 | No IRI was invented | `core/resolve-element`, a placeholder until resolved |
-| Every count is exact rather than a floor | nothing truncated, and truncation would have said so |
+| Result counts are not floors, within the query's scope and bounds | nothing truncated, and truncation would have said so |
 | Each claim names its evidence | claim classes, uncited claims refused |
 | Conclusions are separated from facts | `inferences` versus `graph_facts` |
 | What the models cannot answer is stated | `unknowns`, the one class exempt from citation |

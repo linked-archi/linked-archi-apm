@@ -8,15 +8,23 @@ and the reproducibility envelope two authors.
 from __future__ import annotations
 
 import json
+import io
+import shlex
+import subprocess
+import sys
+import tempfile
 import unittest
 from pathlib import Path
+from contextlib import redirect_stdout
+from unittest import mock
 
 import support
 from support import AUGMENTED, ROOT
 
 from linked_archi_analyse import build_bundle, build_plan, load_patterns, render_markdown
 from linked_archi_analyse.patterns import AnalyseError, resolve_mode, terms_in
-from linked_archi_analyse.plan import DEFAULT_BUDGET
+from linked_archi_analyse.plan import DEFAULT_BUDGET, required_templates
+from linked_archi_analyse import cli as analyse_cli
 
 QUERY = ROOT / "skills" / "linked-archi-query" / "scripts" / "la-query"
 
@@ -35,7 +43,8 @@ def _catalogue(profile: str = "linked-archi-default") -> dict:
 
 
 def _plan(question: str, *, mode: str | None = None, profile: str = "linked-archi-default",
-          catalogue: dict | None = -1, budget: int = DEFAULT_BUDGET):
+          catalogue: dict | None = -1, budget: int = DEFAULT_BUDGET,
+          definitions: bool = False, preview: bool = True):
     patterns = load_patterns()
     pattern, ranked = resolve_mode(mode, question, patterns)
     return build_plan(
@@ -46,6 +55,8 @@ def _plan(question: str, *, mode: str | None = None, profile: str = "linked-arch
         profile=profile,
         data=["graph.trig"],
         budget=budget,
+        definitions=definitions,
+        preview=preview,
     )
 
 
@@ -158,20 +169,27 @@ class TestPlanShape(unittest.TestCase):
 
 
 class TestProfileAwareness(unittest.TestCase):
-    def test_a_refused_template_is_replaced_at_planning_time(self):
-        """The point of annotating: not discovering it halfway through."""
+    def test_a_refused_template_is_a_decision_without_an_executable_command(self):
         plan = _plan('what depends on "Order Service" if we retire it?',
                      profile="linked-archi-default")
-        refused = [step for step in plan.steps if step.availability == "refused"]
+        refused = plan.decisions
         self.assertTrue(refused, "the default profile refuses core/dependents-direct")
-        for step in refused:
-            self.assertTrue(step.alternatives, "a refusal with nowhere to go is half an answer")
-            self.assertTrue(step.note, "and it must say why")
+        for decision in refused:
+            self.assertTrue(decision["alternatives"])
+            self.assertTrue(decision["reason"])
+            self.assertTrue(decision["answers"])
+            self.assertTrue(decision["does_not_prove"])
+            self.assertNotIn("command", decision)
+            self.assertNotIn(decision["template"], [step.template for step in plan.steps])
+        self.assertNotIn("query run core/dependents-direct", plan.to_text())
+        self.assertIn("not assumed to answer the same question", plan.to_text())
+        self.assertEqual(plan.as_dict()["planned_steps"], 7)
 
     def test_the_same_plan_under_a_richer_profile_refuses_nothing(self):
         plan = _plan('what depends on "Order Service" if we retire it?',
                      profile="examples/curated-store")
         self.assertEqual([s for s in plan.steps if s.availability == "refused"], [])
+        self.assertEqual(plan.decisions, [])
 
     def test_a_template_caveat_is_carried_into_the_plan(self):
         plan = _plan("is this the same system? reconcile the two", profile="examples/curated-store")
@@ -185,6 +203,211 @@ class TestProfileAwareness(unittest.TestCase):
         self.assertTrue(plan.steps, "still an ordered plan")
         for step in plan.steps:
             self.assertEqual(step.availability, "unknown")
+
+
+class TestConditionalPlanning(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.catalogue = _catalogue()
+
+    def test_entity_questions_resolve_names_without_requesting_definitions(self):
+        for question in ('what depends on "Order Service"?',
+                         'what depends on "Definition Service"?',
+                         'what is in "Orders"?',
+                         'which applications are deprecated?'):
+            with self.subTest(question=question):
+                plan = _plan(question, catalogue=self.catalogue)
+                self.assertNotIn("core/define-term", [step.template for step in plan.steps])
+                resolve = next(step for step in plan.steps if step.stage == "resolve")
+                self.assertIn("several candidates", resolve.stop_when)
+
+    def test_definition_questions_and_explicit_requests_keep_definition_evidence(self):
+        for question, definitions in (('what does "Order Service" mean?', False),
+                                      ('what is "Order Service"?', False),
+                                      ('define “Order Service”', False),
+                                      ('what depends on "Order Service"?', True)):
+            with self.subTest(question=question):
+                plan = _plan(question, catalogue=self.catalogue, definitions=definitions)
+                definition = next(step for step in plan.steps if step.template == "core/define-term")
+                self.assertEqual(definition.parameters["TERM"], "Order Service")
+                self.assertIn("ask", definition.stop_when)
+
+    def test_metadata_selection_contains_only_the_planned_candidates(self):
+        question = 'what depends on "Order Service"?'
+        pattern, _ranked = resolve_mode(None, question, load_patterns())
+        selected = required_templates(question, pattern)
+        plan = _plan(question, catalogue=self.catalogue)
+        self.assertEqual(set(selected), {step.template for step in plan.steps}
+                         | {decision["template"] for decision in plan.decisions})
+        self.assertEqual(len(selected), len(set(selected)))
+
+    def test_refusals_are_review_barriers_not_silent_substitutions(self):
+        plan = _plan('what depends on "Order Service"?', catalogue=self.catalogue)
+        decision = next(item for item in plan.decisions if item["template"] == "core/dependents-direct")
+        provenance = next(step for step in plan.steps if step.template == "core/provenance")
+        self.assertIn(decision["id"], provenance.review_decisions)
+        self.assertEqual(provenance.status, "review-required")
+
+    def test_unprofiled_catalogue_metadata_does_not_assert_availability(self):
+        unprofiled = json.loads(json.dumps(self.catalogue))
+        for metadata in unprofiled["templates"].values():
+            metadata.pop("available", None)
+            metadata.pop("profile_caveats", None)
+        plan = _plan('what depends on "Order Service"?', catalogue=unprofiled)
+        self.assertTrue(all(step.availability == "unknown" for step in plan.steps))
+        self.assertEqual(plan.batches(), [])
+
+
+class TestPlanBatches(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.catalogue = _catalogue()
+
+    def test_orientation_is_one_ready_batch_and_keeps_both_envelopes(self):
+        plan = _plan('what depends on "Order Service"?', catalogue=self.catalogue)
+        batch = plan.batches()[0]
+        self.assertEqual(batch["stage"], "orient")
+        self.assertEqual(batch["status"], "ready")
+        self.assertEqual(batch["depends_on"], [])
+        self.assertEqual(batch["steps"], [1, 2])
+        self.assertEqual(batch["manifest"]["schema_version"], 1)
+        self.assertEqual([entry["template"] for entry in batch["manifest"]["queries"]],
+                         ["core/inventory-summary", "core/models"])
+        self.assertEqual([entry["out"] for entry in batch["manifest"]["queries"]],
+                         ["steps/01-inventory-summary.json", "steps/02-models.json"])
+
+    def test_independent_name_resolution_batches_wait_for_orientation_review(self):
+        plan = _plan('what depends on "Orders" and "Payments"?', catalogue=self.catalogue)
+        resolution = next(batch for batch in plan.batches() if batch["stage"] == "resolve")
+        self.assertEqual(resolution["status"], "awaiting-evidence")
+        self.assertEqual(resolution["depends_on"], [1, 2])
+        self.assertEqual([entry["set"]["TERM"] for entry in resolution["manifest"]["queries"]],
+                         ["Orders", "Payments"])
+
+    def test_unresolved_and_refused_queries_never_enter_a_batch(self):
+        plan = _plan("what depends on the order service?", catalogue=self.catalogue)
+        for batch in plan.batches():
+            for entry in batch["manifest"]["queries"]:
+                self.assertNotIn("core/dependents-direct", entry["template"])
+                self.assertFalse(any(value.startswith("<") for value in entry["set"].values()))
+        self.assertTrue(any(step.unresolved_parameters for step in plan.steps))
+
+    def test_pattern_dependencies_preserve_neighbours_before_deeper_paths(self):
+        plan = _plan('what depends on "Order Service"?', catalogue=self.catalogue)
+        neighbours = next(step for step in plan.steps if step.template == "core/neighbours-qualified")
+        dependents = next(step for step in plan.steps if step.template == "core/dependents-qualified")
+        self.assertEqual(dependents.depends_on, [neighbours.number])
+        self.assertEqual(dependents.status, "awaiting-parameters")
+
+    def test_unknown_availability_and_over_budget_steps_do_not_enter_batches(self):
+        self.assertEqual(_plan('what depends on "Order Service"?', catalogue=None).batches(), [])
+        self.assertEqual(_plan('what depends on "Order Service"?', catalogue=self.catalogue,
+                               budget=1).batches(), [])
+
+    def test_commands_quote_output_paths_and_keep_placeholders_as_single_arguments(self):
+        plan = _plan('what depends on "Order Service"?', catalogue=self.catalogue)
+        step = next(step for step in plan.steps if "FOCUS_IRI" in step.parameters)
+        command = shlex.split(step.command(profile=plan.profile, data=plan.data, endpoint=None,
+                                           steps_dir="results with spaces", preview=True))
+        self.assertEqual(command[command.index("-o") + 1],
+                         step.output_path("results with spaces"))
+        self.assertIn(f"FOCUS_IRI={step.parameters['FOCUS_IRI']}", command)
+        self.assertIn("--preview", command)
+
+    def test_written_manifest_runs_with_query_and_bundles_unchanged_envelopes(self):
+        support.requires_pyoxigraph(self)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            batches = root / "batches"
+            steps = root / "steps"
+            done = subprocess.run(
+                [sys.executable, str(ROOT / "skills/linked-archi-analyse/scripts/la-analyse"),
+                 "plan", "--question", 'what depends on "Orders"?',
+                 "--profile", "examples/curated-store", "--data", str(AUGMENTED),
+                 "--batch-dir", str(batches), "--steps-dir", str(steps), "--json"],
+                capture_output=True, text=True, timeout=120, cwd=ROOT,
+            )
+            self.assertEqual(done.returncode, 0, done.stderr)
+            plan = json.loads(done.stdout)
+            batch = plan["batches"][0]
+            manifest = Path(batch["manifest_path"])
+            self.assertEqual(json.loads(manifest.read_text()), batch["manifest"])
+            self.assertFalse(steps.exists(), "planning cannot execute or write result envelopes")
+            command = shlex.split(batch["command"])
+            executed = subprocess.run([sys.executable, str(QUERY), *command[1:]],
+                                      capture_output=True, text=True, timeout=120, cwd=ROOT)
+            self.assertEqual(executed.returncode, 0, executed.stderr)
+            evidence = [entry["out"] for entry in batch["manifest"]["queries"]]
+            bundle = build_bundle(evidence).as_dict()
+            self.assertEqual(len(bundle["steps"]), 2)
+            self.assertEqual([step["template"] for step in bundle["steps"]],
+                             ["core/inventory-summary", "core/models"])
+
+
+class TestSelectiveCatalogue(unittest.TestCase):
+    def test_the_normal_path_requests_only_required_metadata(self):
+        response = subprocess.CompletedProcess([], 0, json.dumps({"schema_version": 1, "templates": {}}), "")
+        with mock.patch.object(analyse_cli, "_companion", return_value=QUERY), \
+                mock.patch.object(analyse_cli.subprocess, "run", return_value=response) as run:
+            _document, preview = analyse_cli._catalogue("linked-archi-default", ["core/models", "core/resolve-element"])
+        self.assertTrue(preview)
+        self.assertEqual(run.call_count, 1)
+        command = run.call_args.args[0]
+        self.assertEqual(command.count("--template"), 2)
+        self.assertIn("core/models", command)
+        self.assertIn("core/resolve-element", command)
+
+    def test_a_companion_without_filtered_catalogue_support_keeps_the_existing_contract(self):
+        failed = subprocess.CompletedProcess([], 2, "", "unrecognized arguments: --template")
+        document = {"schema_version": 1, "templates": {"core/models": {"parameters": {}}}}
+        succeeded = subprocess.CompletedProcess([], 0, json.dumps(document), "")
+        with mock.patch.object(analyse_cli, "_companion", return_value=QUERY), \
+                mock.patch.object(analyse_cli.subprocess, "run", side_effect=[failed, succeeded]) as run:
+            result = analyse_cli._catalogue("linked-archi-default", ["core/models"])
+        self.assertEqual(result, (document, False))
+        self.assertEqual(run.call_count, 2)
+        self.assertNotIn("--template", run.call_args.args[0])
+
+    def test_legacy_companion_plans_omit_new_flags_from_steps_and_batches(self):
+        catalogue = _catalogue()
+        failed = subprocess.CompletedProcess([], 2, "", "unrecognized arguments: --template")
+        succeeded = subprocess.CompletedProcess([], 0, json.dumps(catalogue), "")
+        for machine in (False, True):
+            with self.subTest(machine=machine):
+                output = io.StringIO()
+                request = {"schema_version": 1, "question": 'what depends on "Orders"?',
+                           "profile": "linked-archi-default", "data": ["graph.trig"]}
+                with mock.patch.object(analyse_cli, "_companion", return_value=QUERY), \
+                        mock.patch.object(analyse_cli.subprocess, "run", side_effect=[failed, succeeded]), \
+                        mock.patch.object(sys, "stdin", io.StringIO(json.dumps(request))), \
+                        redirect_stdout(output):
+                    if machine:
+                        analyse_cli.cmd_machine_plan(None)
+                    else:
+                        args = analyse_cli.build_parser().parse_args([
+                            "plan", "--question", request["question"], "--profile", request["profile"],
+                            "--data", "graph.trig", "--json",
+                        ])
+                        analyse_cli.cmd_plan(args)
+                plan = json.loads(output.getvalue())
+                self.assertTrue(plan["batches"])
+                self.assertTrue(plan["annotated"])
+                for item in plan["steps"] + plan["batches"]:
+                    command = shlex.split(item["command"])
+                    self.assertNotIn("--preview", command)
+                    self.assertNotIn("--limit", command)
+                for step in plan["steps"]:
+                    self.assertIn("--json", shlex.split(step["command"]))
+                    self.assertIn("-o", shlex.split(step["command"]))
+
+    def test_direct_planner_call_defaults_to_compatible_command_flags(self):
+        pattern, ranked = resolve_mode(None, 'what depends on "Orders"?', load_patterns())
+        plan = build_plan('what depends on "Orders"?', pattern=pattern, ranked=ranked,
+                          catalogue=_catalogue(), profile="linked-archi-default", data=["graph.trig"])
+        self.assertTrue(plan.batches())
+        for item in plan.as_dict()["steps"] + plan.batches():
+            self.assertNotIn("--preview", shlex.split(item["command"]))
+            self.assertNotIn("--limit", shlex.split(item["command"]))
 
 
 class TestBundle(unittest.TestCase):

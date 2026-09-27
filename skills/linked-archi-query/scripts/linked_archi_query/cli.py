@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any, Sequence
 
 from . import verification
-from .catalog import CatalogError, load_catalog
+from .catalog import STAGES, CatalogError, load_catalog
 from .contract import ContractError, ResolvedProfile
 from .envelope import Envelope
 from .render import RenderError, UnsupportedTemplate, render, render_literal
@@ -658,17 +658,29 @@ def cmd_catalog_show(args: argparse.Namespace) -> int:
 
 
 def cmd_catalog_dump(args: argparse.Namespace) -> int:
-    """Every entry with full metadata in one call.
+    """Selected entries with full metadata in one call.
 
     `catalog show` per template costs a call each for what is static metadata. Selecting a
     template and binding its parameters should not be an N-call negotiation.
     """
     catalog = load_catalog()
+    names = {catalog.get(name).name for name in args.template}
+    stages = set(args.stage)
+    notations = set(args.notation)
+    unknown_notations = notations.difference(entry.notation for entry in catalog)
+    if unknown_notations:
+        raise CatalogError("Unknown notation: " + ", ".join(sorted(unknown_notations)))
     profile = _profile(args.profile) if args.profile else None
     payload: dict[str, Any] = {"schema_version": 1, "templates": {}}
     if profile is not None:
         payload["profile"] = {"id": profile.name, "version": profile.profile_version}
     for entry in catalog:
+        if names and entry.name not in names:
+            continue
+        if stages and entry.stage not in stages:
+            continue
+        if notations and entry.notation not in notations:
+            continue
         item: dict[str, Any] = {
             "stage": entry.stage,
             "notation": entry.notation,
@@ -769,6 +781,8 @@ def _emit(envelope: Envelope, args: argparse.Namespace) -> int:
     if args.output:
         written = envelope.write(args.output)
         print(f"Wrote {written} ({envelope.row_count} row(s))")
+        if getattr(args, "preview", False):
+            print(envelope.to_preview(limit=args.limit))
         return OK
 
     # --json predates --format and is documented in three places, so it keeps working.
@@ -787,7 +801,17 @@ def _emit(envelope: Envelope, args: argparse.Namespace) -> int:
     return OK
 
 
+def _check_preview(args: argparse.Namespace, *, require_output: bool = False) -> None:
+    if not getattr(args, "preview", False):
+        return
+    if require_output and not args.output:
+        raise RenderError("--preview requires -o/--output to save the full result envelope")
+    if args.limit < 1:
+        raise RenderError("--preview requires a positive --limit")
+
+
 def cmd_run(args: argparse.Namespace) -> int:
+    _check_preview(args, require_output=True)
     profile = _profile(args.profile)
     rendered = render(args.template, profile, _parse_sets(args.set))
     raw = _execute(rendered.query, _target(args))
@@ -795,6 +819,7 @@ def cmd_run(args: argparse.Namespace) -> int:
 
 
 def cmd_literal(args: argparse.Namespace) -> int:
+    _check_preview(args, require_output=True)
     profile = _profile(args.profile)
     text = Path(args.file).read_text(encoding="utf-8") if args.file else args.query
     if not text:
@@ -868,6 +893,7 @@ def cmd_batch(args: argparse.Namespace) -> int:
     plus every earlier query, and `execute_many` validates the whole batch as read-only
     before running any of it, so a batch cannot do partial unsafe work.
     """
+    _check_preview(args)
     profile = _profile(args.profile)
     entries = _batch_manifest(args.manifest)
 
@@ -897,6 +923,7 @@ def cmd_batch(args: argparse.Namespace) -> int:
         )
 
     lines = []
+    previews = []
     total_query_ms = 0
     load_ms = 0
     for entry, item, raw in zip(entries, rendered, results):
@@ -913,6 +940,8 @@ def cmd_batch(args: argparse.Namespace) -> int:
             f"  {entry['id']}: {envelope.row_count} row(s), "
             f"{envelope.elapsed_ms} ms{flag}{note}"
         )
+        if args.preview:
+            previews.append(f"# {entry['id']}\n{envelope.to_preview(limit=args.limit)}")
 
     summary = "\n".join([
         f"{len(entries)} quer{'y' if len(entries) == 1 else 'ies'} in one invocation",
@@ -927,6 +956,8 @@ def cmd_batch(args: argparse.Namespace) -> int:
         print(f"Wrote {args.output}")
     else:
         print(summary)
+    if previews:
+        print("\n\n".join(previews))
     return OK
 
 
@@ -1165,6 +1196,11 @@ _OUTPUT_HELP = (
     "write the artifact to this file instead of stdout: the rendered SPARQL for "
     "`render`, the full result envelope as JSON for `run` and `literal`"
 )
+_PREVIEW_HELP = (
+    "with -o, also print a bounded TSV preview with caveats and citation. --limit "
+    "caps displayed rows (CONSTRUCT: output lines); the saved JSON stays complete. "
+    "The preview uses TSV regardless of --format or --json"
+)
 
 _EPILOG = """\
 Examples:
@@ -1237,15 +1273,28 @@ def build_parser() -> argparse.ArgumentParser:
     show.set_defaults(func=cmd_catalog_show)
     dump = catalog_sub.add_parser(
         "dump",
-        help="every template's full metadata as JSON, in one call",
+        help="selected templates' full metadata as JSON, in one call",
         description=(
             "For choosing among several templates, or binding several parameter sets, "
-            "without one call per template."
+            "without one call per template. Without filters, returns the full catalogue. "
+            "Repeated values match any value; different filter kinds must all match."
         ),
     )
     dump.add_argument(
         "--profile", metavar="NAME_OR_PATH",
         help="also report availability and caveats per template",
+    )
+    dump.add_argument(
+        "--template", action="append", default=[], metavar="NAME",
+        help="include only these exact template names (repeatable)",
+    )
+    dump.add_argument(
+        "--stage", action="append", default=[], choices=STAGES,
+        help="include only these catalogue stages (repeatable)",
+    )
+    dump.add_argument(
+        "--notation", action="append", default=[], metavar="NAME",
+        help="include only these catalogue notations, e.g. bpmn (repeatable)",
     )
     _output_arg(dump)
     dump.set_defaults(func=cmd_catalog_dump)
@@ -1295,6 +1344,7 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--json", action="store_true", help=_JSON_HELP)
     run.add_argument("--limit", type=int, default=100, metavar="N", help=_LIMIT_HELP)
     run.add_argument("-o", "--output", metavar="FILE", help=_OUTPUT_HELP)
+    run.add_argument("--preview", action="store_true", help=_PREVIEW_HELP)
     run.set_defaults(func=cmd_run)
     literal = query_sub.add_parser(
         "literal",
@@ -1317,6 +1367,7 @@ def build_parser() -> argparse.ArgumentParser:
     literal.add_argument("--json", action="store_true", help=_JSON_HELP)
     literal.add_argument("--limit", type=int, default=100, metavar="N", help=_LIMIT_HELP)
     literal.add_argument("-o", "--output", metavar="FILE", help=_OUTPUT_HELP)
+    literal.add_argument("--preview", action="store_true", help=_PREVIEW_HELP)
     literal.set_defaults(func=cmd_literal)
     batch = query_sub.add_parser(
         "batch",
@@ -1349,6 +1400,16 @@ def build_parser() -> argparse.ArgumentParser:
     _target_args(batch)
     batch.add_argument("-o", "--output", metavar="FILE",
                        help="write the run summary here instead of stdout")
+    batch.add_argument(
+        "--preview", action="store_true",
+        help="also print each result's bounded preview with caveats and citation; "
+             "manifest out files retain the full JSON envelopes",
+    )
+    batch.add_argument(
+        "--limit", type=int, default=100, metavar="N",
+        help="rows per preview (CONSTRUCT: output lines), default 100; does not cap "
+             "the queries or saved envelopes",
+    )
     batch.set_defaults(func=cmd_batch)
 
     lint = commands.add_parser(

@@ -19,7 +19,7 @@ from typing import Any, Sequence
 
 from .bundle import CLAIM_CLASSES, DEFAULT_STATE_DIR, STATE_DIR_ENV, build_bundle, render_markdown
 from .patterns import AnalyseError, load_patterns, pattern_summary, resolve_mode
-from .plan import DEFAULT_BUDGET, build_plan
+from .plan import DEFAULT_BUDGET, build_plan, required_templates
 
 OK, REFUSED, ERROR = 0, 1, 2
 
@@ -75,8 +75,8 @@ def _companion(skill: str, executable: str) -> Path:
     )
 
 
-def _catalogue(profile: str | None) -> dict[str, Any] | None:
-    """The query owner's catalogue, or ``None`` when that skill is not reachable.
+def _catalogue(profile: str | None, names: Sequence[str] = ()) -> tuple[dict[str, Any] | None, bool]:
+    """Return catalogue metadata and local preview compatibility information.
 
     One `catalog dump` call rather than one `catalog show` per template, and the documented
     human command rather than a machine contract, because the JSON it emits is already
@@ -84,27 +84,35 @@ def _catalogue(profile: str | None) -> dict[str, Any] | None:
 
     Degrades rather than fails: a plan without availability annotations is still an ordered
     plan, and the caller is told what is missing.
+
+    Template filtering and preview shipped together. A successful filtered request opts
+    into both; the full-catalogue fallback conservatively keeps legacy command flags.
+    This local capability information never changes the query owner's JSON contract.
     """
     try:
         executable = _companion(REQUIRED_QUERY_SKILL, "la-query")
     except AnalyseError:
-        return None
-    command = [sys.executable, str(executable), "catalog", "dump"]
-    if profile:
-        command += ["--profile", profile]
-    try:
-        done = subprocess.run(command, capture_output=True, text=True, timeout=120)
-    except (OSError, subprocess.TimeoutExpired):
-        return None
-    if done.returncode != 0:
-        return None
-    try:
-        document = json.loads(done.stdout)
-    except json.JSONDecodeError:
-        return None
-    if not isinstance(document, dict) or document.get("schema_version") != 1:
-        return None
-    return document
+        return None, False
+    for selection in (names, ()) if names else ((),):
+        command = [sys.executable, str(executable), "catalog", "dump"]
+        if profile:
+            command += ["--profile", profile]
+        for name in selection:
+            command += ["--template", name]
+        try:
+            done = subprocess.run(command, capture_output=True, text=True, timeout=120)
+        except (OSError, subprocess.TimeoutExpired):
+            return None, False
+        if done.returncode != 0:
+            continue
+        try:
+            document = json.loads(done.stdout)
+        except json.JSONDecodeError:
+            return None, False
+        if not isinstance(document, dict) or document.get("schema_version") != 1:
+            return None, False
+        return document, bool(selection)
+    return None, False
 
 
 # ---------------------------------------------------------------------------
@@ -123,17 +131,26 @@ def cmd_plan(args: argparse.Namespace) -> int:
         raise AnalyseError("plan needs --question, or --list-patterns")
 
     pattern, ranked = resolve_mode(args.mode, args.question, patterns)
+    catalogue, preview = _catalogue(args.profile, required_templates(args.question, pattern, args.definitions))
     plan = build_plan(
         args.question,
         pattern=pattern,
         ranked=ranked,
-        catalogue=_catalogue(args.profile),
+        catalogue=catalogue,
         profile=args.profile,
         data=args.data,
         endpoint=args.endpoint,
         budget=args.budget,
         steps_dir=args.steps_dir,
+        definitions=args.definitions,
+        batch_dir=args.batch_dir,
+        preview=preview,
     )
+    if args.batch_dir:
+        for batch in plan.batches():
+            target = Path(batch["manifest_path"])
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(json.dumps(batch["manifest"], indent=2) + "\n", encoding="utf-8")
     output = plan.as_dict() if args.json else plan.to_text()
     text = json.dumps(output, indent=2, ensure_ascii=False) if args.json else output
     if args.output:
@@ -281,7 +298,8 @@ def _machine_input(allowed: set[str], label: str) -> dict[str, Any]:
 
 def cmd_machine_plan(_args: argparse.Namespace) -> int:
     request = _machine_input(
-        {"question", "mode", "profile", "data", "endpoint", "budget", "steps_dir"}, "plan"
+        {"question", "mode", "profile", "data", "endpoint", "budget", "steps_dir",
+         "definitions", "batch_dir"}, "plan"
     )
     question = request.get("question")
     if not isinstance(question, str) or not question.strip():
@@ -292,18 +310,28 @@ def cmd_machine_plan(_args: argparse.Namespace) -> int:
     budget = request.get("budget", DEFAULT_BUDGET)
     if not isinstance(budget, int) or isinstance(budget, bool) or budget < 1:
         raise AnalyseError("machine plan budget must be a positive integer")
+    definitions = request.get("definitions", False)
+    if not isinstance(definitions, bool):
+        raise AnalyseError("machine plan definitions must be a boolean")
+    batch_dir = request.get("batch_dir")
+    if batch_dir is not None and (not isinstance(batch_dir, str) or not batch_dir.strip()):
+        raise AnalyseError("machine plan batch_dir must be a non-empty string")
     patterns = load_patterns()
     pattern, ranked = resolve_mode(request.get("mode"), question, patterns)
+    catalogue, preview = _catalogue(request.get("profile"), required_templates(question, pattern, definitions))
     plan = build_plan(
         question,
         pattern=pattern,
         ranked=ranked,
-        catalogue=_catalogue(request.get("profile")),
+        catalogue=catalogue,
         profile=request.get("profile"),
         data=data,
         endpoint=request.get("endpoint"),
         budget=budget,
         steps_dir=request.get("steps_dir") or "steps",
+        definitions=definitions,
+        batch_dir=batch_dir,
+        preview=preview,
     )
     print(json.dumps(plan.as_dict(), ensure_ascii=False))
     return OK
@@ -371,8 +399,8 @@ def build_parser() -> argparse.ArgumentParser:
             "Routes the question to an analysis pattern and emits the numbered steps to run, "
             "in doctrine order: orient, resolve, the pattern's own evidence, then quality. "
             "With --profile and linked-archi-query installed, each step carries this "
-            "profile's availability, so a refused template is replaced by its documented "
-            "alternative at planning time rather than mid-investigation."
+            "profile's availability. Refused templates become decisions with alternatives "
+            "to assess, never query commands. Independent concrete steps can run as batches."
         ),
     )
     plan.add_argument(
@@ -409,6 +437,14 @@ def build_parser() -> argparse.ArgumentParser:
     plan.add_argument(
         "--steps-dir", default="steps", metavar="DIR",
         help="directory the planned commands write envelopes to (default: steps)",
+    )
+    plan.add_argument(
+        "--definitions", action="store_true",
+        help="include term definitions; otherwise only definition questions request them",
+    )
+    plan.add_argument(
+        "--batch-dir", metavar="DIR",
+        help="write manifests for independent concrete steps here; executes no queries",
     )
     plan.add_argument("--json", action="store_true", help="emit the plan as JSON")
     plan.add_argument("-o", "--output", metavar="FILE", help="write to this file instead of stdout")

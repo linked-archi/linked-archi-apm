@@ -54,17 +54,34 @@ la-profile _machine resolve
 ```
 la-query catalog list [--profile P] [--why] [-o FILE]
 la-query catalog show <template> [--profile P] [--source] [-o FILE]
-la-query catalog dump [--profile P] [-o FILE]
+la-query catalog dump [--profile P] [--template NAME ...] [--stage STAGE ...]
+                       [--notation NAME ...] [-o FILE]
 la-query query render <template> [--profile P] [--set NAME=VALUE ...] [--force] [-o FILE]
 la-query query run <template> [--profile P] <target> [--set NAME=VALUE ...]
-                              [--format {tsv,md,json}] [--json] [--limit N] [-o FILE]
+                              [--format {tsv,md,json}] [--json] [--limit N] [-o FILE] [--preview]
 la-query query literal (--query SPARQL | --file FILE) [--profile P] <target>
-                              [--format ...] [--json] [--limit N] [-o FILE]
-la-query query batch <manifest> [--profile P] <target> [-o FILE]
+                              [--format ...] [--json] [--limit N] [-o FILE] [--preview]
+la-query query batch <manifest> [--profile P] <target> [-o FILE] [--preview] [--limit N]
 la-query lint [file] [--query SPARQL] [--profile P] <target> [-o FILE]
 la-query doctor [-o FILE]
 la-query _machine lint
 ```
+
+`catalog dump` filters are repeatable: values within one filter kind form a union, and different
+kinds intersect. Select only relevant templates to reduce output while retaining their complete
+metadata, profile refusals and caveats. The unfiltered dump and `schema_version: 1` payload remain
+unchanged. Unknown template, stage or notation values fail explicitly.
+
+For `query run` and `literal`, `--preview` requires `-o FILE` and a positive `--limit`; invalid
+combinations fail before execution. The file remains the complete JSON envelope; stdout also gets
+a bounded preview, including warnings, truncation and citation. Preview presentation uses TSV
+regardless of `--format` or `--json`. `--limit` defaults to 100 displayed rows (CONSTRUCT previews:
+physical output lines). It does not reduce query cost, change the query's own `LIMIT`, or truncate
+the saved envelope.
+
+For `query batch`, manifest `out` entries save per-query JSON envelopes; batch `-o FILE` saves the
+run summary. `--preview` prints each result's bounded preview to stdout whether the summary is
+saved or printed. It does not require batch `-o`. Without `--preview`, existing output is unchanged.
 
 ## la-validate
 
@@ -82,7 +99,8 @@ la-validate _machine {validate,report}
 
 ```
 la-analyse plan [--question TEXT] [--mode PATTERN] [--list-patterns] [--profile P]
-                [--data FILE ...] [--endpoint URL] [--budget N] [--steps-dir DIR] [--json] [-o FILE]
+                [--data FILE ...] [--endpoint URL] [--budget N] [--steps-dir DIR]
+                [--definitions] [--batch-dir DIR] [--json] [-o FILE]
 la-analyse bundle --step FILE [--step FILE ...] [--question TEXT] [--findings FILE]
                   [--dataset-revision REV] [--markdown] [-o FILE]
 la-analyse render --bundle FILE [-o FILE]
@@ -91,6 +109,13 @@ la-analyse _machine {plan,bundle}
 ```
 
 `--step` is required and order-significant.
+
+Analyse owns question investigation and orchestration; `plan` opens no dataset and executes no
+queries. Definition questions request term definitions automatically; `--definitions` also includes
+them for other questions. `--batch-dir DIR` writes query-owned batch manifests for eligible
+independent steps with concrete parameters. Follow each group's prerequisite and evidence-review
+boundaries, and run the batch instead of its individual commands. Generated commands save complete
+envelopes and print bounded previews; each query still counts toward the investigation budget.
 
 ## The target flags
 
