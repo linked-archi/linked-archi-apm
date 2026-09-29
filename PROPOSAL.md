@@ -900,6 +900,35 @@ or nested subprocess counts. Isolated verification state, explicit memory stores
 resource bounds and alternating order reduce contamination without claiming cold-cache or
 end-to-end agent performance. No skill runtime or public contract changes for this harness.
 
+**D24. Endpoint syntax and transport are measured separately from dataset coverage.** The
+ArchiSurance converter-backed snapshot carries RDF 1.2 triple terms. Choosing an RDF4J
+server does not make the client capable of reading them: the HTTP adapter previously rejected
+structured triple-valued JSON bindings, and remote profile discovery conservatively skipped
+destructuring even when a server supported it.
+
+Connect now validates the recursive JSON term structure and preserves triple terms in the
+existing string-cell contract, including nested literal annotations. Versioned result media
+types have unversioned fallbacks. No raw-result field changes meaning and no cross-skill
+runtime import is introduced.
+
+The additive `capabilities` public command and version-1 machine operation perform one
+bounded, query-owner-linted known-answer probe. It checks construction, accessors and
+structured JSON serialization, plus parsing of a false-filtered variable triple-term pattern.
+The latter deliberately does not read application data and does not prove real-data matching
+or persistence. A positive report is therefore named `triple_terms`, never "fully compliant
+SPARQL 1.2". Wrong answers and syntax/negotiation refusal mean not verified; network,
+authentication and malformed-result failures remain errors.
+
+Profile `recommend|verify --probe-endpoint` opts into that operation once before planning its
+normal batch. Successful syntax probing permits investigation of reification coverage; it
+does not assert that bridges exist, change profile claims or bypass profile verification.
+Without the flag the current conservative remote behavior remains. Ordinary queries and
+constructors never probe implicitly, which preserves D23's latency boundary. Capability
+reports are not cached as permanent facts about a mutable endpoint. Analyse continues to
+own investigation/orchestration, query read-only policy and execution envelopes, and connect
+transport. Server import/restart/export and actual answer equivalence belong in the E2E
+fixture tests, not in a transport unit test.
+
 ### Requests deliberately not adopted as stated
 
 Carried here from the agent-usability plan when that plan was retired, because each of these

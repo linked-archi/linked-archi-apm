@@ -177,6 +177,24 @@ def cmd_connect(args: argparse.Namespace) -> int:
     return OK
 
 
+def _capabilities(target: dict[str, Any]) -> dict[str, Any]:
+    if not target.get("endpoint") or target.get("data"):
+        raise AdapterError("capabilities requires an endpoint, not local data")
+    with _open(target) as adapter:
+        verified = adapter.probe_sparql_12()
+        return {
+            "schema_version": 1,
+            "dataset_id": adapter.dataset_id,
+            "triple_terms": verified,
+            "description": adapter.describe(),
+        }
+
+
+def cmd_capabilities(args: argparse.Namespace) -> int:
+    print(json.dumps(_capabilities(_target(args)), ensure_ascii=False))
+    return OK
+
+
 def _suggest_profile_step(args: argparse.Namespace) -> None:
     """Name the command that picks a profile, rather than picking one here.
 
@@ -446,6 +464,14 @@ def cmd_machine_execute_many(_args: argparse.Namespace) -> int:
     return OK
 
 
+def cmd_machine_capabilities(_args: argparse.Namespace) -> int:
+    request = _machine_request()
+    if set(request) != {"schema_version", "target"}:
+        raise AdapterError("capabilities accepts only schema_version and target")
+    print(json.dumps(_capabilities(request["target"]), ensure_ascii=False))
+    return OK
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="la-connect",
@@ -531,6 +557,17 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_target_args(connect)
     connect.set_defaults(func=cmd_connect)
+    capabilities = commands.add_parser(
+        "capabilities",
+        help="explicitly probe endpoint triple-term support and report JSON",
+        description=(
+            "Run one bounded, read-only known-answer query. This checks triple-term "
+            "construction, accessors and JSON results, not full SPARQL 1.2 conformance. "
+            "Normal queries never run this probe implicitly."
+        ),
+    )
+    _add_target_args(capabilities)
+    capabilities.set_defaults(func=cmd_capabilities)
     machine = commands.add_parser(
         "_machine",
         help=_MACHINE_HELP,
@@ -558,6 +595,16 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     execute_many.set_defaults(func=cmd_machine_execute_many)
+    capabilities_machine = machine_sub.add_parser(
+        "capabilities",
+        help="explicitly probe endpoint triple-term support",
+        description=(
+            'Request {"schema_version": 1, "target": {"endpoint": "..."}}. Run one '
+            "query-owner-linted known-answer probe and report triple_terms as a boolean. "
+            "This tests required syntax and JSON transport, not full standards conformance."
+        ),
+    )
+    capabilities_machine.set_defaults(func=cmd_machine_capabilities)
     return parser
 
 

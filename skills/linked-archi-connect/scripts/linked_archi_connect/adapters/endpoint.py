@@ -32,14 +32,37 @@ from .base import Adapter, AdapterError, RawResult
 TOKEN_ENV = "LINKED_ARCHI_SPARQL_TOKEN"
 
 _ACCEPT = (
-    "application/sparql-results+json;q=1.0, "
-    "text/turtle;q=0.9, "
-    "application/n-triples;q=0.8"
+    "application/sparql-results+json;version=1.2;q=1.0, "
+    "application/sparql-results+json;q=0.95, "
+    "text/turtle;version=1.2;q=0.9, text/turtle;q=0.85, "
+    "application/n-triples;version=1.2;q=0.8, application/n-triples;q=0.75"
 )
 _SPARQL_JSON = "application/sparql-results+json"
 _ASK_TEXT = "text/boolean"
 _RDF_RESULTS = frozenset({"text/turtle", "application/n-triples"})
 _HOST_LABEL = re.compile(r"^(?!-)[A-Za-z0-9-]{1,63}(?<!-)$")
+_MAX_TRIPLE_DEPTH = 64
+_TRIPLE_TERM_PROBE = """SELECT ?term ?subject ?predicate ?object WHERE {
+  VALUES ?term {
+    <<( <urn:linked-archi:probe:subject> <urn:linked-archi:probe:predicate>
+        <urn:linked-archi:probe:object> )>>
+  }
+  BIND(SUBJECT(?term) AS ?subject)
+  BIND(PREDICATE(?term) AS ?predicate)
+  BIND(OBJECT(?term) AS ?object)
+  FILTER NOT EXISTS {
+    ?unused <urn:linked-archi:probe:relation> <<( ?nestedSubject ?nestedPredicate ?nestedObject )>>
+    FILTER(false)
+  }
+} LIMIT 1"""
+
+
+class EndpointResponseError(AdapterError):
+    """An HTTP error whose status remains available for explicit capability probes."""
+
+    def __init__(self, status_code: int, message: str) -> None:
+        super().__init__(message)
+        self.status_code = status_code
 
 
 def _valid_host(hostname: str) -> bool:
@@ -96,11 +119,25 @@ def _public_id(parsed: urllib.parse.SplitResult) -> str:
     return urllib.parse.urlunsplit((parsed.scheme, host, parsed.path, "", ""))
 
 
-def _valid_binding_term(term: Any) -> bool:
+def _valid_binding_term(term: Any, depth: int = 0) -> bool:
     """Whether one SPARQL Results JSON term has a coherent field shape."""
-    if not isinstance(term, dict):
+    if not isinstance(term, dict) or depth > _MAX_TRIPLE_DEPTH:
         return False
     term_type = term.get("type")
+    if not isinstance(term_type, str):
+        return False
+    if term_type == "triple":
+        value = term.get("value")
+        if set(term) != {"type", "value"} or not isinstance(value, dict):
+            return False
+        if set(value) != {"subject", "predicate", "object"}:
+            return False
+        if not all(_valid_binding_term(part, depth + 1) for part in value.values()):
+            return False
+        return (
+            value["subject"]["type"] in {"uri", "bnode"}
+            and value["predicate"]["type"] == "uri"
+        )
     if term_type not in {"uri", "bnode", "literal", "typed-literal"}:
         return False
     if not isinstance(term.get("value"), str):
@@ -116,7 +153,7 @@ def _valid_binding_term(term: Any) -> bool:
             and bool(term["datatype"].strip())
         )
 
-    allowed = {"type", "value", "datatype", "xml:lang"}
+    allowed = {"type", "value", "datatype", "xml:lang", "its:dir"}
     if not keys.issubset(allowed):
         return False
     has_datatype = "datatype" in term
@@ -129,6 +166,10 @@ def _valid_binding_term(term: Any) -> bool:
         return False
     if has_language and (
         not isinstance(term["xml:lang"], str) or not term["xml:lang"].strip()
+    ):
+        return False
+    if "its:dir" in term and (
+        not has_language or term["its:dir"] not in ("ltr", "rtl")
     ):
         return False
     return True
@@ -168,11 +209,17 @@ class EndpointAdapter(Adapter):
         self._token = token or os.environ.get(TOKEN_ENV)
         # Unknown until something is queried; the connect skill reports it.
         self.named_graphs_present = None
+        self.sparql_12 = False
+        self._triple_term_probe = "not checked"
+        self._last_result_has_triple_terms = False
 
     # -- internals ----------------------------------------------------------
 
     def _post(self, query: str, timeout_ms: int | None) -> tuple[bytes, str]:
-        body = urllib.parse.urlencode({"query": query}).encode("utf-8")
+        parameters = {"query": query}
+        if query == _TRIPLE_TERM_PROBE:
+            parameters["version"] = "1.2"
+        body = urllib.parse.urlencode(parameters).encode("utf-8")
         headers = {
             "Accept": _ACCEPT,
             "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
@@ -190,7 +237,8 @@ class EndpointAdapter(Adapter):
                 return response.read(), response.headers.get_content_type()
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")[:400]
-            raise AdapterError(
+            raise EndpointResponseError(
+                exc.code,
                 f"Endpoint returned HTTP {exc.code} for a read-only query. "
                 f"{detail.strip()}"
             ) from exc
@@ -206,12 +254,13 @@ class EndpointAdapter(Adapter):
             ) from exc
 
     def _execute_raw(self, query: str, timeout_ms: int | None = None) -> RawResult:
+        self._last_result_has_triple_terms = False
         payload, content_type = self._post(query, timeout_ms)
 
         if content_type == _SPARQL_JSON:
             try:
                 document = json.loads(payload)
-            except json.JSONDecodeError as exc:
+            except (json.JSONDecodeError, UnicodeDecodeError, RecursionError) as exc:
                 raise AdapterError(
                     f"Endpoint claimed {content_type} but returned unparseable JSON"
                 ) from exc
@@ -250,6 +299,8 @@ class EndpointAdapter(Adapter):
                 for term in binding.values():
                     if not _valid_binding_term(term):
                         raise AdapterError("Endpoint returned a malformed SELECT binding")
+                    if term["type"] == "triple":
+                        self._last_result_has_triple_terms = True
             rows = [
                 {name: _binding(binding.get(name)) for name in variables}
                 for binding in bindings
@@ -268,6 +319,34 @@ class EndpointAdapter(Adapter):
             )
         return RawResult(form="CONSTRUCT", triples=text)
 
+    def probe_sparql_12(self) -> bool:
+        """Check triple-term syntax, construction, accessors and JSON transport only."""
+        self.sparql_12 = False
+        self._triple_term_probe = "not verified"
+        try:
+            result = self.execute(_TRIPLE_TERM_PROBE)
+        except EndpointResponseError as exc:
+            if exc.status_code not in {400, 406, 415, 422}:
+                raise
+            self._triple_term_probe = f"not verified (HTTP {exc.status_code})"
+            return False
+        expected = {
+            "term": "<<( <urn:linked-archi:probe:subject> "
+            "<urn:linked-archi:probe:predicate> <urn:linked-archi:probe:object> )>>",
+            "subject": "urn:linked-archi:probe:subject",
+            "predicate": "urn:linked-archi:probe:predicate",
+            "object": "urn:linked-archi:probe:object",
+        }
+        self.sparql_12 = (
+            result.form == "SELECT"
+            and self._last_result_has_triple_terms
+            and set(result.variables) == set(expected)
+            and result.rows == [expected]
+        )
+        if self.sparql_12:
+            self._triple_term_probe = "verified"
+        return self.sparql_12
+
     # -- reporting ----------------------------------------------------------
 
     def describe(self) -> str:
@@ -280,6 +359,8 @@ class EndpointAdapter(Adapter):
                 "in the clear."
             )
         lines.append(f"  timeout: {self.default_timeout_ms} ms")
+        if self._triple_term_probe != "not checked":
+            lines.append(f"  RDF/SPARQL triple-term probe: {self._triple_term_probe}")
         lines.append(
             "  reminder: enforce read-only server-side too. This client refuses "
             "updates and SERVICE, but a client-side check is a guard, not a boundary."
@@ -291,9 +372,32 @@ def _binding(term: dict[str, Any] | None) -> str:
     """Render one SPARQL-JSON binding, keeping blank nodes distinguishable."""
     if not term:
         return ""
+    if term.get("type") == "triple" or "its:dir" in term:
+        return _rdf_term(term)
     if term.get("type") == "bnode":
         return f"_:{term.get('value', '')}"
     return str(term.get("value", ""))
+
+
+def _rdf_term(term: dict[str, Any]) -> str:
+    """Preserve the structure and literal annotations inside a validated triple term."""
+    term_type = term["type"]
+    value = term["value"]
+    if term_type == "triple":
+        parts = [_rdf_term(value[part]) for part in ("subject", "predicate", "object")]
+        return "<<( " + " ".join(parts) + " )>>"
+    if term_type == "uri":
+        return f"<{value}>"
+    if term_type == "bnode":
+        return f"_:{value}"
+    literal = json.dumps(value, ensure_ascii=False)
+    if "xml:lang" in term:
+        literal += "@" + term["xml:lang"]
+        if "its:dir" in term:
+            literal += "--" + term["its:dir"]
+    elif "datatype" in term:
+        literal += "^^<" + term["datatype"] + ">"
+    return literal
 
 
 def connect(endpoint: str, **kwargs: Any) -> EndpointAdapter:

@@ -31,8 +31,9 @@ Policy flags, shared by `url`, `git` and `gitlab-mcp`: `--cache-dir DIR`, `--tim
 la-connect datasets [directory] [--include-fixtures] [--no-git] [--search-dir DIR ...]
                     [--max-depth N] [--extension EXT ...]
 la-connect connect <target>
+la-connect capabilities --endpoint URL [--timeout-ms MS]
 la-connect doctor
-la-connect _machine {execute,execute-many}
+la-connect _machine {execute,execute-many,capabilities}
 ```
 
 ## la-profile
@@ -41,13 +42,19 @@ la-connect _machine {execute,execute-many}
 la-profile list
 la-profile show    [--profile NAME_OR_PATH] [--json]
 la-profile resolve [--profile NAME_OR_PATH]
-la-profile verify  [--profile NAME_OR_PATH] <target> [--all] [--emit-fix]
-la-profile recommend <target>
+la-profile verify  [--profile NAME_OR_PATH] <target> [--all] [--emit-fix] [--probe-endpoint]
+la-profile recommend <target> [--probe-endpoint]
 la-profile derive <name> [--type-mapping FILE] [--metamodel FILE] [--base-iri IRI]
                          [--notation SLUG] [--extends PROFILE] [-o FILE]
 la-profile doctor
 la-profile _machine resolve
 ```
+
+`--probe-endpoint` requires `--endpoint` and adds one explicit known-answer triple-term
+syntax/JSON check before the normal profile probe batch. It does not assert full standards
+conformance or dataset coverage. Without it, remote discovery remains conservative.
+`la-connect capabilities` returns a schema-version-1 JSON report with `triple_terms: true`
+only after that check succeeds; ordinary queries and constructor calls never probe implicitly.
 
 ## la-query
 

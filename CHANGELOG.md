@@ -11,6 +11,12 @@ workflow publishes exactly this text, so what is written here is what a consumer
 ## [Unreleased]
 
 ### Added
+- **RDF 1.2 endpoint result handling and explicit capability checks.** Structured triple-term
+  SPARQL JSON bindings retain nested terms and literal annotations in result cells. HTTP
+  negotiation prefers version 1.2 while keeping legacy media-type fallbacks. Connect's
+  `capabilities` command and machine operation verify the required syntax and transport with
+  one read-only known-answer query; profile `recommend|verify --probe-endpoint` opts into it.
+  No normal query pays an implicit probe, and no server name becomes a standards-compliance claim.
 - **Repeatable local query-workflow benchmarks.** `make benchmark` measures selective metadata,
   render-only generation, saved previews, analyse planning and independent orientation batches.
   It checks evidence equivalence, isolates companion/state settings, records reproducible input

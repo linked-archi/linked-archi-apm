@@ -15,6 +15,7 @@ strings and missing required fields fail closed.
 |---|---|
 | `la-connect _machine execute` | Execute one read-only query against one target |
 | `la-connect _machine execute-many` | Execute several queries against one opened target |
+| `la-connect _machine capabilities` | Explicitly test endpoint triple-term syntax and transport |
 
 `execute-many` opens the target once. For a local file that means parsing it once, which
 is the whole reason it exists: `la-profile verify` issues a dozen probes and paying the
@@ -105,6 +106,47 @@ Summing `load_ms` across the results therefore gives one load.
 
 There is no `row_count` on the wire. Count `rows`, or read `boolean`. A count field would
 be a second answer to a question the rows already settle.
+
+Structured SPARQL JSON triple terms are validated recursively and represented in a string
+cell as `<<( subject predicate object )>>`. Subjects must be IRIs or blank nodes, predicates
+must be IRIs, and objects can also be literals or nested triple terms. Nested literals keep
+their escaping, datatype, language and direction. Nesting beyond 64 levels is refused rather
+than exhausting the Python stack. Ordinary IRI, blank-node and literal cells retain their
+existing representation; a new directional literal is represented as `"text"@language--direction`.
+
+## Explicit endpoint capability probe
+
+`capabilities` takes only `schema_version` and `target`; the target must name an endpoint.
+Its public equivalent is `la-connect capabilities --endpoint URL`. Both return:
+
+```json
+{
+  "schema_version": 1,
+  "dataset_id": "https://graph.example.org/query",
+  "triple_terms": true,
+  "description": "SPARQL endpoint: https://graph.example.org/query\n  RDF/SPARQL triple-term probe: verified"
+}
+```
+
+One bounded read-only query constructs a triple term, reads its subject/predicate/object,
+and requires the exact expected structured JSON result. A false-filtered graph pattern also
+requires the parser to accept variable triple-term syntax without scanning application data.
+This does not prove real-data matching, persistence, or full RDF/SPARQL 1.2 conformance.
+HTTP 400/406/415/422 or a wrong known answer returns `triple_terms: false`, meaning **not
+verified**, not necessarily unsupported. Authentication, network and malformed-result failures
+remain errors. No constructor or ordinary query implicitly runs this probe, and the report is
+not cached as a permanent endpoint capability.
+
+`la-profile recommend|verify --endpoint URL --probe-endpoint` calls this operation once before
+planning its normal probe batch. A positive result permits triple-term probes even when the
+starting profile does not claim an `rdf:reifies` bridge. Dataset coverage is still measured
+separately; syntax support cannot turn missing data into a capability claim.
+
+The HTTP adapter advertises `version=1.2` result media types with unversioned fallbacks and
+announces query version 1.2 only for its exact known probe. Ordinary query text is sent unchanged,
+without guessing grammar from comments or quoted text. Term encoding and negotiation follow the
+[SPARQL 1.2 JSON format](https://www.w3.org/TR/sparql12-results-json/#select-encode-terms)
+and [SPARQL 1.2 Protocol](https://www.w3.org/TR/sparql12-protocol/#version-announcement).
 
 ## Read-only enforcement
 

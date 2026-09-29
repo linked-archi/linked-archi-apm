@@ -297,10 +297,17 @@ An unknown never contradicts the claim and is never offered as a `--emit-fix` co
 !!! note "The bridge is only read where the engine can parse it"
     `<<( s p o )>>` is a **parse error** on a SPARQL 1.1 engine rather than an empty result,
     and a probe batch fails whole on one bad query. So the destructuring pattern is used only
-    when the backend reports SPARQL 1.2 — true for local pyoxigraph — or when the profile
+    when the backend reports triple-term syntax support — true for local pyoxigraph — or when the profile
     claims `capabilities.rdf_reifies`, which is how an operator asserts it of a remote
     endpoint and the same gate query templates are refused by. Otherwise the verdict falls to
     the last two rows above, which need no 1.2 support.
+
+For a remote endpoint, `recommend` and `verify` accept `--probe-endpoint`. This explicitly
+delegates one known-answer syntax/result-transport check to `la-connect _machine capabilities`
+before the normal dataset probe batch. A verified response enables the triple-term checks;
+it does not claim full SPARQL 1.2 conformance or that this dataset contains reification bridges.
+Without the flag, endpoints retain their conservative behavior and ordinary queries incur
+no extra capability request. The probe result is not persisted as an endpoint guarantee.
 
 This role replaced `rel_predicate` (`arch:relPredicate`). Core never published that term —
 the `skos:historyNote` on `QualifiedRelationship` records the `rdf:Statement` design behind

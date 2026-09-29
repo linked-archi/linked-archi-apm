@@ -301,29 +301,60 @@ def _execute_many(target: dict[str, Any], queries: list[str]) -> list[dict[str, 
     return [_validate_raw_result(result) for result in results]
 
 
+def _endpoint_capabilities(target: dict[str, Any]) -> dict[str, Any]:
+    request = {"schema_version": 1, "target": target}
+    deadline = _companion_deadline(target, 1)
+    try:
+        done = subprocess.run(
+            [sys.executable, str(_connect_executable()), "_machine", "capabilities"],
+            input=json.dumps(request), capture_output=True, text=True, timeout=deadline,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise CompanionError("linked-archi-connect capabilities exceeded its deadline") from exc
+    if done.returncode != 0:
+        raise CompanionError(done.stderr.strip() or "linked-archi-connect capability probe failed")
+    try:
+        response = json.loads(done.stdout)
+    except json.JSONDecodeError as exc:
+        raise CompanionError("linked-archi-connect returned invalid capability JSON") from exc
+    if (
+        not isinstance(response, dict)
+        or type(response.get("schema_version")) is not int
+        or response["schema_version"] != 1
+        or type(response.get("triple_terms")) is not bool
+        or not isinstance(response.get("dataset_id"), str)
+        or not response["dataset_id"].strip()
+        or not isinstance(response.get("description"), str)
+    ):
+        raise CompanionError("linked-archi-connect returned a malformed capability result")
+    return response
+
+
 class _ConnectProbe:
-    def __init__(self, target: dict[str, Any]) -> None:
+    def __init__(self, target: dict[str, Any], *, probe_endpoint: bool = False) -> None:
         self.target = target
         self.description = ""
         #: The dataset identity connect reported, so a clean verification can be recorded
         #: against the same identity a later query will see.
         self.dataset_id = ""
-        #: Whether the backend parses SPARQL 1.2, which decides whether a probe may look
-        #: inside an `rdf:reifies` triple term with `<<( s p o )>>`.
-        #:
-        #: Read off the target rather than from the adapter, because probes go through
-        #: `_execute_many` as a subprocess and there is no object to ask. Local data means
-        #: pyoxigraph, which parses it; an endpoint is somebody else's engine and is assumed
-        #: not to, since the pattern is a parse error rather than an empty result on 1.1 and
-        #: one bad query fails the whole batch. An operator who knows better says so by
-        #: claiming `capabilities.rdf_reifies` in the profile.
         self.sparql_12 = bool(target.get("data")) and not target.get("endpoint")
+        self._capability_report = None
+        if probe_endpoint:
+            if not target.get("endpoint") or target.get("data"):
+                raise CompanionError("--probe-endpoint requires --endpoint, not local data")
+            self._capability_report = _endpoint_capabilities(target)
+            self.sparql_12 = self._capability_report["triple_terms"]
 
     def execute_many(self, queries: list[str]) -> list[dict[str, Any]]:
         results = _execute_many(self.target, queries)
         if results:
             self.description = str(results[0].get("description") or "")
             self.dataset_id = str(results[0].get("dataset_id") or "")
+            if self._capability_report is not None:
+                if self.dataset_id != self._capability_report["dataset_id"]:
+                    raise CompanionError("endpoint capability and query dataset identities disagree")
+                status = "verified" if self.sparql_12 else "not verified"
+                self.description += f"\n  explicit endpoint triple-term probe: {status}"
         return results
 
 
@@ -395,7 +426,7 @@ def cmd_recommend(args: argparse.Namespace) -> int:
     each one's warnings - which is slow and rewards whichever profile happens to warn least
     rather than the one that fits.
     """
-    probe = _ConnectProbe(_target(args))
+    probe = _ConnectProbe(_target(args), probe_endpoint=getattr(args, "probe_endpoint", False))
     observations = observe_dataset(probe)
     recommendation = recommend_profile(observations)
     if probe.description:
@@ -414,6 +445,8 @@ def cmd_recommend(args: argparse.Namespace) -> int:
     target = " ".join(
         f"--data {shlex.quote(str(data))}" for data in (args.data or [])
     ) or (f"--endpoint {shlex.quote(str(args.endpoint))}" if args.endpoint else "")
+    if getattr(args, "probe_endpoint", False):
+        target += " --probe-endpoint"
     print()
     print("next:")
     print(f"  la-profile verify --profile {recommendation.profile} {target}".rstrip())
@@ -432,6 +465,8 @@ def _fix_command(args: argparse.Namespace, profile: Any) -> str:
         parts += ["--data", shlex.quote(str(data))]
     if args.endpoint:
         parts += ["--endpoint", shlex.quote(str(args.endpoint))]
+    if getattr(args, "probe_endpoint", False):
+        parts.append("--probe-endpoint")
     if args.lenient:
         parts.append("--lenient")
     parts += ["--emit-fix", ">", f"{profile.name}-fitted.yaml"]
@@ -440,7 +475,7 @@ def _fix_command(args: argparse.Namespace, profile: Any) -> str:
 
 def cmd_verify(args: argparse.Namespace) -> int:
     profile = load_profile(args.profile)
-    probe = _ConnectProbe(_target(args))
+    probe = _ConnectProbe(_target(args), probe_endpoint=getattr(args, "probe_endpoint", False))
     findings = verify_against_dataset(profile, probe)
     # With --emit-fix, stdout carries the generated profile and nothing else, so
     # `> acme.yaml` produces a usable file. The report still goes to the operator.
@@ -531,6 +566,10 @@ def _profile_arg(parser: argparse.ArgumentParser) -> None:
 
 def _target_args(parser: argparse.ArgumentParser) -> None:
     """The dataset to check the profile against. Needs the connect companion."""
+    parser.add_argument(
+        "--probe-endpoint", action="store_true",
+        help="explicitly check endpoint triple-term support once before profiling",
+    )
     parser.add_argument(
         "--data",
         action="append",
