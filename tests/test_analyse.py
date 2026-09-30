@@ -69,9 +69,22 @@ class TestRouting(unittest.TestCase):
             ("which diagram shows this container?", "views-and-documentation"),
             ("can we trust these models?", "model-quality"),
             ("what is in this process?", "model-contents"),
+            ('How is "General CRM System" represented across ArchiMate, Backstage and LeanIX, '
+             'and which teams own APIs serving the BPMN processes?',
+             "cross-notation"),
         ):
             with self.subTest(question):
                 self.assertEqual(_plan(question, catalogue=None).pattern, expected)
+
+    def test_notation_names_require_two_distinct_mentions(self):
+        patterns = load_patterns()
+        selected, ranked = resolve_mode(None, "What is in the ArchiMate model?", patterns)
+        self.assertNotEqual(selected.name if selected else None, "cross-notation")
+        selected, ranked = resolve_mode(None, "Compare BPMN with Backstage", patterns)
+        self.assertEqual(selected.name, "cross-notation")
+        self.assertIn("named notations: backstage, bpmn", ranked[0].matched)
+        selected, ranked = resolve_mode(None, "What depends on Backstage and LeanIX?", patterns)
+        self.assertEqual(selected.name, "impact-and-dependency")
 
     def test_a_single_word_trigger_matches_whole_words_only(self):
         """"data" must not fire on "database", and "fail" must not fire on "failover"."""

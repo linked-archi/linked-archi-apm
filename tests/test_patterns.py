@@ -35,18 +35,19 @@ class TestRoutingTableShape(unittest.TestCase):
         self.assertEqual(document["schema_version"], 1)
         self.assertTrue(document["patterns"])
 
-    def test_every_pattern_declares_the_five_routing_fields(self):
-        """Trigger, file, templates, capabilities, stop conditions. All five, always.
+    def test_every_pattern_declares_the_routing_fields(self):
+        """Trigger, file, templates, capabilities, stop conditions are always present.
 
         A pattern without triggers cannot be routed to; without stop conditions it has no
         end, which is how an investigation turns into a fishing expedition.
         """
         for name, pattern in _patterns().items():
             with self.subTest(name):
-                self.assertEqual(
-                    set(pattern),
-                    {"title", "file", "triggers", "templates", "capabilities", "stop_when"},
-                )
+                required = {"title", "file", "triggers", "templates", "capabilities", "stop_when"}
+                self.assertEqual(set(pattern) - {"notation_mentions"}, required)
+                if "notation_mentions" in pattern:
+                    self.assertEqual(name, "cross-notation")
+                    self.assertGreaterEqual(len(set(pattern["notation_mentions"])), 2)
                 self.assertTrue(pattern["title"].strip())
                 self.assertTrue(pattern["triggers"], "a pattern nothing routes to")
                 self.assertTrue(pattern["templates"], "a pattern that runs nothing")

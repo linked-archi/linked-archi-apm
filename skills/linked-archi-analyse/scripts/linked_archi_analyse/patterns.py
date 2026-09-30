@@ -34,6 +34,7 @@ class Pattern:
     templates: tuple[str, ...]
     capabilities: Mapping[str, str]
     stop_when: tuple[str, ...]
+    notation_mentions: tuple[str, ...]
 
 
 def load_patterns(path: Path | None = None) -> dict[str, Pattern]:
@@ -69,6 +70,7 @@ def load_patterns(path: Path | None = None) -> dict[str, Pattern]:
             templates=tuple(str(t) for t in spec["templates"]),
             capabilities=dict(spec["capabilities"]),
             stop_when=tuple(str(s) for s in spec["stop_when"]),
+            notation_mentions=tuple(str(n).lower() for n in spec.get("notation_mentions", [])),
         )
     return patterns
 
@@ -108,6 +110,12 @@ def route(question: str, patterns: Mapping[str, Pattern]) -> list[Match]:
                 hits.append(trigger)
         if hits:
             matches.append(Match(pattern=pattern, score=len(hits), matched=tuple(hits)))
+    if not matches:
+        for pattern in patterns.values():
+            named_notations = sorted(words.intersection(pattern.notation_mentions))
+            if len(named_notations) >= 2:
+                matches.append(Match(pattern=pattern, score=1,
+                                     matched=("named notations: " + ", ".join(named_notations),)))
     # Score first, then pattern name, so equal scores are reported in a stable order rather
     # than in whatever order the file happened to list them.
     matches.sort(key=lambda match: (-match.score, match.pattern.name))
@@ -156,6 +164,7 @@ def pattern_summary(patterns: Mapping[str, Pattern]) -> Sequence[dict[str, Any]]
             "title": pattern.title,
             "file": pattern.file,
             "triggers": list(pattern.triggers),
+            "notation_mentions": list(pattern.notation_mentions),
             "templates": list(pattern.templates),
         }
         for pattern in sorted(patterns.values(), key=lambda p: p.name)

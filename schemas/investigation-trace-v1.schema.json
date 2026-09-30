@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:linked-archi:apm:investigation-trace:1",
+  "title": "Observed APM investigation trace",
+  "description": "Records what an agent saw and which owner CLIs it chose; it does not prescribe or execute an investigation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "scenario_id", "scenario_contract_sha256", "snapshot_manifest_sha256",
+    "dataset_sha256", "profile_sha256", "apm_source_sha256", "agent", "prompt_sha256",
+    "started_at", "finished_at", "elapsed_ms", "agent_exit_code", "events",
+    "raw_events", "saved_artifacts", "final_answer", "token_usage"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "scenario_id": {"type": "string", "minLength": 1},
+    "scenario_contract_sha256": {"$ref": "#/$defs/digest"},
+    "snapshot_manifest_sha256": {"$ref": "#/$defs/digest"},
+    "dataset_sha256": {"$ref": "#/$defs/digest"},
+    "profile_sha256": {"$ref": "#/$defs/digest"},
+    "apm_source_sha256": {"$ref": "#/$defs/digest"},
+    "apm_revision": {"type": ["string", "null"]},
+    "agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["client", "model", "settings_sha256"],
+      "properties": {
+        "client": {"type": "string", "minLength": 1},
+        "model": {"type": "string", "minLength": 1},
+        "reasoning_effort": {"type": ["string", "null"]},
+        "settings_sha256": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "prompt_sha256": {"$ref": "#/$defs/digest"},
+    "started_at": {"type": "string", "format": "date-time"},
+    "finished_at": {"type": "string", "format": "date-time"},
+    "elapsed_ms": {"type": ["integer", "null"], "minimum": 0},
+    "agent_exit_code": {"type": "integer"},
+    "first_evidence_ms": {"type": ["integer", "null"], "minimum": 0},
+    "events": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "oneOf": [
+          {"$ref": "#/$defs/owner_call"},
+          {"$ref": "#/$defs/artifact_read"},
+          {"$ref": "#/$defs/tool_call"},
+          {"$ref": "#/$defs/review"}
+        ]
+      }
+    },
+    "raw_events": {"$ref": "#/$defs/artifact"},
+    "saved_artifacts": {"type": "array", "items": {"$ref": "#/$defs/artifact"}},
+    "final_answer": {
+      "oneOf": [{"$ref": "#/$defs/artifact"}, {"type": "null"}]
+    },
+    "token_usage": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "source", "input_tokens", "output_tokens"],
+          "properties": {
+            "status": {"const": "measured"},
+            "source": {"type": "string", "minLength": 1},
+            "input_tokens": {"type": "integer", "minimum": 0},
+            "output_tokens": {"type": "integer", "minimum": 0},
+            "cached_input_tokens": {"type": "integer", "minimum": 0}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "reason"],
+          "properties": {
+            "status": {"const": "unmeasured"},
+            "reason": {"type": "string", "minLength": 1}
+          }
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "bytes"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/digest"},
+        "bytes": {"type": "integer", "minimum": 0}
+      }
+    },
+    "phase": {
+      "enum": ["setup", "orientation", "resolution", "investigation", "quality", "answer", "unclassified"]
+    },
+    "owner_call": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequence", "offset_ms", "phase", "kind", "owner", "argv", "exit_code",
+        "wall_ms", "stdout_bytes", "stderr_bytes", "visible_bytes", "visible_sha256"
+      ],
+      "properties": {
+        "sequence": {"type": "integer", "minimum": 1},
+        "offset_ms": {"type": ["integer", "null"], "minimum": 0},
+        "phase": {"$ref": "#/$defs/phase"},
+        "kind": {"const": "owner_call"},
+        "owner": {"enum": ["analyse", "query", "connect", "profile", "source", "validate"]},
+        "argv": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "exit_code": {"type": "integer"},
+        "wall_ms": {"type": ["integer", "null"], "minimum": 0},
+        "stdout_bytes": {"type": ["integer", "null"], "minimum": 0},
+        "stderr_bytes": {"type": ["integer", "null"], "minimum": 0},
+        "visible_bytes": {"type": "integer", "minimum": 0},
+        "visible_sha256": {"$ref": "#/$defs/digest"},
+        "saved_artifacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "sha256", "bytes"],
+            "properties": {
+              "path": {"type": "string", "minLength": 1},
+              "sha256": {"$ref": "#/$defs/digest"},
+              "bytes": {"type": "integer", "minimum": 0}
+            }
+          }
+        }
+      }
+    },
+    "artifact_read": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sequence", "offset_ms", "phase", "kind", "path", "read_bytes", "visible_bytes", "visible_sha256"],
+      "properties": {
+        "sequence": {"type": "integer", "minimum": 1},
+        "offset_ms": {"type": ["integer", "null"], "minimum": 0},
+        "phase": {"$ref": "#/$defs/phase"},
+        "kind": {"const": "artifact_read"},
+        "path": {"type": "string", "minLength": 1},
+        "read_bytes": {"type": ["integer", "null"], "minimum": 0},
+        "visible_bytes": {"type": "integer", "minimum": 0},
+        "visible_sha256": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "tool_call": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sequence", "offset_ms", "phase", "kind", "command", "argv", "exit_code", "wall_ms", "visible_bytes", "visible_sha256"],
+      "properties": {
+        "sequence": {"type": "integer", "minimum": 1},
+        "offset_ms": {"type": ["integer", "null"], "minimum": 0},
+        "phase": {"$ref": "#/$defs/phase"},
+        "kind": {"const": "tool_call"},
+        "command": {"type": "string", "minLength": 1},
+        "argv": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "exit_code": {"type": "integer"},
+        "wall_ms": {"type": ["integer", "null"], "minimum": 0},
+        "visible_bytes": {"type": "integer", "minimum": 0},
+        "visible_sha256": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sequence", "offset_ms", "phase", "kind", "reviewed_events", "outcome", "summary"],
+      "properties": {
+        "sequence": {"type": "integer", "minimum": 1},
+        "offset_ms": {"type": ["integer", "null"], "minimum": 0},
+        "phase": {"$ref": "#/$defs/phase"},
+        "kind": {"const": "review"},
+        "reviewed_events": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 1}},
+        "outcome": {"enum": ["continue", "stop", "clarify", "refuse"]},
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "description": "A short decision summary, not private reasoning or chain-of-thought."
+        }
+      }
+    }
+  }
+}

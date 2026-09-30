@@ -2,6 +2,8 @@
 
 Triggers: anything joining two tools — a BPMN process to an ArchiMate application, a
 Backstage component to a C4 container, "is this the same system", "reconcile".
+If no phrase trigger matches, naming at least two notations also routes here; an explicit
+impact or coverage trigger takes precedence over this fallback.
 
 These are the questions the graph exists to answer and the ones most likely to come back
 empty. The cause is almost always a **missing identity assertion**, not a wrong query.

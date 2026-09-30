@@ -14,6 +14,10 @@ make check          # skill validation, then the full test suite
 
 ## Benchmarking query workflows
 
+For the next, agent-visible multi-step investigation benchmark and its correctness gates,
+see [INVESTIGATION-PERFORMANCE-PLAN.md](INVESTIGATION-PERFORMANCE-PLAN.md). The CLI harness
+below remains a mechanical baseline, not a measurement of model-token usage.
+
 Run from the repository root with the same dependencies as the tests:
 
 ```bash

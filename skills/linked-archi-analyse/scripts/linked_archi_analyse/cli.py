@@ -126,6 +126,8 @@ def cmd_plan(args: argparse.Namespace) -> int:
         for entry in pattern_summary(patterns):
             print(f"{entry['pattern']:24} {entry['title']}")
             print(f"{'':24} triggers: {', '.join(entry['triggers'][:6])}")
+            if entry["notation_mentions"]:
+                print(f"{'':24} fallback: two of {', '.join(entry['notation_mentions'])}")
         return OK
     if not args.question:
         raise AnalyseError("plan needs --question, or --list-patterns")

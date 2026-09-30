@@ -929,6 +929,17 @@ own investigation/orchestration, query read-only policy and execution envelopes,
 transport. Server import/restart/export and actual answer equivalence belong in the E2E
 fixture tests, not in a transport unit test.
 
+**D25. Cross-notation routing has a conservative notation-name fallback.** In the first
+converter-backed agent trial, a question naming ArchiMate, Backstage, LeanIX and BPMN matched no
+phrase trigger. The agent read the pattern index and replanned with explicit
+`--mode cross-notation` before it could investigate. The routing table now declares notation
+names for that pattern. Only when no ordinary trigger matches does a question naming at least
+two distinct notations select it. One named notation cannot trigger it, an explicit mode still
+wins, and impact or coverage wording still has its original precedence. This changes analyse
+planning, not query execution or review barriers. The observed baseline has real client token
+telemetry and source-grounded answer checks, but one run does not demonstrate a latency or token
+saving; paired agent trials remain required by `INVESTIGATION-PERFORMANCE-PLAN.md`.
+
 ### Requests deliberately not adopted as stated
 
 Carried here from the agent-usability plan when that plan was retired, because each of these

@@ -1251,7 +1251,7 @@ class TestNoPrivateHostsShip(unittest.TestCase):
     #: Real public hosts this package legitimately references.
     ALLOWED = {
         "meta.linked.archi",          # the published ontologies
-        "schema.org", "purl.org", "www.w3.org",
+        "schema.org", "json-schema.org", "purl.org", "www.w3.org",
         "github.com", "git-lfs.github.com", "microsoft.github.io", "gitlab.com",
         "keepachangelog.com", "semver.org",
         "agentskills.io", "kiro.dev",

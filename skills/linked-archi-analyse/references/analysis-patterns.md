@@ -10,7 +10,7 @@ only when an evidence gap forces it, and say why.
 | uncovered, coverage, incomplete, gap, missing, no owner | Coverage and gaps | [patterns/coverage-and-gaps.md](patterns/coverage-and-gaps.md) |
 | decision, principle, standard, policy, exception, who approved | Governance and decisions | [patterns/governance-and-decisions.md](patterns/governance-and-decisions.md) |
 | duplicate, overlap, rationalise, lifecycle, deprecated, portfolio | Lifecycle and portfolio comparison | [patterns/lifecycle-and-portfolio.md](patterns/lifecycle-and-portfolio.md) |
-| reconcile, same system, both tools, identity | Cross-notation questions | [patterns/cross-notation.md](patterns/cross-notation.md) |
+| reconcile, same system, both tools, identity, or at least two named notations | Cross-notation questions | [patterns/cross-notation.md](patterns/cross-notation.md) |
 | diagram, drawn, documented, view, what is new in | Views and documentation | [patterns/views-and-documentation.md](patterns/views-and-documentation.md) |
 | what is in, take part, participate, who is involved, components | What a model contains | [patterns/model-contents.md](patterns/model-contents.md) |
 | can we trust, quality, complete, wrong with, orphans, conformance | Model quality | [patterns/model-quality.md](patterns/model-quality.md) |
@@ -25,6 +25,9 @@ la-analyse plan --question '...' --mode model-quality     # when the routing is 
 
 Triggers are matched as whole words for single words and as substrings for phrases, which is
 why they are short: "can we trust this" would miss "can we trust **these** models".
+When no trigger matches, the cross-notation pattern can still match two or more notation
+names from its declared `notation_mentions` list. One notation alone does not imply a
+cross-tool join, and an explicit impact or coverage trigger retains priority.
 
 Each file carries the steps, the templates, the mistake the pattern exists to prevent, and
 its **stop conditions** — because knowing when an investigation is finished is as much of the

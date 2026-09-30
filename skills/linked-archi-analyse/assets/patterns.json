@@ -160,6 +160,14 @@
     "cross-notation": {
       "title": "Cross-notation questions",
       "file": "references/patterns/cross-notation.md",
+      "notation_mentions": [
+        "archimate",
+        "bpmn",
+        "backstage",
+        "leanix",
+        "c4",
+        "structurizr"
+      ],
       "triggers": [
         "reconcile",
         "same system",

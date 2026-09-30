@@ -10,6 +10,11 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 
+### Changed
+- **Cross-notation routing for named tools.** When no phrase trigger matches, questions
+  naming two or more notations can select the cross-notation investigation pattern without
+  a manual `--mode`. Existing phrase-trigger and explicit-mode precedence is unchanged.
+
 ### Added
 - **RDF 1.2 endpoint result handling and explicit capability checks.** Structured triple-term
   SPARQL JSON bindings retain nested terms and literal annotations in result cells. HTTP
