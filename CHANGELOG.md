@@ -11,6 +11,9 @@ workflow publishes exactly this text, so what is written here is what a consumer
 ## [Unreleased]
 
 ### Changed
+- **Name-resolution guidance.** Query and analyse now distinguish architecture elements
+  described as model records from model containers, avoiding `core/resolve-model` title hits
+  when the requested answer is about elements.
 - **Cross-notation routing for named tools.** When no phrase trigger matches, questions
   naming two or more notations can select the cross-notation investigation pattern without
   a manual `--mode`. Existing phrase-trigger and explicit-mode precedence is unchanged.

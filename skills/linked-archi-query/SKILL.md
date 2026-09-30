@@ -59,7 +59,8 @@ catalogue-wide work. Keep availability, caveats and “does not prove” with ea
 | Need | Candidate |
 |---|---|
 | Dataset orientation | `core/inventory-summary`, `core/models` |
-| Name to IRI / model name | `core/resolve-element` / `core/resolve-model` |
+| Named architecture record (application, process, capability, task) | `core/resolve-element` |
+| Model container, title or source file | `core/resolve-model` |
 | Definition | `core/define-term` |
 | Detail / neighbours / dependents | `core/element-detail`, `core/neighbours-qualified`, `core/dependents-qualified` |
 | Traceability / gaps | `core/traceability`, `core/coverage-gaps` |
@@ -82,9 +83,13 @@ a refusal. Label the output **unexecuted**, with the profile and assumptions.
 
 Use the user's dataset, endpoint, or `$LINKED_ARCHI_DATA`; never choose a fixture or
 guess a dataset. If unsettled, delegate selection to `linked-archi-connect` (`datasets`
-lists candidates, it does not choose). Resolve names with `core/resolve-element`; if
-no concept matches, try `core/resolve-model` where a model name is plausible. Ask when
-several matches materially change the answer. Use `core/define-term` for a definition
+lists candidates, it does not choose). For a named architecture record, including an
+application or another element *in* a model, use `core/resolve-element` even if the
+question calls it a "model record". Use `core/resolve-model` only when the requested
+resource is the model container itself (its title, source or contents), or when concept
+resolution finds no match and a model name is plausible. A model-title hit is not an
+element match. Ask when several matches materially change the answer. Use `core/define-term`
+for a definition
 or unresolved meaning, not automatically after every successful resolution.
 
 Before counting, coverage or absence claims, inspect `core/inventory-summary` and

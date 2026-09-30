@@ -750,7 +750,7 @@
     "core/resolve-element": {
       "file": "core/resolve-element.rq",
       "stage": "resolution",
-      "purpose": "Resolve a name a user typed to candidate IRIs, best candidate first.",
+      "purpose": "Resolve a named architecture element or record inside a model to candidate IRIs, best candidate first; not the model container itself.",
       "answers": "Which resources match a term by name, alias or native id, ranked by how much of the value matched (?rank) and by which of the three matched (?matched).",
       "does_not_prove": "That the top match is the one meant. Ask when the choice changes the answer.",
       "parameters": {
@@ -786,7 +786,7 @@
     "core/resolve-model": {
       "file": "core/resolve-model.rq",
       "stage": "resolution",
-      "purpose": "Resolve a phrase to a model, as against a concept inside one.",
+      "purpose": "Resolve a phrase to a model container by title or source, not to an architecture element or record inside one.",
       "answers": "Which models match by title, name, native id, description, source file, status or notation, ranked exact then prefix then substring.",
       "does_not_prove": "That the top-ranked model is the one meant, or that it is current. Rank is string similarity only.",
       "parameters": {

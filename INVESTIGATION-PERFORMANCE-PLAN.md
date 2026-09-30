@@ -64,8 +64,10 @@ it neither launches one nor executes a query.
 
 The first visible detour was routing: the question named ArchiMate, Backstage, LeanIX and BPMN
 but matched no phrase trigger. The agent read the pattern index and reran planning with
-`--mode cross-notation`; one attempted orientation batch also failed before recovery. A separate
-narrow-lookup pilot selected `core/resolve-model` for element records and did not answer that
+`--mode cross-notation`. The orientation batch itself succeeded; its compound shell call
+exited 2 because a subsequent file search included a nonexistent directory. The shell exit
+must not be attributed to the query owner. A separate narrow-lookup pilot selected
+`core/resolve-model` for element records and did not answer that
 scenario; it is diagnostic, not a successful benchmark sample. None of these observations
 establishes a measured per-stage or stable cross-version token reduction.
 
@@ -75,6 +77,63 @@ a post-change agent trial. The collector expects Codex `--json` events, the answ
 frozen prompt, and run metadata containing `started_at`, `finished_at`, `elapsed_ms`,
 `exit_code`, `client`, `model`, `reasoning_effort` and a non-secret `settings` object. It records
 missing usage as `unmeasured`; combined shell output is never falsely split by owner.
+
+## Follow-up lookup diagnostic
+
+`graph/out/e2e/apm-agent-lookup-guidance-2026-09-30/` contains one post-guidance agent run
+of the frozen bounded-lookup question. It chose `core/resolve-element` in one executed query,
+not `core/resolve-model`; the saved envelope has eight exact typed rows for six distinct
+records across Backstage, LeanIX, ArchiMate and UML. The original scenario contract and its
+baseline trace hash are unchanged. The separate source-grounded
+`graph/tests/bounded-lookup-expected.json` checks the complete six-record answer, while the
+original scenario still names the three core notation types needed by the cross-notation task.
+
+Its observational trace records six completed shell calls, 14,066 agent-visible output bytes,
+87,938 input tokens (80,128 cached) and 1,021 output tokens. Wall time is unmeasured at
+millisecond precision; the recorded start/end are second-resolution filesystem timestamps.
+The earlier failed pilot used a different prompt, so these runs are **not paired** and their
+token counts are not a saving claim. The refreshed converter-backed skills benchmark passes
+the six-record lookup and 21-row process checks at
+`graph/out/e2e/apm-benchmark-frozen-contract-2026-09-30.json`. Final local checks: 904 APM
+tests, 125 graph tests and a strict documentation build passed. The APM memory-watchdog test
+failed under the file sandbox but passed when the full suite was rerun outside it.
+
+## Partial paired investigation trials
+
+The controlled A/B run is retained at `graph/out/e2e/apm-paired-2026-09-30/` with its runner,
+per-run raw events, traces, answers, independent structural scoring and `manual-review.md`.
+Baseline is the archived `6fdc595` skills tree, whose digest exactly matches the first agent
+trace; candidate is the current skills tree with D25 and D26. The frozen prompt hash,
+snapshot, dataset, profile, scenario, model and settings hashes match across the six
+completed runs. Order alternated: baseline/candidate, candidate/baseline, baseline/candidate.
+No source conversion was repeated.
+
+All six completed answers select cross-notation (the three baseline agents need an explicit
+mode override), save twelve query envelopes and a bundle, cite existing evidence, and match
+the 21 source-grounded process rows as an exact multiset. The manual review flags wording in
+one baseline and one candidate answer that could imply a contradiction between ArchiMate
+`Target` and LeanIX `Active`; they are different register dimensions. No answer asserts that
+an unmatched API path proves implementation absence.
+
+| Completed runs only | Baseline, n=3 | Candidate, n=3 |
+|---|---:|---:|
+| Median agent wall time | 300,803 ms (266,503–523,136) | 290,836 ms (199,189–379,163) |
+| Median measured input tokens | 703,375 (510,511–788,500) | 733,503 (459,226–827,297) |
+| Median output tokens | 6,958 (5,457–7,853) | 7,386 (5,013–8,613) |
+| Median completed shell calls | 16 | 21 |
+| Manual cross-notation override | 3/3 | 0/3 |
+
+Candidate median wall time is 3.3% lower but only two of three pairs are faster; median input
+tokens are 4.3% higher and only one pair uses fewer. Query-envelope load and execution times
+are well under one second in median per run, so they cannot explain the hundreds of seconds
+of agent wall time. Per-stage model tokens and compound-command timings remain unmeasured.
+This sample is **inconclusive**, not an APM performance win.
+
+Trials 7–10 did not complete because the Codex client returned "Your workspace is out of
+credits. Add credits to continue." They are preserved as infrastructure failures, excluded
+from medians, and must not be treated as answer-quality failures. No further agent calls were
+made after confirming the repeated error. Once credits are restored, run the ignored harness
+with `--start 7 --count 4 --suffix retry1` and review the new evidence before any conclusion.
 
 ## Measurement contract
 
@@ -144,6 +203,9 @@ envelopes and source-grounded contracts.
   priority. This removes the observed routing miss in deterministic tests; it is **not yet**
   an observed agent-time or token improvement. Later candidates include compact plan inspection,
   unnecessary repeated metadata reads, safe batching and expensive query structure.
+- [x] Clarify element-versus-model name resolution in query and analyse entrypoints and the
+  catalogue. One bounded agent diagnostic now selects the element resolver and produces the
+  complete source-grounded record set. This does not establish a stable performance gain.
 - [ ] Repeat paired trials on the **same snapshot** and verify evidence/answer equivalence.
   Run `make check` and the existing CLI benchmark; add focused regression tests for any changed
   contract. Record rationale in `PROPOSAL.md` and user-facing changes in `CHANGELOG.md`.

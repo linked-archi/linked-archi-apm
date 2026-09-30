@@ -7,6 +7,7 @@ file with no entry is invisible and untested. Both kinds of drift are silent.
 
 from __future__ import annotations
 
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -31,6 +32,25 @@ from linked_archi_query.render import _PLACEHOLDER as PLACEHOLDER
 from linked_archi_query.render import _base_role as base_role
 from linked_archi_query.validate import split_comments
 load_profile = support.load_resolved_profile
+
+
+class TestResolutionRoutingMetadata(unittest.TestCase):
+    def test_catalogue_and_skill_entrypoints_distinguish_elements_from_models(self):
+        skills = support.ROOT / "skills"
+        query = skills / "linked-archi-query"
+        analyse = skills / "linked-archi-analyse"
+        catalog = json.loads((query / "assets/templates/catalog.json").read_text("utf-8"))
+        element = catalog["templates"]["core/resolve-element"]["purpose"]
+        model = catalog["templates"]["core/resolve-model"]["purpose"]
+        self.assertIn("element or record inside a model", element)
+        self.assertIn("not the model container", element)
+        self.assertIn("model container", model)
+        self.assertIn("not to an architecture element", model)
+        query_skill = (query / "SKILL.md").read_text("utf-8")
+        analyse_skill = (analyse / "SKILL.md").read_text("utf-8")
+        self.assertIn('calls it a "model record"', query_skill)
+        self.assertIn("records in a model", analyse_skill)
+        self.assertIn("A model-title hit is not an", query_skill)
 
 
 class TestCatalogParsing(unittest.TestCase):

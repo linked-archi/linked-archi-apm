@@ -940,6 +940,16 @@ planning, not query execution or review barriers. The observed baseline has real
 telemetry and source-grounded answer checks, but one run does not demonstrate a latency or token
 saving; paired agent trials remain required by `INVESTIGATION-PERFORMANCE-PLAN.md`.
 
+**D26. Resolve what the question names, not the word “model” alone.** A bounded ArchiSurance
+pilot asked for exact records named “General CRM System” in models. It selected
+`core/resolve-model` first and returned matching model titles rather than the requested
+ArchiMate, Backstage and LeanIX architecture elements. Query and analyse guidance and the
+catalogue now distinguish an element *inside* a model from the model container itself.
+`core/resolve-element` remains the route for the former, even when prose calls it a “model
+record”; `core/resolve-model` serves the latter or a plausible model name after zero concept
+matches. This is a routing clarification, not a new resolver, query executor or identity
+claim. The diagnostic pilot is not evidence of measured performance improvement.
+
 ### Requests deliberately not adopted as stated
 
 Carried here from the agent-usability plan when that plan was retired, because each of these

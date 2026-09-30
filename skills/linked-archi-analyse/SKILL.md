@@ -61,8 +61,10 @@ throughout the investigation, and store artifacts in the project, not the skill 
    profile with `linked-archi-profile` if not settled; re-verify after data refresh.
    A verification marker or equal filenames do not prove the dataset is unchanged.
 
-3. **Resolve inputs.** Resolve names before binding IRIs. Ask when ambiguity changes
-   the answer. A zero concept match may be a model: consider `core/resolve-model`.
+3. **Resolve inputs.** Resolve named architecture elements with `core/resolve-element`
+   before binding IRIs, even when called records in a model. Use `core/resolve-model`
+   for a model container/title or after a zero concept match suggests a model name;
+   its title hit is not an element match. Ask when ambiguity changes the answer.
    Definitions are conditional, not an automatic second lookup for every name:
    use `core/define-term` for meaning/ambiguity, a definition question, or when the
    selected pattern calls for it. `--definitions` explicitly requests this extra step.
