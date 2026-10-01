@@ -158,13 +158,28 @@ class TestPlanShape(unittest.TestCase):
         ]
         self.assertEqual(len(signatures), len(set(signatures)))
 
-    def test_stop_conditions_belong_to_the_investigation_not_to_a_step(self):
-        """Distributing them across steps read as per-step rules and was nonsense."""
+    def test_stop_conditions_belong_to_pattern_claims_not_arbitrary_steps(self):
+        """Distributing them across steps would make them per-step rules."""
         self.assertTrue(self.plan.pattern_stop_when)
         pattern_steps = [s for s in self.plan.steps if s.stage == "pattern"]
         self.assertTrue(pattern_steps)
         for step in pattern_steps:
             self.assertEqual(step.stop_when, "")
+
+    def test_cross_notation_plan_flags_independent_parts_without_extra_queries(self):
+        question = ('How is "General CRM System" represented across ArchiMate and LeanIX, '
+                    'and which teams own APIs serving BPMN processes?')
+        plan = _plan(question, catalogue=None)
+        self.assertEqual(plan.pattern, "cross-notation")
+        self.assertTrue(any("each requested answer" in note and "budget" in note
+                            for note in plan.notes))
+        self.assertTrue(all("independent" in condition for condition in plan.pattern_stop_when))
+        self.assertIn("stop the pattern-dependent claim when:", plan.to_text())
+        self.assertEqual([step.template for step in plan.steps], [
+            "core/inventory-summary", "core/models", "core/resolve-element",
+            "core/identity-audit", "core/label-collisions", "core/provenance",
+        ])
+        self.assertEqual(plan.budget, DEFAULT_BUDGET)
 
     def test_the_plan_states_its_budget_and_marks_what_exceeds_it(self):
         tight = _plan('what depends on "Order Service"?', budget=3)

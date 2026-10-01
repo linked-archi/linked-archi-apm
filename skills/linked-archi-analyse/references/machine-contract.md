@@ -123,8 +123,9 @@ What a caller may rely on:
 - **`over_budget`** marks steps beyond `budget`. They are marked rather than dropped, so what
   is being given up stays visible, but never enter a batch. `planned_steps` and the budget
   count query steps; refusal decisions are separate.
-- **`pattern_stop_when`** belongs to the investigation, not to any one step. Distributing
-  those conditions across steps would read as per-step rules and mislead.
+- **`pattern_stop_when`** applies to claims that depend on the selected pattern, not to any
+  one step or an independent clause of a multi-part question. Distributing those conditions
+  across steps would read as per-step rules and mislead.
 
 `status` is a planning summary, not execution authorization:
 

@@ -168,9 +168,8 @@ class Plan:
     steps_dir: str
     annotated: bool
     notes: list[str]
-    #: The pattern's own stop conditions, carried whole. NOT distributed across steps: they
-    #: are conditions on the investigation, and pairing "reachability is not criticality"
-    #: with whichever step happened to be third reads as a per-step rule and is nonsense.
+    #: The pattern's own stop conditions, carried whole. They apply to claims using the
+    #: pattern, not arbitrary steps or independent claims in a multi-part question.
     pattern_stop_when: list[str] = field(default_factory=list)
     decisions: list[dict[str, Any]] = field(default_factory=list)
     batch_dir: str | None = None
@@ -315,7 +314,7 @@ class Plan:
                 lines.append(f"   stop if: {step.stop_when}")
             lines.append("")
         if self.pattern_stop_when:
-            lines.append("stop the investigation when:")
+            lines.append("stop the pattern-dependent claim when:")
             for condition in self.pattern_stop_when:
                 lines.append(f"  - {condition}")
             lines.append("")
@@ -393,6 +392,13 @@ def build_plan(
             "right start; then either name a pattern with --mode (see "
             "references/analysis-patterns.md) or report that this package has no method for "
             "the question."
+        )
+    elif pattern.name == "cross-notation":
+        notes.append(
+            "This pattern plans identity evidence, not every clause of a multi-part question. "
+            "Reserve query budget for an evidence path or justified unknown for each requested "
+            "answer before widening audits; its stop conditions apply only to the "
+            "identity-dependent claim."
         )
 
     terms = terms_in(question)

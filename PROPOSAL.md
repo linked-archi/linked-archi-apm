@@ -950,6 +950,27 @@ record”; `core/resolve-model` serves the latter or a plausible model name afte
 matches. This is a routing clarification, not a new resolver, query executor or identity
 claim. The diagnostic pilot is not evidence of measured performance improvement.
 
+**D27. Preserve answer coverage across question clauses before widening audits.** The
+five-pair converter-backed investigation comparison found a candidate run that used all twelve
+queries on orientation, resolution, broad identity audits and related detail, then reported
+the BPMN API-ownership clause unresolved. That statement was honest about its executed
+evidence, but the verified dataset had a source-grounded 21-row join the run never queried.
+The candidate removed manual cross-notation routing overrides, yet passed only four of five
+answer-quality checks and had higher observed median wall time and input tokens. Routing
+alone is not a performance or answer-quality win.
+
+Analyse now asks for a claim-to-evidence checkpoint before optional or wider audits. Its
+cross-notation plan explicitly says that its templates cover authored correspondence, not
+every clause, and its stop conditions close only the identity-dependent claim. Other clauses
+continue with their own evidence or a justified limitation. A relevant supplied or
+project-local query can be inspected as a candidate when the template shortlist is insufficient,
+but it establishes nothing until validated and executed by query. This is guidance and an
+additive plan note, not a natural-language clause parser, automatic query runner or guarantee
+that a missing relationship exists. Query remains the sole read-only executor; budget and review
+barriers stay advisory and unchanged. Focused tests check the compound-question plan and
+unchanged query shortlist. A fresh agent comparison is needed before claiming a performance
+improvement or releasing this as one.
+
 ### Requests deliberately not adopted as stated
 
 Carried here from the agent-usability plan when that plan was retired, because each of these

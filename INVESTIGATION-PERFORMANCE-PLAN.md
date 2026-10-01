@@ -98,7 +98,7 @@ the six-record lookup and 21-row process checks at
 tests, 125 graph tests and a strict documentation build passed. The APM memory-watchdog test
 failed under the file sandbox but passed when the full suite was rerun outside it.
 
-## Partial paired investigation trials
+## Initial paired investigation trials
 
 The controlled A/B run is retained at `graph/out/e2e/apm-paired-2026-09-30/` with its runner,
 per-run raw events, traces, answers, independent structural scoring and `manual-review.md`.
@@ -129,11 +129,79 @@ are well under one second in median per run, so they cannot explain the hundreds
 of agent wall time. Per-stage model tokens and compound-command timings remain unmeasured.
 This sample is **inconclusive**, not an APM performance win.
 
-Trials 7–10 did not complete because the Codex client returned "Your workspace is out of
-credits. Add credits to continue." They are preserved as infrastructure failures, excluded
-from medians, and must not be treated as answer-quality failures. No further agent calls were
-made after confirming the repeated error. Once credits are restored, run the ignored harness
-with `--start 7 --count 4 --suffix retry1` and review the new evidence before any conclusion.
+The original attempts at trials 7–10 did not complete because the Codex client returned
+"Your workspace is out of credits. Add credits to continue." They remain preserved as
+infrastructure failures, excluded from medians and distinct from answer-quality failures.
+The five-pair result below supersedes this initial three-pair view.
+
+## Offline follow-up checks
+
+The converter-backed snapshot benchmark now checks the frozen C4 refusal scenario as well as
+the bounded lookup and process answer. It calls `la-query query render notation/c4/containers`
+with the verified profile but **without** a dataset or force option, and requires the profile
+refusal rather than successful rendering or an empty result. The report at
+`graph/out/e2e/apm-benchmark-refusal-2026-09-30.json` passes: six exact lookup records, the
+21 source-grounded process rows and refusal before execution. This is a deterministic owner
+check, not evidence that an agent would refuse correctly in a new trial. All 128 graph tests
+pass; no sources were reconverted.
+
+An offline review of the six completed JSONL traces found median agent-visible shell output
+of 127,654 bytes for baseline and 148,266 for candidate. Large individual outputs often
+combine file reads, owner calls or ad-hoc query-building, so their bytes cannot be attributed
+to a single owner or stage. The identity-audit preview and reading both skill entrypoints are
+also substantial context sources. These observations suggest a next optimization target, not
+a measured token cause or a performance improvement; the candidate's measured median input
+tokens are currently higher.
+
+For a **new** comparison, the observational collector can accept a
+line-hashed monotonic event-timing sidecar. The trial harness has an optional
+`--capture-timing` switch that saves one without altering raw JSONL. It can measure completed
+shell-call durations, but not model reasoning time or per-owner costs inside compound shell
+commands. It was not mixed into the resumed A/B run, which retained the original settings.
+The sidecar capture has unit tests and syntax checks, but has not been exercised with a live
+Codex agent.
+
+## Completed five-pair comparison
+
+Credits and service access returned. A first trial-7 retry failed during local sandbox
+initialization, before contacting the service; it remains an infrastructure failure. Four
+`retry2` trials then completed with the frozen prompt, snapshot, model, settings and skill
+digests unchanged. The ignored graph artifacts retain all ten completed trials, failed
+attempts, raw events, envelopes, `summary.json`, `manual-audit.json` and `manual-review.md`.
+
+| All completed attempts, n=5 each | Baseline | Candidate |
+|---|---:|---:|
+| Independent answer-quality passes | 5/5 | 4/5 |
+| Median agent wall time | 266,503 ms (192,528–523,136) | 290,836 ms (199,189–379,163) |
+| Median measured input tokens | 655,140 (453,972–788,500) | 733,503 (459,226–837,234) |
+| Median agent-visible shell output | 133,519 bytes | 148,266 bytes |
+| Manual cross-notation override | 5/5 | 0/5 |
+
+The candidate is faster in three of five pairs but has 9.1% **higher** median wall time;
+it uses fewer input tokens in two of five pairs but has 12.0% **higher** median input tokens.
+These values include the failed-quality candidate run rather than selecting it out. The
+candidate routing change removes all observed manual mode overrides, but no time or token
+improvement is established.
+
+The fifth candidate trial used all twelve queries without executing the available
+process-to-API join. It correctly qualified that mapping as unresolved in its **executed
+evidence**, but its answer omitted the requested ownership result even though the frozen
+dataset contains the source-grounded 21-row answer. The independent exact-multiset checker
+and manual review both mark this as incomplete. Earlier wording caveats in one trial per
+variant remain separate from this failure. This is a quality regression and blocks a
+performance release or version bump. It also shows why a clean deterministic CLI benchmark
+cannot substitute for agent trials.
+
+The bounded follow-up changes `linked-archi-analyse` guidance and its cross-notation plan:
+claim-to-evidence coverage precedes optional/wider audits, and identity stop conditions do
+not end independent question clauses. A focused deterministic test checks the compound
+question, budget and unchanged query shortlist. The changed checkout passes 905 APM tests,
+a strict documentation build and the converter-backed skills benchmark at
+`graph/out/e2e/apm-benchmark-claim-coverage-final-2026-09-30.json` without reconversion.
+This has not yet demonstrated that agents consistently follow the checkpoint. Keep
+`linked-archi-query` as the read-only executor and start a **new** comparison against the
+changed skills digest; do not pool it with these ten runs. Per-stage model-token attribution
+remains unmeasured.
 
 ## Measurement contract
 
@@ -206,9 +274,20 @@ envelopes and source-grounded contracts.
 - [x] Clarify element-versus-model name resolution in query and analyse entrypoints and the
   catalogue. One bounded agent diagnostic now selects the element resolver and produces the
   complete source-grounded record set. This does not establish a stable performance gain.
-- [ ] Repeat paired trials on the **same snapshot** and verify evidence/answer equivalence.
-  Run `make check` and the existing CLI benchmark; add focused regression tests for any changed
-  contract. Record rationale in `PROPOSAL.md` and user-facing changes in `CHANGELOG.md`.
+- [x] Add a deterministic, profile-gated C4 refusal check to the converter-backed snapshot
+  benchmark. It guards against treating an absent notation as an empty factual answer, but
+  does not replace an agent refusal trial.
+- [x] Complete five alternating pairs on the **same snapshot** and independently score their
+  evidence. The candidate fails one ownership answer and has no stable wall-time or token win;
+  the result is a failed gate, not an optimization success.
+- [x] Add claim-to-evidence budget guidance in analyse and scope cross-notation stop conditions
+  to the identity-dependent claim, without moving execution into query. Record the rationale
+  in `PROPOSAL.md`, user-facing change in `CHANGELOG.md` and a focused regression test.
+- [x] Run `make check`, strict docs and the CLI benchmark on the frozen snapshot. All 905 APM
+  tests pass with process RSS inspection available; source-grounded checks pass without
+  reconversion.
+- [ ] Forward-test the changed skill on the frozen snapshot, then repeat a new paired
+  comparison before any time/token claim or version bump.
 
 ## Completion criteria
 

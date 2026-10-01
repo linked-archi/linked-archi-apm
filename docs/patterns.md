@@ -75,8 +75,8 @@ do not execute every candidate to complete a checklist. Query remains the execut
 
 *Stop when:*
 
-- identity-audit is refused, which means the dataset has no reconciliation and the join cannot be made
-- only label candidates remain - report them as candidates and stop
+- identity-audit is refused: stop the identity-dependent join, not independent parts of a multi-part question
+- only label candidates remain: report identity as unresolved and continue independent claims with their own evidence
 
 ### `governance-and-decisions`
 

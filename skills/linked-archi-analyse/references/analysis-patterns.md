@@ -30,8 +30,8 @@ names from its declared `notation_mentions` list. One notation alone does not im
 cross-tool join, and an explicit impact or coverage trigger retains priority.
 
 Each file carries the steps, the templates, the mistake the pattern exists to prevent, and
-its **stop conditions** — because knowing when an investigation is finished is as much of the
-method as knowing what to run.
+its **stop conditions** for claims that depend on it — because knowing when a claim is
+blocked is as much of the method as knowing what to run.
 
 ## Running any of them
 

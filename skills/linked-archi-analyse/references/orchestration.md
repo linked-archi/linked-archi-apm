@@ -15,6 +15,19 @@ are suggestions with different semantics, not automatic replacements.
 refusal boundaries. A step being fully bound is not evidence that either review happened.
 Budget flags remain advisory: count executed queries and stop at the agreed budget.
 
+For a question with several requested answers, keep a short claim-to-evidence checklist while
+reviewing the plan. Allocate queries to the smallest useful path for each claim before optional
+audits or wider result limits. A pattern's stop condition can close the claim that depends on
+it without abandoning independent claims. Before bundling, check that every requested answer
+has executed evidence or an explicit, evidence-based limitation; do not mistake a plan's
+candidate steps for complete question coverage.
+
+When the tested template shortlist does not cover a claim, a supplied or project-local query
+may be a useful starting point. Inspect only a relevant candidate; check its graph scope,
+parameters and bounds, then delegate lint and execution to query. Its presence is not proof
+that it answers the question, and it never becomes evidence until executed against the
+settled dataset and profile.
+
 Plans include `batches` for independent, fully bound same-stage candidates with known
 availability and an explicit dataset/endpoint; `--batch-dir DIR` also writes those manifests.
 Over-budget candidates are excluded. Neither plans nor manifest

@@ -11,6 +11,11 @@ workflow publishes exactly this text, so what is written here is what a consumer
 ## [Unreleased]
 
 ### Changed
+- **Multi-part investigation coverage.** Analyse now prompts a claim-to-evidence budget
+  check before broad audits; cross-notation stop conditions apply to the identity-dependent
+  claim rather than ending independent parts of the question. Planning and query execution
+  ownership are unchanged. This addresses an incomplete agent answer observed in the
+  five-pair ArchiSurance comparison; no speed or token improvement is claimed yet.
 - **Name-resolution guidance.** Query and analyse now distinguish architecture elements
   described as model records from model containers, avoiding `core/resolve-model` title hits
   when the requested answer is about elements.

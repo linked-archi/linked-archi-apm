@@ -43,6 +43,10 @@ throughout the investigation, and store artifacts in the project, not the skill 
 
 1. **Frame the question.** State the scope, desired claim and query budget (default 12).
    Quote resource names in the question; the planner does not invent names from prose.
+   For a multi-part question, name each requested answer and reserve budget for a load-bearing
+   evidence path or a justified unknown for each. One selected pattern need not cover every
+   clause. Do not spend the remaining budget expanding an audit while another requested
+   answer has no evidence path.
    Generate a plan and load **only its selected pattern file**, not all patterns:
 
    ```bash
@@ -73,6 +77,9 @@ throughout the investigation, and store artifacts in the project, not the skill 
    template metadata. For changes, use `catalog show NAME` or filtered `catalog dump
    --template NAME ... --profile P`; read typing, gates and “does not prove”. Do not
    read template source or the whole catalogue for routine execution.
+   If those templates leave a requested claim uncovered, inspect a supplied or project-local
+   query as a **candidate** before inventing a broad exploratory join. Validate its scope
+   and run it only through `linked-archi-query`; query text is not itself result evidence.
 
    Honour dependency and review barriers. Batch only independent, fully bound steps
    whose prerequisites have been reviewed. Inspect `decisions` before continuing:

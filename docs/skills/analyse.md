@@ -78,6 +78,13 @@ Orientation always comes first, so an empty later result can be told from a part
 Resolution comes next, so no step takes a hand-written IRI. Then the pattern's evidence. Then
 provenance, so every load-bearing element can be traced to a source.
 
+The selected pattern is a starting method, not a guarantee that every clause of a multi-part
+question is covered. Reserve query budget for a load-bearing path or justified unknown for
+each requested answer before optional audits or wider limits; apply pattern stop conditions
+only to claims that depend on that pattern. If the template shortlist leaves a claim open,
+a supplied or project-local query may be inspected as a candidate, then validated and run
+through `linked-archi-query`; a query file is not itself result evidence.
+
 Orientation is freshly planned on every invocation. No previous envelope or verification
 marker is used to skip it: the existing basename-based dataset identity cannot prove that
 the current data is unchanged.

@@ -91,7 +91,7 @@ batch      steps 1, 2 [ready]
    establishes: the pattern's own evidence
    FOCUS_IRI: <FOCUS_IRI: resolved in the resolve step, from core/resolve-element>
 
-stop the investigation when:
+stop the pattern-dependent claim when:
   - the relationship semantics on a path stop supporting the claim
   - reachability has been established but criticality has not - they are different questions
   - the next hop needs data the models do not carry, such as traffic or failure history
