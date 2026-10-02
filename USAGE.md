@@ -109,13 +109,15 @@ it](#upgrading-and-removing-it) for the other routes and for keeping it current.
 
 ### With APM
 
-Install from the repository, a local archive, or a published ref. The committed
-skill directories already contain their owned runtime and assets; installation does
-not generate or copy a shared payload.
+Install from a consuming project using a local checkout, archive or published ref. Do not
+install the package into its own checkout: APM treats that as a circular dependency. The
+committed skill directories already contain their owned runtime and assets; installation
+does not generate or copy a shared payload.
 
 ```bash
-apm install .
-apm install linked-archi/linked-archi-apm#v0.6.0
+APM_SOURCE=/absolute/path/to/linked-archi-apm
+apm install "$APM_SOURCE"
+apm install linked-archi/linked-archi-apm#v0.7.0
 ```
 
 That is the whole happy path. The rest of this section is for when the default is not
@@ -129,10 +131,10 @@ on. Name them yourself when the project carries no signal, carries a misleading 
 you want several harnesses at once:
 
 ```bash
-apm install . --target kiro
-apm install . --target claude,codex,kiro     # -t is the short form
-apm install . --target all                   # every auto-detectable harness
-apm install . --target all,agent-skills      # plus the shared .agents/skills/ tree
+apm install "$APM_SOURCE" --target kiro
+apm install "$APM_SOURCE" --target claude,codex,kiro     # -t is the short form
+apm install "$APM_SOURCE" --target all                   # every auto-detectable harness
+apm install "$APM_SOURCE" --target all,agent-skills      # plus the shared .agents/skills/ tree
 ```
 
 Resolution order is `--target`, then `targets:` in *your* `apm.yml`, then
@@ -141,7 +143,7 @@ without writing anything:
 
 ```bash
 apm targets              # every harness, active or not, and the signal that decided it
-apm install . --dry-run
+apm install "$APM_SOURCE" --dry-run
 ```
 
 One consequence worth stating for this package: because it declares no `targets:`, a
@@ -164,8 +166,8 @@ Grok Build keep native skill directories; the rest converge on a shared tree.
 #### Installing outside the current project
 
 ```bash
-apm install . --root /tmp/apm-out         # redirect every write under a directory
-apm install . -g --target kiro,claude     # user scope (~/.apm/) rather than a project
+apm install "$APM_SOURCE" --root /tmp/apm-out         # redirect every write under a directory
+apm install "$APM_SOURCE" -g --target kiro,claude     # user scope (~/.apm/) rather than a project
 ```
 
 `--root` mirrors `pip install --target`: `apm.yml`, `.apm/` and local-path dependencies
@@ -181,7 +183,7 @@ nothing.
 #### Installing a subset
 
 ```bash
-apm install . --skill linked-archi-query
+apm install "$APM_SOURCE" --skill linked-archi-query
 ```
 
 `--skill NAME` is repeatable. `linked-archi-source` works independently and is
@@ -296,8 +298,8 @@ apm update -g                    # user-scope dependencies
 apm update --yes                 # CI and scripts
 ```
 
-A pinned ref does not move on its own: `apm install linked-archi/linked-archi-apm#v0.6.0`
-means v0.6.0 until you change the ref in your own manifest and install again. In CI prefer
+A pinned ref does not move on its own: `apm install linked-archi/linked-archi-apm#v0.7.0`
+means v0.7.0 until you change the ref in your own manifest and install again. In CI prefer
 [`apm install --frozen`](https://microsoft.github.io/apm/reference/cli/install/), which
 deploys exactly what `apm.lock.yaml` records and fails on drift rather than quietly moving.
 `apm update` refreshes dependencies, not the APM binary — that is `apm self-update` or your

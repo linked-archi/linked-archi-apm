@@ -10,12 +10,16 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-02
+
 ### Changed
 - **Multi-part investigation coverage.** Analyse now prompts a claim-to-evidence budget
   check before broad audits; cross-notation stop conditions apply to the identity-dependent
   claim rather than ending independent parts of the question. Planning and query execution
-  ownership are unchanged. This addresses an incomplete agent answer observed in the
-  five-pair ArchiSurance comparison; no speed or token improvement is claimed yet.
+  ownership are unchanged. In a separate five-pair ArchiSurance agent comparison, all five
+  changed-skill answers pass the source-grounded process check and median measured input
+  tokens fall 22.0% versus the frozen pre-change skills tree. Wall-time improvement is not
+  established; the result does not isolate which change caused the token difference.
 - **Name-resolution guidance.** Query and analyse now distinguish architecture elements
   described as model records from model containers, avoiding `core/resolve-model` title hits
   when the requested answer is about elements.
@@ -582,7 +586,8 @@ converters against the meta.linked.archi ontologies.
   for SHACL validation, and `git` for Git acquisition. Endpoint and HTTPS transport use
   the standard library. No mandatory MCP server.
 
-[Unreleased]: https://github.com/linked-archi/linked-archi-apm/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/linked-archi/linked-archi-apm/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.3.0...v0.4.0

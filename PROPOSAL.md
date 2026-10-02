@@ -1,7 +1,7 @@
 # linked-archi-apm: proposal, design record, and progress tracker
 
-**Status:** released, Apache-2.0, installable directly by APM (v0.6.0)
-**Last updated:** 2026-09-08
+**Status:** released, Apache-2.0, installable directly by APM (v0.7.0)
+**Last updated:** 2026-10-02
 
 One document, three jobs. It records **why** this package exists, **how** it is
 designed and what evidence each decision rests on, and **where the work stands**.
@@ -968,8 +968,15 @@ but it establishes nothing until validated and executed by query. This is guidan
 additive plan note, not a natural-language clause parser, automatic query runner or guarantee
 that a missing relationship exists. Query remains the sole read-only executor; budget and review
 barriers stay advisory and unchanged. Focused tests check the compound-question plan and
-unchanged query shortlist. A fresh agent comparison is needed before claiming a performance
-improvement or releasing this as one.
+unchanged query shortlist. A separate five-pair agent comparison against the frozen
+pre-D27 skills tree finds all five D27 answers manually defensible and exact on the
+source-grounded 21-row process contract, versus four of five manually defensible and
+three exact baseline answers. Median measured input tokens fall from 696,187 to 542,727
+(22.0%), lower in all five pairs. Median wall time is effectively flat (255,268 versus
+253,593 ms), with substantial variance, so no stable latency gain or attribution to this
+single instruction change is claimed. The original failed-credit attempt is retained but
+excluded from completed-run medians; raw evidence and caveats are recorded in
+`INVESTIGATION-PERFORMANCE-PLAN.md`.
 
 ### Requests deliberately not adopted as stated
 

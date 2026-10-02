@@ -3,20 +3,21 @@
 ## Install
 
 The package is an [APM](https://microsoft.github.io/apm/) bundle. The committed tree is the
-artifact: there is no build step and no install-time bundling.
+artifact: there is no build step and no install-time bundling. Run installs from the consuming
+project, not from this package checkout.
 
 ```bash
-apm install linked-archi/linked-archi-apm#v0.6.0
-apm install .                    # from a local clone
+apm install linked-archi/linked-archi-apm#v0.7.0
+apm install /absolute/path/to/linked-archi-apm   # local clone
 ```
 
 `apm targets` shows what auto-detection resolves to before you commit to it. Naming harnesses
 explicitly, or redirecting where files land:
 
 ```bash
-apm install . --target claude,codex,kiro   # or -t all
-apm install . --root /tmp/apm-out          # redirect every write under a directory
-apm install . -g --target kiro             # user scope (~/.apm/)
+apm install /absolute/path/to/linked-archi-apm --target claude,codex,kiro
+apm install /absolute/path/to/linked-archi-apm --root /tmp/apm-out
+apm install /absolute/path/to/linked-archi-apm -g --target kiro
 ```
 
 ## Requirements

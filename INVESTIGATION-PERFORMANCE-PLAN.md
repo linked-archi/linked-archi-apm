@@ -1,6 +1,7 @@
 # Agent-visible investigation performance plan
 
-Status: in progress. This plan measures and improves APM investigations, not the upload platform.
+Status: D27 token objective verified; latency improvement and per-stage attribution remain open.
+This plan measures and improves APM investigations, not the upload platform.
 `graph/` below means the ArchiSurance graph checkout at
 `../../../linked.archi usecase/use-case-repo-group/archisurance/graph/` relative to this repo.
 
@@ -158,8 +159,9 @@ line-hashed monotonic event-timing sidecar. The trial harness has an optional
 `--capture-timing` switch that saves one without altering raw JSONL. It can measure completed
 shell-call durations, but not model reasoning time or per-owner costs inside compound shell
 commands. It was not mixed into the resumed A/B run, which retained the original settings.
-The sidecar capture has unit tests and syntax checks, but has not been exercised with a live
-Codex agent.
+The sidecar capture has unit tests and syntax checks; it was subsequently exercised in the
+separate D27 comparison below. Its event-arrival offsets do not identify model versus service
+latency or split compound shell commands into owner timings.
 
 ## Completed five-pair comparison
 
@@ -188,9 +190,9 @@ process-to-API join. It correctly qualified that mapping as unresolved in its **
 evidence**, but its answer omitted the requested ownership result even though the frozen
 dataset contains the source-grounded 21-row answer. The independent exact-multiset checker
 and manual review both mark this as incomplete. Earlier wording caveats in one trial per
-variant remain separate from this failure. This is a quality regression and blocks a
+variant remain separate from this failure. At that stage the quality regression blocked a
 performance release or version bump. It also shows why a clean deterministic CLI benchmark
-cannot substitute for agent trials.
+cannot substitute for agent trials; the D27 follow-up and separate forward test are below.
 
 The bounded follow-up changes `linked-archi-analyse` guidance and its cross-notation plan:
 claim-to-evidence coverage precedes optional/wider audits, and identity stop conditions do
@@ -198,10 +200,65 @@ not end independent question clauses. A focused deterministic test checks the co
 question, budget and unchanged query shortlist. The changed checkout passes 905 APM tests,
 a strict documentation build and the converter-backed skills benchmark at
 `graph/out/e2e/apm-benchmark-claim-coverage-final-2026-09-30.json` without reconversion.
-This has not yet demonstrated that agents consistently follow the checkpoint. Keep
-`linked-archi-query` as the read-only executor and start a **new** comparison against the
-changed skills digest; do not pool it with these ten runs. Per-stage model-token attribution
-remains unmeasured.
+At this point the checkpoint had not been tested with agents. Keep `linked-archi-query` as
+the read-only executor; the separate changed-skills comparison below must not be pooled with
+these ten runs. Per-stage model-token attribution remains unmeasured.
+
+## D27 paired forward test
+
+The separate five-pair comparison and independent review are retained at
+`graph/out/e2e/apm-paired-d27-2026-10-01/` (`summary.json`, `manual-review.md` and individual
+raw events, answers and envelopes). Baseline is the archived pre-D27 skills tree
+(`ef7c3e3d73a5357c732302b1f0d15799944ef6fceb18bd5d08a440893e0dc2c1`); candidate
+is D27 (`82079b89e629669cf0563970bfdc021c41b7238573d4bf7c5964622d859a1691`).
+All completed trials used the same frozen prompt, converter-backed snapshot, verified
+profile, model, low reasoning setting, 12-query budget and isolated settings. Order
+alternated, with no source reconversion. An initial trial-7 candidate attempt exhausted
+Codex credits before an answer; its completed retry is counted, while the failure remains
+visible in the artifacts and is excluded from medians.
+
+| Five completed attempts per variant | Pre-D27 baseline | D27 candidate |
+|---|---:|---:|
+| Independent 21-row exact process passes | 3/5 | 5/5 |
+| Manual answer-quality passes | 4/5 | 5/5 |
+| Median measured input tokens | 696,187 (653,397–754,764) | 542,727 (436,121–611,767) |
+| Median output tokens | 6,926 | 6,239 |
+| Median agent wall time | 255,268 ms (224,741–285,987) | 253,593 ms (210,381–792,602) |
+| Median agent-visible shell output | 142,939 bytes | 136,039 bytes |
+| Median completed shell calls / executed query envelopes | 15 / 11 | 12 / 10 |
+
+Candidate input tokens are 22.0% lower by median and lower in every pair. Its exact process
+evidence and manual answer-quality checks pass in all five trials. The baseline's first
+answer genuinely misses the notification API/team path. Another baseline answer contains
+all 21 substantive relations but projects owner as a group IRI rather than the expected
+native entity reference; the exact checker fails it, while manual review counts a qualified
+pass. Both results are reported without changing the checker after the fact. Several
+baseline answers also need wording care: ArchiMate `Target` and LeanIX `Active` belong to
+different register dimensions, not a demonstrated contradiction.
+
+Median wall time is only 0.7% lower, with the candidate faster in three of five pairs and
+one 792,602 ms candidate outlier. **No stable latency improvement or causal attribution to
+the guidance alone is established.** JSONL event timing cannot distinguish model reasoning
+from service delay; query-envelope load and execution medians are below one second per trial.
+The measured-token completion gate is met on this frozen cross-notation scenario, with no
+observed answer-quality or review-barrier regression. Per-stage cost attribution remains
+unverified; the additional one-off agent smoke trials below are not performance samples.
+
+## Release smoke trials
+
+One D27 agent trial per remaining scenario is retained at
+`graph/out/e2e/apm-release-smoke-2026-10-01/`, including raw events, traces, answers,
+evidence and `review.md`. The bounded lookup executes `core/resolve-element` once; the
+independent source-grounded checker matches all eight exact-name `(IRI, type)` bindings
+for six distinct records, and the answer does not equate them by label. The C4 trial uses
+query's catalogue/profile gate, saves the `REFUSED` result for
+`notation/c4/containers`, executes zero RDF queries and does not mistake dataset absence
+for enterprise-wide absence. Both answers cite existing archived evidence. An earlier
+lookup attempt failed during sandboxed Codex initialization before answering; the
+successful retry and failed attempt are both retained. The lookup envelope correctly
+states that its fresh isolated skill state has no profile-verification marker, despite
+the separately verified E2E snapshot. These two single trials check for obvious route
+and refusal regressions; they do not establish statistical reliability or latency gains.
 
 ## Measurement contract
 
@@ -286,8 +343,11 @@ envelopes and source-grounded contracts.
 - [x] Run `make check`, strict docs and the CLI benchmark on the frozen snapshot. All 905 APM
   tests pass with process RSS inspection available; source-grounded checks pass without
   reconversion.
-- [ ] Forward-test the changed skill on the frozen snapshot, then repeat a new paired
-  comparison before any time/token claim or version bump.
+- [x] Forward-test the changed skill on the frozen snapshot in five new alternating pairs,
+  independently review their answers and report the measured token gain separately from
+  the unverified latency objective.
+- [x] Run one bounded-lookup and one profile-refusal agent smoke trial against the same
+  frozen snapshot and independently check their saved evidence before release preparation.
 
 ## Completion criteria
 

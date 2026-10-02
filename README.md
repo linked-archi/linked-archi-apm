@@ -133,21 +133,22 @@ version-controlled, testable artifact rather than a prompt somebody retypes.
 Every skill is directly installable from the committed tree; there is no build or
 install-time bundling step.
 
-**With APM**, which is the intended route. The package declares no `targets:`, so APM
-auto-detects your runtime from the project and promotes each of the six skills into it:
+**With APM**, which is the intended route. Run these from the consuming project, not this
+package checkout. The package declares no `targets:`, so APM auto-detects your runtime
+from the consumer and promotes each of the six skills into it:
 
 ```bash
-apm install linked-archi/linked-archi-apm#v0.6.0
-apm install .                    # from a local clone
+apm install linked-archi/linked-archi-apm#v0.7.0
+apm install /absolute/path/to/linked-archi-apm   # local clone
 ```
 
 Name the harnesses yourself when the project has no signal to detect, or when you want
 the skills somewhere other than the current project:
 
 ```bash
-apm install . --target claude,codex,kiro   # or -t all
-apm install . --root /tmp/apm-out          # redirect every write under a directory
-apm install . -g --target kiro             # user scope (~/.apm/)
+apm install /absolute/path/to/linked-archi-apm --target claude,codex,kiro
+apm install /absolute/path/to/linked-archi-apm --root /tmp/apm-out
+apm install /absolute/path/to/linked-archi-apm -g --target kiro
 ```
 
 `apm targets` shows what auto-detection resolves to before you commit to it. Full flag
