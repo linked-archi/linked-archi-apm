@@ -39,6 +39,12 @@ recursively for tooling, especially from `/` or `$HOME`. Run `la-query doctor` i
 report the missing companion and stop rather than substituting another RDF tool.
 Write artifacts in the user's project, never in an installed skill directory.
 
+Use a project-owned catalogue only when its path is explicitly supplied. Pass repeatable
+`--catalog PATH` on each `catalog list/show/dump` and `query render/run/batch` call;
+do not discover catalogues or edit installed templates. This adds project-owned names
+without overriding bundled ones. It does not extend `linked-archi-analyse` planning
+patterns automatically; analyst-led steps must select those templates explicitly.
+
 ## Get only the metadata needed
 
 Prefer tested templates: roles are bound by the profile, not vocabulary recalled from
@@ -148,4 +154,6 @@ query truncation.
 - Refusal, empty result or failed command: [references/troubleshooting.md](references/troubleshooting.md).
 - New or adapted template: [references/template-contract.md](references/template-contract.md).
 - Endpoint permissions, query cost or unsafe request: [references/safety.md](references/safety.md).
+- Project-owned catalogue: [references/template-contract.md](references/template-contract.md)
+  and `assets/templates/custom/README.md`; external SPARQL is trusted project code.
 - Programmatic calls: [references/machine-contract.md](references/machine-contract.md).

@@ -573,8 +573,12 @@ def _parse_sets(pairs: Sequence[str]) -> dict[str, Any]:
     return values
 
 
+def _selected_catalog(args: argparse.Namespace):
+    return load_catalog(extensions=args.catalog)
+
+
 def cmd_catalog_list(args: argparse.Namespace) -> int:
-    catalog = load_catalog()
+    catalog = _selected_catalog(args)
     problems = catalog.validate_files()
     profile = _profile(args.profile) if args.profile else None
     print(catalog.format_list(profile))
@@ -596,7 +600,7 @@ def cmd_catalog_list(args: argparse.Namespace) -> int:
 
 
 def cmd_catalog_show(args: argparse.Namespace) -> int:
-    entry = load_catalog().get(args.template)
+    entry = _selected_catalog(args).get(args.template)
     profile = _profile(args.profile) if args.profile else None
     print(f"name            {entry.name}")
     print(f"file            {entry.file}")
@@ -663,7 +667,7 @@ def cmd_catalog_dump(args: argparse.Namespace) -> int:
     `catalog show` per template costs a call each for what is static metadata. Selecting a
     template and binding its parameters should not be an N-call negotiation.
     """
-    catalog = load_catalog()
+    catalog = _selected_catalog(args)
     names = {catalog.get(name).name for name in args.template}
     stages = set(args.stage)
     notations = set(args.notation)
@@ -712,7 +716,10 @@ def cmd_catalog_dump(args: argparse.Namespace) -> int:
 
 
 def cmd_render(args: argparse.Namespace) -> int:
-    rendered = render(args.template, _profile(args.profile), _parse_sets(args.set), strict=not args.force)
+    rendered = render(
+        args.template, _profile(args.profile), _parse_sets(args.set),
+        catalog=_selected_catalog(args), strict=not args.force,
+    )
     for warning in rendered.warnings:
         print(f"caveat: {warning}", file=sys.stderr)
     if args.output:
@@ -813,7 +820,9 @@ def _check_preview(args: argparse.Namespace, *, require_output: bool = False) ->
 def cmd_run(args: argparse.Namespace) -> int:
     _check_preview(args, require_output=True)
     profile = _profile(args.profile)
-    rendered = render(args.template, profile, _parse_sets(args.set))
+    rendered = render(
+        args.template, profile, _parse_sets(args.set), catalog=_selected_catalog(args)
+    )
     raw = _execute(rendered.query, _target(args))
     return _emit(_envelope(raw, rendered, profile), args)
 
@@ -896,11 +905,12 @@ def cmd_batch(args: argparse.Namespace) -> int:
     _check_preview(args)
     profile = _profile(args.profile)
     entries = _batch_manifest(args.manifest)
+    catalog = _selected_catalog(args)
 
     rendered = []
     for entry in entries:
         if entry["template"]:
-            rendered.append(render(entry["template"], profile, entry["set"]))
+            rendered.append(render(entry["template"], profile, entry["set"], catalog=catalog))
         else:
             text = (
                 Path(entry["file"]).read_text(encoding="utf-8")
@@ -1115,6 +1125,13 @@ def _profile_arg(parser: argparse.ArgumentParser) -> None:
     )
 
 
+def _catalog_arg(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--catalog", action="append", default=[], metavar="PATH",
+        help="add a trusted project catalogue (repeatable); never auto-discovered",
+    )
+
+
 def _target_args(parser: argparse.ArgumentParser) -> None:
     """The dataset. Exactly one kind, and the same four flags on every command."""
     parser.add_argument(
@@ -1250,6 +1267,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--why", action="store_true",
         help="explain every refusal and name an alternative template",
     )
+    _catalog_arg(listing)
     _output_arg(listing)
     listing.set_defaults(func=cmd_catalog_list)
     show = catalog_sub.add_parser(
@@ -1269,6 +1287,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--source", action="store_true",
         help="print the unrendered SPARQL, directives and all",
     )
+    _catalog_arg(show)
     _output_arg(show)
     show.set_defaults(func=cmd_catalog_show)
     dump = catalog_sub.add_parser(
@@ -1296,6 +1315,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--notation", action="append", default=[], metavar="NAME",
         help="include only these catalogue notations, e.g. bpmn (repeatable)",
     )
+    _catalog_arg(dump)
     _output_arg(dump)
     dump.set_defaults(func=cmd_catalog_dump)
 
@@ -1319,6 +1339,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     render_cmd.add_argument("template", help="template name, e.g. core/models")
     _profile_arg(render_cmd)
+    _catalog_arg(render_cmd)
     render_cmd.add_argument("--set", action="append", default=[], metavar="NAME=VALUE",
                             help=_SET_HELP)
     render_cmd.add_argument("-o", "--output", metavar="FILE", help=_OUTPUT_HELP)
@@ -1337,6 +1358,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     run.add_argument("template", help="template name, e.g. core/dependents-qualified")
     _profile_arg(run)
+    _catalog_arg(run)
     _target_args(run)
     run.add_argument("--set", action="append", default=[], metavar="NAME=VALUE",
                      help=_SET_HELP)
@@ -1397,6 +1419,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     batch.add_argument("manifest", metavar="FILE", help="batch manifest, JSON")
     _profile_arg(batch)
+    _catalog_arg(batch)
     _target_args(batch)
     batch.add_argument("-o", "--output", metavar="FILE",
                        help="write the run summary here instead of stdout")

@@ -177,15 +177,48 @@ plainer dataset does have.** A refusal that offers nowhere to go is only half an
 Add `notation` for a notation-specific template, and put the file under
 `assets/templates/notation/<notation>/`.
 
+## Downstream project catalogue
+
+Keep extensions beside your own APM/project, not in an installed skill. A JSON
+catalogue uses the same `version: 1` / `templates` shape as the bundled
+`assets/templates/catalog.json`. Each entry's `file` is a `.rq` path relative to
+that JSON file's directory. Give every entry a project namespace such as
+`acme/capability-map`; `core/`, `notation/` and `custom/` are reserved. A project
+catalogue cannot replace a bundled or another project template. A file path cannot
+escape the catalogue directory, including by symlink.
+
+```bash
+python3 path/to/la-query catalog show acme/capability-map \
+  --catalog queries/catalog.json --profile profiles/acme.yaml
+python3 path/to/la-query query run acme/capability-map \
+  --catalog queries/catalog.json --profile profiles/acme.yaml --data graph.trig
+```
+
+`--catalog` is explicit on each `catalog list/show/dump` and `query render/run/batch`
+invocation and may be repeated for several independent catalogues. It is never
+discovered from the environment or the profile. In a batch, the same selected
+catalogues resolve all template entries before any execution. The loader checks a
+positive integer `LIMIT` bound and an outer trailing `LIMIT {{LIMIT}}`, required
+role/graph/membership declarations, and alternative names. Rendering then applies
+profile gates, parameter typing and read-only validation. These are mechanical
+checks, not proof that a query's joins, scope or answer semantics are right. Test
+project templates against representative graph data and use read-only credentials
+for endpoints: SPARQL read-only validation is not an authorization boundary.
+
+`linked-archi-analyse` does not register project templates in its bundled planning
+patterns. A custom template can be chosen as an explicit analyst-led query step;
+automatic planner integration is a separate extension. See the complete example in
+`examples/fixed-graph-downstream/` in the package repository.
+
 ## Testing
 
 The suite fails when a catalogued template has no test case, so the catalogue cannot
 drift untested. Add a case to `tests/test_templates.py` with the parameters to use and
 a minimum row count.
 
-**Repository development only.** `tests/` and `make check` live in the package repository,
-not in an installed skill, so these steps assume you have a checkout. Adding a template to an
-installed copy gets you an untested template - use the repository.
+**Upstream repository development only.** `tests/` and `make check` live in the package
+repository, not in an installed skill. Downstream authors keep their own tests with
+their own catalogue; adding a template to an installed copy remains unsupported.
 
 Expected counts are **floors**, not assertions about your data. If a template legitimately
 returns nothing against the fixtures, that is a fixture gap worth fixing rather than a

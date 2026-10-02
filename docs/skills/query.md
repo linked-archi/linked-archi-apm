@@ -50,6 +50,43 @@ With `--profile`, each selected entry also carries `available`, `unmet` and `pro
 payload and complete entry metadata remain the same with filters; without filters, `catalog dump`
 still emits the whole catalogue. Prefer a selected dump when only a few templates are relevant.
 
+### Project-owned catalogue extensions
+
+An installed skill is not a place to keep project queries. Keep a `catalog.json` and its `.rq`
+files in the consuming project, then pass the catalogue explicitly to `catalog list`, `show` or
+`dump`, or to `query render`, `run` or `batch`:
+
+```bash
+python3 ../../skills/linked-archi-query/scripts/la-query catalog show demo/accountability \
+  --catalog skills/fixed-graph-demo/assets/queries/catalog.json \
+  --profile skills/fixed-graph-demo/assets/profiles/demo.yaml
+python3 ../../skills/linked-archi-query/scripts/la-query query run demo/accountability \
+  --catalog skills/fixed-graph-demo/assets/queries/catalog.json \
+  --profile skills/fixed-graph-demo/assets/profiles/demo.yaml \
+  --data skills/fixed-graph-demo/assets/data/architecture.trig \
+  --set FOCUS_IRI=https://example.org/fixed-graph/catalog/element/payments-service
+```
+
+Run these from `examples/fixed-graph-downstream/` in this repository checkout. Its pinned
+`v0.7.0` installed copy predates `--catalog`; select a release containing the extension
+before using the project query from installed skills.
+
+`--catalog` is repeatable. Each extension uses the bundled catalogue's JSON schema, names its
+own relative `.rq` files, and gives each template a project namespace such as `acme/`.
+Duplicate names and file paths escaping the catalogue directory are refused; no working-directory
+scan or automatic registration occurs. Use full names such as `demo/accountability`:
+basename shortcuts can become ambiguous across catalogues. External entries go through the same
+profile gates,
+rendering, read-only check and result envelope as bundled entries. Keep project-specific fixture
+tests with the extension: the upstream test floor covers bundled templates only. Treat the
+catalogue path as a trust decision, not a sandbox for untrusted SPARQL, and keep endpoint
+credentials read-only.
+
+Registering a template does not add an `la-analyse` pattern or make the planner select it.
+Analyse still investigates and orchestrates; it may inspect an explicitly supplied project
+query, but only query executes it. The [downstream APM example](../downstream-apm.md) shows
+the selected-skill package and the explicit graph/profile/catalogue choices together.
+
 ## Generating SPARQL without execution
 
 For a known profile and template, inspect its parameter contract and render it directly:

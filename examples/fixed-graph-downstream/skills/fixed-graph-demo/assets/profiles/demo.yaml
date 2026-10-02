@@ -1,0 +1,34 @@
+extends: linked-archi-default.yaml
+profile: fixed-graph-demo
+version: 1
+description: The fixed demo graph uses project-specific labels and an accountability predicate.
+base_iri: https://example.org/fixed-graph/
+
+namespaces:
+  demo: https://example.org/fixed-graph/ontology#
+
+roles:
+  label: demo:displayName
+  owner: demo:accountableTeam
+  ownership_class: bs:Ownership
+
+capabilities:
+  partitioned_semantic_graphs: false
+  views_graph: false
+  view_geometry: false
+  concept_owner: true
+  element_lifecycle: false
+
+notations:
+  model:
+    present: false
+  bpmn:
+    present: false
+  c4:
+    present: false
+  backstage:
+    present: true
+  leanix:
+    present: false
+  plantuml:
+    present: false

@@ -44,6 +44,9 @@ All entries are rendered and validated read-only before any executes. One local 
 serves the batch; only its first result carries `load_ms`. A batch has no result-to-input
 substitution: resolve names and review evidence before batching their dependent queries.
 Do not combine stages merely because their parameters happen to be filled in.
+For project-owned template entries, pass the same explicit `--catalog queries/catalog.json`
+to `query batch` that you used when inspecting them. One selected catalogue set applies
+to every entry; a batch entry cannot silently select a different template source.
 
 Do not switch to cached stores just to avoid parsing. Analytical performance differs;
 consult the connect owner's `references/store-modes.md` before changing modes (D19).

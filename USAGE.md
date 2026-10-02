@@ -194,6 +194,14 @@ companion skills for operations that need them: query rendering needs
 read-only check. Analysis delegates to those three. Missing companions fail with the
 exact required skill name.
 
+For a complete downstream manifest that selects those four upstream skills and installs
+its own skill carrying a fixed graph and custom profile, see
+[the downstream example](examples/fixed-graph-downstream/README.md). A project-owned query
+catalogue is passed explicitly with `--catalog PATH`; installing this package does not
+automatically discover or trust catalogue files from the consumer. The example pins
+`v0.7.0` for its four-skill baseline; its external catalogue needs a later release
+containing the new flag.
+
 #### The authoritative reference
 
 Flags, target names and deploy paths belong to APM rather than to this package, and they

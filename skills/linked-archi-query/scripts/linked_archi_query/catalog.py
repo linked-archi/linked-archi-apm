@@ -22,7 +22,7 @@ import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any, Iterable, Mapping, Sequence
 
 from .contract import _is_absolute_iri
 
@@ -200,10 +200,17 @@ class TemplateEntry:
     #: all 34 templates would train a reader to skip the line, and the profile caveats
     #: that matter would go with it.
     caveat: str = ""
+    template_dir: Path = TEMPLATE_DIR
 
     @property
     def path(self) -> Path:
-        return TEMPLATE_DIR / self.file
+        root = self.template_dir.resolve()
+        path = (self.template_dir / self.file).resolve()
+        if not path.is_relative_to(root):
+            raise CatalogError(
+                f"Template {self.name!r} file escapes its catalogue directory: {self.file}"
+            )
+        return path
 
     def text(self) -> str:
         if not self.path.is_file():
@@ -211,7 +218,10 @@ class TemplateEntry:
                 f"Template {self.name!r} is catalogued as {self.file} but that file "
                 "does not exist"
             )
-        return self.path.read_text(encoding="utf-8")
+        try:
+            return self.path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            raise CatalogError(f"Could not read template {self.name!r}: {exc}") from exc
 
     def check(self, profile: ResolvedProfile) -> Verdict:
         """Whether ``profile`` supports this template.
@@ -326,6 +336,7 @@ class Catalog:
 
     def __init__(self, document: Mapping[str, Any], source: Path | None = None) -> None:
         self.source = source
+        self.template_dir = source.parent if source is not None else TEMPLATE_DIR
         if not isinstance(document, Mapping):
             raise CatalogError("catalog must be a mapping")
         if any(not isinstance(key, str) for key in document):
@@ -379,6 +390,16 @@ class Catalog:
                 raise CatalogError(
                     f"Template {name!r} needs a stripped, non-empty {required_key!r}"
                 )
+        file = spec["file"]
+        if (
+            not file.endswith(".rq")
+            or "\\" in file
+            or any(part in {"", ".", ".."} for part in file.split("/"))
+            or Path(file).is_absolute()
+        ):
+            raise CatalogError(
+                f"Template {name!r} file must be a relative .rq path inside its catalogue directory"
+            )
         stage = spec["stage"]
         if stage not in STAGES:
             raise CatalogError(
@@ -531,6 +552,7 @@ class Catalog:
             notation=notation,
             notation_namespace=notation_namespace,
             caveat=caveat,
+            template_dir=self.template_dir,
         )
 
     # -- access -------------------------------------------------------------
@@ -598,16 +620,17 @@ class Catalog:
         for entry in self:
             if not entry.path.is_file():
                 problems.append(f"{entry.name}: file not found at {entry.file}")
-        catalogued = {e.file for e in self}
-        for found in sorted(TEMPLATE_DIR.rglob("*.rq")):
-            relative = found.relative_to(TEMPLATE_DIR).as_posix()
-            if relative.startswith("custom/"):
-                continue
-            if relative not in catalogued:
-                problems.append(
-                    f"{relative}: on disk but not in catalog.json, so it is "
-                    "untested and unreachable by routing"
-                )
+        if self.source is None or self.source.resolve() == CATALOG_PATH.resolve():
+            catalogued = {e.file for e in self if e.template_dir == TEMPLATE_DIR}
+            for found in sorted(TEMPLATE_DIR.rglob("*.rq")):
+                relative = found.relative_to(TEMPLATE_DIR).as_posix()
+                if relative.startswith("custom/"):
+                    continue
+                if relative not in catalogued:
+                    problems.append(
+                        f"{relative}: on disk but not in catalog.json, so it is "
+                        "untested and unreachable by routing"
+                    )
         return problems
 
     def format_list(self, profile: ResolvedProfile | None = None) -> str:
@@ -638,12 +661,133 @@ class Catalog:
         return "\n".join(lines).lstrip("\n")
 
 
-def load_catalog(path: Path | str = CATALOG_PATH) -> Catalog:
-    target = Path(path)
+def _read_catalog(path: Path | str) -> Catalog:
+    target = Path(path).resolve()
     if not target.is_file():
         raise CatalogError(f"Catalogue not found: {target}")
     try:
         document = json.loads(target.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         raise CatalogError(f"{target.name} is not valid JSON: {exc}") from exc
+    except (OSError, UnicodeError) as exc:
+        raise CatalogError(f"Could not read catalogue {target}: {exc}") from exc
     return Catalog(document, source=target)
+
+
+def _validate_extension_entry(entry: TemplateEntry) -> None:
+    from .render import _PLACEHOLDER, _base_role
+    from .validate import split_comments
+
+    limit = entry.parameters.get("LIMIT")
+    if (
+        not limit
+        or limit.get("type") != "integer"
+        or not isinstance(limit.get("min"), int)
+        or isinstance(limit.get("min"), bool)
+        or limit["min"] < 1
+        or not isinstance(limit.get("max"), int)
+        or isinstance(limit.get("max"), bool)
+        or limit["max"] < limit["min"]
+        or (
+            "default" in limit
+            and not limit["min"] <= limit["default"] <= limit["max"]
+        )
+    ):
+        raise CatalogError(f"Extension template {entry.name!r} needs a bounded integer LIMIT")
+    if not entry.does_not_prove.strip():
+        raise CatalogError(f"Extension template {entry.name!r} needs does_not_prove")
+    if entry.notation and not entry.notation_namespace:
+        raise CatalogError(
+            f"Extension template {entry.name!r} needs notation_namespace for its notation gate"
+        )
+    if entry.requires.capabilities and not entry.alternatives:
+        raise CatalogError(
+            f"Extension template {entry.name!r} needs an alternative for its capability gate"
+        )
+
+    code = "".join(
+        "" if is_comment else chunk
+        for is_comment, chunk in split_comments(entry.text())
+    )
+    placeholders = list(_PLACEHOLDER.finditer(code))
+    if not re.search(r"\bLIMIT\s*\{\{\s*LIMIT\s*\}\}\s*$", code, re.IGNORECASE):
+        raise CatalogError(
+            f"Extension template {entry.name!r} must end with LIMIT {{{{LIMIT}}}}"
+        )
+    for match in placeholders:
+        if match.group(1) in {
+            "ROLE", "ROLES", "PATH", "GRAPH_OPEN", "GRAPH_VAR", "MEMBERSHIP"
+        } and not match.group(2):
+            raise CatalogError(
+                f"Extension template {entry.name!r} has a missing argument for "
+                f"{{{{{match.group(1)}}}}}"
+            )
+
+    roles = {
+        match.group(2)
+        for match in placeholders
+        if match.group(1) in {"ROLE", "ROLES", "PATH"}
+    }
+    graph_roles = {
+        _base_role(match.group(2))
+        for match in placeholders
+        if match.group(1) in {"GRAPH_OPEN", "GRAPH_VAR"}
+    } - {"any"}
+    undeclared_roles = roles - set(entry.requires.roles)
+    undeclared_graph_roles = graph_roles - set(entry.requires.graph_roles)
+    if undeclared_roles or undeclared_graph_roles:
+        details = []
+        if undeclared_roles:
+            details.append("requires.roles: " + ", ".join(sorted(undeclared_roles)))
+        if undeclared_graph_roles:
+            details.append("requires.graph_roles: " + ", ".join(sorted(undeclared_graph_roles)))
+        raise CatalogError(
+            f"Extension template {entry.name!r} uses undeclared dependencies ("
+            + "; ".join(details) + ")"
+        )
+    uses_membership = any(match.group(1) == "MEMBERSHIP" for match in placeholders)
+    if uses_membership != entry.requires.membership:
+        raise CatalogError(
+            f"Extension template {entry.name!r} uses MEMBERSHIP={uses_membership} "
+            f"but requires.membership={entry.requires.membership}"
+        )
+
+
+def load_catalog(
+    path: Path | str = CATALOG_PATH,
+    *,
+    extensions: Sequence[Path | str] = (),
+) -> Catalog:
+    catalog = _read_catalog(path)
+    external_entries: list[TemplateEntry] = []
+    for extension_path in extensions:
+        extension = _read_catalog(extension_path)
+        problems = extension.validate_files()
+        if problems:
+            raise CatalogError("Invalid extension catalogue: " + "; ".join(problems))
+        for entry in extension:
+            _validate_extension_entry(entry)
+            segments = entry.name.split("/")
+            if (
+                len(segments) < 2
+                or segments[0] in {"core", "notation", "custom"}
+                or any(not re.fullmatch(r"[a-z][a-z0-9_-]*", segment) for segment in segments)
+            ):
+                raise CatalogError(
+                    f"Extension template {entry.name!r} needs a project namespace, "
+                    "for example acme/my-question"
+                )
+            if entry.name in catalog:
+                raise CatalogError(
+                    f"Extension template {entry.name!r} duplicates an existing template"
+                )
+            catalog._entries[entry.name] = entry
+            external_entries.append(entry)
+    for entry in external_entries:
+        missing = set(entry.alternatives) - set(catalog.names)
+        if missing:
+            raise CatalogError(
+                f"Extension template {entry.name!r} names unknown alternatives: "
+                + ", ".join(sorted(missing))
+            )
+    return catalog

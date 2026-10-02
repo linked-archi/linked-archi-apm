@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "templates": {
+    "demo/accountability": {
+      "file": "accountability.rq",
+      "stage": "analysis",
+      "purpose": "Show the recorded accountable team when a matching qualified ownership assertion exists.",
+      "answers": "The project-specific team assertion and the qualified relationship that agree on one component and team.",
+      "does_not_prove": "Current operational accountability or that every component has an owner.",
+      "parameters": {
+        "FOCUS_IRI": {
+          "type": "iri",
+          "description": "Component IRI resolved from graph evidence"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 100,
+          "min": 1,
+          "max": 1000,
+          "description": "Maximum result rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "element_class",
+          "label",
+          "owner",
+          "ownership_class",
+          "relationship_class",
+          "rel_source",
+          "rel_target"
+        ],
+        "graph_roles": ["semantic"],
+        "capabilities": {"concept_owner": true}
+      },
+      "alternatives": ["core/neighbours-qualified"],
+      "caveat": "These are authored graph assertions, not a live ownership directory."
+    }
+  }
+}

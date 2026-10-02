@@ -59,16 +59,16 @@ only after that check succeeds; ordinary queries and constructor calls never pro
 ## la-query
 
 ```
-la-query catalog list [--profile P] [--why] [-o FILE]
-la-query catalog show <template> [--profile P] [--source] [-o FILE]
+la-query catalog list [--profile P] [--catalog PATH ...] [--why] [-o FILE]
+la-query catalog show <template> [--profile P] [--catalog PATH ...] [--source] [-o FILE]
 la-query catalog dump [--profile P] [--template NAME ...] [--stage STAGE ...]
-                       [--notation NAME ...] [-o FILE]
-la-query query render <template> [--profile P] [--set NAME=VALUE ...] [--force] [-o FILE]
-la-query query run <template> [--profile P] <target> [--set NAME=VALUE ...]
+                       [--notation NAME ...] [--catalog PATH ...] [-o FILE]
+la-query query render <template> [--profile P] [--catalog PATH ...] [--set NAME=VALUE ...] [--force] [-o FILE]
+la-query query run <template> [--profile P] [--catalog PATH ...] <target> [--set NAME=VALUE ...]
                               [--format {tsv,md,json}] [--json] [--limit N] [-o FILE] [--preview]
 la-query query literal (--query SPARQL | --file FILE) [--profile P] <target>
                               [--format ...] [--json] [--limit N] [-o FILE] [--preview]
-la-query query batch <manifest> [--profile P] <target> [-o FILE] [--preview] [--limit N]
+la-query query batch <manifest> [--profile P] [--catalog PATH ...] <target> [-o FILE] [--preview] [--limit N]
 la-query lint [file] [--query SPARQL] [--profile P] <target> [-o FILE]
 la-query doctor [-o FILE]
 la-query _machine lint
@@ -78,6 +78,11 @@ la-query _machine lint
 kinds intersect. Select only relevant templates to reduce output while retaining their complete
 metadata, profile refusals and caveats. The unfiltered dump and `schema_version: 1` payload remain
 unchanged. Unknown template, stage or notation values fail explicitly.
+
+`--catalog PATH` explicitly loads an additional trusted JSON catalogue, with template files
+relative to that catalogue. It is repeatable, never discovered automatically, and cannot
+replace bundled names. Pass it to each catalogue, render, run or batch invocation that uses
+an external template. It does not apply to `query literal` or alter analyse pattern routing.
 
 For `query run` and `literal`, `--preview` requires `-o FILE` and a positive `--limit`; invalid
 combinations fail before execution. The file remains the complete JSON envelope; stdout also gets

@@ -10,6 +10,15 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 
+### Added
+- **Composable downstream APM example.** An installable project skill carries a fixed graph
+  and custom profile, selects only analyse, connect, profile and query from upstream, and
+  shows the install and verification path.
+- **Explicit project-owned query catalogues.** `la-query catalog` and catalogued `query`
+  commands accept repeatable `--catalog PATH` overlays without editing an installed skill.
+  Bundled entries cannot be replaced, and external entries keep the existing gates, read-only
+  checks and evidence envelope. This does not auto-register analysis patterns.
+
 ## [0.7.0] - 2026-10-02
 
 ### Changed

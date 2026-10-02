@@ -1,0 +1,15 @@
+$schema: https://microsoft.github.io/apm/specs/schemas/manifest-v0.1.schema.json
+name: fixed-graph-downstream
+version: "0.1.0"
+description: A downstream APM with one installed fixed-graph skill and four Linked.Archi companions.
+includes:
+  - skills/fixed-graph-demo/
+dependencies:
+  apm:
+    - git: linked-archi/linked-archi-apm
+      ref: v0.7.0
+      skills:
+        - linked-archi-analyse
+        - linked-archi-query
+        - linked-archi-profile
+        - linked-archi-connect

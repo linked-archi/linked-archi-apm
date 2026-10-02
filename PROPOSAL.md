@@ -978,6 +978,19 @@ single instruction change is claimed. The original failed-credit attempt is reta
 excluded from completed-run medians; raw evidence and caveats are recorded in
 `INVESTIGATION-PERFORMANCE-PLAN.md`.
 
+**D28. Downstream composition and query extension do not mutate installed skills.** A
+consumer can pin its own graph and profile, install only the four skills needed for
+analysis and querying, and keep its own query catalogue beside its model. External
+catalogues are opt-in with `--catalog PATH`, never discovered from a working directory;
+their names must not replace bundled entries. Template files are resolved within their
+own catalogue directory. Query retains profile gating, rendering, read-only checks,
+execution and envelopes for both bundled and external entries. The consumer owns tests
+for external entries: the upstream one-fixture-test-per-template invariant applies to
+the bundled catalogue, not to arbitrary project data. A catalogue path is a trust
+decision, not a sandbox for third-party SPARQL. Registering a query does not extend
+`la-analyse`'s pattern routing or cause automatic execution; investigation and
+orchestration remain with analyse, and query remains the sole executor (D7, D10, D23).
+
 ### Requests deliberately not adopted as stated
 
 Carried here from the agent-usability plan when that plan was retired, because each of these

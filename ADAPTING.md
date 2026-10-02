@@ -24,6 +24,7 @@ Write a new template when the **question** is new, not when the vocabulary is.
 | Your own taxonomy | [A `taxonomies` entry](#taxonomies-need-no-new-template) |
 | A house field promoted through `--ns-vocab` | [A custom role](#custom-roles) |
 | A genuinely new question | [A new template](skills/linked-archi-query/assets/templates/custom/README.md) |
+| A fixed graph with selected skills and a project-owned query | [The downstream APM example](examples/fixed-graph-downstream/README.md) |
 | A vocabulary that is not Linked.Archi at all | [Rebind the core roles](#a-graph-that-is-not-linkedarchi) |
 
 Start with `la-kg profile list` and `la-kg catalog list --profile <candidate>`. If a
@@ -359,7 +360,13 @@ needs.
 
 Where a graph reifies relationships differently — a single predicate rather than a
 resource with endpoints — the qualified-form templates will not fit, and a small
-`skills/linked-archi-query/assets/templates/custom/` set is the honest answer.
+project-owned query catalogue is the honest answer. Pass its `catalog.json` explicitly
+with `--catalog PATH` on each `la-query catalog` or catalogued `la-query query`
+command; do not edit an installed skill. The same profile gates, rendering checks,
+read-only validation and result envelope still apply to an external template. See the
+[downstream APM example](examples/fixed-graph-downstream/README.md) for the full layout.
+Its `v0.7.0` pin covers the fixed-graph baseline only; use this checkout or a later
+release with `--catalog` for the project-owned query.
 
 ---
 

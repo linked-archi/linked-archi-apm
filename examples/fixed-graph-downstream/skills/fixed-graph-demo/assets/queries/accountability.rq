@@ -1,0 +1,24 @@
+# demo/accountability - Who is explicitly recorded as accountable for this component?
+#
+# Answers: the project-specific accountable-team assertion only where a matching
+# qualified ownership relationship names the same component and team.
+#
+# Does NOT prove: current operational accountability or complete owner coverage.
+#
+# Parameters: FOCUS_IRI, LIMIT
+{{PREFIXES}}
+SELECT ?component ?componentName ?team ?teamName ?relationship {{GRAPH_VAR:semantic}}
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    VALUES ?component { {{FOCUS_IRI}} }
+    ?component a {{ROLE:element_class}} ;
+      {{ROLE:label}} ?componentName ;
+      {{ROLE:owner}} ?team .
+    ?team {{ROLE:label}} ?teamName .
+    ?relationship a {{ROLE:relationship_class}}, {{ROLE:ownership_class}} ;
+      {{ROLE:rel_source}} ?component ;
+      {{ROLE:rel_target}} ?team .
+  {{GRAPH_CLOSE}}
+}
+ORDER BY ?component ?team ?relationship
+LIMIT {{LIMIT}}

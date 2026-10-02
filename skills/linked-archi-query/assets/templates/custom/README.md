@@ -1,62 +1,57 @@
 # Your own templates
 
-Templates here follow the same contract as the bundled ones and are the right
-place for questions the core set does not cover. Note first that **a custom
-ontology usually needs no new template at all**: the core templates resolve roles
-rather than terms, so binding your vocabulary in a profile is normally enough. Use
-the `linked-archi-profile` skill and its `references/profile-reference.md` guide for
-that work. Write a template when the *question* is new, not when the vocabulary is.
+A new vocabulary usually needs a custom profile, not new SPARQL: the bundled queries
+resolve roles through the profile. Write a template when the *question* is new.
 
-`assets/templates/custom/` is exempt from the catalogue completeness check, so a template
-dropped here will not fail the build. It also will not be reachable by routing or
-covered by a test. Add a catalogue entry as soon as it is more than a scratch
-query.
+## Downstream APM: keep queries in your project
 
-## The contract
-
-**A prose header.** Three things, in this order: what it answers, what it does
-*not* prove, and its parameters. The middle one earns its place - it is where a
-reader learns that a modelled relationship is not a runtime dependency, or that an
-absent value means nobody recorded it. Routing reads these too.
-
-**No `PREFIX` lines.** Use `{{PREFIXES}}`. A template carrying its own prefixes is
-how one query ends up on a stale namespace while its neighbour is current.
-
-**No vocabulary terms.** Use `{{ROLE:label}}` for the primary binding,
-`{{ROLES:x}}` for a `VALUES` list, `{{PATH:x}}` for an alternation. A hardcoded
-IRI works until someone runs it against a graph built from a different ontology
-version, and then returns nothing rather than failing.
-
-**Wrap patterns in `{{GRAPH_OPEN:role}}` / `{{GRAPH_CLOSE}}`.** The profile decides
-whether that becomes a `GRAPH` clause, a `VALUES` restriction, or a plain group, so
-one template serves TriG and flattened Turtle. Use `:any` when the point is to
-report which graphs exist.
-
-**Bound the result.** Every template takes a `LIMIT`.
-
-**Declare `requires`.** Roles, graph roles and capabilities. This is what turns a
-missing dependency into a refusal with a reason instead of an empty result that
-reads as "nothing exists". Add `alternatives` naming a template that answers the
-same question from evidence the dataset does have.
-
-**Add a test case.** `tests/test_templates.py` fails when a catalogued template has
-none, so the catalogue cannot drift untested. That file is in the package **repository**, not
-in an installed skill: a template added to an installed copy is an untested template.
-
-## Getting started
+Do not edit an installed `linked-archi-query` skill. Put `catalog.json` and its `.rq`
+files together in your own project or APM package, and opt in to that catalogue on
+**each** command that uses it:
 
 ```bash
-cp ../core/neighbours-qualified.rq my-question.rq
+python3 path/to/la-query catalog show acme/my-question \
+  --catalog queries/catalog.json --profile profiles/acme.yaml
+python3 path/to/la-query query render acme/my-question \
+  --catalog queries/catalog.json --profile profiles/acme.yaml --set FOCUS_IRI=https://example.org/focus
+python3 path/to/la-query query run acme/my-question \
+  --catalog queries/catalog.json --profile profiles/acme.yaml --data graph.trig \
+  --set FOCUS_IRI=https://example.org/focus
 ```
 
-Then add the catalogue entry, run it, and check the refusal path works:
+The flag also works with `catalog list`, `catalog dump` and `query batch`; repeat it to
+add more than one project catalogue. It **adds to** the bundled catalogue, without
+overriding a bundled name. Names need a project namespace such as `acme/my-question`;
+`core/`, `notation/` and `custom/` are reserved. `file` is relative to the project
+catalogue's directory, cannot escape it (including through symlinks), and must exist.
+An external catalogue is never discovered automatically. Pass the same `--catalog`
+value during selection, rendering and execution. `linked-archi-analyse` does not add
+project templates to its built-in planning patterns automatically; choose and run
+them explicitly as analyst-led steps. Use full names such as `acme/my-question`;
+basename shortcuts can become ambiguous across catalogues.
 
-```bash
-python3 scripts/la-query catalog show custom/my-question --profile <your-profile>
-python3 scripts/la-query query render custom/my-question --profile <your-profile> --set FOCUS_IRI=...
-python3 scripts/la-query query run    custom/my-question --profile <your-profile> --data <your>.trig
-```
+The loader checks the catalogue shape, a positive bounded `LIMIT {{LIMIT}}` at the end
+of each template, declared role/graph/membership dependencies, and valid alternative
+names. Rendering still applies profile gates, typed parameters and read-only validation.
+Test your own query's semantics against representative data; these checks cannot prove
+that joins, scope or the answer are correct. Treat external SPARQL as **trusted project
+code**. Read-only validation is not an isolation or authorization boundary; use
+read-only endpoint credentials for remote stores.
 
-Naming: `assets/templates/custom/<verb-or-noun>.rq`, catalogued as `custom/<same>`.
-Group notation-specific work under `assets/templates/notation/<notation>/` instead,
-and say so with a `notation` key.
+For a complete downstream package with a fixed graph, custom profile, selected skills
+and project catalogue, see `examples/fixed-graph-downstream/` in the package repository.
+
+## Upstream contribution: change the package repository
+
+To add a bundled template for all users, work in the package checkout. A scratch
+template under `assets/templates/custom/` is exempt from the bundled completeness check
+and is not reachable by routing. To publish it, add an entry to
+`assets/templates/catalog.json` and a case in `tests/test_templates.py`, then run
+`make check`. Do not make this change in an installed skill directory.
+
+Follow [the template contract](../../../references/template-contract.md): include a
+header describing what the query answers and does not prove, use `{{PREFIXES}}`,
+role and graph directives rather than remembered vocabulary, declare `requires`,
+and bound the result with `LIMIT`. Core profile roles normally cover vocabulary
+variation; a new template should add a new question rather than duplicate a bundled
+one for a different ontology spelling.

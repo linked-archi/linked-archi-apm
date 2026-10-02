@@ -1,0 +1,38 @@
+@prefix arch: <https://meta.linked.archi/core#> .
+@prefix bs: <https://meta.linked.archi/backstage/onto#> .
+@prefix demo: <https://example.org/fixed-graph/ontology#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+<https://example.org/fixed-graph/catalog/graph/model> {
+  <https://example.org/fixed-graph/catalog> a arch:Model ;
+    arch:modelConformsToMetamodel <https://meta.linked.archi/backstage/metamodel#BackstageCatalog> .
+}
+
+<https://example.org/fixed-graph/catalog/graph/semantic> {
+  <https://example.org/fixed-graph/catalog/element/payments-service>
+    a arch:Element, arch:ModelConcept, bs:Component ;
+    arch:inModel <https://example.org/fixed-graph/catalog> ;
+    demo:displayName "Payments Service"@en ;
+    demo:accountableTeam <https://example.org/fixed-graph/catalog/element/payments-team> ;
+    skos:notation "payments-service" .
+
+  <https://example.org/fixed-graph/catalog/element/payments-team>
+    a arch:Element, arch:ModelConcept, bs:Group ;
+    arch:inModel <https://example.org/fixed-graph/catalog> ;
+    demo:displayName "Payments Team"@en ;
+    skos:notation "payments-team" .
+
+  <https://example.org/fixed-graph/catalog/relationship/payments-owned-by-team>
+    a arch:QualifiedRelationship, arch:ModelConcept, bs:Ownership ;
+    arch:inModel <https://example.org/fixed-graph/catalog> ;
+    arch:source <https://example.org/fixed-graph/catalog/element/payments-service> ;
+    arch:target <https://example.org/fixed-graph/catalog/element/payments-team> ;
+    skos:notation "payments-owned-by-team" .
+}
+
+<https://example.org/fixed-graph/catalog/graph/provenance> {
+  <https://example.org/fixed-graph/catalog/graph/model> a prov:Bundle .
+  <https://example.org/fixed-graph/catalog/graph/semantic> a prov:Bundle .
+  <https://example.org/fixed-graph/catalog/graph/provenance> a prov:Bundle .
+}

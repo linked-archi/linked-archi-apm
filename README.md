@@ -8,6 +8,15 @@ ArchiMate, BPMN, C4/Structurizr, Backstage and LeanIX models into RDF against th
 **Documentation: <https://linked-archi.github.io/linked-archi-apm/>** — the skills, all 39
 templates, the analysis patterns, and a worked conversational-analysis walkthrough.
 
+To build your own package around a fixed graph and profile, start with the
+[downstream APM example](examples/fixed-graph-downstream/README.md). It installs only the
+[analysis, connection, profile and query skills](examples/fixed-graph-downstream/apm.yml)
+from this package, alongside its own installable skill carrying the graph and profile;
+remote acquisition and SHACL validation remain optional. A project-owned query
+catalogue can be selected explicitly without editing an installed skill once a
+release containing `--catalog` is installed; the
+example's `v0.7.0` pin demonstrates the four-skill baseline only.
+
 There is no application here, and that is deliberate. Given the graph's conventions
 as skills and a tested query library, a coding agent in an ordinary IDE becomes a
 competent architecture analyst. The artifact is the context and the templates.

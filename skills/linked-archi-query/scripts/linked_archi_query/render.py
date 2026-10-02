@@ -467,7 +467,8 @@ def render(
     inspection only. It still validates read-only, and the caller is expected not
     to execute it - the point of looking is usually to explain the refusal.
     """
-    catalog = catalog or load_catalog()
+    if catalog is None:
+        catalog = load_catalog()
     entry = catalog.get(template)
 
     verdict = entry.check(profile)

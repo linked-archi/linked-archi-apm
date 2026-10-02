@@ -249,6 +249,7 @@ class TestChangelog(ManifestTestCase):
             at_root - shipped, set(), "root documents missing from the dist copy list"
         )
         self.assertIn("CHANGELOG.md", shipped)
+        self.assertIn("examples", shipped, "downstream package examples must ship in dist")
 
 
 class TestScripts(ManifestTestCase):

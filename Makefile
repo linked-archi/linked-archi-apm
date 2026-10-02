@@ -134,7 +134,7 @@ dist: check
 	@rm -rf dist/linked-archi-apm && mkdir -p dist/linked-archi-apm
 	@for item in apm.yml LICENSE NOTICE README.md USAGE.md ADAPTING.md CHANGELOG.md \
 	             CONTRIBUTING.md SECURITY.md PROPOSAL.md INVESTIGATION-PERFORMANCE-PLAN.md \
-	             Makefile bin fixtures tests skills schemas; do \
+	             Makefile bin examples fixtures tests skills schemas; do \
 	  COPYFILE_DISABLE=1 cp -R "$$item" dist/linked-archi-apm/; \
 	done
 	@find dist/linked-archi-apm -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null || true
