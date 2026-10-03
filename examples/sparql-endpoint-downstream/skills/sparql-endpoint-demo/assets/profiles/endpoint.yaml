@@ -1,0 +1,7 @@
+extends: linked-archi-default.yaml
+profile: sparql-endpoint-demo
+version: 1
+description: >-
+  Starter profile for a remote store containing Linked.Archi converter-default
+  RDF. It inherits the default vocabulary and graph layout; verify these claims
+  against the selected endpoint and adapt them before using query results.

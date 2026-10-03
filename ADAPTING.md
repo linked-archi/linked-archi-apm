@@ -25,6 +25,7 @@ Write a new template when the **question** is new, not when the vocabulary is.
 | A house field promoted through `--ns-vocab` | [A custom role](#custom-roles) |
 | A genuinely new question | [A new template](skills/linked-archi-query/assets/templates/custom/README.md) |
 | A fixed graph with selected skills and a project-owned query | [The downstream APM example](examples/fixed-graph-downstream/README.md) |
+| A read-only SPARQL endpoint with selected skills | [The endpoint downstream APM example](examples/sparql-endpoint-downstream/README.md) |
 | A vocabulary that is not Linked.Archi at all | [Rebind the core roles](#a-graph-that-is-not-linkedarchi) |
 
 Start with `la-kg profile list` and `la-kg catalog list --profile <candidate>`. If a

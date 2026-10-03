@@ -1,11 +1,21 @@
 # Build a downstream APM
 
+Choose the [fixed-graph example](https://github.com/linked-archi/linked-archi-apm/tree/main/examples/fixed-graph-downstream)
+when you publish RDF with the package. Choose the
+[SPARQL-endpoint example](https://github.com/linked-archi/linked-archi-apm/tree/main/examples/sparql-endpoint-downstream)
+when the graph is already served remotely. Both select the same four upstream
+skills; only the fixed-graph example packages RDF and an optional custom query.
+
 The [fixed-graph downstream example](https://github.com/linked-archi/linked-archi-apm/tree/main/examples/fixed-graph-downstream)
 is an installable APM package, not a fork of the six skills. It combines a synthetic,
 already-published TriG graph and a project-owned profile inside its own Agent Skill,
 an APM dependency selecting four upstream skills, and project-owned query files. Its
 `SKILL.md` tells an installed agent which graph and profile to use; each owner command
 still receives those choices explicitly.
+
+The graph, profile and query are under the skill because APM deploys the declared
+`skills/fixed-graph-demo/` subtree. Root-level sibling asset folders would not travel
+with this package into the consuming project.
 
 | In the downstream package | Purpose |
 |---|---|
@@ -24,10 +34,14 @@ cannot cover, but its profile verification has no errors.
 
 ## The catalogue boundary
 
+`--catalog` is **not** needed to compose a downstream APM, select skills, use a fixed graph,
+or load a custom profile with bundled templates. It is needed only to register and run
+the project's own named query through `linked-archi-query`.
+
 The example's `apm.yml` pins the published `v0.7.0` four-skill baseline. That release does
 **not** have `--catalog`; the project query requires this unreleased checkout or a later release
-containing explicit catalogue overlays. Do not expect the pinned install to run it until the
-example's ref is updated at release time.
+containing explicit catalogue overlays. Do not expect the pinned install to run it until a
+supporting ref is published and the example's pin is updated.
 
 With the current repository checkout, from `examples/fixed-graph-downstream/`, the new query
 owner can inspect and run the project entry without editing its bundled `catalog.json`:
@@ -54,3 +68,19 @@ A catalogue entry makes a query discoverable and executable by `linked-archi-que
 analyst can select it explicitly while investigating a question. See the
 [query skill](skills/query.md#project-owned-catalogue-extensions) and
 [profile adaptation guide](concepts/profile.md) for the two separate extension contracts.
+
+## Endpoint variant
+
+The endpoint example ships its own skill instructions and profile, but no TriG file,
+catalogue or credentials. Its consumer supplies `--endpoint URL` instead of `--data`
+on each connect, profile and query command. The URL is an explicit target, not an
+environment fallback in the CLI. `LINKED_ARCHI_SPARQL_TOKEN` supplies an optional
+Bearer token; credentials must have server-side read-only permissions.
+
+`connect --endpoint` checks configuration and describes the adapter, but does **not**
+contact the service. Run `la-profile verify --endpoint` against the actual graph
+before treating an empty query result as absence. Use HTTPS, configure a server-side
+timeout and result cap, and record an external dataset revision if reproducibility
+matters: the service may change without the APM package changing. The endpoint
+example uses bundled query templates and therefore needs no `--catalog` or later
+release than its `v0.7.0` pin.

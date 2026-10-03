@@ -7,6 +7,11 @@ The package ships a tiny synthetic TriG graph, its matching custom profile, and
 an optional project query inside the demo skill's `assets/` directory. No source
 acquisition, conversion, or SHACL validation is part of this fixed-graph example.
 
+The assets live under `skills/fixed-graph-demo/` deliberately: `includes:` deploys
+that whole skill directory, so the graph, profile and query travel with it. Files
+placed in sibling root-level `data/`, `profiles/` or `queries/` directories would
+not be part of the installed skill.
+
 The profile extends Linked.Archi's bundled default, but binds `label` to
 `demo:displayName`, `owner` to `demo:accountableTeam`, and a project role to
 `bs:Ownership`. These are claims about the included graph, not blanket overrides
@@ -59,6 +64,9 @@ is not a conclusion about an enterprise.
 
 ## Optional catalogued query
 
+The package, fixed graph and custom profile work without `--catalog` using the
+bundled query templates. The flag is needed only for this additional named query.
+
 The packaged `assets/queries/catalog.json` registers `demo/accountability` with
 typed parameters, profile requirements, a row limit, and a result caveat. Its
 `accountability.rq` reports a team only when the project-specific accountability
@@ -95,8 +103,10 @@ resolved relative to the catalogue, and bundled template names remain intact.
 
 - Replace `skills/fixed-graph-demo/assets/data/architecture.trig` with a published
   graph or a fixed read-only endpoint. For an endpoint, pass `--endpoint URL`
-  instead of `--data`, and verify the profile against that endpoint. Do not put
-  credentials or a large private dataset in an APM package.
+  instead of `--data`, and verify the profile against that endpoint. The
+  [endpoint-only example](../sparql-endpoint-downstream/README.md) shows that
+  layout without packaging RDF. Do not put credentials or a large private
+  dataset in an APM package.
 - Edit `skills/fixed-graph-demo/assets/profiles/demo.yaml` to match the actual
   vocabulary, graph layout, capabilities, and notation population. Re-verify
   after every graph or profile change.

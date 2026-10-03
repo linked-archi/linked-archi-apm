@@ -17,6 +17,11 @@ catalogue can be selected explicitly without editing an installed skill once a
 release containing `--catalog` is installed; the
 example's `v0.7.0` pin demonstrates the four-skill baseline only.
 
+If the graph is already served over SPARQL, use the
+[endpoint downstream example](examples/sparql-endpoint-downstream/README.md) instead.
+It packages instructions and a profile, not a dataset or credentials; the consumer
+supplies the read-only endpoint explicitly at runtime.
+
 There is no application here, and that is deliberate. Given the graph's conventions
 as skills and a tested query library, a coding agent in an ordinary IDE becomes a
 competent architecture analyst. The artifact is the context and the templates.

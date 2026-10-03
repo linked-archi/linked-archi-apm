@@ -1,0 +1,15 @@
+$schema: https://microsoft.github.io/apm/specs/schemas/manifest-v0.1.schema.json
+name: sparql-endpoint-downstream
+version: "0.1.0"
+description: A downstream APM for an explicitly supplied SPARQL query endpoint.
+includes:
+  - skills/sparql-endpoint-demo/
+dependencies:
+  apm:
+    - git: linked-archi/linked-archi-apm
+      ref: v0.7.0
+      skills:
+        - linked-archi-analyse
+        - linked-archi-query
+        - linked-archi-profile
+        - linked-archi-connect

@@ -202,6 +202,11 @@ automatically discover or trust catalogue files from the consumer. The example p
 `v0.7.0` for its four-skill baseline; its external catalogue needs a later release
 containing the new flag.
 
+For a graph already published at a SPARQL endpoint, the
+[endpoint downstream example](examples/sparql-endpoint-downstream/README.md) selects the
+same four companion skills without packaging RDF or needing `--catalog`. Supply the
+endpoint on each owner command and verify the profile against the live service.
+
 #### The authoritative reference
 
 Flags, target names and deploy paths belong to APM rather than to this package, and they

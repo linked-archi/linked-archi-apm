@@ -14,6 +14,9 @@ workflow publishes exactly this text, so what is written here is what a consumer
 - **Composable downstream APM example.** An installable project skill carries a fixed graph
   and custom profile, selects only analyse, connect, profile and query from upstream, and
   shows the install and verification path.
+- **SPARQL-endpoint downstream APM example.** A second installable package selects those
+  four skills without bundling graph data or credentials, and shows explicit endpoint
+  selection and live profile verification before interpreting results.
 - **Explicit project-owned query catalogues.** `la-query catalog` and catalogued `query`
   commands accept repeatable `--catalog PATH` overlays without editing an installed skill.
   Bundled entries cannot be replaced, and external entries keep the existing gates, read-only
