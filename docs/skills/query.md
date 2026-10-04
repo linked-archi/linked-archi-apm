@@ -52,24 +52,24 @@ still emits the whole catalogue. Prefer a selected dump when only a few template
 
 ### Project-owned catalogue extensions
 
-An installed skill is not a place to keep project queries. Keep a `catalog.json` and its `.rq`
-files in the consuming project, then pass the catalogue explicitly to `catalog list`, `show` or
-`dump`, or to `query render`, `run` or `batch`:
+A downstream skill may package a project-owned `catalog.json` and its `.rq` files,
+as the fixed-graph example does. Packaging does not register the queries: pass the
+catalogue explicitly to `catalog list`, `show` or `dump`, or to `query render`,
+`run` or `batch` after installing the package with the `agent-skills` target:
 
 ```bash
-python3 ../../skills/linked-archi-query/scripts/la-query catalog show demo/accountability \
-  --catalog skills/fixed-graph-demo/assets/queries/catalog.json \
-  --profile skills/fixed-graph-demo/assets/profiles/demo.yaml
-python3 ../../skills/linked-archi-query/scripts/la-query query run demo/accountability \
-  --catalog skills/fixed-graph-demo/assets/queries/catalog.json \
-  --profile skills/fixed-graph-demo/assets/profiles/demo.yaml \
-  --data skills/fixed-graph-demo/assets/data/architecture.trig \
+python3 .agents/skills/linked-archi-query/scripts/la-query catalog show demo/accountability \
+  --catalog .agents/skills/fixed-graph-demo/assets/queries/catalog.json \
+  --profile .agents/skills/fixed-graph-demo/assets/profiles/demo.yaml
+python3 .agents/skills/linked-archi-query/scripts/la-query query run demo/accountability \
+  --catalog .agents/skills/fixed-graph-demo/assets/queries/catalog.json \
+  --profile .agents/skills/fixed-graph-demo/assets/profiles/demo.yaml \
+  --data .agents/skills/fixed-graph-demo/assets/data/architecture.trig \
   --set FOCUS_IRI=https://example.org/fixed-graph/catalog/element/payments-service
 ```
 
-Run these from `examples/fixed-graph-downstream/` in this repository checkout. Its pinned
-`v0.7.0` installed copy predates `--catalog`; select a release containing the extension
-before using the project query from installed skills.
+Run these from the consumer project after installing the example's pinned
+`v0.8.0` dependency. Publish that upstream tag before resolving the package.
 
 `--catalog` is repeatable. Each extension uses the bundled catalogue's JSON schema, names its
 own relative `.rq` files, and gives each template a project namespace such as `acme/`.

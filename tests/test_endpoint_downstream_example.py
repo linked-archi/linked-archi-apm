@@ -38,7 +38,7 @@ class TestEndpointDownstreamExample(unittest.TestCase):
         dependencies = manifest["dependencies"]["apm"]
         self.assertEqual(len(dependencies), 1)
         self.assertEqual(dependencies[0]["git"], "linked-archi/linked-archi-apm")
-        self.assertEqual(dependencies[0]["ref"], "v0.7.0")
+        self.assertEqual(dependencies[0]["ref"], "v0.8.0")
         self.assertEqual(set(dependencies[0]["skills"]), {
             "linked-archi-analyse",
             "linked-archi-query",

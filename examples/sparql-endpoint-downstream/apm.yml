@@ -7,7 +7,7 @@ includes:
 dependencies:
   apm:
     - git: linked-archi/linked-archi-apm
-      ref: v0.7.0
+      ref: v0.8.0
       skills:
         - linked-archi-analyse
         - linked-archi-query

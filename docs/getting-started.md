@@ -7,7 +7,7 @@ artifact: there is no build step and no install-time bundling. Run installs from
 project, not from this package checkout.
 
 ```bash
-apm install linked-archi/linked-archi-apm#v0.7.0
+apm install linked-archi/linked-archi-apm#v0.8.0
 apm install /absolute/path/to/linked-archi-apm   # local clone
 ```
 

@@ -38,22 +38,21 @@ cannot cover, but its profile verification has no errors.
 or load a custom profile with bundled templates. It is needed only to register and run
 the project's own named query through `linked-archi-query`.
 
-The example's `apm.yml` pins the published `v0.7.0` four-skill baseline. That release does
-**not** have `--catalog`; the project query requires this unreleased checkout or a later release
-containing explicit catalogue overlays. Do not expect the pinned install to run it until a
-supporting ref is published and the example's pin is updated.
+The example's `apm.yml` pins `v0.8.0`, which includes explicit catalogue overlays.
+Publish that upstream tag before installing the example from a separate project.
 
-With the current repository checkout, from `examples/fixed-graph-downstream/`, the new query
-owner can inspect and run the project entry without editing its bundled `catalog.json`:
+After installing the example into a consumer project with the `agent-skills`
+target, the query owner can inspect and run the project entry without editing
+its bundled `catalog.json`:
 
 ```bash
-python3 ../../skills/linked-archi-query/scripts/la-query catalog show demo/accountability \
-  --catalog skills/fixed-graph-demo/assets/queries/catalog.json \
-  --profile skills/fixed-graph-demo/assets/profiles/demo.yaml
-python3 ../../skills/linked-archi-query/scripts/la-query query run demo/accountability \
-  --catalog skills/fixed-graph-demo/assets/queries/catalog.json \
-  --profile skills/fixed-graph-demo/assets/profiles/demo.yaml \
-  --data skills/fixed-graph-demo/assets/data/architecture.trig \
+python3 .agents/skills/linked-archi-query/scripts/la-query catalog show demo/accountability \
+  --catalog .agents/skills/fixed-graph-demo/assets/queries/catalog.json \
+  --profile .agents/skills/fixed-graph-demo/assets/profiles/demo.yaml
+python3 .agents/skills/linked-archi-query/scripts/la-query query run demo/accountability \
+  --catalog .agents/skills/fixed-graph-demo/assets/queries/catalog.json \
+  --profile .agents/skills/fixed-graph-demo/assets/profiles/demo.yaml \
+  --data .agents/skills/fixed-graph-demo/assets/data/architecture.trig \
   --set FOCUS_IRI=https://example.org/fixed-graph/catalog/element/payments-service
 ```
 
@@ -82,5 +81,5 @@ contact the service. Run `la-profile verify --endpoint` against the actual graph
 before treating an empty query result as absence. Use HTTPS, configure a server-side
 timeout and result cap, and record an external dataset revision if reproducibility
 matters: the service may change without the APM package changing. The endpoint
-example uses bundled query templates and therefore needs no `--catalog` or later
-release than its `v0.7.0` pin.
+example uses bundled query templates and therefore needs no `--catalog`, although
+it also pins `v0.8.0` for consistency with the fixed-graph example.

@@ -8,9 +8,8 @@ includes:
 dependencies:
   apm:
     - git: linked-archi/linked-archi-apm
-      # Composition and bundled queries work on v0.7.0. Pin a later published ref
-      # containing --catalog when demo/accountability becomes a required query.
-      ref: v0.7.0
+      # v0.8.0 adds explicit --catalog support for the packaged project query.
+      ref: v0.8.0
       skills:
         - linked-archi-analyse
         - linked-archi-query

@@ -2,7 +2,7 @@
 
 This directory is an **APM package** that another project can install. Its
 `apm.yml` includes the project-owned `fixed-graph-demo` skill and pins only four
-Linked.Archi companion skills from `v0.7.0`: analyse, query, profile, and connect.
+Linked.Archi companion skills from `v0.8.0`: analyse, query, profile, and connect.
 The package ships a tiny synthetic TriG graph, its matching custom profile, and
 an optional project query inside the demo skill's `assets/` directory. No source
 acquisition, conversion, or SHACL validation is part of this fixed-graph example.
@@ -20,7 +20,8 @@ for other datasets.
 ## Install from a separate project
 
 With APM, Python 3.11+, PyYAML, and pyoxigraph installed, start **outside this
-package checkout**. Set `EXAMPLE` to the absolute path of this directory:
+package checkout**. Set `EXAMPLE` to the absolute path of this directory. The
+upstream `v0.8.0` tag must be published before resolving this dependency:
 
 ```bash
 mkdir my-architecture-project && cd my-architecture-project
@@ -74,14 +75,14 @@ edge and the qualified ownership relationship agree. If the direct owner
 capability is unavailable, `core/neighbours-qualified` can inspect the
 qualified relationship alone, but cannot establish that agreement.
 
-**The pinned `v0.7.0` query skill does not support external catalogues.** This
-project query is ready for a later Linked.Archi ref with explicit `--catalog`
-support. To exercise it **now, inside this source checkout**, use the current
-development query owner and the packaged asset paths:
+The pinned `v0.8.0` query skill supports explicit `--catalog` overlays. Once
+that upstream tag is published and this package is installed in a consumer
+project, use the installed paths:
 
 ```bash
-DEMO=skills/fixed-graph-demo
-QUERY=../../skills/linked-archi-query/scripts/la-query
+SKILLS=.agents/skills
+DEMO="$SKILLS/fixed-graph-demo"
+QUERY="$SKILLS/linked-archi-query/scripts/la-query"
 python3 "$QUERY" catalog show demo/accountability \
   --catalog "$DEMO/assets/queries/catalog.json" \
   --profile "$DEMO/assets/profiles/demo.yaml"
@@ -92,12 +93,9 @@ python3 "$QUERY" query run demo/accountability \
   --set FOCUS_IRI=https://example.org/fixed-graph/catalog/element/payments-service
 ```
 
-After changing the `apm.yml` ref to a release with that support and reinstalling
-the downstream package, set `DEMO=.agents/skills/fixed-graph-demo` and
-`QUERY=.agents/skills/linked-archi-query/scripts/la-query` in the **consumer
-project** and run the same two commands. The catalogue is never auto-discovered;
-the user/agent must pass its installed path on each call. The query file is
-resolved relative to the catalogue, and bundled template names remain intact.
+The catalogue is never auto-discovered merely because it is inside an installed
+skill; the user/agent must pass its path on each call. The query file is resolved
+relative to the catalogue, and bundled template names remain intact.
 
 ## Adapt it
 

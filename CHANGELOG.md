@@ -10,6 +10,8 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-04
+
 ### Added
 - **Composable downstream APM example.** An installable project skill carries a fixed graph
   and custom profile, selects only analyse, connect, profile and query from upstream, and
@@ -598,7 +600,8 @@ converters against the meta.linked.archi ontologies.
   for SHACL validation, and `git` for Git acquisition. Endpoint and HTTPS transport use
   the standard library. No mandatory MCP server.
 
-[Unreleased]: https://github.com/linked-archi/linked-archi-apm/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/linked-archi/linked-archi-apm/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.4.0...v0.5.0

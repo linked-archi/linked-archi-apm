@@ -43,7 +43,6 @@ orchestrate it, and use `linked-archi-query` for read-only execution. This skill
 does not execute SPARQL itself. `linked-archi-source` and
 `linked-archi-validate` are deliberately absent.
 
-`assets/queries/catalog.json` registers `demo/accountability`, but the pinned
-Linked.Archi `v0.7.0` dependency cannot load external catalogues. Use it only
-after upgrading the dependency to a ref with explicit `--catalog` support,
-passing this skill's absolute catalogue path on each catalogue or query call.
+`assets/queries/catalog.json` registers `demo/accountability`. The pinned
+Linked.Archi `v0.8.0` dependency supports external catalogues; pass this
+skill's absolute catalogue path with `--catalog` on each catalogue or query call.

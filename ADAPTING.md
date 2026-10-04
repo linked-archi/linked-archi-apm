@@ -366,8 +366,7 @@ with `--catalog PATH` on each `la-query catalog` or catalogued `la-query query`
 command; do not edit an installed skill. The same profile gates, rendering checks,
 read-only validation and result envelope still apply to an external template. See the
 [downstream APM example](examples/fixed-graph-downstream/README.md) for the full layout.
-Its `v0.7.0` pin covers the fixed-graph baseline only; use this checkout or a later
-release with `--catalog` for the project-owned query.
+Its `v0.8.0` pin includes `--catalog` for the project-owned query.
 
 ---
 

@@ -5,7 +5,7 @@ This is a second, installable APM example. Unlike the
 an RDF file. A consumer supplies the URL of an existing SPARQL query endpoint
 at runtime. The package selects only `linked-archi-analyse`,
 `linked-archi-query`, `linked-archi-profile`, and `linked-archi-connect` from
-the published `v0.7.0` Linked.Archi APM, plus its own `sparql-endpoint-demo`
+the `v0.8.0` Linked.Archi APM, plus its own `sparql-endpoint-demo`
 skill. There is no source acquisition, conversion, SHACL validation, or
 project-owned query catalogue.
 
@@ -18,7 +18,8 @@ verify it for a real store. No endpoint URL or credential is committed here.
 ## Install from a separate project
 
 With APM, Python 3.11+, and PyYAML installed, start **outside this package
-checkout**. Set `EXAMPLE` to the absolute path of this directory:
+checkout**. Set `EXAMPLE` to the absolute path of this directory. The upstream
+`v0.8.0` tag must be published before resolving this dependency:
 
 ```bash
 mkdir my-endpoint-project && cd my-endpoint-project
@@ -57,7 +58,7 @@ the actual store and re-run verification. Do not treat zero result rows as
 absence until dataset scope and profile have been checked.
 
 After verification reports zero errors, ask one bounded question through the
-query owner. This template is bundled in `v0.7.0`; `--catalog` is **not** needed:
+query owner. This template is bundled in `v0.8.0`; `--catalog` is **not** needed:
 
 ```bash
 python3 "$SKILLS/linked-archi-query/scripts/la-query" catalog show \
@@ -92,7 +93,7 @@ this checkout and is not installed as a skill.
   reproducible answers, because the remote graph can change independently.
 - Publish this downstream package at a reviewed Git ref and install it from
   a separate project. Commit that consumer project's APM lockfile. The
-  published `v0.7.0` pin supports this example as written.
+  `v0.8.0` pin supports this example as written once that tag is published.
 
 See the parent package's [profile adaptation guide](../../ADAPTING.md),
 [usage guide](../../USAGE.md), and

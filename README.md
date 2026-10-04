@@ -13,9 +13,8 @@ To build your own package around a fixed graph and profile, start with the
 [analysis, connection, profile and query skills](examples/fixed-graph-downstream/apm.yml)
 from this package, alongside its own installable skill carrying the graph and profile;
 remote acquisition and SHACL validation remain optional. A project-owned query
-catalogue can be selected explicitly without editing an installed skill once a
-release containing `--catalog` is installed; the
-example's `v0.7.0` pin demonstrates the four-skill baseline only.
+catalogue can be selected explicitly with `--catalog PATH` without editing an
+installed skill. The example pins `v0.8.0` for this feature.
 
 If the graph is already served over SPARQL, use the
 [endpoint downstream example](examples/sparql-endpoint-downstream/README.md) instead.
@@ -152,7 +151,7 @@ package checkout. The package declares no `targets:`, so APM auto-detects your r
 from the consumer and promotes each of the six skills into it:
 
 ```bash
-apm install linked-archi/linked-archi-apm#v0.7.0
+apm install linked-archi/linked-archi-apm#v0.8.0
 apm install /absolute/path/to/linked-archi-apm   # local clone
 ```
 
