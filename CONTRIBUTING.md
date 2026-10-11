@@ -114,9 +114,11 @@ from one whose implementation regressed.
 them. No shared library, no generated copies, no cross-skill imports — companions talk over
 versioned JSON subprocess contracts. Fifteen packaging tests enforce this.
 
-**Fixtures are extracted, not authored.** `fixtures/` comes from real converter output via
-`make fixtures`. An authored fixture is written to satisfy the queries under test, so it
-cannot detect a wrong vocabulary. If you need new fixture coverage, extract it.
+**Fixtures are extracted, not authored.** Instance fixtures come from real converter
+output via `make fixtures`; vocabulary and shape fixtures select statements from
+published semantic assets, which converters do not emit. Neither kind may invent
+facts to satisfy the queries under test. Record the source and selection rule in
+`fixtures/PROVENANCE.md` when adding coverage.
 
 ## Scope of a change
 

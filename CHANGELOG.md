@@ -10,6 +10,8 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-11
+
 ### Added
 - **SKOS-aware classification investigation.** Classification intent routes to a
   dedicated analyse pattern. A bounded, profile-scoped `core/resolve-concept` query
@@ -613,7 +615,8 @@ converters against the meta.linked.archi ontologies.
   for SHACL validation, and `git` for Git acquisition. Endpoint and HTTPS transport use
   the standard library. No mandatory MCP server.
 
-[Unreleased]: https://github.com/linked-archi/linked-archi-apm/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/linked-archi/linked-archi-apm/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.5.0...v0.6.0

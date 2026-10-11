@@ -1,6 +1,8 @@
 # Where these fixtures come from
 
-Regenerate with `make fixtures`, which runs `build_fixtures.py`.
+Regenerate converter-output fixtures with `make fixtures`, which runs
+`build_fixtures.py`. Published vocabulary and shape extracts come from the
+semantic assets listed below, not from converter output.
 
 Everything in `base.trig` is a real quad from a real conversion. Only the selection
 is ours. That matters more than it sounds: the package this one replaces tested 15
@@ -58,7 +60,7 @@ Consequences, all of which the tests encode:
 | `flat.ttl` | 3320 | 0 | `base` with graph identity discarded. |
 | `converter-1.3.trig` | 284 | 4 | Real converter output, **verbatim**. The one PARTITIONED fixture. |
 | `vocabulary.ttl` | 843 | 0 | Published vocabulary: BPMN taxonomy, plus the core property axioms. |
-| `semantic-schemes.ttl` | 29 | 0 | Published ArchiMate 4 taxonomy and viewpoint catalog excerpt for scheme-aware queries. |
+| `semantic-schemes.ttl` | 29 | 0 | Selected statements from the published ArchiMate 4 taxonomy and viewpoint catalog. |
 | `shapes.ttl` | 3744 | 0 | Published SHACL: which relationship may connect which types. |
 | `unqualified-forms.json` | 75 pairs | — | Extracted `arch:unqualifiedForm` mappings. Not RDF. |
 
@@ -80,7 +82,8 @@ pairing: vocabulary-backed templates read published vocabulary, which no convers
 emits, so the suite loads `vocabulary.ttl` beside the dataset exactly as an operator
 would (`la-connect` takes several files). The test also attaches
 `semantic-schemes.ttl` for the published viewpoint entries. See
-[vocabulary.ttl](#vocabularyttl-published-not-converted) below. That is
+[vocabulary.ttl](#vocabularyttl-published-not-converted) and
+[semantic-schemes.ttl](#semantic-schemesttl-published-taxonomy-and-viewpoints) below. That is
 the bar the selection rules below
 are tuned to: a fixture on which a template returns nothing is a template the test
 suite cannot distinguish from a broken one.
@@ -377,8 +380,8 @@ that does not diff cleanly. Assert on shape and counts, never on bytes.
 
 ## `vocabulary.ttl`: published, not converted
 
-The only fixture here that is not converter output, and the distinction matters more than
-its size suggests. Every other file answers "what does a conversion emit". This one answers
+One of the fixtures here that is not converter output, and the distinction matters more than
+its size suggests. Converter-output files answer "what does a conversion emit". This one answers
 "what does the vocabulary those instances conform to actually say" — and a conversion emits
 none of it. That is not an omission in the converters: instances and schema are different
 artifacts with different lifecycles, and the converter's job is the former.
@@ -453,6 +456,24 @@ the wrong vocabulary version derives from the wrong hierarchy, silently. The dat
 what it conforms to in `arch:modelConformsToMetamodel`; the vocabulary attached beside it
 should be that version. Checking the pairing is verification work this package has not done
 yet — recorded in `PROPOSAL.md` B5.
+
+## `semantic-schemes.ttl`: published taxonomy and viewpoints
+
+**Source.** `linked-archi-meta/modelingLanguages/archimate/4.0/archimate4-tax.ttl`
+and `archimate4-viewpoints.ttl`, published at `https://meta.linked.archi/`.
+This is an excerpt of those RDF assets, not converter output or a synthetic
+taxonomy. Its 29 statements are in the default graph, as they are when the
+published Turtle is loaded by `la-connect`.
+
+**Selection rule.** From the taxonomy, take the scheme resource and
+`StrategyDomain`; from the viewpoint library, take `ViewpointCatalog`,
+`StrategyViewpoints`, and `CapabilityMap`. For those subjects, select only the
+`rdf:type`, `skos:prefLabel`, `skos:inScheme`, and `skos:narrower` statements
+needed to navigate the schemes, plus the published `CapabilityMap` definition,
+broader category, included concepts, stakeholders, purposes, and view types.
+The literal wording and IRIs remain those of the source files. This bounded
+extract tests scheme-aware queries; it is not a complete ArchiMate 4 catalog,
+so missing entries in this fixture do not imply missing published viewpoints.
 
 ## `shapes.ttl`: what says a relationship is allowed
 

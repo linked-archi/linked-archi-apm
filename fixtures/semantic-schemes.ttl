@@ -22,7 +22,8 @@ am4vp:StrategyViewpoints a skos:Concept ;
 
 am4vp:CapabilityMap a arch:Viewpoint ;
     skos:prefLabel "Capability Map Viewpoint"@en ;
-    skos:definition "Shows the capabilities of the enterprise and how they are composed and related, typically as a hierarchical map."@en ;
+    skos:definition '''Shows the capabilities of the enterprise and how they are
+composed and related, typically as a hierarchical map.'''@en ;
     arch:includesConcept am4:Capability, am4:Resource, am4:ValueStream,
                          am4:CourseOfAction, am4:Outcome ;
     arch:targetsStakeholder am4vp:EnterpriseArchitect, am4vp:CIO,
