@@ -1182,12 +1182,13 @@ def _verify_against_dataset(profile: Profile, adapter) -> list[Finding]:
 
 
 #: The manifest properties that name a published asset, and what each one carries. A
-#: metamodel manifest declares more than these - viewpoints, deliverable templates,
-#: reference data - but these three are what a query or a check reads.
+#: Other manifest assets (deliverables, reference data) do not feed these queries.
 MANIFEST_ASSETS: tuple[tuple[str, str], ...] = (
     ("modelConcepts", "the ontology: classes, and the domain/range axioms"),
     ("conceptClassification", "the taxonomy: which category covers which class"),
     ("formalRules", "the SHACL shapes: which relationship may connect which types"),
+    ("architectureViewpoints", "the published viewpoint definitions"),
+    ("viewpointLibrary", "the SKOS viewpoint catalog"),
 )
 
 
@@ -1261,10 +1262,21 @@ def _verify_metamodel_pairing(profile: Profile, adapter) -> list[Finding]:
                 f'FILTER(STRSTARTS(STR(?mm), "{root}")) }} }} }}'
             ),
             **{
-                prop: adapter.ask(
+                f"declares:{prop}": adapter.ask(
+                    f"{p}\nASK {{ ?mm a arch:Metamodel ; arch:{prop} ?asset . "
+                    f'FILTER(STRSTARTS(STR(?mm), "{root}")) }}'
+                )
+                for prop, _ in MANIFEST_ASSETS
+            },
+            **{
+                f"attached:{prop}": adapter.ask(
                     f"{p}\nASK {{ ?mm a arch:Metamodel ; arch:{prop} ?asset . "
                     f'FILTER(STRSTARTS(STR(?mm), "{root}")) '
-                    f"?s ?ap ?ao . FILTER(STRSTARTS(STR(?s), STR(?asset))) }}"
+                    + (
+                        f"?asset a <{profile.role('concept_scheme_class')}> . }}"
+                        if prop == "viewpointLibrary" else
+                        "?s ?ap ?ao . FILTER(STRSTARTS(STR(?s), STR(?asset))) }"
+                    )
                 )
                 for prop, _ in MANIFEST_ASSETS
             },
@@ -1279,7 +1291,8 @@ def _verify_metamodel_pairing(profile: Profile, adapter) -> list[Finding]:
         if not answer["attached"]:
             missing_manifest.append(f"{slug} ({root}metamodel)")
             continue
-        absent = [label for prop, label in MANIFEST_ASSETS if not answer[prop]]
+        absent = [label for prop, label in MANIFEST_ASSETS
+                  if answer[f"declares:{prop}"] and not answer[f"attached:{prop}"]]
         if absent:
             incomplete.append(f"{slug}: {'; '.join(absent)}")
 

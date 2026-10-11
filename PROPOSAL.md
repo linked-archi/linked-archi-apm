@@ -73,7 +73,7 @@ The terms that exist, against the ones an author reasonably reaches for first:
 **How it is enforced:** no template names a vocabulary term at all. Templates name roles, and
 `skills/linked-archi-profile/assets/profiles/linked-archi-default.yaml` binds each role to a
 verified term. `tests/test_render.py::test_no_template_carries_its_own_prefixes` asserts it
-across all 40 templates, so a term cannot creep back into one.
+across all 43 templates, so a term cannot creep back into one.
 
 ### F2. Graph scoping has to be a profile decision, not a constant
 
@@ -276,8 +276,8 @@ identified by shape and `tests/test_fixtures.py` asserts the shape of each one.
 Extraction proves a fixture was true of *some* build; only an assertion pins which.
 
 Every selection rule in `fixtures/build_fixtures.py` exists because a template
-    returned zero rows without it. All 40 templates return rows against
-`augmented.trig`: a template returning nothing is one the suite cannot distinguish
+    returned zero rows without it. All 43 templates return rows against
+`augmented.trig` paired with the published vocabulary fixtures: a template returning nothing is one the suite cannot distinguish
 from a broken one. Details in [fixtures/PROVENANCE.md](fixtures/PROVENANCE.md).
 
 One addition bends this rule and is worth naming here rather than only in the
@@ -510,14 +510,14 @@ anything about the code under test.
 | Check | Result |
 |---|---|
 | `make skills` | 6 skills valid, 0 problems |
-| `make test` | 644 tests, 0 failures, 0 skipped |
+| `make test` | 937 tests, 0 failures, 0 skipped outside the sandbox (the memory watchdog needs child RSS visibility) |
 | `make verify` (default profile / `base.trig`) | 0 errors |
 | `make verify-curated` (curated profile / `augmented.trig`) | 0 errors |
 | `query batch` against separate `query run` commands | identical `rows`, `query_id`, `truncated` and `row_count`; load paid once |
 | Store modes `memory`, `cached`, `readonly`, `refresh` | same quad and named-graph counts from each; a changed input rebuilds rather than serving a stale store |
-| `la-query catalog list --profile linked-archi-default` | 40 templates, 33 available, 7 refused with reasons |
-| `la-query catalog list --profile curated-store` | 40 available, 0 refused |
-| All 40 templates against `augmented.trig` | every one returns rows |
+| `la-query catalog list --profile linked-archi-default` | 43 templates, 33 available, 10 refused with reasons |
+| `la-query catalog list --profile curated-store` | 43 available, 0 refused |
+| All 43 templates against `augmented.trig` and paired vocabulary fixtures | every one returns rows |
 | Exit-code contracts | 9 of 9 |
 | Owner skills copied alone to temp directories | independent commands run with `PYTHONPATH` scrubbed; combined siblings execute |
 
@@ -990,6 +990,20 @@ the bundled catalogue, not to arbitrary project data. A catalogue path is a trus
 decision, not a sandbox for third-party SPARQL. Registering a query does not extend
 `la-analyse`'s pattern routing or cause automatic execution; investigation and
 orchestration remain with analyse, and query remains the sole executor (D7, D10, D23).
+
+**D29. Published SKOS schemes have distinct evidential roles.** A metamodel manifest
+declares notation taxonomies and viewpoint libraries, but declaring an IRI does not
+load its triples. Profile derivation preserves exact scheme IRIs (including `#`) and
+records the viewpoint resources/catalog; operators explicitly attach the matching
+vocabulary and verify the pairing. Instance classifications are assertions in the
+semantic graph (`core/resolve-concept` → `core/classified-by`). A notation taxonomy
+instead groups OWL types in the vocabulary graph (`core/resolve-vocabulary-concept` →
+`core/elements-by-category`), and its scheme IRI stays in every result. A viewpoint
+catalog describes prescribed palettes and audiences (`core/viewpoint-catalog` →
+`core/viewpoint-detail`), while `core/views` reports actual diagrams and SHACL alone
+judges conformance. Analyse routes these question intents and reviews ambiguity;
+query remains the only executor. Catalog shortlist and detail facets avoid a
+multi-valued cross-product that would waste rows and model tokens.
 
 ### Requests deliberately not adopted as stated
 

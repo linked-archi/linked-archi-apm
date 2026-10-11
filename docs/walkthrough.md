@@ -329,7 +329,7 @@ before quoting the answer anywhere that matters.
 
 | Property | Where it came from |
 |---|---|
-| The question selected a tested method, not generated SPARQL | routing table, 9 patterns |
+| The question selected a tested method, not generated SPARQL | routing table, 12 patterns |
 | A template the dataset cannot support was refused before running | profile gating, at planning time |
 | No IRI was invented | `core/resolve-element`, a placeholder until resolved |
 | Result counts are not floors, within the query's scope and bounds | nothing truncated, and truncation would have said so |

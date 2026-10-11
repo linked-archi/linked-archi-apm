@@ -1,0 +1,40 @@
+# core/viewpoint-detail - What does a prescribed viewpoint allow and target?
+#
+# Answers: one row per declared allowed class, stakeholder, purpose or view type.
+# Facet rows avoid a cross-product of these multi-valued declarations; none are
+# elements present in any model.
+# Does NOT prove: conformance of an actual view. Validate that with SHACL.
+#
+# Parameters: VIEWPOINT_IRI, LIMIT
+{{PREFIXES}}
+SELECT DISTINCT ?viewpoint ?scheme ?label ?facet ?value
+WHERE {
+  {{GRAPH_OPEN:vocabulary}}
+    VALUES ?viewpoint { {{VIEWPOINT_IRI}} }
+    ?viewpoint a {{ROLE:viewpoint_class}} ;
+               {{ROLE:in_scheme}} ?scheme .
+    ?scheme a {{ROLE:concept_scheme_class}} .
+    OPTIONAL { ?viewpoint {{PATH:label}} ?label }
+    {
+      ?viewpoint {{ROLE:includes_concept}} ?value .
+      BIND("included type" AS ?facet)
+    }
+    UNION
+    {
+      ?viewpoint {{ROLE:targets_stakeholder}} ?value .
+      BIND("stakeholder" AS ?facet)
+    }
+    UNION
+    {
+      ?viewpoint {{ROLE:viewpoint_has_purpose}} ?value .
+      BIND("purpose" AS ?facet)
+    }
+    UNION
+    {
+      ?viewpoint {{ROLE:view_type}} ?value .
+      BIND("view type" AS ?facet)
+    }
+  {{GRAPH_CLOSE}}
+}
+ORDER BY ?facet ?value
+LIMIT {{LIMIT}}

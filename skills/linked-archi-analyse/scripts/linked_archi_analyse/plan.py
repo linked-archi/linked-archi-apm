@@ -36,6 +36,7 @@ PARAMETER_SOURCES: Mapping[str, str] = {
     "EXPECTED_PREDICATE": "a predicate from core/discover-predicates, spelling confirmed with core/element-detail",
     "PREDICATE_PATH": "a predicate from core/discover-relationship-types",
     "CONCEPT_IRI": "from core/resolve-concept after reviewing its scheme and ambiguity",
+    "VIEWPOINT_IRI": "from core/viewpoint-catalog after reviewing the scheme and audience",
     "TERM": "a name from the question",
 }
 
@@ -60,8 +61,13 @@ def required_templates(question: str, pattern: Pattern | None,
                        definitions: bool = False) -> list[str]:
     """The metadata this investigation needs, before any dataset is consulted."""
     names = [template for template, _purpose in _ORIENTATION]
-    names.append("core/resolve-concept" if pattern and pattern.resolution == "concept"
-                 else "core/resolve-element")
+    resolution = pattern.resolution if pattern else "element"
+    if resolution != "vocabulary" or terms_in(question):
+        names.append({
+            "concept": "core/resolve-concept",
+            "vocabulary": "core/resolve-vocabulary-concept",
+            "viewpoint": "core/viewpoint-catalog",
+        }.get(resolution, "core/resolve-element"))
     if definitions_needed(question, definitions):
         names.append("core/define-term")
     if pattern is not None:
@@ -403,7 +409,7 @@ def build_plan(
         )
 
     terms = terms_in(question)
-    if not terms:
+    if not terms and (pattern is None or pattern.resolution not in ("viewpoint", "vocabulary")):
         notes.append(
             "No quoted name in the question, so resolve steps carry a placeholder. Quote the "
             "names you mean - inventing a TERM value is what the resolve step exists to stop."
@@ -488,19 +494,30 @@ def build_plan(
             "only one notation loaded and the question needs two",
         )
 
-    concept_resolution = pattern is not None and pattern.resolution == "concept"
-    resolve_template = "core/resolve-concept" if concept_resolution else "core/resolve-element"
+    resolution = pattern.resolution if pattern else "element"
+    resolve_template = {
+        "concept": "core/resolve-concept",
+        "vocabulary": "core/resolve-vocabulary-concept",
+        "viewpoint": "core/viewpoint-catalog",
+    }.get(resolution, "core/resolve-element")
     # One resolve step per quoted name: a question naming two things needs both resolved, and
     # a plan that resolves the first and assumes the second is how the second gets invented.
-    for term in (terms or (None,)):
+    resolve_terms = ((None,) if resolution == "viewpoint" else
+                     () if resolution == "vocabulary" and not terms else
+                     (terms or (None,)))
+    for term in resolve_terms:
         subject = f'"{term}"' if term else "each name in the question"
         add(
             resolve_template, "resolve",
-            f"Turn {subject} into a taxonomy concept IRI." if concept_resolution
+            "List prescribed viewpoints and their schemes." if resolution == "viewpoint"
+            else f"Turn {subject} into a SKOS concept IRI." if resolution in ("concept", "vocabulary")
             else f"Turn {subject} into an IRI.",
-            "the taxonomy concept IRI for the classification step" if concept_resolution
+            "candidate viewpoints to review against the question" if resolution == "viewpoint"
+            else "a category and its scheme, not an asserted classification" if resolution == "vocabulary"
+            else "the taxonomy concept IRI for the classification step" if resolution == "concept"
             else "the focus IRIs later steps take as parameters",
-            "several concepts or schemes match - ask instead of picking" if concept_resolution
+            "the library has no matching viewpoint - do not invent one" if resolution == "viewpoint"
+            else "several concepts or schemes match - ask instead of picking" if resolution in ("concept", "vocabulary")
             else "several candidates match and the choice changes the answer - ask instead of picking",
             term=term,
         )

@@ -1,6 +1,6 @@
 # Template catalogue
 
-Forty tested templates. Each one declares what it answers, what it does **not** prove, what it
+Forty-three tested templates. Each one declares what it answers, what it does **not** prove, what it
 needs from the profile, and which templates to use instead when it is refused.
 
 `la-query catalog show <name>` is the authoritative parameter list — read it rather than the `.rq`
@@ -18,14 +18,14 @@ python3 scripts/la-query catalog dump --profile linked-archi-default \
 | Stage | Templates | Purpose |
 |---|---|---|
 | [orientation](#orientation) | 4 | Run these first, every session. They establish what is actually loaded, so an empty later result can be told from a partial export. |
-| [resolution](#resolution) | 6 | Turn a name a user typed into an IRI. Never construct an IRI from a label. |
+| [resolution](#resolution) | 7 | Turn a name a user typed into an IRI. Never construct an IRI from a label. |
 | [discovery](#discovery) | 3 | Find out what predicates and relationship types this dataset actually uses, before assuming one. |
 | [analysis](#analysis) | 10 | The questions people actually ask: what depends on what, what realises what, what crosses a layer. |
-| [views](#views) | 6 | Diagrams: what is drawn, where, and what differs between two of them. |
+| [views](#views) | 8 | Prescribed viewpoints and actual diagrams: what is offered, drawn, and different. |
 | [enrichment](#enrichment) | 3 | Attributes only some notations carry, such as lifecycle and ownership. |
 | [quality](#quality) | 8 | Whether the model can be trusted to answer at all: gaps, orphans, provenance, identity, conformance. |
 
-Thirty-four are cross-notation. Six are notation-specific: one each for ArchiMate, C4, Backstage and LeanIX, and two for BPMN. A notation template is gated on the vocabulary IRI it is written against, never on a notation label.
+Thirty-seven are cross-notation. Six are notation-specific: one each for ArchiMate, C4, Backstage and LeanIX, and two for BPMN. A notation template is gated on the vocabulary IRI it is written against, never on a notation label.
 
 ## Which one to reach for
 
@@ -40,6 +40,8 @@ then cite its sources. Analyse owns that orchestration. Render-only work needs m
 | "what is loaded?", "how much of X?" | `core/inventory-summary`, then `core/inventory` | a count means nothing until you know the dataset is whole |
 | "what does *Order Service* mean here?" | `core/resolve-element`, then `core/define-term` | a label is not an IRI, and one label often matches several |
 | "which elements are classified under *Arch component*?" | `core/resolve-concept`, then `core/classified-by` | classification intent chooses the method; SKOS labels resolve concept and scheme candidates, not query intent |
+| "which types belong to *Application Domain*?" | `core/resolve-vocabulary-concept`, then `core/elements-by-category` | the notation taxonomy groups OWL types, not asserted instance classifications |
+| "which viewpoint fits a capability map?" | `core/viewpoint-catalog`, then `core/viewpoint-detail` | a published viewpoint library describes permitted classes and intended audience; `core/views` reports actual diagrams |
 | "what does X relate to?" | `core/neighbours-qualified` | the qualified form is what converters emit by default |
 | "what breaks if X changes?" | `core/dependents-qualified` | bounded to two hops, and answers reachability rather than impact |
 | "what connects capabilities to applications?" | `core/traceability` | the question is about two *types*, not two named things |
@@ -202,6 +204,9 @@ Elements of a model grouped by the taxonomy category of their type.
 
 **Instead, when refused.** `notation/bpmn/process-components`, `core/elements-by-type`
 
+Every row includes the exact `scheme` IRI. One type may occur under multiple axes;
+do not collapse those rows into one mutually exclusive category.
+
 ### `core/inventory`
 
 Named graphs, types and counts. Run first, every session.
@@ -343,6 +348,25 @@ The resolver accepts `skos:inScheme` on the concept or one `skos:broader` hop to
 parent with `skos:inScheme`. It does not scan a vocabulary-only graph or an
 unbounded hierarchy; `core/classified-by` likewise requires classification facts
 in the semantic graph.
+
+### `core/resolve-vocabulary-concept`
+
+Resolve a named concept from an attached notation taxonomy or viewpoint catalog.
+
+**Answers.** Candidate concept IRIs, exact scheme IRIs and matched preferred or alternative labels.
+
+!!! warning "Does not prove"
+    That a category classifies any model instance, or that a prescribed viewpoint is used.
+
+| Parameter | Type | Default |
+|---|---|---|
+| `TERM` | string | required |
+| `LIMIT` | integer (range 1..100) | `25` |
+
+**Requires.** roles `label`, `alt_label`, `in_scheme`, `concept_scheme_class`; graph `vocabulary`.
+
+The scheme itself must be attached as `skos:ConceptScheme`. Review all matching schemes
+and truncation before binding an IRI; a label alone is not a route or an identity.
 
 ### `core/resolve-model`
 
@@ -597,7 +621,36 @@ C4 elements with type, technology and containing parent.
 
 ## views
 
-Diagrams: what is drawn, where, and what differs between two of them.
+Prescribed viewpoints and actual diagrams: what is offered, drawn, and different.
+
+### `core/viewpoint-catalog`
+
+List prescribed viewpoints in attached SKOS libraries, one row per viewpoint with
+its category and definition. This is vocabulary, not the model's own views.
+
+| Parameter | Type | Default |
+|---|---|---|
+| `LIMIT` | integer (range 1..3000) | `300` |
+
+**Requires.** graph `vocabulary` and the viewpoint roles bound by the profile.
+
+!!! warning "Does not prove"
+    That a viewpoint has been used, fits a particular model, or passes conformance validation.
+
+### `core/viewpoint-detail`
+
+Inspect the allowed element classes, stakeholders, purposes and view types of one
+reviewed viewpoint IRI. Each facet/value pair gets one row, avoiding a cross-product.
+
+| Parameter | Type | Default |
+|---|---|---|
+| `VIEWPOINT_IRI` | iri | required |
+| `LIMIT` | integer (range 1..3000) | `300` |
+
+**Requires.** graph `vocabulary` and the viewpoint roles bound by the profile.
+
+!!! warning "Does not prove"
+    That an actual diagram conforms; run the matching viewpoint SHACL shapes with `linked-archi-validate`.
 
 ### `core/view-contents`
 

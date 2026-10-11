@@ -46,7 +46,8 @@ class TestRoutingTableShape(unittest.TestCase):
                 required = {"title", "file", "triggers", "templates", "capabilities", "stop_when"}
                 self.assertEqual(set(pattern) - {"notation_mentions", "resolution"}, required)
                 if "resolution" in pattern:
-                    self.assertIn(pattern["resolution"], {"element", "concept"})
+                    self.assertIn(pattern["resolution"],
+                                  {"element", "concept", "vocabulary", "viewpoint"})
                 if "notation_mentions" in pattern:
                     self.assertEqual(name, "cross-notation")
                     self.assertGreaterEqual(len(set(pattern["notation_mentions"])), 2)
@@ -90,6 +91,15 @@ class TestPatternsPointAtRealThings(unittest.TestCase):
                         "CONCEPT_IRI" in catalog.get(template).parameters
                         for template in pattern["templates"]
                     ))
+
+    def test_published_scheme_patterns_use_vocabulary_backed_templates(self):
+        patterns = _patterns()
+        self.assertEqual(patterns["notation-taxonomy"]["resolution"], "vocabulary")
+        self.assertEqual(patterns["viewpoint-selection"]["resolution"], "viewpoint")
+        self.assertIn("core/elements-by-category",
+                      patterns["notation-taxonomy"]["templates"])
+        self.assertIn("core/viewpoint-detail",
+                      patterns["viewpoint-selection"]["templates"])
 
     def test_every_capability_gate_names_a_real_capability(self):
         """So a planner can trust the gate, and a renamed capability cannot rot silently."""

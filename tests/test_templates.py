@@ -16,7 +16,7 @@ import tempfile
 from pathlib import Path
 
 import support
-from support import AUGMENTED, BASE, FLAT, VOCABULARY, requires_pyoxigraph
+from support import AUGMENTED, BASE, FLAT, SEMANTIC_SCHEMES, VOCABULARY, requires_pyoxigraph
 
 from linked_archi_connect.adapters.base import AdapterError
 from linked_archi_query import load_catalog, render
@@ -42,6 +42,7 @@ CASES: dict[str, tuple[dict, int]] = {
     "core/models": ({}, 5),
     "core/resolve-element": ({"TERM": "order"}, 2),
     "core/resolve-concept": ({"TERM": "Arch component"}, 1),
+    "core/resolve-vocabulary-concept": ({"TERM": "Capability Map Viewpoint"}, 1),
     # Same term as resolve-element on purpose: the two populations are different, and
     # "order" hits both a BPMN model and several concepts inside it.
     "core/resolve-model": ({"TERM": "order"}, 2),
@@ -86,6 +87,8 @@ CASES: dict[str, tuple[dict, int]] = {
     "core/identity-audit": ({}, 2),
     "core/validation-summary": ({}, 1),
     "core/views": ({}, 2),
+    "core/viewpoint-catalog": ({}, 1),
+    "core/viewpoint-detail": ({"VIEWPOINT_IRI": "https://meta.linked.archi/archimate4/viewpoints#CapabilityMap"}, 1),
     "core/view-contents": ({"VIEW_IRI": support.C4_VIEW}, 3),
     # The semantic route to the same three. arch:inView reaches four subjects on this
     # view - the three elements and one relationship drawn between two of them - so a
@@ -134,7 +137,7 @@ class TestAgainstAugmentedFixture(unittest.TestCase):
             raise unittest.SkipTest("pyoxigraph is not installed")
         cls.catalog = load_catalog()
         cls.profile = load_profile("curated-store")
-        cls.adapter = support.load_fixture(AUGMENTED, VOCABULARY)
+        cls.adapter = support.load_fixture(AUGMENTED, VOCABULARY, SEMANTIC_SCHEMES)
 
     def test_every_template_returns_at_least_its_floor(self):
         for name, (params, minimum) in sorted(CASES.items()):
@@ -309,11 +312,49 @@ class TestAgainstAugmentedFixture(unittest.TestCase):
             "categories must be the taxonomy's own, for the types this model uses",
         )
         for row in envelope.rows:
+            self.assertEqual(row["scheme"], "https://meta.linked.archi/bpmn/tax#")
             self.assertTrue(row["categoryLabel"], f"unlabelled category for {row['type']}")
             self.assertTrue(
                 row["parentCategory"].endswith("FlowObjects"),
                 f"the branch above the category is missing: {row['parentCategory']!r}",
             )
+
+    def test_published_concept_resolution_keeps_schemes_separate(self):
+        rendered = render("core/resolve-vocabulary-concept", self.profile,
+                          {"TERM": "Capability Map Viewpoint"}, catalog=self.catalog)
+        envelope = self.adapter.execute(
+            rendered.query, template="core/resolve-vocabulary-concept",
+            profile_id=self.profile.name, profile_version=self.profile.profile_version,
+            limit=200,
+        )
+        self.assertEqual({row["concept"] for row in envelope.rows},
+                         {"https://meta.linked.archi/archimate4/viewpoints#CapabilityMap"})
+        self.assertEqual({row["scheme"] for row in envelope.rows},
+                         {"https://meta.linked.archi/archimate4/viewpoints#ViewpointCatalog"})
+
+    def test_viewpoint_library_is_not_a_model_view(self):
+        catalog = render("core/viewpoint-catalog", self.profile, {}, catalog=self.catalog)
+        catalog_rows = self.adapter.execute(
+            catalog.query, template="core/viewpoint-catalog", profile_id=self.profile.name,
+            profile_version=self.profile.profile_version, limit=300,
+        ).rows
+        viewpoint = "https://meta.linked.archi/archimate4/viewpoints#CapabilityMap"
+        self.assertEqual({row["viewpoint"] for row in catalog_rows}, {viewpoint})
+        self.assertEqual({row["scheme"] for row in catalog_rows},
+                         {"https://meta.linked.archi/archimate4/viewpoints#ViewpointCatalog"})
+        detail = render("core/viewpoint-detail", self.profile,
+                        {"VIEWPOINT_IRI": viewpoint}, catalog=self.catalog)
+        detail_rows = self.adapter.execute(
+            detail.query, template="core/viewpoint-detail", profile_id=self.profile.name,
+            profile_version=self.profile.profile_version, limit=300,
+        ).rows
+        self.assertIn("https://meta.linked.archi/archimate4/onto#Capability",
+                      {row["value"] for row in detail_rows
+                       if row["facet"] == "included type"})
+        self.assertIn("https://meta.linked.archi/core#Catalog",
+                      {row["value"] for row in detail_rows
+                       if row["facet"] == "view type"})
+        self.assertEqual(len(detail_rows), 12)
 
     def test_the_derived_template_names_no_notation_term(self):
         """What makes it notation-agnostic, stated as a check rather than a claim.
@@ -815,6 +856,7 @@ class TestAgainstBaseFixture(unittest.TestCase):
         # Converter output carries instances, not the ontologies and taxonomies
         # they conform to, so there is no class hierarchy here to group by.
         "core/elements-by-category",
+        "core/resolve-vocabulary-concept", "core/viewpoint-catalog", "core/viewpoint-detail",
     }
 
     def test_gated_templates_are_refused(self):

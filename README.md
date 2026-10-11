@@ -5,7 +5,7 @@ ArchiMate, BPMN, C4/Structurizr, Backstage and LeanIX models into RDF against th
 [meta.linked.archi](https://meta.linked.archi) ontologies with the
 [Linked.Archi converters](https://gitlab.com/linked-archi/linked-archi-tools/converters/converters).
 
-**Documentation: <https://linked-archi.github.io/linked-archi-apm/>** — the skills, all 40
+**Documentation: <https://linked-archi.github.io/linked-archi-apm/>** — the skills, all 43
 templates, the analysis patterns, and a worked conversational-analysis walkthrough.
 
 To build your own package around a fixed graph and profile, start with the
@@ -66,7 +66,7 @@ taxonomy terms are all data, so a custom ontology or taxonomy needs no code chan
 reports drift between claimed and observed terms, and exits non-zero when a claim is
 false. `--all` verifies every profile so you can find which one actually fits.
 
-**Ask a question.** 40 tested templates across seven stages — orientation, resolution,
+**Ask a question.** 43 tested templates across seven stages — orientation, resolution,
 discovery, analysis, enrichment, quality and views — spanning neighbours, transitive dependents, traceability paths,
 taxonomy classification, lifecycle, ownership, coverage gaps, orphans, identity
 audit, provenance and diagram usage, plus notation-specific templates for ArchiMate,
@@ -82,10 +82,10 @@ suggesting alternatives; a `partial` one runs with a caveat. Every result carrie
 provenance footer: template, query hash, dataset, profile version, timestamp and row
 count.
 
-**Investigate, not just query.** Ten analysis patterns cover impact and
+**Investigate, not just query.** Twelve analysis patterns cover impact and
 dependency, traceability, coverage, governance and decisions, lifecycle and portfolio
-comparison, cross-notation questions, views, model contents, model quality and taxonomy
-classification. Answers separate
+comparison, cross-notation questions, views, model contents, model quality,
+asserted classification, notation type taxonomies and viewpoint selection. Answers separate
 graph facts from inference from unknowns, and state what cannot be concluded.
 
 **Validate honestly, without a JVM.** `la-validate run` executes SHACL in-process

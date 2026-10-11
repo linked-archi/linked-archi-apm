@@ -1,6 +1,6 @@
 # Analysis patterns
 
-Ten patterns, each a method for a kind of architecture question: which templates to run, what gates
+Twelve patterns, each a method for a kind of architecture question: which templates to run, what gates
 them, and — the part that matters most — **when to stop**.
 
 `assets/patterns.json` is the authoritative routing table. The prose under `references/patterns/` is
@@ -38,7 +38,7 @@ do not execute every candidate to complete a checklist. Query remains the execut
     pattern lists capabilities so a planner can say "this dataset cannot answer that" before running
     anything.
 
-## The ten patterns
+## The twelve patterns
 
 ### `coverage-and-gaps`
 
@@ -116,6 +116,42 @@ do not execute every candidate to complete a checklist. Query remains the execut
 
 The question's classification wording selects this pattern; the quoted SKOS label
 resolves a concept **after** selection. A label by itself never chooses a template.
+
+### `notation-taxonomy`
+
+**Notation type taxonomy.** Depth: [`references/patterns/notation-taxonomy.md`](https://github.com/linked-archi/linked-archi-apm/blob/main/skills/linked-archi-analyse/references/patterns/notation-taxonomy.md)
+
+*Triggers:* `notation taxonomy`, `type taxonomy`, `grouped by domain`, `grouped by aspect`, `element by domain`, `element by aspect`, `type category`
+
+*Candidate templates, in evidence order:*
+
+- `core/resolve-vocabulary-concept` — resolution step over attached vocabulary
+- `core/elements-by-category`
+- `core/provenance`
+
+*Stop when:*
+
+- the notation's matching vocabulary is not attached — zero categories do not mean zero elements
+- multiple schemes or categories match — review the exact scheme IRI
+- the category groups OWL types, not asserted instance classifications
+
+### `viewpoint-selection`
+
+**Viewpoint selection.** Depth: [`references/patterns/viewpoint-selection.md`](https://github.com/linked-archi/linked-archi-apm/blob/main/skills/linked-archi-analyse/references/patterns/viewpoint-selection.md)
+
+*Triggers:* `which viewpoint`, `what viewpoint`, `choose a viewpoint`, `suitable viewpoint`, `viewpoint catalog`, `viewpoint library`, `capability map viewpoint`
+
+*Candidate templates, in evidence order:*
+
+- `core/viewpoint-catalog` — resolution step over attached vocabulary
+- `core/viewpoint-detail`
+- `core/views` — actual views, not viewpoint prescriptions
+
+*Stop when:*
+
+- the matching viewpoint catalog is not attached
+- stakeholder, purpose or allowed classes do not fit the question
+- a viewpoint declaration or conformance assertion is mistaken for SHACL conformance
 
 ### `impact-and-dependency`
 

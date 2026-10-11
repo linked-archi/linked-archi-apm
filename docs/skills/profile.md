@@ -84,7 +84,7 @@ need a second round trip happen inside SPARQL instead.
 | `roles.<name>` | A bound role that nothing in this dataset uses. |
 | `graphs.roles.<name>` | A required graph role that is missing. |
 | `metamodel.manifest` | The data declares a metamodel whose manifest is not attached. |
-| `metamodel.assets` | The manifest is attached but the assets it names are not. |
+| `metamodel.assets` | The manifest is attached but declared ontology, taxonomy, shapes, viewpoints or viewpoint catalog are missing. |
 | `vocabulary.*` | The attached vocabulary does not cover the notations in use. |
 
 A capability claim contradicted by the data is an **error** and carries a fix pair, so `--emit-fix`
@@ -117,6 +117,14 @@ Draft a profile for a custom metamodel rather than forking a bundled one.
 python3 scripts/la-profile derive my-platform --type-mapping converter-mapping.yaml
 python3 scripts/la-profile derive my-platform --metamodel metamodel.ttl --notation myslug
 ```
+
+Derivation preserves the manifest's exact `arch:conceptClassification` scheme IRI,
+including a trailing `#`, and records `arch:architectureViewpoints` and
+`arch:viewpointLibrary` under the notation as `viewpoint_resources` and
+`viewpoint_catalogs`. It records references, not downloaded data: acquire the matching
+OWL, taxonomy and viewpoint documents explicitly, pair them with the model through
+`la-connect --data`, then bind `graphs.roles.vocabulary: default` in a child profile.
+`la-profile verify` reports a declared catalog that was not attached.
 
 | Flag | Default | Purpose |
 |---|---|---|

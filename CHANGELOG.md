@@ -16,6 +16,12 @@ workflow publishes exactly this text, so what is written here is what a consumer
   returns concept and scheme candidates before `core/classified-by`; ambiguous names
   remain review barriers rather than invented IRIs. Analyse still plans only, while
   query owns execution and evidence envelopes.
+- **Notation taxonomy and viewpoint-library investigations.** Profile derivation now
+  preserves exact scheme IRIs and records the manifest's viewpoint resources and
+  catalog. Vocabulary-backed queries resolve published concepts, group model types
+  by their scheme, and inspect prescribed viewpoints separately from actual views.
+  Analyse routes these as distinct patterns; profile verification warns when a
+  declared viewpoint library is not attached.
 
 ## [0.8.0] - 2026-10-04
 

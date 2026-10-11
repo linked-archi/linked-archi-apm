@@ -35,10 +35,11 @@
 #
 # Parameters: MODEL_IRI, LIMIT
 {{PREFIXES}}
-SELECT ?category ?categoryLabel ?parentCategory ?element ?label ?type
+SELECT ?scheme ?category ?categoryLabel ?parentCategory ?element ?label ?type
 WHERE {
   {{GRAPH_OPEN:vocabulary}}
-    ?category {{ROLE:narrower}} ?type .
+    ?category {{ROLE:in_scheme}} ?scheme ;
+              {{ROLE:narrower}} ?type .
     OPTIONAL { ?category {{PATH:label}} ?categoryLabel }
     OPTIONAL { ?category {{ROLE:broader}} ?parentCategory }
   {{GRAPH_CLOSE}}

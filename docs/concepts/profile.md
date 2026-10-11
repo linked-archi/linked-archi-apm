@@ -37,12 +37,12 @@ Every section is optional, and `extends` is resolved depth-first before validati
 | `roles` | map | Role name to one IRI, a non-empty list of IRIs in preference order, or `null`. |
 | `graphs` | map | `layout`, `named_graphs`, `roles`, `required`, `descendants`. |
 | `capabilities` | map | `true`, `false` or `"partial"`. `label_language` is a string instead. |
-| `notations` | map | Slug to a spec: `label`, `metamodel`, `namespace`, `native_id`, `present`. |
+| `notations` | map | Slug to a spec: `label`, `metamodel`, `namespace`, `native_id`, `present`, and derived scheme/catalog IRIs. |
 | `taxonomies` | list | SKOS concept schemes available for classification queries. |
 | `navigation` | map | Only `model_membership`, and inside it only `mode` and `max_depth`. |
 | `limits` | map | `default_row_limit`, `max_row_limit`, `timeout_ms`. |
 
-The bundled `linked-archi-default` binds **59 roles**, 4 graph roles and 14 capabilities.
+The bundled `linked-archi-default` binds **65 roles**, 4 graph roles and 14 capabilities.
 
 !!! note "Any other key under `graphs` becomes a graph role"
     The guard list is exactly `layout`, `named_graphs`, `roles`, `required`, `descendants`.
@@ -75,7 +75,7 @@ Three binding shapes, and the difference between them is behaviour, not style:
 uses `skos:notation`. `owner` is `null` because converter output records no ownership — so
 `core/coverage-gaps` asking about owners is refused with a reason, rather than run to return nothing.
 
-### The 59 roles the default profile binds
+### The 65 roles the default profile binds
 
 Grouped by what they describe. This is the whole vocabulary surface a template is allowed to touch.
 
@@ -86,10 +86,10 @@ Grouped by what they describe. This is the whole vocabulary surface a template i
 | **Relationship form** | `rel_source`, `rel_target`, `rel_type`, `has_qualified_rel`, `reifies`, `unqualified_form` |
 | **Containment** | `part_of_model`, `part_of`, `has_part`, `folder_name` |
 | **Source description** | `bundle_class`, `qualified_derivation`, `source_path`, `source_repo`, `source_digest`, `source_alternate`, `source_url`, `source_email` |
-| **Conformance** | `conforms_to_metamodel`, `conforms_to_viewpoint` |
+| **Conformance and viewpoints** | `conforms_to_metamodel`, `conforms_to_viewpoint`, `viewpoint_class`, `includes_concept`, `targets_stakeholder`, `viewpoint_has_purpose`, `view_type` |
 | **Views and geometry** | `view_node_class`, `view_link_class`, `view_ref`, `node_element`, `in_view`, `link_relationship`, `link_source`, `link_target`, `bounds_x`, `bounds_y` |
 | **Provenance** | `derived_from`, `generated_by`, `generated_at`, `attributed_to`, `source_file`, `agent_name`, `agent_version` |
-| **Taxonomy and schema** | `broader`, `narrower`, `in_scheme`, `keywords`, `subclass_of` |
+| **Taxonomy and schema** | `concept_scheme_class`, `broader`, `narrower`, `in_scheme`, `keywords`, `subclass_of` |
 | **Lifecycle** | `model_status`, `element_lifecycle`, `architecture_state` |
 | **Unbound by default** | `owner`, `same_as`, `exact_match` |
 

@@ -53,11 +53,25 @@ python3 scripts/la-profile verify --profile profiles/acme.yaml --data your-graph
 If that reports capability drift, `--emit-fix` turns it into a corrected child profile in one
 command rather than an editing session.
 
-## Taxonomies need no derivation at all
+## Published taxonomies and viewpoint libraries
 
-A taxonomy is one `taxonomies` entry. Classification is plain SKOS, so `core/classified-by`
-walks `skos:broader` against whichever scheme you name — the Linked.Archi common taxonomy, a
-notation's own, or a house scheme reached through `arch:conceptClassification`.
+Derivation records every `arch:conceptClassification` IRI exactly as declared,
+including a trailing `#`, in `taxonomies` and the notation's `taxonomy_schemes`.
+It also records `arch:architectureViewpoints` as `viewpoint_resources` and
+`arch:viewpointLibrary` as `viewpoint_catalogs`. The latter may identify a concept
+scheme *inside* the same viewpoint document; it is not an extra file to fetch.
+
+These are references, not attached triples. Acquire the matching ontology, taxonomy
+and viewpoint documents with `linked-archi-source`, pair them beside the converted
+data using `linked-archi-connect`, and bind `graphs.roles.vocabulary: default` in a
+child profile. Do not turn that role on before the files are present. Verify the
+result; `metamodel.assets` reports a declared library that remains unattached.
+
+For instance classification assertions, `core/resolve-concept` and
+`core/classified-by` read the semantic graph. For notation type grouping,
+`core/resolve-vocabulary-concept` and `core/elements-by-category` read the
+attached vocabulary. For prescribed viewpoints, use `core/viewpoint-catalog` and
+`core/viewpoint-detail`; actual diagrams remain under `core/views`.
 
 ## Editing by hand instead
 

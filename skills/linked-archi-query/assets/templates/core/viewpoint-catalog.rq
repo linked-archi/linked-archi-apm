@@ -1,0 +1,23 @@
+# core/viewpoint-catalog - Which prescribed viewpoints are in the attached library?
+#
+# Answers: one row per viewpoint with its catalog scheme, category and definition.
+# Audience and palette belong in core/viewpoint-detail, so this shortlist stays small.
+# Does NOT prove: that a viewpoint fits a particular model, has been used, or that
+# a view conforms to it. Use core/views for actual view assertions and SHACL for
+# conformance.
+#
+# Parameters: LIMIT
+{{PREFIXES}}
+SELECT DISTINCT ?scheme ?viewpoint ?label ?category ?definition
+WHERE {
+  {{GRAPH_OPEN:vocabulary}}
+    ?viewpoint a {{ROLE:viewpoint_class}} ;
+               {{ROLE:in_scheme}} ?scheme .
+    ?scheme a {{ROLE:concept_scheme_class}} .
+    OPTIONAL { ?viewpoint {{PATH:label}} ?label }
+    OPTIONAL { ?viewpoint {{ROLE:broader}} ?category }
+    OPTIONAL { ?viewpoint {{ROLE:definition}} ?definition }
+  {{GRAPH_CLOSE}}
+}
+ORDER BY ?scheme ?label ?viewpoint
+LIMIT {{LIMIT}}

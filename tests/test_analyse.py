@@ -124,6 +124,39 @@ class TestRouting(unittest.TestCase):
         self.assertTrue(any("No quoted name" in note for note in plan.notes))
         self.assertIn("TERM", resolution.unresolved_parameters)
 
+    def test_notation_taxonomy_uses_attached_vocabulary_not_instance_classification(self):
+        plan = _plan('Which types are grouped by domain under "Strategy Domain"?',
+                     profile="curated-store")
+        self.assertEqual(plan.pattern, "notation-taxonomy")
+        names = [step.template for step in plan.steps]
+        self.assertIn("core/resolve-vocabulary-concept", names)
+        self.assertIn("core/elements-by-category", names)
+        self.assertNotIn("core/classified-by", names)
+        self.assertEqual(next(step for step in plan.steps if
+                              step.template == "core/resolve-vocabulary-concept")
+                         .parameters["TERM"], "Strategy Domain")
+
+    def test_notation_taxonomy_without_a_category_skips_unused_resolution(self):
+        plan = _plan("How are elements grouped by domain?", profile="curated-store")
+        self.assertEqual(plan.pattern, "notation-taxonomy")
+        self.assertNotIn("core/resolve-vocabulary-concept",
+                         [step.template for step in plan.steps])
+        self.assertIn("core/elements-by-category", [step.template for step in plan.steps])
+        self.assertFalse(any("No quoted name" in note for note in plan.notes))
+        self.assertNotIn("core/resolve-vocabulary-concept", required_templates(
+            "How are elements grouped by domain?", load_patterns()["notation-taxonomy"]
+        ))
+
+    def test_viewpoint_selection_starts_with_catalog_not_a_model_view(self):
+        plan = _plan("Which viewpoint suits a capability map?", profile="curated-store")
+        self.assertEqual(plan.pattern, "viewpoint-selection")
+        self.assertEqual(plan.steps[2].template, "core/viewpoint-catalog")
+        detail = next(step for step in plan.steps if step.template == "core/viewpoint-detail")
+        self.assertIn("core/viewpoint-catalog", detail.parameters["VIEWPOINT_IRI"])
+        self.assertIn(plan.steps[2].number, detail.depends_on)
+        self.assertNotIn("core/resolve-element", [step.template for step in plan.steps])
+        self.assertFalse(any("No quoted name" in note for note in plan.notes))
+
     def test_no_match_is_reported_rather_than_guessed(self):
         """The alphabetically first pattern is not an answer to an unrecognised question."""
         plan = _plan("what colour is the logo?", catalogue=None)

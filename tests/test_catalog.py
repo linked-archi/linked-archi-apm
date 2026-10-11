@@ -383,6 +383,9 @@ class TestGating(unittest.TestCase):
                 # lifts this - examples/with-vocabulary - and until then the answer comes
                 # from notation/bpmn/process-components and its hand-maintained list.
                 "core/elements-by-category",
+                "core/resolve-vocabulary-concept",
+                "core/viewpoint-catalog",
+                "core/viewpoint-detail",
             },
         )
 

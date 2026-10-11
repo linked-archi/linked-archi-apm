@@ -56,6 +56,13 @@ and returns candidate concept IRIs **with schemes**; review all exact candidates
 and truncation before supplying `CONCEPT_IRI`. A taxonomy label is not a routing
 instruction or an IRI.
 
+Notation category questions use `core/resolve-vocabulary-concept` instead: it searches
+attached SKOS schemes in the `vocabulary` graph, then `core/elements-by-category`
+joins categories to instance types and returns the exact scheme on each row.
+Viewpoint questions use `core/viewpoint-catalog` and `core/viewpoint-detail` to inspect
+prescribed options; `core/views` separately reports actual model views. Neither a
+catalog entry nor `viewConformsToViewpoint` proves SHACL conformance.
+
 ### Project-owned catalogue extensions
 
 A downstream skill may package a project-owned `catalog.json` and its `.rq` files,

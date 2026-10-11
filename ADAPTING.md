@@ -4,7 +4,7 @@ The short version: **write a profile, not a fork.**
 
 Templates in this package name semantic *roles* rather than vocabulary terms. A
 profile binds each role to whatever your dataset calls it. So a custom ontology is
-usually a configuration change, and the 28 bundled templates keep working unchanged.
+usually a configuration change, and the 43 bundled templates keep working unchanged.
 
 Write a new template when the **question** is new, not when the vocabulary is.
 
@@ -22,6 +22,7 @@ Write a new template when the **question** is new, not when the vocabulary is.
 | Turtle, or any dataset with no named graphs | `examples/flattened-turtle` |
 | A custom metamodel extending ArchiMate or BPMN | [Derive a profile](#the-five-step-path) |
 | Your own taxonomy | [A `taxonomies` entry](#taxonomies-need-no-new-template) |
+| A notation taxonomy or viewpoint library | Attach the manifest's matching vocabulary and use `core/elements-by-category` or `core/viewpoint-catalog` |
 | A house field promoted through `--ns-vocab` | [A custom role](#custom-roles) |
 | A genuinely new question | [A new template](skills/linked-archi-query/assets/templates/custom/README.md) |
 | A fixed graph with selected skills and a project-owned query | [The downstream APM example](examples/fixed-graph-downstream/README.md) |
@@ -242,7 +243,8 @@ label, endpoints, membership — which your metamodel did not change.
 
 ## Taxonomies need no new template
 
-Classification is plain SKOS, so one template covers every scheme. Add an entry:
+For **asserted instance classification**, SKOS lets one template cover every
+scheme. Add an entry with the scheme's exact IRI:
 
 ```yaml
 taxonomies:
@@ -263,13 +265,23 @@ la-kg query run core/classified-by --profile profiles/cloudplatform.yaml --data 
 
 `core/classified-by` follows `skos:broader` upward from whatever concept you name, so
 naming a leaf returns its members and naming a top concept returns the whole branch.
-It works identically against the common taxonomy, a notation's own scheme, or yours.
+It works against the common taxonomy, a notation's own scheme, or yours **only
+when instance classification edges are asserted in the semantic graph**.
 
 The one requirement is that something in the graph **asserts** the classification.
 Converters do not classify elements against a scheme, so this comes from your
 pipeline or from an authored enrichment step. If `core/classified-by` returns
 nothing, check that first — with `core/discover-predicates` — before suspecting the
 query.
+
+A notation taxonomy that instead maps categories to **OWL element classes** is a
+different route: attach the published taxonomy with
+`graphs.roles.vocabulary: default`, resolve its category with
+`core/resolve-vocabulary-concept`, and use
+`core/elements-by-category` for a reviewed model. A viewpoint library is another
+scheme, but its members are prescribed viewpoints: inspect them with
+`core/viewpoint-catalog` and `core/viewpoint-detail`; `core/views` reports actual
+model views. A manifest declares these assets but never loads them automatically.
 
 ---
 

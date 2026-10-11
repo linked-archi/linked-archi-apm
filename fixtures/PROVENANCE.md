@@ -58,6 +58,7 @@ Consequences, all of which the tests encode:
 | `flat.ttl` | 3320 | 0 | `base` with graph identity discarded. |
 | `converter-1.3.trig` | 284 | 4 | Real converter output, **verbatim**. The one PARTITIONED fixture. |
 | `vocabulary.ttl` | 843 | 0 | Published vocabulary: BPMN taxonomy, plus the core property axioms. |
+| `semantic-schemes.ttl` | 29 | 0 | Published ArchiMate 4 taxonomy and viewpoint catalog excerpt for scheme-aware queries. |
 | `shapes.ttl` | 3744 | 0 | Published SHACL: which relationship may connect which types. |
 | `unqualified-forms.json` | 75 pairs | — | Extracted `arch:unqualifiedForm` mappings. Not RDF. |
 
@@ -72,12 +73,13 @@ off a version stamp either, since every `.trig` here says
 `schema:softwareVersion "1.3.0-SNAPSHOT"`. See
 [The version stamp proves nothing](#the-version-stamp-proves-nothing).
 
-All 40 catalogued templates return rows against `augmented.trig` under the
+All 43 catalogued templates return rows against `augmented.trig` under the
 `curated-store` profile committed at
 `skills/linked-archi-profile/assets/profiles/examples/curated-store.yaml` — with one
-pairing: `core/elements-by-category` reads published vocabulary, which no conversion
+pairing: vocabulary-backed templates read published vocabulary, which no conversion
 emits, so the suite loads `vocabulary.ttl` beside the dataset exactly as an operator
-would (`la-connect` takes several files). See
+would (`la-connect` takes several files). The test also attaches
+`semantic-schemes.ttl` for the published viewpoint entries. See
 [vocabulary.ttl](#vocabularyttl-published-not-converted) below. That is
 the bar the selection rules below
 are tuned to: a fixture on which a template returns nothing is a template the test
@@ -228,7 +230,7 @@ correspondence between records over a claim that two resources are one thing.
 
 Use it with the `curated-store` profile at
 `skills/linked-archi-profile/assets/profiles/examples/curated-store.yaml`, which is
-the profile these additions describe. All 40 templates are available under it, and none
+the profile these additions describe. All 43 templates are available under it, and none
 are refused — which is the point of the additions.
 
 ### The RDF 1.2 bridge, and where it bends the extraction rule

@@ -64,7 +64,7 @@ def load_patterns(path: Path | None = None) -> dict[str, Pattern]:
                 f"pattern {name!r} is missing {', '.join(sorted(missing))}"
             )
         resolution = spec.get("resolution", "element")
-        if resolution not in ("element", "concept"):
+        if resolution not in ("element", "concept", "vocabulary", "viewpoint"):
             raise AnalyseError(f"pattern {name!r} has unknown resolution {resolution!r}")
         patterns[name] = Pattern(
             name=name,

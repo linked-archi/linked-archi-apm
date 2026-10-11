@@ -68,6 +68,8 @@ catalogue-wide work. Keep availability, caveats and “does not prove” with ea
 | Named architecture record (application, process, capability, task) | `core/resolve-element` |
 | Model container, title or source file | `core/resolve-model` |
 | Definition | `core/define-term` |
+| Published taxonomy category | `core/resolve-vocabulary-concept`, then `core/elements-by-category` |
+| Prescribed viewpoint | `core/viewpoint-catalog`, then `core/viewpoint-detail` |
 | Detail / neighbours / dependents | `core/element-detail`, `core/neighbours-qualified`, `core/dependents-qualified` |
 | Traceability / gaps | `core/traceability`, `core/coverage-gaps` |
 | Diagram usage / contents | `core/view-usage`, `core/view-contents`; inspect semantic alternatives if refused |

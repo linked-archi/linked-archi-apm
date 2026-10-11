@@ -254,7 +254,7 @@
       "file": "core/elements-by-category.rq",
       "stage": "orientation",
       "purpose": "Elements of a model grouped by the taxonomy category of their type.",
-      "answers": "How a notation's own taxonomy groups what is in this model.",
+      "answers": "How each attached notation taxonomy groups what is in this model, with the exact scheme IRI on every row.",
       "does_not_prove": "That an element whose type no category names is unimportant - it produces no row at all.",
       "parameters": {
         "MODEL_IRI": {
@@ -273,6 +273,7 @@
         "roles": [
           "narrower",
           "broader",
+          "in_scheme",
           "label"
         ],
         "graph_roles": [
@@ -772,6 +773,22 @@
       },
       "caveat": "Searches classification concepts in the semantic graph, not unattached or vocabulary-only taxonomies. Review all matching schemes before binding an IRI."
     },
+    "core/resolve-vocabulary-concept": {
+      "file": "core/resolve-vocabulary-concept.rq",
+      "stage": "resolution",
+      "purpose": "Resolve a named SKOS concept in an attached notation taxonomy or viewpoint catalog.",
+      "answers": "Candidate concept IRIs, exact scheme IRIs and matching labels in the vocabulary graph.",
+      "does_not_prove": "That a category classifies model instances, or that a prescribed viewpoint is used.",
+      "parameters": {
+        "TERM": {"type": "string", "description": "the quoted published concept or viewpoint name"},
+        "LIMIT": {"type": "integer", "default": 25, "min": 1, "max": 100, "description": "maximum candidates"}
+      },
+      "requires": {
+        "roles": ["label", "alt_label", "in_scheme", "concept_scheme_class"],
+        "graph_roles": ["vocabulary"]
+      },
+      "caveat": "Only attached vocabulary is searched. Review all schemes and truncation before using an IRI."
+    },
     "core/resolve-element": {
       "file": "core/resolve-element.rq",
       "stage": "resolution",
@@ -1039,6 +1056,37 @@
         "core/view-contents",
         "core/views"
       ]
+    },
+    "core/viewpoint-catalog": {
+      "file": "core/viewpoint-catalog.rq",
+      "stage": "views",
+      "purpose": "List prescribed viewpoints and their catalog, category and definition without expanding every facet.",
+      "answers": "The attached viewpoint library's options, not diagrams in a model.",
+      "does_not_prove": "That a viewpoint fits a model, has been used or is conformed to by a view.",
+      "parameters": {
+        "LIMIT": {"type": "integer", "default": 300, "min": 1, "max": 3000, "description": "maximum rows"}
+      },
+      "requires": {
+        "roles": ["viewpoint_class", "concept_scheme_class", "in_scheme", "label", "broader", "definition"],
+        "graph_roles": ["vocabulary"]
+      },
+      "caveat": "Prescribed viewpoints come from the attached vocabulary version; use core/views for actual view assertions."
+    },
+    "core/viewpoint-detail": {
+      "file": "core/viewpoint-detail.rq",
+      "stage": "views",
+      "purpose": "Inspect the element classes, stakeholders, purposes and view types declared for one viewpoint.",
+      "answers": "Facet/value rows for the allowed classes, stakeholders, purposes and view types of a reviewed viewpoint.",
+      "does_not_prove": "That an actual diagram conforms to this viewpoint; use SHACL validation.",
+      "parameters": {
+        "VIEWPOINT_IRI": {"type": "iri", "description": "a viewpoint IRI from core/viewpoint-catalog or core/resolve-vocabulary-concept"},
+        "LIMIT": {"type": "integer", "default": 300, "min": 1, "max": 3000, "description": "maximum rows"}
+      },
+      "requires": {
+        "roles": ["viewpoint_class", "concept_scheme_class", "in_scheme", "label", "includes_concept", "targets_stakeholder", "viewpoint_has_purpose", "view_type"],
+        "graph_roles": ["vocabulary"]
+      },
+      "caveat": "Declared palette and audience are guidance; actual view conformance needs validation."
     },
     "core/view-usage": {
       "file": "core/view-usage.rq",

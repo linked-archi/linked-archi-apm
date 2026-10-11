@@ -1,0 +1,33 @@
+# core/resolve-vocabulary-concept - Which published scheme concept does this name denote?
+#
+# Answers: candidate concept IRIs and exact scheme IRIs in the attached vocabulary.
+# Does NOT prove: that a category classifies any model element or that a viewpoint is used.
+# A vocabulary-only concept is not an asserted instance classification. Review every
+# exact candidate before choosing a scheme or concept.
+#
+# Parameters: TERM, LIMIT
+{{PREFIXES}}
+SELECT DISTINCT ?rank ?matched ?value ?concept ?scheme
+WHERE {
+  {{GRAPH_OPEN:vocabulary}}
+    ?concept {{ROLE:in_scheme}} ?scheme .
+    ?scheme a {{ROLE:concept_scheme_class}} .
+    {
+      ?concept {{ROLE:label}} ?value .
+      BIND("1 name" AS ?matched)
+    }
+    UNION
+    {
+      ?concept {{ROLE:alt_label}} ?value .
+      BIND("2 alias" AS ?matched)
+    }
+    FILTER(CONTAINS(LCASE(STR(?value)), LCASE({{TERM}})))
+    BIND(
+      IF(LCASE(STR(?value)) = LCASE({{TERM}}), "1 exact",
+        IF(STRSTARTS(LCASE(STR(?value)), LCASE({{TERM}})), "2 prefix", "3 contains")
+      ) AS ?rank
+    )
+  {{GRAPH_CLOSE}}
+}
+ORDER BY ?rank ?matched ?value ?scheme ?concept
+LIMIT {{LIMIT}}

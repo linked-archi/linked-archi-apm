@@ -234,9 +234,14 @@ types, and far more so than parsing IRIs.
 
 ## taxonomies
 
-SKOS concept schemes available for classification. Adding a custom taxonomy is an
-entry here and needs no new template: `core/classified-by` walks `skos:broader` from
-whatever concept you name.
+SKOS concept schemes declared for the profile. Preserve each scheme IRI exactly,
+including a trailing `#` when present. An entry does not attach the document.
+`core/classified-by` walks asserted instance classification in the semantic graph;
+`core/elements-by-category` uses a notation taxonomy's class links from the
+attached vocabulary. Derived notation specs additionally record
+`taxonomy_schemes`, `viewpoint_resources` and `viewpoint_catalogs` from the
+metamodel manifest. Use `core/viewpoint-catalog` for prescribed viewpoints and
+`core/views` for actual model views.
 
 ## navigation
 

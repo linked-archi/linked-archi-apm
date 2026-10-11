@@ -16,6 +16,32 @@
     "authoritative gate is the query catalogue's own `requires`, checked at render time."
   ],
   "patterns": {
+    "notation-taxonomy": {
+      "title": "Notation type taxonomy",
+      "file": "references/patterns/notation-taxonomy.md",
+      "resolution": "vocabulary",
+      "triggers": ["notation taxonomy", "type taxonomy", "grouped by domain", "grouped by aspect", "element by domain", "element by aspect", "type category"],
+      "templates": ["core/elements-by-category", "core/provenance"],
+      "capabilities": {},
+      "stop_when": [
+        "the notation's matching vocabulary is not attached - do not treat zero categories as zero elements",
+        "multiple schemes or categories match - review the exact scheme IRI before selecting one",
+        "the category groups OWL types, not asserted instance classifications"
+      ]
+    },
+    "viewpoint-selection": {
+      "title": "Viewpoint selection",
+      "file": "references/patterns/viewpoint-selection.md",
+      "resolution": "viewpoint",
+      "triggers": ["which viewpoint", "what viewpoint", "choose a viewpoint", "suitable viewpoint", "viewpoint catalog", "viewpoint library", "capability map viewpoint"],
+      "templates": ["core/viewpoint-detail", "core/views"],
+      "capabilities": {},
+      "stop_when": [
+        "the matching viewpoint catalog is not attached - a missing option is not a negative finding",
+        "stakeholder, purpose or allowed classes do not fit the stated question - do not recommend by label alone",
+        "viewpoint guidance or a viewConformsToViewpoint assertion is not SHACL conformance"
+      ]
+    },
     "taxonomy-classification": {
       "title": "Taxonomy classification",
       "file": "references/patterns/taxonomy-classification.md",

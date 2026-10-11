@@ -1,0 +1,33 @@
+@prefix arch: <https://meta.linked.archi/core#> .
+@prefix am4: <https://meta.linked.archi/archimate4/onto#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix am4tax: <https://meta.linked.archi/archimate4/tax#> .
+@prefix am4vp: <https://meta.linked.archi/archimate4/viewpoints#> .
+
+am4tax: a skos:ConceptScheme ;
+    skos:prefLabel "ArchiMate 4.0 Concept Scheme"@en .
+
+am4tax:StrategyDomain a skos:Concept ;
+    skos:prefLabel "Strategy Domain"@en ;
+    skos:inScheme am4tax: ;
+    skos:narrower am4:Capability .
+
+am4vp:ViewpointCatalog a skos:ConceptScheme ;
+    skos:prefLabel "ArchiMate 4.0 Viewpoint Catalog"@en .
+
+am4vp:StrategyViewpoints a skos:Concept ;
+    skos:prefLabel "Strategy Viewpoints"@en ;
+    skos:inScheme am4vp:ViewpointCatalog ;
+    skos:narrower am4vp:CapabilityMap .
+
+am4vp:CapabilityMap a arch:Viewpoint ;
+    skos:prefLabel "Capability Map Viewpoint"@en ;
+    skos:definition "Shows the capabilities of the enterprise and how they are composed and related, typically as a hierarchical map."@en ;
+    arch:includesConcept am4:Capability, am4:Resource, am4:ValueStream,
+                         am4:CourseOfAction, am4:Outcome ;
+    arch:targetsStakeholder am4vp:EnterpriseArchitect, am4vp:CIO,
+                            am4vp:BusinessManager ;
+    arch:viewpointHasPurpose am4vp:Deciding, am4vp:Informing ;
+    skos:inScheme am4vp:ViewpointCatalog ;
+    skos:broader am4vp:StrategyViewpoints ;
+    arch:viewType arch:Diagram, arch:Catalog .

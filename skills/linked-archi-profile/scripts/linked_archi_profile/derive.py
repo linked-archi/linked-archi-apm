@@ -10,9 +10,9 @@ information a query needs to find it again. Deriving from it closes the loop: on
 file configures both ends, so the graph and the queries cannot disagree.
 
 **The ``arch:Metamodel`` manifest.** The published extension mechanism. A manifest
-names its ontology, shapes, viewpoints and taxonomy through
-``arch:modelConcepts``, ``arch:formalRules``, ``arch:architectureViewpoints`` and
-``arch:conceptClassification``, which is exactly the set a profile needs.
+names its ontology, shapes, viewpoints, viewpoint library and taxonomy through
+``arch:modelConcepts``, ``arch:formalRules``, ``arch:architectureViewpoints``,
+``arch:viewpointLibrary`` and ``arch:conceptClassification``.
 
 What comes out is a **draft**. Two things cannot be derived and are reported as
 notes rather than guessed:
@@ -62,6 +62,7 @@ MANIFEST_PROPERTIES: dict[str, str] = {
     "modelConcepts": "ontology",
     "formalRules": "shapes",
     "architectureViewpoints": "viewpoints",
+    "viewpointLibrary": "viewpoint library",
     "conceptClassification": "taxonomy",
     "referenceData": "reference data",
     "derivationRules": "derivation rules",
@@ -397,9 +398,8 @@ def derive_profile(
                 combined[prefix] = namespace
 
         for scheme in info.assets.get("conceptClassification", []):
-            trimmed = scheme.rstrip("#")
             result.taxonomies.append({
-                "scheme": trimmed,
+                "scheme": scheme,
                 "prefix": _prefix_for_graph(scheme, info.namespaces) or "tax",
                 "label": f"{info.label or name} classification",
             })
@@ -413,8 +413,20 @@ def derive_profile(
         ontologies = info.assets.get("modelConcepts", [])
         if ontologies:
             onto_prefix = _prefix_for_graph(ontologies[0], info.namespaces)
+            if not onto_prefix and ontologies[0].endswith(("#", "/")):
+                if not re.fullmatch(r"[A-Za-z][\w.-]*", slug):
+                    raise DeriveError(f"notation slug {slug!r} cannot be used as a namespace prefix")
+                onto_prefix = slug if slug not in combined else f"{slug}onto"
+                combined[onto_prefix] = ontologies[0]
             if onto_prefix:
                 entry["namespace"] = onto_prefix
+        for property_name, field_name in (
+            ("conceptClassification", "taxonomy_schemes"),
+            ("architectureViewpoints", "viewpoint_resources"),
+            ("viewpointLibrary", "viewpoint_catalogs"),
+        ):
+            if info.assets.get(property_name):
+                entry[field_name] = info.assets[property_name]
         result.notations[slug] = entry
 
         for local, description in MANIFEST_PROPERTIES.items():
@@ -427,6 +439,12 @@ def derive_profile(
             result.notes.append(
                 "pass the shapes graph above to the validate skill; it is not "
                 "fetched automatically"
+            )
+        if any(key in info.assets for key in ("conceptClassification", "viewpointLibrary")):
+            result.notes.append(
+                "acquire and attach the matching ontology, taxonomy and viewpoint documents "
+                "as vocabulary before using vocabulary-backed queries; derivation does not "
+                "fetch them or bind graphs.roles.vocabulary"
             )
 
     if type_mapping:

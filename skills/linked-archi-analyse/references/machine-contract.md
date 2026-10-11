@@ -51,6 +51,14 @@ For `taxonomy-classification`, the resolve step is `core/resolve-concept` rather
 unresolved until the candidate concept and scheme have been reviewed. The question's
 classification intent selects the pattern; SKOS labels never select one by themselves.
 
+For `notation-taxonomy`, resolution instead uses `core/resolve-vocabulary-concept`
+against attached published schemes; `core/elements-by-category` groups a reviewed
+model by its element types and carries the scheme IRI. For `viewpoint-selection`,
+`core/viewpoint-catalog` is the resolution step even without a quoted name;
+`VIEWPOINT_IRI` remains unresolved until a candidate's audience and palette are
+reviewed. Neither pattern treats a catalog declaration as instance classification
+or SHACL conformance.
+
 `batch_dir`, when supplied, must be a non-empty string. It sets the intended manifest paths.
 **The machine command writes no manifests.** The human `plan --batch-dir DIR` command writes
 them; otherwise consumers can save the embedded manifests themselves. Neither runs queries.

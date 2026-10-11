@@ -36,6 +36,7 @@ CONVERTER_13 = FIXTURES / "converter-1.3.trig"
 #: fixture easier than reality: the same triples returned five rows from a named graph and
 #: none from the default graph a Turtle file loads into, with no error either way.
 VOCABULARY = FIXTURES / "vocabulary.ttl"
+SEMANTIC_SCHEMES = FIXTURES / "semantic-schemes.ttl"
 #: Published SHACL: which relationship may connect which element types. No conversion
 #: emits it, and `rdfs:domain`/`rdfs:range` cannot express it for the unqualified (direct
 #: triple) forms - those carry neither. See ``fixtures/PROVENANCE.md``.

@@ -46,7 +46,7 @@ $ python3 scripts/la-query doctor
 linked-archi-query
   owner root:   .../skills/linked-archi-query
   command:      .../skills/linked-archi-query/scripts/la-query
-  templates:    40 in .../skills/linked-archi-query/assets/templates
+  templates:    43 in .../skills/linked-archi-query/assets/templates
   skills dir:   (unset; resolving beside this skill)
   dataset env:  (unset)
   la-profile    .../skills/linked-archi-profile/scripts/la-profile  (resolves the profile for render and run)

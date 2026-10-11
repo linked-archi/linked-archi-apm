@@ -9,9 +9,9 @@
 # different vocabulary is an edit to a profile rather than a fork of the
 # template library. See ADAPTING.md.
 #
-# Every namespace, graph suffix, class and predicate below was verified against
-# real converter output, not inferred from documentation. The verification
-# evidence is recorded in PROPOSAL.md (Appendix A).
+# Instance bindings and graph layout were verified against real converter output;
+# optional vocabulary prefixes and roles follow the published semantic assets.
+# The converter verification evidence is recorded in PROPOSAL.md (Appendix A).
 
 profile: linked-archi-default
 # 2 because this profile's meaning changed: it now describes the graph layout the
@@ -60,6 +60,8 @@ namespaces:
   # Notation ontologies
   am: https://meta.linked.archi/archimate3/onto#
   am4: https://meta.linked.archi/archimate4/onto#
+  am4tax: https://meta.linked.archi/archimate4/tax#
+  am4vp: https://meta.linked.archi/archimate4/viewpoints#
   amvp: https://meta.linked.archi/archimate3/viewpoints#
   bpmn: https://meta.linked.archi/bpmn/onto#
   bpmndi: https://meta.linked.archi/bpmn/di#
@@ -287,6 +289,12 @@ roles:
   # --- Conformance ---------------------------------------------------------
   conforms_to_metamodel: arch:modelConformsToMetamodel
   conforms_to_viewpoint: arch:viewConformsToViewpoint
+  viewpoint_class: arch:Viewpoint
+  concept_scheme_class: skos:ConceptScheme
+  includes_concept: arch:includesConcept
+  targets_stakeholder: arch:targetsStakeholder
+  viewpoint_has_purpose: arch:viewpointHasPurpose
+  view_type: arch:viewType
 
   # --- Views ---------------------------------------------------------------
   # Two routes say a concept is on a view, and converter output carries both since

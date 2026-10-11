@@ -76,6 +76,11 @@ throughout the investigation, and store artifacts in the project, not the skill 
    `core/resolve-concept`: review the matching SKOS concepts and schemes before binding
    `CONCEPT_IRI` to `core/classified-by`. A concept label alone does not select the
    pattern, and neither a matching label nor the first-ranked row establishes identity.
+   For a notation's type taxonomy, resolve its published concept with
+   `core/resolve-vocabulary-concept` and use `core/elements-by-category` only when
+   the matching vocabulary is attached. For viewpoint choice, inspect
+   `core/viewpoint-catalog` and `core/viewpoint-detail`; `core/views` reports actual
+   diagrams, while SHACL validation judges conformance.
 
 4. **Choose evidence and orchestrate execution.** The planner retrieves only candidate
    template metadata. For changes, use `catalog show NAME` or filtered `catalog dump

@@ -97,5 +97,5 @@ from it carries a caveat saying so.
 - [Getting started](getting-started.md) — install, check the tooling, run the first query.
 - [Conversational analysis](walkthrough.md) — a question in natural language turned into a
   planned series of catalogued queries and a fact-grounded answer.
-- [Template catalogue](templates.md) — all 40 templates, what each answers and what it does not
+- [Template catalogue](templates.md) — all 43 templates, what each answers and what it does not
   prove.

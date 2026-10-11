@@ -69,7 +69,7 @@ python3 scripts/la-analyse plan --question 'what depends on "Order Service"?' \
 
 ```mermaid
 flowchart LR
-  O["orient<br/><small>core/inventory-summary<br/>core/models</small>"] --> R["resolve<br/><small>core/resolve-element or core/resolve-concept<br/>core/define-term when requested</small>"]
+  O["orient<br/><small>core/inventory-summary<br/>core/models</small>"] --> R["resolve<br/><small>element, semantic SKOS, vocabulary SKOS<br/>or viewpoint catalog; definitions on request</small>"]
   R --> P["pattern<br/><small>the pattern's own templates,<br/>in table order</small>"]
   P --> Q["quality<br/><small>core/provenance</small>"]
 ```
@@ -84,6 +84,14 @@ by the name of a SKOS concept. This pattern substitutes `core/resolve-concept` f
 `CONCEPT_IRI` to `core/classified-by`. Analyse does not query the graph or choose a
 candidate automatically. Both templates read the semantic graph, so a vocabulary-only
 taxonomy is not evidence of asserted membership.
+
+The other two SKOS routes answer different questions. `notation-taxonomy` resolves
+published category labels in attached vocabulary and uses `core/elements-by-category`
+to group model instances by their OWL types; it never infers an asserted
+classification. `viewpoint-selection` starts with `core/viewpoint-catalog`, then
+reviews a candidate's palette and audience through `core/viewpoint-detail`.
+`core/views` reports actual diagrams, and viewpoint SHACL shapes—not the catalog
+query—judge conformance. Missing vocabulary is a refusal, not evidence of absence.
 
 The selected pattern is a starting method, not a guarantee that every clause of a multi-part
 question is covered. Reserve query budget for a load-bearing path or justified unknown for
