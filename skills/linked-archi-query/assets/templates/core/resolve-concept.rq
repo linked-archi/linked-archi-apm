@@ -1,0 +1,46 @@
+# core/resolve-concept - Which SKOS classification concept does this term denote?
+#
+# Answers: candidate concept IRIs and their schemes, ranked by label match.
+# Does NOT prove: that the first candidate is intended, or that every published
+# taxonomy is attached to this dataset. Review all exact hits across schemes.
+#
+# This template searches concepts alongside assertions in the semantic graph.
+# An attached vocabulary-only taxonomy is not searched under named-graph profiles; it
+# cannot establish membership for core/classified-by without semantic assertions.
+# Some curated legacy graphs put skos:inScheme on the parent only, so the one-hop
+# parent branch is included without an unbounded hierarchy walk.
+#
+# Parameters: TERM, LIMIT
+{{PREFIXES}}
+SELECT DISTINCT ?rank ?matched ?value ?concept ?scheme
+WHERE {
+  {{GRAPH_OPEN:semantic}}
+    {
+      { ?concept {{ROLE:in_scheme}} ?scheme . }
+      UNION
+      {
+        ?concept {{ROLE:broader}} ?parent .
+        ?parent {{ROLE:in_scheme}} ?scheme .
+      }
+    }
+    {
+      {
+        ?concept {{ROLE:label}} ?value .
+        BIND("1 name" AS ?matched)
+      }
+      UNION
+      {
+        ?concept {{ROLE:alt_label}} ?value .
+        BIND("2 alias" AS ?matched)
+      }
+    }
+    FILTER(CONTAINS(LCASE(STR(?value)), LCASE({{TERM}})))
+    BIND(
+      IF(LCASE(STR(?value)) = LCASE({{TERM}}), "1 exact",
+        IF(STRSTARTS(LCASE(STR(?value)), LCASE({{TERM}})), "2 prefix", "3 contains")
+      ) AS ?rank
+    )
+  {{GRAPH_CLOSE}}
+}
+ORDER BY ?rank ?matched ?value ?scheme ?concept
+LIMIT {{LIMIT}}

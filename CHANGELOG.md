@@ -10,6 +10,13 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 
+### Added
+- **SKOS-aware classification investigation.** Classification intent routes to a
+  dedicated analyse pattern. A bounded, profile-scoped `core/resolve-concept` query
+  returns concept and scheme candidates before `core/classified-by`; ambiguous names
+  remain review barriers rather than invented IRIs. Analyse still plans only, while
+  query owns execution and evidence envelopes.
+
 ## [0.8.0] - 2026-10-04
 
 ### Added

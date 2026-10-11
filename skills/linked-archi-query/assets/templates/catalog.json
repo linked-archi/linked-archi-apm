@@ -747,6 +747,31 @@
         "core/orphans"
       ]
     },
+    "core/resolve-concept": {
+      "file": "core/resolve-concept.rq",
+      "stage": "resolution",
+      "purpose": "Resolve a SKOS classification term to candidate concept IRIs and schemes.",
+      "answers": "Which classification concepts in the semantic graph match a name or alternative label.",
+      "does_not_prove": "That the first candidate is intended, or that every published taxonomy is attached to this dataset.",
+      "parameters": {
+        "TERM": {
+          "type": "string",
+          "description": "the quoted taxonomy concept name to resolve"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 25,
+          "min": 1,
+          "max": 100,
+          "description": "maximum candidates"
+        }
+      },
+      "requires": {
+        "roles": ["label", "alt_label", "broader", "in_scheme"],
+        "graph_roles": ["semantic"]
+      },
+      "caveat": "Searches classification concepts in the semantic graph, not unattached or vocabulary-only taxonomies. Review all matching schemes before binding an IRI."
+    },
     "core/resolve-element": {
       "file": "core/resolve-element.rq",
       "stage": "resolution",

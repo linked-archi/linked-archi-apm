@@ -16,6 +16,30 @@
     "authoritative gate is the query catalogue's own `requires`, checked at render time."
   ],
   "patterns": {
+    "taxonomy-classification": {
+      "title": "Taxonomy classification",
+      "file": "references/patterns/taxonomy-classification.md",
+      "resolution": "concept",
+      "triggers": [
+        "classified under",
+        "classified as",
+        "classified",
+        "classification branch",
+        "taxonomy branch",
+        "taxonomy category",
+        "category members"
+      ],
+      "templates": [
+        "core/classified-by",
+        "core/provenance"
+      ],
+      "capabilities": {},
+      "stop_when": [
+        "no matching SKOS concept or scheme is present in the semantic graph - do not invent an IRI",
+        "more than one concept or scheme matches the term - ask which one was intended",
+        "the branch has no asserted classifications - do not infer that no elements belong to it"
+      ]
+    },
     "impact-and-dependency": {
       "title": "Impact and dependency",
       "file": "references/patterns/impact-and-dependency.md",

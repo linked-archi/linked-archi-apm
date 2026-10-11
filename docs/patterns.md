@@ -1,6 +1,6 @@
 # Analysis patterns
 
-Nine patterns, each a method for a kind of architecture question: which templates to run, what gates
+Ten patterns, each a method for a kind of architecture question: which templates to run, what gates
 them, and — the part that matters most — **when to stop**.
 
 `assets/patterns.json` is the authoritative routing table. The prose under `references/patterns/` is
@@ -38,7 +38,7 @@ do not execute every candidate to complete a checklist. Query remains the execut
     pattern lists capabilities so a planner can say "this dataset cannot answer that" before running
     anything.
 
-## The nine patterns
+## The ten patterns
 
 ### `coverage-and-gaps`
 
@@ -95,6 +95,27 @@ do not execute every candidate to complete a checklist. Query remains the execut
 
 - no predicate in this dataset carries decisions or policies at all
 - the only status found describes the conversion rather than the architecture
+
+### `taxonomy-classification`
+
+**Taxonomy classification.** Depth: [`references/patterns/taxonomy-classification.md`](https://github.com/linked-archi/linked-archi-apm/blob/main/skills/linked-archi-analyse/references/patterns/taxonomy-classification.md)
+
+*Triggers:* `classified under`, `classified as`, `classified`, `classification branch`, `taxonomy branch`, `taxonomy category`, `category members`
+
+*Candidate templates, in evidence order:*
+
+- `core/resolve-concept` — resolution step, not an extra pattern query
+- `core/classified-by`
+- `core/provenance`
+
+*Stop when:*
+
+- no matching SKOS concept or scheme is present in the semantic graph — do not invent an IRI
+- more than one concept or scheme matches the term — ask which one was intended
+- the branch has no asserted classifications — do not infer that no elements belong to it
+
+The question's classification wording selects this pattern; the quoted SKOS label
+resolves a concept **after** selection. A label by itself never chooses a template.
 
 ### `impact-and-dependency`
 

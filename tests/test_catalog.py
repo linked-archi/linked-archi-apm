@@ -583,7 +583,7 @@ class TestGating(unittest.TestCase):
         profile = load_profile("linked-archi-default")
         listing = self.catalog.format_list(profile)
         self.assertIn("x core/dependents-direct", listing)
-        self.assertIn("32 available", listing)
+        self.assertIn("33 available", listing)
 
 
 if __name__ == "__main__":

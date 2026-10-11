@@ -91,7 +91,7 @@ skills:
 
 # The same command CI runs. --strict fails on a broken internal link rather than publishing
 # one, and tests/test_docs.py checks the countable claims against catalog.json and
-# patterns.json - the site states "39 templates" and "nine patterns" in prose, and prose is
+# patterns.json - the site states template and pattern counts in prose, and prose is
 # where a number goes stale first.
 docs:
 	$(PY) -m mkdocs build --strict

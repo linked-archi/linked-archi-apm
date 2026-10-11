@@ -46,6 +46,11 @@ trigger the heuristic. A pattern listing `core/define-term` does not force it in
 plan: request definitions when the investigation needs that semantic evidence. Name
 resolution still preserves its ambiguity stop condition.
 
+For `taxonomy-classification`, the resolve step is `core/resolve-concept` rather than
+`core/resolve-element`. Its `TERM` is the quoted concept name and `CONCEPT_IRI` remains
+unresolved until the candidate concept and scheme have been reviewed. The question's
+classification intent selects the pattern; SKOS labels never select one by themselves.
+
 `batch_dir`, when supplied, must be a non-empty string. It sets the intended manifest paths.
 **The machine command writes no manifests.** The human `plan --batch-dir DIR` command writes
 them; otherwise consumers can save the embedded manifests themselves. Neither runs queries.

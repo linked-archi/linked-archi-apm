@@ -179,7 +179,7 @@ paragraph is not hedging; it is the part that keeps the answer honest when someo
 
 ## Where to go next
 
-- [Template catalogue](templates.md) — all thirty-nine, with what each does not prove.
+- [Template catalogue](templates.md) — all forty, with what each does not prove.
 - [Evidence and refusal](concepts/evidence.md) — why exit 1 is an answer.
 - [Conversational analysis](walkthrough.md) — the same shape, planned by `la-analyse` from a
   question in natural language.

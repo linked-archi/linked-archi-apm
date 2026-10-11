@@ -56,7 +56,7 @@ flowchart TB
 | `linked-archi-source` | Acquiring RDF from HTTPS, a pinned Git revision, or a read-only GitLab MCP handoff. Digest, size, redirect and parse verification. | Executes no SPARQL. |
 | `linked-archi-connect` | Dataset discovery, attachment and identity. Local pyoxigraph store or SPARQL endpoint. | Chooses no dataset for you. |
 | `linked-archi-profile` | The graph profile: namespaces, roles, graph layout, capabilities, notations. Verifies its claims against real data. | Never applies a recommendation. |
-| `linked-archi-query` | The 39-template catalogue, rendering, read-only enforcement, execution, and the result envelope. | Invents no IRI. |
+| `linked-archi-query` | The 40-template catalogue, rendering, read-only enforcement, execution, and the result envelope. | Invents no IRI. |
 | `linked-archi-validate` | SHACL in-process, plus reading a report someone else produced. Target-class coverage beside the verdict. | Needs no JVM or converter. |
 | `linked-archi-analyse` | Routing a question to an analysis pattern, planning the ordered steps, bundling the envelopes. | **Executes nothing.** |
 
@@ -97,5 +97,5 @@ from it carries a caveat saying so.
 - [Getting started](getting-started.md) — install, check the tooling, run the first query.
 - [Conversational analysis](walkthrough.md) — a question in natural language turned into a
   planned series of catalogued queries and a fact-grounded answer.
-- [Template catalogue](templates.md) — all 39 templates, what each answers and what it does not
+- [Template catalogue](templates.md) — all 40 templates, what each answers and what it does not
   prove.

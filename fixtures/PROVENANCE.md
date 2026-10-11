@@ -72,7 +72,7 @@ off a version stamp either, since every `.trig` here says
 `schema:softwareVersion "1.3.0-SNAPSHOT"`. See
 [The version stamp proves nothing](#the-version-stamp-proves-nothing).
 
-All 39 catalogued templates return rows against `augmented.trig` under the
+All 40 catalogued templates return rows against `augmented.trig` under the
 `curated-store` profile committed at
 `skills/linked-archi-profile/assets/profiles/examples/curated-store.yaml` — with one
 pairing: `core/elements-by-category` reads published vocabulary, which no conversion
@@ -228,7 +228,7 @@ correspondence between records over a claim that two resources are one thing.
 
 Use it with the `curated-store` profile at
 `skills/linked-archi-profile/assets/profiles/examples/curated-store.yaml`, which is
-the profile these additions describe. All 39 templates are available under it, and none
+the profile these additions describe. All 40 templates are available under it, and none
 are refused — which is the point of the additions.
 
 ### The RDF 1.2 bridge, and where it bends the extraction rule

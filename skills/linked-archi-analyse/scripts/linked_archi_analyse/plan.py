@@ -23,7 +23,7 @@ DEFAULT_BUDGET = 12
 #: invented IRIs in it. Anything not listed becomes a generic placeholder naming the
 #: catalogue as the authority, which is honest rather than convenient.
 PARAMETER_SOURCES: Mapping[str, str] = {
-    "FOCUS_IRI": "resolved in the resolve step, from core/resolve-element",
+    "FOCUS_IRI": "from core/resolve-element or an element IRI in earlier evidence",
     "MODEL_IRI": "resolved in the resolve step, from core/resolve-model",
     "PROCESS_IRI": "an element IRI from core/resolve-element or notation/bpmn/process-components",
     "VIEW_IRI": "a view IRI from core/views",
@@ -35,7 +35,7 @@ PARAMETER_SOURCES: Mapping[str, str] = {
     "TARGET_TYPE": "a class IRI from core/inventory",
     "EXPECTED_PREDICATE": "a predicate from core/discover-predicates, spelling confirmed with core/element-detail",
     "PREDICATE_PATH": "a predicate from core/discover-relationship-types",
-    "CONCEPT_IRI": "a taxonomy concept IRI, from the profile's taxonomies entry",
+    "CONCEPT_IRI": "from core/resolve-concept after reviewing its scheme and ambiguity",
     "TERM": "a name from the question",
 }
 
@@ -60,7 +60,8 @@ def required_templates(question: str, pattern: Pattern | None,
                        definitions: bool = False) -> list[str]:
     """The metadata this investigation needs, before any dataset is consulted."""
     names = [template for template, _purpose in _ORIENTATION]
-    names.append("core/resolve-element")
+    names.append("core/resolve-concept" if pattern and pattern.resolution == "concept"
+                 else "core/resolve-element")
     if definitions_needed(question, definitions):
         names.append("core/define-term")
     if pattern is not None:
@@ -487,16 +488,20 @@ def build_plan(
             "only one notation loaded and the question needs two",
         )
 
-    resolve_template = "core/resolve-element"
+    concept_resolution = pattern is not None and pattern.resolution == "concept"
+    resolve_template = "core/resolve-concept" if concept_resolution else "core/resolve-element"
     # One resolve step per quoted name: a question naming two things needs both resolved, and
     # a plan that resolves the first and assumes the second is how the second gets invented.
     for term in (terms or (None,)):
         subject = f'"{term}"' if term else "each name in the question"
         add(
             resolve_template, "resolve",
-            f"Turn {subject} into an IRI.",
-            "the focus IRIs later steps take as parameters",
-            "several candidates match and the choice changes the answer - ask instead of picking",
+            f"Turn {subject} into a taxonomy concept IRI." if concept_resolution
+            else f"Turn {subject} into an IRI.",
+            "the taxonomy concept IRI for the classification step" if concept_resolution
+            else "the focus IRIs later steps take as parameters",
+            "several concepts or schemes match - ask instead of picking" if concept_resolution
+            else "several candidates match and the choice changes the answer - ask instead of picking",
             term=term,
         )
         if definitions_needed(question, definitions):

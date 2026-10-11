@@ -9,6 +9,7 @@ only when an evidence gap forces it, and say why.
 | which capability, supports, realises, implements, serves, end to end | Traceability | [patterns/traceability.md](patterns/traceability.md) |
 | uncovered, coverage, incomplete, gap, missing, no owner | Coverage and gaps | [patterns/coverage-and-gaps.md](patterns/coverage-and-gaps.md) |
 | decision, principle, standard, policy, exception, who approved | Governance and decisions | [patterns/governance-and-decisions.md](patterns/governance-and-decisions.md) |
+| classified under, classified as, taxonomy branch, taxonomy category | Taxonomy classification | [patterns/taxonomy-classification.md](patterns/taxonomy-classification.md) |
 | duplicate, overlap, rationalise, lifecycle, deprecated, portfolio | Lifecycle and portfolio comparison | [patterns/lifecycle-and-portfolio.md](patterns/lifecycle-and-portfolio.md) |
 | reconcile, same system, both tools, identity, or at least two named notations | Cross-notation questions | [patterns/cross-notation.md](patterns/cross-notation.md) |
 | diagram, drawn, documented, view, what is new in | Views and documentation | [patterns/views-and-documentation.md](patterns/views-and-documentation.md) |
@@ -28,6 +29,9 @@ why they are short: "can we trust this" would miss "can we trust **these** model
 When no trigger matches, the cross-notation pattern can still match two or more notation
 names from its declared `notation_mentions` list. One notation alone does not imply a
 cross-tool join, and an explicit impact or coverage trigger retains priority.
+The taxonomy pattern is selected by classification wording, not by the name of a SKOS
+concept alone. Its resolve step finds concept and scheme candidates in the semantic graph;
+review ambiguity before binding `CONCEPT_IRI` to `core/classified-by`.
 
 Each file carries the steps, the templates, the mistake the pattern exists to prevent, and
 its **stop conditions** for claims that depend on it — because knowing when a claim is

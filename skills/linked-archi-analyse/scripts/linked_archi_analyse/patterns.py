@@ -35,6 +35,7 @@ class Pattern:
     capabilities: Mapping[str, str]
     stop_when: tuple[str, ...]
     notation_mentions: tuple[str, ...]
+    resolution: str = "element"
 
 
 def load_patterns(path: Path | None = None) -> dict[str, Pattern]:
@@ -62,6 +63,9 @@ def load_patterns(path: Path | None = None) -> dict[str, Pattern]:
             raise AnalyseError(
                 f"pattern {name!r} is missing {', '.join(sorted(missing))}"
             )
+        resolution = spec.get("resolution", "element")
+        if resolution not in ("element", "concept"):
+            raise AnalyseError(f"pattern {name!r} has unknown resolution {resolution!r}")
         patterns[name] = Pattern(
             name=name,
             title=str(spec["title"]),
@@ -71,6 +75,7 @@ def load_patterns(path: Path | None = None) -> dict[str, Pattern]:
             capabilities=dict(spec["capabilities"]),
             stop_when=tuple(str(s) for s in spec["stop_when"]),
             notation_mentions=tuple(str(n).lower() for n in spec.get("notation_mentions", [])),
+            resolution=resolution,
         )
     return patterns
 
@@ -165,6 +170,7 @@ def pattern_summary(patterns: Mapping[str, Pattern]) -> Sequence[dict[str, Any]]
             "file": pattern.file,
             "triggers": list(pattern.triggers),
             "notation_mentions": list(pattern.notation_mentions),
+            "resolution": pattern.resolution,
             "templates": list(pattern.templates),
         }
         for pattern in sorted(patterns.values(), key=lambda p: p.name)

@@ -73,7 +73,7 @@ The terms that exist, against the ones an author reasonably reaches for first:
 **How it is enforced:** no template names a vocabulary term at all. Templates name roles, and
 `skills/linked-archi-profile/assets/profiles/linked-archi-default.yaml` binds each role to a
 verified term. `tests/test_render.py::test_no_template_carries_its_own_prefixes` asserts it
-across all 39 templates, so a term cannot creep back into one.
+across all 40 templates, so a term cannot creep back into one.
 
 ### F2. Graph scoping has to be a profile decision, not a constant
 
@@ -276,7 +276,7 @@ identified by shape and `tests/test_fixtures.py` asserts the shape of each one.
 Extraction proves a fixture was true of *some* build; only an assertion pins which.
 
 Every selection rule in `fixtures/build_fixtures.py` exists because a template
-returned zero rows without it. All 39 templates return rows against
+    returned zero rows without it. All 40 templates return rows against
 `augmented.trig`: a template returning nothing is one the suite cannot distinguish
 from a broken one. Details in [fixtures/PROVENANCE.md](fixtures/PROVENANCE.md).
 
@@ -515,9 +515,9 @@ anything about the code under test.
 | `make verify-curated` (curated profile / `augmented.trig`) | 0 errors |
 | `query batch` against separate `query run` commands | identical `rows`, `query_id`, `truncated` and `row_count`; load paid once |
 | Store modes `memory`, `cached`, `readonly`, `refresh` | same quad and named-graph counts from each; a changed input rebuilds rather than serving a stale store |
-| `la-query catalog list --profile linked-archi-default` | 39 templates, 32 available, 7 refused with reasons |
-| `la-query catalog list --profile curated-store` | 35 available, 0 refused |
-| All 39 templates against `augmented.trig` | every one returns rows |
+| `la-query catalog list --profile linked-archi-default` | 40 templates, 33 available, 7 refused with reasons |
+| `la-query catalog list --profile curated-store` | 40 available, 0 refused |
+| All 40 templates against `augmented.trig` | every one returns rows |
 | Exit-code contracts | 9 of 9 |
 | Owner skills copied alone to temp directories | independent commands run with `PYTHONPATH` scrubbed; combined siblings execute |
 

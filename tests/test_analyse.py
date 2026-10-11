@@ -92,6 +92,38 @@ class TestRouting(unittest.TestCase):
         _, ranked = resolve_mode(None, "which database stores the failover config?", patterns)
         self.assertEqual([match.pattern.name for match in ranked], [])
 
+    def test_taxonomy_intent_selects_concept_resolution_not_a_domain_label(self):
+        plan = _plan('Which elements are classified under "Arch component"?', catalogue=None)
+        self.assertEqual(plan.pattern, "taxonomy-classification")
+        self.assertEqual([step.template for step in plan.steps[:4]], [
+            "core/inventory-summary", "core/models", "core/resolve-concept",
+            "core/classified-by",
+        ])
+        self.assertEqual(plan.steps[2].parameters, {})
+        self.assertIn("several concepts or schemes", plan.steps[2].stop_when)
+        self.assertIsNone(_plan('Tell me about "Arch component"', catalogue=None).pattern)
+        self.assertEqual(
+            _plan('Which policy elements are classified under "Arch component"?',
+                  catalogue=None).pattern,
+            "taxonomy-classification",
+        )
+
+    def test_taxonomy_plan_keeps_concept_iri_unresolved_until_evidence_is_reviewed(self):
+        plan = _plan('Which elements are classified under "Arch component"?')
+        resolution = next(step for step in plan.steps if step.template == "core/resolve-concept")
+        classified = next(step for step in plan.steps if step.template == "core/classified-by")
+        self.assertEqual(resolution.parameters["TERM"], "Arch component")
+        self.assertIn("core/resolve-concept", classified.parameters["CONCEPT_IRI"])
+        self.assertIn("CONCEPT_IRI", classified.unresolved_parameters)
+        self.assertIn(resolution.number, classified.depends_on)
+        self.assertNotIn("core/resolve-element", [step.template for step in plan.steps])
+
+    def test_taxonomy_resolution_requires_a_quoted_term(self):
+        plan = _plan("Which elements are classified under the category?")
+        resolution = next(step for step in plan.steps if step.template == "core/resolve-concept")
+        self.assertTrue(any("No quoted name" in note for note in plan.notes))
+        self.assertIn("TERM", resolution.unresolved_parameters)
+
     def test_no_match_is_reported_rather_than_guessed(self):
         """The alphabetically first pattern is not an answer to an unrecognised question."""
         plan = _plan("what colour is the logo?", catalogue=None)

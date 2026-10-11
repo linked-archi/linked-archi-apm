@@ -72,6 +72,10 @@ throughout the investigation, and store artifacts in the project, not the skill 
    Definitions are conditional, not an automatic second lookup for every name:
    use `core/define-term` for meaning/ambiguity, a definition question, or when the
    selected pattern calls for it. `--definitions` explicitly requests this extra step.
+   For a classification question, `taxonomy-classification` instead uses
+   `core/resolve-concept`: review the matching SKOS concepts and schemes before binding
+   `CONCEPT_IRI` to `core/classified-by`. A concept label alone does not select the
+   pattern, and neither a matching label nor the first-ranked row establishes identity.
 
 4. **Choose evidence and orchestrate execution.** The planner retrieves only candidate
    template metadata. For changes, use `catalog show NAME` or filtered `catalog dump

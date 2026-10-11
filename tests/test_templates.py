@@ -12,6 +12,8 @@ suite cannot tell an empty-by-design template from a broken one.
 from __future__ import annotations
 
 import unittest
+import tempfile
+from pathlib import Path
 
 import support
 from support import AUGMENTED, BASE, FLAT, VOCABULARY, requires_pyoxigraph
@@ -39,6 +41,7 @@ CASES: dict[str, tuple[dict, int]] = {
     "core/inventory-summary": ({}, 4),
     "core/models": ({}, 5),
     "core/resolve-element": ({"TERM": "order"}, 2),
+    "core/resolve-concept": ({"TERM": "Arch component"}, 1),
     # Same term as resolve-element on purpose: the two populations are different, and
     # "order" hits both a BPMN model and several concepts inside it.
     "core/resolve-model": ({"TERM": "order"}, 2),
@@ -162,6 +165,42 @@ class TestAgainstAugmentedFixture(unittest.TestCase):
             self.assertEqual(
                 row["relType"], "https://meta.linked.archi/bpmn/onto#SequenceFlow"
             )
+
+    def test_concept_resolution_returns_a_scheme_not_an_element(self):
+        rendered = render("core/resolve-concept", self.profile,
+                          {"TERM": "Arch component"}, catalog=self.catalog)
+        envelope = self.adapter.execute(
+            rendered.query, template="core/resolve-concept", profile_id=self.profile.name,
+            profile_version=self.profile.profile_version, limit=200,
+        )
+        self.assertEqual({row["concept"] for row in envelope.rows}, {support.TAX_ROOT})
+        self.assertEqual({row["scheme"] for row in envelope.rows},
+                         {"https://meta.linked.archi/core-tax"})
+
+    def test_same_label_in_two_schemes_remains_ambiguous(self):
+        from linked_archi_connect.adapters import open_adapter
+
+        graph = """@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+<https://example.org/test/graph/semantic> {
+  <https://example.org/scheme-a#Software> skos:inScheme <https://example.org/scheme-a> ;
+    skos:prefLabel "Software"@en .
+  <https://example.org/scheme-b#Software> skos:inScheme <https://example.org/scheme-b> ;
+    skos:altLabel "Software"@en .
+}
+"""
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "ambiguous.trig"
+            path.write_text(graph, encoding="utf-8")
+            adapter = open_adapter(data=[path])
+            rendered = render("core/resolve-concept", self.profile,
+                              {"TERM": "Software"}, catalog=self.catalog)
+            envelope = adapter.execute(
+                rendered.query, template="core/resolve-concept", profile_id=self.profile.name,
+                profile_version=self.profile.profile_version, limit=200,
+            )
+        self.assertEqual([row["matched"] for row in envelope.rows], ["1 name", "2 alias"])
+        self.assertEqual({row["scheme"] for row in envelope.rows},
+                         {"https://example.org/scheme-a", "https://example.org/scheme-b"})
 
     def _traceability(self, source_type, target_type):
         rendered = render("core/traceability", self.profile,

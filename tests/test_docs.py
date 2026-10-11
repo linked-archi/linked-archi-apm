@@ -1,8 +1,8 @@
 """The published site, checked against what the package actually ships.
 
-The docs make specific, countable claims: 39 templates, nine analysis patterns, six skills. Those
+The docs make specific, countable claims about templates, patterns and skills. Those
 are exactly the claims that rot, because adding a template is a one-line catalogue change and
-nothing else would notice. A site that documents 38 of 39 templates is worse than one that documents
+nothing else would notice. A site that misses one shipped template is worse than one that documents
 none, since a reader has no way to tell which page is stale.
 
 These tests do not check prose. They check that every name the package ships appears in the page
@@ -46,11 +46,11 @@ class TestTemplateCatalogueIsDocumentedWhole(unittest.TestCase):
     def test_the_stated_count_matches(self):
         """The prose says a number. Numbers in prose are the first thing to go stale."""
         self.assertIn(
-            "Thirty-nine tested templates", self.page,
+            "Forty tested templates", self.page,
             f"the catalogue ships {len(self.templates)} templates; the page's opening sentence "
             "states a different number",
         )
-        self.assertEqual(len(self.templates), 39)
+        self.assertEqual(len(self.templates), 40)
 
     def test_the_stage_table_counts_match_the_catalogue(self):
         counts: dict[str, int] = {}
@@ -122,8 +122,8 @@ class TestAnalysisPatternsAreDocumentedWhole(unittest.TestCase):
                     self.assertIn(f"`{template}`", self.page)
 
     def test_the_stated_count_matches(self):
-        self.assertIn("Nine patterns", self.page)
-        self.assertEqual(len(self.patterns), 9)
+        self.assertIn("Ten patterns", self.page)
+        self.assertEqual(len(self.patterns), 10)
 
 
 class TestEveryPageIsReachable(unittest.TestCase):

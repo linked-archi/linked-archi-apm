@@ -69,7 +69,7 @@ python3 scripts/la-analyse plan --question 'what depends on "Order Service"?' \
 
 ```mermaid
 flowchart LR
-  O["orient<br/><small>core/inventory-summary<br/>core/models</small>"] --> R["resolve<br/><small>core/resolve-element per quoted name<br/>core/define-term when requested</small>"]
+  O["orient<br/><small>core/inventory-summary<br/>core/models</small>"] --> R["resolve<br/><small>core/resolve-element or core/resolve-concept<br/>core/define-term when requested</small>"]
   R --> P["pattern<br/><small>the pattern's own templates,<br/>in table order</small>"]
   P --> Q["quality<br/><small>core/provenance</small>"]
 ```
@@ -77,6 +77,13 @@ flowchart LR
 Orientation always comes first, so an empty later result can be told from a partial export.
 Resolution comes next, so no step takes a hand-written IRI. Then the pattern's evidence. Then
 provenance, so every load-bearing element can be traced to a source.
+
+Classification questions route by explicit intent phrases such as “classified under”, not
+by the name of a SKOS concept. This pattern substitutes `core/resolve-concept` for
+`core/resolve-element`: review its candidate IRIs **and schemes**, then bind the chosen
+`CONCEPT_IRI` to `core/classified-by`. Analyse does not query the graph or choose a
+candidate automatically. Both templates read the semantic graph, so a vocabulary-only
+taxonomy is not evidence of asserted membership.
 
 The selected pattern is a starting method, not a guarantee that every clause of a multi-part
 question is covered. Reserve query budget for a load-bearing path or justified unknown for

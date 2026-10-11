@@ -44,7 +44,9 @@ class TestRoutingTableShape(unittest.TestCase):
         for name, pattern in _patterns().items():
             with self.subTest(name):
                 required = {"title", "file", "triggers", "templates", "capabilities", "stop_when"}
-                self.assertEqual(set(pattern) - {"notation_mentions"}, required)
+                self.assertEqual(set(pattern) - {"notation_mentions", "resolution"}, required)
+                if "resolution" in pattern:
+                    self.assertIn(pattern["resolution"], {"element", "concept"})
                 if "notation_mentions" in pattern:
                     self.assertEqual(name, "cross-notation")
                     self.assertGreaterEqual(len(set(pattern["notation_mentions"])), 2)
@@ -77,6 +79,17 @@ class TestPatternsPointAtRealThings(unittest.TestCase):
             if missing:
                 unknown[name] = missing
         self.assertEqual(unknown, {}, f"patterns naming templates that do not exist: {unknown}")
+
+    def test_concept_resolution_patterns_have_a_concept_parameter_to_bind(self):
+        catalog = load_catalog()
+        self.assertIn("core/resolve-concept", catalog.names)
+        for name, pattern in _patterns().items():
+            if pattern.get("resolution") == "concept":
+                with self.subTest(name):
+                    self.assertTrue(any(
+                        "CONCEPT_IRI" in catalog.get(template).parameters
+                        for template in pattern["templates"]
+                    ))
 
     def test_every_capability_gate_names_a_real_capability(self):
         """So a planner can trust the gate, and a renamed capability cannot rot silently."""

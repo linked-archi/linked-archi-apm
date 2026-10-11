@@ -1,6 +1,6 @@
 # Template catalogue
 
-Thirty-nine tested templates. Each one declares what it answers, what it does **not** prove, what it
+Forty tested templates. Each one declares what it answers, what it does **not** prove, what it
 needs from the profile, and which templates to use instead when it is refused.
 
 `la-query catalog show <name>` is the authoritative parameter list — read it rather than the `.rq`
@@ -18,14 +18,14 @@ python3 scripts/la-query catalog dump --profile linked-archi-default \
 | Stage | Templates | Purpose |
 |---|---|---|
 | [orientation](#orientation) | 4 | Run these first, every session. They establish what is actually loaded, so an empty later result can be told from a partial export. |
-| [resolution](#resolution) | 5 | Turn a name a user typed into an IRI. Never construct an IRI from a label. |
+| [resolution](#resolution) | 6 | Turn a name a user typed into an IRI. Never construct an IRI from a label. |
 | [discovery](#discovery) | 3 | Find out what predicates and relationship types this dataset actually uses, before assuming one. |
 | [analysis](#analysis) | 10 | The questions people actually ask: what depends on what, what realises what, what crosses a layer. |
 | [views](#views) | 6 | Diagrams: what is drawn, where, and what differs between two of them. |
 | [enrichment](#enrichment) | 3 | Attributes only some notations carry, such as lifecycle and ownership. |
 | [quality](#quality) | 8 | Whether the model can be trusted to answer at all: gaps, orphans, provenance, identity, conformance. |
 
-Thirty-three are cross-notation. Six are notation-specific: one each for ArchiMate, C4, Backstage and LeanIX, and two for BPMN. A notation template is gated on the vocabulary IRI it is written against, never on a notation label.
+Thirty-four are cross-notation. Six are notation-specific: one each for ArchiMate, C4, Backstage and LeanIX, and two for BPMN. A notation template is gated on the vocabulary IRI it is written against, never on a notation label.
 
 ## Which one to reach for
 
@@ -39,6 +39,7 @@ then cite its sources. Analyse owns that orchestration. Render-only work needs m
 |---|---|---|
 | "what is loaded?", "how much of X?" | `core/inventory-summary`, then `core/inventory` | a count means nothing until you know the dataset is whole |
 | "what does *Order Service* mean here?" | `core/resolve-element`, then `core/define-term` | a label is not an IRI, and one label often matches several |
+| "which elements are classified under *Arch component*?" | `core/resolve-concept`, then `core/classified-by` | classification intent chooses the method; SKOS labels resolve concept and scheme candidates, not query intent |
 | "what does X relate to?" | `core/neighbours-qualified` | the qualified form is what converters emit by default |
 | "what breaks if X changes?" | `core/dependents-qualified` | bounded to two hops, and answers reachability rather than impact |
 | "what connects capabilities to applications?" | `core/traceability` | the question is about two *types*, not two named things |
@@ -321,6 +322,27 @@ Resolve a name a user typed to candidate IRIs, best candidate first.
 **Requires.** graphs `semantic`
 
 **Instead, when refused.** `core/resolve-model`, `core/define-term`
+
+### `core/resolve-concept`
+
+Resolve a quoted SKOS classification term to candidate concept IRIs and schemes.
+
+**Answers.** Which classification concepts in the semantic graph match a name or alternative label, ranked exact, prefix, then substring.
+
+!!! warning "Does not prove"
+    That the first candidate is intended, or that every published taxonomy is attached. Review all exact matches across schemes before binding `CONCEPT_IRI`.
+
+| Parameter | Type | Default |
+|---|---|---|
+| `TERM` | string | required |
+| `LIMIT` | integer (range 1..100) | `25` |
+
+**Requires.** roles `label`, `alt_label`, `broader`, `in_scheme`; graphs `semantic`
+
+The resolver accepts `skos:inScheme` on the concept or one `skos:broader` hop to a
+parent with `skos:inScheme`. It does not scan a vocabulary-only graph or an
+unbounded hierarchy; `core/classified-by` likewise requires classification facts
+in the semantic graph.
 
 ### `core/resolve-model`
 

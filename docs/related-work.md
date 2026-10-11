@@ -171,7 +171,7 @@ with substantially lower latency and cost per question than comparable systems.
 The shared premise is the important part: schema metadata beats unaided generation, and validation
 belongs before execution rather than after a confusing result. This package agrees on both and
 differs on what gets generated. Instead of retrieving examples to condition a model, it ships
-thirty-nine templates whose parameters are typed and whose vocabulary is bound by
+forty templates whose parameters are typed and whose vocabulary is bound by
 [profile](concepts/profile.md) roles at render time. Validation is the fallback path for a
 hand-written query, not the main one.
 

@@ -50,6 +50,12 @@ With `--profile`, each selected entry also carries `available`, `unmet` and `pro
 payload and complete entry metadata remain the same with filters; without filters, `catalog dump`
 still emits the whole catalogue. Prefer a selected dump when only a few templates are relevant.
 
+For taxonomy-classification questions, `la-analyse` selects `core/resolve-concept`
+before `core/classified-by`. The former searches SKOS names in the semantic graph
+and returns candidate concept IRIs **with schemes**; review all exact candidates
+and truncation before supplying `CONCEPT_IRI`. A taxonomy label is not a routing
+instruction or an IRI.
+
 ### Project-owned catalogue extensions
 
 A downstream skill may package a project-owned `catalog.json` and its `.rq` files,
