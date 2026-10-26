@@ -494,7 +494,7 @@ def refresh_unqualified_forms(meta_root: Path) -> int:
     ):
         cls, pred = str(row["c"])[1:-1], str(row["u"])[1:-1]
         # Keep only class -> predicate. The ontologies also declare the pair on the
-        # qualified *property* (am:qualifiedServes), which is the same mapping from
+        # qualified *property* (am:qualifiedServing), which is the same mapping from
         # the other side and would collide on the same key space.
         local = cls.rsplit("#", 1)[-1]
         if not local[:1].isupper():

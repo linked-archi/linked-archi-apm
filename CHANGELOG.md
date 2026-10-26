@@ -10,6 +10,16 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 
+### Changed
+- **Fixtures re-extracted from the current converters.** Each relationship is reached from its
+  source by its type's own qualified predicate, now named after its class as the published
+  vocabularies name it (`am:qualifiedFlow`, `bs:qualifiedOwnership`, `lmm:qualifiedRequiring`,
+  `c4:qualifiedUsing`), where the ArchiMate fixture carried core's generic
+  `arch:hasQualifiedRelationship`; view nodes name their container (`arch-vis:inNode`); a LeanIX
+  fact sheet's category is its type and `lmm:subType`. No template reads the qualified predicates,
+  so no query changes. The default profile's note on `has_qualified_rel` says when the fallback
+  appears.
+
 ## [0.9.0] - 2026-10-11
 
 ### Added

@@ -55,9 +55,9 @@ Consequences, all of which the tests encode:
 
 | File | Quads | Graphs | What it is |
 |---|---|---|---|
-| `base.trig` | 3320 | 17 | Real converter output, trimmed. The default case. |
-| `augmented.trig` | 3433 | 19 | `base` plus what converters never emit. |
-| `flat.ttl` | 3320 | 0 | `base` with graph identity discarded. |
+| `base.trig` | 3333 | 17 | Real converter output, trimmed. The default case. |
+| `augmented.trig` | 3446 | 19 | `base` plus what converters never emit. |
+| `flat.ttl` | 3333 | 0 | `base` with graph identity discarded. |
 | `converter-1.3.trig` | 284 | 4 | Real converter output, **verbatim**. The one PARTITIONED fixture. |
 | `vocabulary.ttl` | 843 | 0 | Published vocabulary: BPMN taxonomy, plus the core property axioms. |
 | `semantic-schemes.ttl` | 29 | 0 | Selected statements from the published ArchiMate 4 taxonomy and viewpoint catalog. |

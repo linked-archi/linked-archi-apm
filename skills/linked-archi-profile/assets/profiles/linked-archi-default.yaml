@@ -198,8 +198,11 @@ roles:
   # arch:QualifiedRelationship - am:Access, bpmn:SequenceFlow, bs:Ownership.
   # There is no arch:relType predicate.
   rel_type: rdf:type
-  # Generic link from an element to its qualified relationship. Emitted only
-  # with ArchiMate's --emit-qualified-rel-triples.
+  # Generic link from an element to its qualified relationship: core's fallback.
+  # Every converter links a source to its relationship by the type's own
+  # qualified predicate, named after the class (am:qualifiedServing for
+  # am:Serving), and uses this one only for a type that has none, or one a type
+  # mapping retyped without naming a qualified predicate for it.
   has_qualified_rel: arch:hasQualifiedRelationship
 
   # --- RDF 1.2 reification bridge ------------------------------------------

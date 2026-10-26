@@ -19,7 +19,7 @@ claims against the file in front of you, nobody has.
 
 ```console
 $ python3 scripts/la-profile verify --profile linked-archi-default --data fixtures/base.trig
-local store: 1 file(s), 3320 quad(s), 17 named graph(s)
+local store: 1 file(s), 3333 quad(s), 17 named graph(s)
   store: parsed into memory in 5 ms (mode memory)
 warn roles.reifies                      bound to http://www.w3.org/1999/02/22-rdf-syntax-ns#reifies but unused in this dataset
 warn roles.unqualified_form             bound to https://meta.linked.archi/core#unqualifiedForm but unused in this dataset
