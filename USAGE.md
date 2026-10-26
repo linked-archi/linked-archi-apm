@@ -117,7 +117,7 @@ does not generate or copy a shared payload.
 ```bash
 APM_SOURCE=/absolute/path/to/linked-archi-apm
 apm install "$APM_SOURCE"
-apm install linked-archi/linked-archi-apm#v0.9.0
+apm install linked-archi/linked-archi-apm#v0.9.1
 ```
 
 That is the whole happy path. The rest of this section is for when the default is not
@@ -310,8 +310,8 @@ apm update -g                    # user-scope dependencies
 apm update --yes                 # CI and scripts
 ```
 
-A pinned ref does not move on its own: `apm install linked-archi/linked-archi-apm#v0.9.0`
-means v0.9.0 until you change the ref in your own manifest and install again. In CI prefer
+A pinned ref does not move on its own: `apm install linked-archi/linked-archi-apm#v0.9.1`
+means v0.9.1 until you change the ref in your own manifest and install again. In CI prefer
 [`apm install --frozen`](https://microsoft.github.io/apm/reference/cli/install/), which
 deploys exactly what `apm.lock.yaml` records and fails on drift rather than quietly moving.
 `apm update` refreshes dependencies, not the APM binary — that is `apm self-update` or your

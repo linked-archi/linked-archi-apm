@@ -54,14 +54,19 @@ class TestPublishedArchiMate4Schemes(unittest.TestCase):
             profile_id=profile.name, profile_version=profile.profile_version,
             limit=200,
         ).rows
-        self.assertEqual({row["scheme"] for row in category_rows},
+        # The exact name is the taxonomy's category. Other schemes may offer looser
+        # candidates, ranked after it - the published catalogue has a viewpoint called
+        # "Application domain, multiple aspects" - which is what review is for.
+        self.assertEqual({row["scheme"] for row in category_rows if row["rank"] == "1 exact"},
                          {"https://meta.linked.archi/archimate4/tax#"})
+        self.assertEqual(category_rows[0]["concept"],
+                         "https://meta.linked.archi/archimate4/tax#ApplicationDomain")
         listed = render("core/viewpoint-catalog", profile, {}, catalog=catalog)
         viewpoint_rows = adapter.execute(
             listed.query, template="core/viewpoint-catalog", profile_id=profile.name,
             profile_version=profile.profile_version, limit=3000,
         ).rows
-        self.assertIn("https://meta.linked.archi/archimate4/viewpoints#CapabilityMap",
+        self.assertIn("https://meta.linked.archi/archimate4/viewpoints#CapabilityMapViewpoint",
                       {row["viewpoint"] for row in viewpoint_rows})
 
     def test_verification_detects_a_missing_viewpoint_catalog(self):

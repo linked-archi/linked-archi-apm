@@ -18,17 +18,14 @@ am4vp:ViewpointCatalog a skos:ConceptScheme ;
 am4vp:StrategyViewpoints a skos:Concept ;
     skos:prefLabel "Strategy Viewpoints"@en ;
     skos:inScheme am4vp:ViewpointCatalog ;
-    skos:narrower am4vp:CapabilityMap .
+    skos:narrower am4vp:CapabilityMapViewpoint .
 
-am4vp:CapabilityMap a arch:Viewpoint ;
+am4vp:CapabilityMapViewpoint a arch:Viewpoint ;
     skos:prefLabel "Capability Map Viewpoint"@en ;
-    skos:definition '''Shows the capabilities of the enterprise and how they are
-composed and related, typically as a hierarchical map.'''@en ;
-    arch:includesConcept am4:Capability, am4:Resource, am4:ValueStream,
-                         am4:CourseOfAction, am4:Outcome ;
-    arch:targetsStakeholder am4vp:EnterpriseArchitect, am4vp:CIO,
-                            am4vp:BusinessManager ;
-    arch:viewpointHasPurpose am4vp:Deciding, am4vp:Informing ;
+    skos:definition "The enterprise's capabilities, the resources they need and the outcomes they produce."@en ;
+    arch:includesConcept am4:AndJunction, am4:Capability, am4:Grouping, am4:OrJunction, am4:Outcome, am4:Resource ;
+    arch:targetsStakeholder am4vp:BusinessArchitect, am4vp:BusinessManager, am4vp:EnterpriseArchitect ;
+    arch:viewpointHasPurpose am4vp:Deciding, am4vp:Designing ;
     skos:inScheme am4vp:ViewpointCatalog ;
     skos:broader am4vp:StrategyViewpoints ;
-    arch:viewType arch:Diagram, arch:Catalog .
+    arch:viewType arch:Catalog, arch:Diagram .

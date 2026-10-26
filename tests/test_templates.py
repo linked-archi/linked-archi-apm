@@ -88,7 +88,7 @@ CASES: dict[str, tuple[dict, int]] = {
     "core/validation-summary": ({}, 1),
     "core/views": ({}, 2),
     "core/viewpoint-catalog": ({}, 1),
-    "core/viewpoint-detail": ({"VIEWPOINT_IRI": "https://meta.linked.archi/archimate4/viewpoints#CapabilityMap"}, 1),
+    "core/viewpoint-detail": ({"VIEWPOINT_IRI": "https://meta.linked.archi/archimate4/viewpoints#CapabilityMapViewpoint"}, 1),
     "core/view-contents": ({"VIEW_IRI": support.C4_VIEW}, 3),
     # The semantic route to the same three. arch:inView reaches four subjects on this
     # view - the three elements and one relationship drawn between two of them - so a
@@ -328,7 +328,7 @@ class TestAgainstAugmentedFixture(unittest.TestCase):
             limit=200,
         )
         self.assertEqual({row["concept"] for row in envelope.rows},
-                         {"https://meta.linked.archi/archimate4/viewpoints#CapabilityMap"})
+                         {"https://meta.linked.archi/archimate4/viewpoints#CapabilityMapViewpoint"})
         self.assertEqual({row["scheme"] for row in envelope.rows},
                          {"https://meta.linked.archi/archimate4/viewpoints#ViewpointCatalog"})
 
@@ -338,7 +338,7 @@ class TestAgainstAugmentedFixture(unittest.TestCase):
             catalog.query, template="core/viewpoint-catalog", profile_id=self.profile.name,
             profile_version=self.profile.profile_version, limit=300,
         ).rows
-        viewpoint = "https://meta.linked.archi/archimate4/viewpoints#CapabilityMap"
+        viewpoint = "https://meta.linked.archi/archimate4/viewpoints#CapabilityMapViewpoint"
         self.assertEqual({row["viewpoint"] for row in catalog_rows}, {viewpoint})
         self.assertEqual({row["scheme"] for row in catalog_rows},
                          {"https://meta.linked.archi/archimate4/viewpoints#ViewpointCatalog"})
@@ -354,7 +354,7 @@ class TestAgainstAugmentedFixture(unittest.TestCase):
         self.assertIn("https://meta.linked.archi/core#Catalog",
                       {row["value"] for row in detail_rows
                        if row["facet"] == "view type"})
-        self.assertEqual(len(detail_rows), 12)
+        self.assertEqual(len(detail_rows), 13)
 
     def test_the_derived_template_names_no_notation_term(self):
         """What makes it notation-agnostic, stated as a check rather than a claim.

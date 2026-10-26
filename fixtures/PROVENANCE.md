@@ -60,7 +60,7 @@ Consequences, all of which the tests encode:
 | `flat.ttl` | 3333 | 0 | `base` with graph identity discarded. |
 | `converter-1.3.trig` | 284 | 4 | Real converter output, **verbatim**. The one PARTITIONED fixture. |
 | `vocabulary.ttl` | 843 | 0 | Published vocabulary: BPMN taxonomy, plus the core property axioms. |
-| `semantic-schemes.ttl` | 29 | 0 | Selected statements from the published ArchiMate 4 taxonomy and viewpoint catalog. |
+| `semantic-schemes.ttl` | 30 | 0 | Selected statements from the published ArchiMate 4 taxonomy and viewpoint catalog. |
 | `shapes.ttl` | 3744 | 0 | Published SHACL: which relationship may connect which types. |
 | `unqualified-forms.json` | 75 pairs | — | Extracted `arch:unqualifiedForm` mappings. Not RDF. |
 
@@ -462,15 +462,19 @@ yet — recorded in `PROPOSAL.md` B5.
 **Source.** `linked-archi-meta/modelingLanguages/archimate/4.0/archimate4-tax.ttl`
 and `archimate4-viewpoints.ttl`, published at `https://meta.linked.archi/`.
 This is an excerpt of those RDF assets, not converter output or a synthetic
-taxonomy. Its 29 statements are in the default graph, as they are when the
+taxonomy. Its 30 statements are in the default graph, as they are when the
 published Turtle is loaded by `la-connect`.
 
 **Selection rule.** From the taxonomy, take the scheme resource and
 `StrategyDomain`; from the viewpoint library, take `ViewpointCatalog`,
-`StrategyViewpoints`, and `CapabilityMap`. For those subjects, select only the
+`StrategyViewpoints`, and `CapabilityMapViewpoint`. For those subjects, select only the
 `rdf:type`, `skos:prefLabel`, `skos:inScheme`, and `skos:narrower` statements
-needed to navigate the schemes, plus the published `CapabilityMap` definition,
+needed to navigate the schemes, plus the published `CapabilityMapViewpoint` definition,
 broader category, included concepts, stakeholders, purposes, and view types.
+Links run between the selected subjects only: the viewpoint's other broader concept
+(`StrategyDomainOnly`, its scope) and the other narrower concepts of
+`StrategyDomain` and `StrategyViewpoints` are left out, so nothing in the extract
+points at a concept it does not describe.
 The literal wording and IRIs remain those of the source files. This bounded
 extract tests scheme-aware queries; it is not a complete ArchiMate 4 catalog,
 so missing entries in this fixture do not imply missing published viewpoints.

@@ -152,7 +152,7 @@ package checkout. The package declares no `targets:`, so APM auto-detects your r
 from the consumer and promotes each of the six skills into it:
 
 ```bash
-apm install linked-archi/linked-archi-apm#v0.9.0
+apm install linked-archi/linked-archi-apm#v0.9.1
 apm install /absolute/path/to/linked-archi-apm   # local clone
 ```
 

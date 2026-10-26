@@ -10,6 +10,14 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-10-26
+
+### Fixed
+- **Profile verification with a resolved profile.** A resolved snapshot gives
+  `conforms_to_metamodel` as a list of IRIs; the metamodel-pairing and notation-presence
+  checks, and dataset observation, interpolated it as a single CURIE and so built no valid
+  query. Every alternative is now written as a SPARQL predicate path.
+
 ### Changed
 - **Fixtures re-extracted from the current converters.** Each relationship is reached from its
   source by its type's own qualified predicate, now named after its class as the published
@@ -19,6 +27,10 @@ workflow publishes exactly this text, so what is written here is what a consumer
   fact sheet's category is its type and `lmm:subType`. No template reads the qualified predicates,
   so no query changes. The default profile's note on `has_qualified_rel` says when the fallback
   appears.
+- **`semantic-schemes.ttl` re-extracted from the published ArchiMate 4 viewpoint catalogue**,
+  which now follows Appendix C: the Capability Map is `am4vp:CapabilityMapViewpoint`, with the
+  stakeholders, purposes and included types published for it. Templates are unchanged; the tests
+  name the current IRI.
 
 ## [0.9.0] - 2026-10-11
 
@@ -625,7 +637,8 @@ converters against the meta.linked.archi ontologies.
   for SHACL validation, and `git` for Git acquisition. Endpoint and HTTPS transport use
   the standard library. No mandatory MCP server.
 
-[Unreleased]: https://github.com/linked-archi/linked-archi-apm/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/linked-archi/linked-archi-apm/compare/v0.9.1...HEAD
+[0.9.1]: https://github.com/linked-archi/linked-archi-apm/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.6.0...v0.7.0
