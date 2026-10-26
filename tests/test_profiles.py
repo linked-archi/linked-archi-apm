@@ -409,6 +409,25 @@ class TestTermResolution(unittest.TestCase):
         )
 
 
+class TestResolvedRoleVerification(unittest.TestCase):
+    """A resolved role may be a full IRI or a list, not just a scalar CURIE."""
+
+    def test_metamodel_probes_accept_absolute_and_alternative_role_bindings(self):
+        requires_pyoxigraph(self)
+        predicate = "https://meta.linked.archi/core#modelConformsToMetamodel"
+        for binding in (predicate, [predicate], ["urn:unused:conformance", predicate]):
+            with self.subTest(binding=binding):
+                profile = load_profile("linked-archi-default")
+                profile.roles["conforms_to_metamodel"] = binding
+                findings = verify_against_dataset(profile, support.load_fixture(CONVERTER_13))
+                self.assertEqual([f for f in findings if f.severity == "error"], [],
+                                 format_findings(findings))
+                present = [f.message for f in findings
+                           if f.subject == "notations.present" and f.severity == "info"]
+                self.assertIn("models present for: backstage", present)
+                self.assertTrue(any(f.subject.startswith("metamodel.") for f in findings))
+
+
 class TestDriftDetection(unittest.TestCase):
     """A profile is a set of claims. These tests check the claims get checked."""
 

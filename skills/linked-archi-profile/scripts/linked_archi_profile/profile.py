@@ -1215,9 +1215,11 @@ def _verify_metamodel_pairing(profile: Profile, adapter) -> list[Finding]:
     from another probe's answer, so the set stays deterministic for the batch planner. The
     joins that would otherwise need a second round happen inside SPARQL instead.
     """
-    conforms = profile.roles.get("conforms_to_metamodel")
-    if not conforms:
+    if not profile.has_role("conforms_to_metamodel"):
         return []
+    # Resolved snapshots carry absolute role lists. Raw interpolation only worked
+    # for a scalar CURIE; render every alternative as a SPARQL predicate path.
+    conforms = "|".join(f"<{iri}>" for iri in profile.expand_role("conforms_to_metamodel"))
 
     p = profile.prefix_block()
     findings: list[Finding] = []
@@ -1346,9 +1348,9 @@ def _verify_notation_presence(profile: Profile, adapter) -> list[Finding]:
     the same reason: a probe set that varies with a probe answer is the "unplanned probe"
     error.
     """
-    conforms = profile.roles.get("conforms_to_metamodel")
-    if not conforms:
+    if not profile.has_role("conforms_to_metamodel"):
         return []
+    conforms = "|".join(f"<{iri}>" for iri in profile.expand_role("conforms_to_metamodel"))
     p = profile.prefix_block()
     roots: dict[str, str] = {}
     for slug in sorted(profile.notations):
@@ -1931,7 +1933,10 @@ def _observe_dataset(adapter) -> tuple[Observation, ...]:
     # vocabulary" means here: a custom notation is invisible until a profile names it.
     # Measured the same way `_verify_notation_presence` measures it, because these two
     # commands must not disagree about one dataset.
-    conforms_role = lens.roles.get("conforms_to_metamodel")
+    conforms_role = (
+        "|".join(f"<{iri}>" for iri in lens.expand_role("conforms_to_metamodel"))
+        if lens.has_role("conforms_to_metamodel") else None
+    )
     notation_roots: dict[str, str] = {}
     if conforms_role:
         for slug in sorted(lens.notations):
