@@ -1,0 +1,61 @@
+# What the core and ArchiMate 3.2 questions answer on archimate3.2-questions-example.ttl. Each case: the
+# question, its bindings (over the defaults on the * line, or -), a result column and exactly the values
+# it holds (or - for none). Every finding question has a case. The questions check of the validation pipeline
+# runs every question with all its parameters and with its required ones only, in named graphs and merged,
+# on the model as written and with its inferable core and abstract types added, and passes when all four
+# agree and every case holds.
+@prefix	ex	https://meta.linked.archi/examples/archimate3.2-questions/
+@prefix	archq	https://meta.linked.archi/core-questions#
+@prefix	amq	https://meta.linked.archi/archimate3/questions#
+@prefix	am	https://meta.linked.archi/archimate3/onto#
+@prefix	amvp	https://meta.linked.archi/archimate3/viewpoints#
+*	focus=ex:server view=ex:orgView model=ex:model viewpoint=amvp:OrganizationViewpoint conceptType=am:ApplicationComponent from=ex:plateauA to=ex:plateauB
+
+# Core: findings. Bank (actor) and Bank (role) share a name across types: not duplicates.
+archq:orphans	-	element	ex:registerClaim ex:orphanService ex:crmDup ex:req2 ex:constraint ex:principle2 ex:capability2 ex:capability3
+archq:not-in-any-view	-	element	ex:handleClaim ex:registerClaim ex:claimService ex:orphanService ex:crm ex:crmDup ex:policyApp ex:newApp ex:brokerPortal ex:crmFunction ex:customerService ex:customerData ex:policyData ex:ceo ex:goal ex:req ex:req2 ex:constraint ex:principle ex:principle2 ex:capability ex:capability2 ex:capability3 ex:wp ex:deliv ex:plateauA ex:plateauB ex:bankRole
+archq:missing-definitions	-	element	ex:crm ex:crmDup ex:policyApp ex:newApp ex:brokerPortal
+archq:missing-definitions	conceptType=am:BusinessProcess	element	ex:registerClaim
+archq:duplicate-labels	-	element	ex:crm ex:crmDup
+archq:relationship-integrity	-	relationship	ex:r5
+# The node on the organisation view is out of place; the specialised device on the technology view is admitted
+# through its superclass; the legacy view's viewpoint is defined nowhere, so it is not judged but reported.
+archq:viewpoint-conformance	-	element	ex:server
+archq:viewpoint-conformance	view=ex:techView	element	-
+archq:viewpoint-conformance	view=ex:legacyView	element	-
+archq:views-with-unknown-viewpoint	-	view	ex:legacyView
+
+# Core: listings.
+archq:elements-of-type	-	element	ex:crm ex:crmDup ex:policyApp ex:newApp ex:brokerPortal
+archq:neighbours	focus=ex:crm	other	ex:server ex:crmFunction ex:customerData ex:policyData ex:deliv ex:plateauA ex:plateauB
+archq:views-showing	focus=ex:customer	view	ex:orgView
+archq:view-contents	-	concept	ex:customer ex:clerk ex:server
+archq:viewpoint-scope	-	element	ex:customer ex:clerk ex:bankActor ex:bankRole
+archq:viewpoint-scope	viewpoint=amvp:TechnologyViewpoint	element	ex:server ex:cloudServer
+archq:architecture-state	-	element	ex:newApp
+
+# ArchiMate 3.2: findings. The broker portal runs on the specialised device; the regulatory constraint is a
+# requirement and the strategic capability a capability, through the model's own subclasses.
+amq:unassigned-behaviour	-	behaviour	ex:registerClaim
+amq:unrealised-services	-	service	ex:orphanService
+amq:applications-without-technology	-	application	ex:policyApp ex:newApp ex:crmDup
+amq:data-never-written	-	object	ex:customerData
+amq:unrealised-capabilities	-	capability	ex:capability2 ex:capability3
+amq:unrealised-requirements	-	requirement	ex:req2 ex:constraint
+amq:principles-without-requirements	-	principle	ex:principle2
+
+# ArchiMate 3.2: listings. The CRM serves the policy application through the function assigned to it.
+amq:elements-by-layer	-	layer	am:StrategyLayerElement am:MotivationElement am:BusinessLayerElement am:ApplicationLayerElement am:TechnologyLayerElement am:ImplementationAndMigrationLayerElement
+amq:cross-layer-relationships	-	sourceLayer	am:TechnologyLayerElement am:BusinessLayerElement am:ImplementationAndMigrationLayerElement
+amq:impact-of-change	-	impacted	ex:crm ex:crmFunction ex:customerService ex:policyApp
+amq:plateau-difference	-	element	ex:newApp ex:policyApp
+amq:responsibility-assignments	-	performer	ex:clerk ex:customer ex:crm ex:bankActor
+amq:application-dependencies	-	provider	ex:crm
+amq:application-dependencies	-	consumer	ex:policyApp
+amq:data-access	-	accessor	ex:crm ex:policyApp
+amq:capability-realisation	-	capability	ex:capability ex:capability2 ex:capability3
+amq:capability-realisation	-	realizer	ex:handleClaim
+amq:requirement-traceability	-	other	ex:handleClaim ex:goal ex:principle
+amq:principle-rationale	-	other	ex:req
+amq:work-package-deliverables	-	realized	ex:crm
+amq:stakeholder-motivation	-	motivation	ex:goal

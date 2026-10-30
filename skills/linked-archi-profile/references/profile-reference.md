@@ -210,7 +210,7 @@ about one should not have templates depending on it silently.
 
 | Capability | Default | Why |
 |---|---|---|
-| `direct_rel_triples` | `false` | `--emit-direct-rel-triples` is off by default, so the qualified form is usually the only form. Verified zero in every default-flag output. Its probe is **three-valued** — see below. |
+| `direct_rel_triples` | `false` | The bundled default describes output without them: from a converter before they became its default, or run with `--no-emit-direct-rel-triples`. Current converters write them; `linked-archi-direct` describes that, and `verify` warns when the data has them and the profile says not. Its probe is **three-valued** — see below. |
 | `rdf_reifies` | `false` | Two claims in one flag: the dataset carries the RDF 1.2 bridge, **and** the engine parses `<<( s p o )>>`. No converter emits the bridge, and on a SPARQL 1.1 endpoint the syntax is a parse error rather than an empty result — so the three reified templates are refused at render time. Do not set it true to "try": a triple term is not an asserted triple, so it cannot stand in for `direct_rel_triples`. |
 | `views_graph` | `partial` | Absent entirely for Backstage and LeanIX output. |
 | `view_geometry` | `partial` | ArchiMate carries bounds; Structurizr and PlantUML emit topology without them. |
@@ -218,6 +218,7 @@ about one should not have templates depending on it silently.
 | `element_lifecycle` | `partial` | Notation-specific and sparse. |
 | `concept_owner` | `false` | Not emitted by any converter. |
 | `validation_in_graph` | `false` | The report is a document, not a graph. |
+| `union_default_graph` | `false` | An endpoint's default graph is the union of its named graphs. Not probed: say so when the store is configured that way. A model question reads the dataset as one graph, which local data is read as on request, and an endpoint only with this claim. |
 
 `verify` probes each of these. Claimed true but absent is an **error**; claimed false
 but present is a **warning**, because you are refusing templates unnecessarily.

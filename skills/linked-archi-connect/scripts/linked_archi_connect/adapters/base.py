@@ -40,6 +40,11 @@ class RawResult:
     dataset_id: str = "<unset>"
     named_graphs_present: bool | None = None
     description: str = ""
+    #: How the query's default graph was read: ``None`` as stored, ``"union"`` as the RDF
+    #: merge of every graph in the dataset. Echoed rather than assumed, so a caller that
+    #: asked for the union can tell it got it - an older backend that ignored the request
+    #: would otherwise answer from an empty default graph, which reads as "none found".
+    default_graph: str | None = None
 
     @property
     def row_count(self) -> int:
@@ -54,6 +59,31 @@ class RawResult:
 
 class AdapterError(RuntimeError):
     """A backend or required companion could not safely execute a query."""
+
+
+#: The ways a query's default graph can be read. ``None`` is the default graph as stored,
+#: deliberately not the union (see adapters/local.py); ``"union"`` is asked for per query,
+#: by a query written for one graph - a model question, which reads the model and its
+#: metamodel as la-gram holds them.
+DEFAULT_GRAPH_MODES = (None, "union")
+
+
+def _check_default_graphs(default_graphs: Sequence[Any] | None, count: int) -> list[str | None]:
+    if default_graphs is None:
+        return [None] * count
+    if isinstance(default_graphs, (str, bytes)) or not isinstance(default_graphs, Sequence):
+        raise AdapterError("default_graphs must be a list, one entry per query")
+    modes = list(default_graphs)
+    if len(modes) != count:
+        raise AdapterError(
+            f"default_graphs has {len(modes)} entries for {count} queries; give one per query"
+        )
+    for mode in modes:
+        if mode not in DEFAULT_GRAPH_MODES:
+            raise AdapterError(
+                f"default graph {mode!r} is not one of: null (as stored), \"union\""
+            )
+    return modes
 
 
 REQUIRED_QUERY_SKILL = "linked-archi-query"
@@ -163,8 +193,14 @@ class Adapter(ABC):
     sparql_12: bool = False
 
     @abstractmethod
-    def _execute_raw(self, query: str, timeout_ms: int | None = None) -> RawResult:
-        """Backend hook. Callers must use :meth:`execute` or :meth:`execute_many`."""
+    def _execute_raw(
+        self, query: str, timeout_ms: int | None = None, default_graph: str | None = None
+    ) -> RawResult:
+        """Backend hook. Callers must use :meth:`execute` or :meth:`execute_many`.
+
+        ``default_graph="union"`` reads the query's default graph as the RDF merge of every
+        graph in the dataset; a backend that cannot must refuse rather than ignore it.
+        """
 
     def _decorate(self, raw: RawResult, started: float) -> RawResult:
         return replace(
@@ -179,9 +215,16 @@ class Adapter(ABC):
         )
 
     def execute_many(
-        self, queries: Sequence[str], timeout_ms: int | None = None
+        self,
+        queries: Sequence[str],
+        timeout_ms: int | None = None,
+        default_graphs: Sequence[str | None] | None = None,
     ) -> list[RawResult]:
-        """Validate the complete batch, then execute it without partial unsafe work."""
+        """Validate the complete batch, then execute it without partial unsafe work.
+
+        ``default_graphs`` gives each query's reading of the default graph, one entry per
+        query; absent, every query reads it as stored.
+        """
         query_list = list(queries)
         if not query_list or any(not isinstance(query, str) or not query.strip() for query in query_list):
             raise AdapterError("execute_many requires a non-empty sequence of queries")
@@ -191,13 +234,17 @@ class Adapter(ABC):
             or timeout_ms <= 0
         ):
             raise AdapterError("timeout_ms must be a positive integer or null")
+        modes = _check_default_graphs(default_graphs, len(query_list))
         validate_queries_readonly(query_list)
         results: list[RawResult] = []
-        for index, query in enumerate(query_list):
+        for index, (query, mode) in enumerate(zip(query_list, modes)):
             started = time.perf_counter()
-            decorated = self._decorate(
-                self._execute_raw(query, timeout_ms=timeout_ms), started
+            raw = (
+                self._execute_raw(query, timeout_ms=timeout_ms, default_graph=mode)
+                if mode
+                else self._execute_raw(query, timeout_ms=timeout_ms)
             )
+            decorated = replace(self._decorate(raw, started), default_graph=mode)
             # The load was paid ONCE, before the first query, so only the first result
             # carries it. Stamping every result would make one parse read as N of them
             # and turn the whole point of a batch into a mystery: the reported load
@@ -207,10 +254,18 @@ class Adapter(ABC):
         return results
 
     def execute(
-        self, query: str, timeout_ms: int | None = None, **_legacy_context: Any
+        self,
+        query: str,
+        timeout_ms: int | None = None,
+        default_graph: str | None = None,
+        **_legacy_context: Any,
     ) -> RawResult:
         """Execute one query through the mandatory query-owner safety contract."""
-        return self.execute_many([query], timeout_ms=timeout_ms)[0]
+        if default_graph is None:
+            return self.execute_many([query], timeout_ms=timeout_ms)[0]
+        return self.execute_many(
+            [query], timeout_ms=timeout_ms, default_graphs=[default_graph]
+        )[0]
 
     def ask(self, query: str) -> bool:
         """Execute a validated ASK probe."""

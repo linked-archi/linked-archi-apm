@@ -43,6 +43,17 @@ printf '%s' "$REQUEST" | python3 scripts/la-connect _machine execute
 
 `execute-many` replaces `query` with `queries`, a non-empty array of strings.
 
+**`default_graph`** is optional: `null` (the default) reads the default graph as stored,
+and `"union"` reads it as the RDF merge of every graph in the dataset — each triple once,
+however many graphs hold it. `execute-many` takes `default_graphs` instead, an array with
+one `null` or `"union"` per query. The union is asked for per query, never for a whole
+target: the query owner asks for it only for a model question, which is written for the
+model and its metamodel in one graph. Local data only — an endpoint refuses it, because
+what its default graph holds is the server's decision; a profile declaring
+`capabilities.union_default_graph` lets the query owner send such a query to it unchanged.
+The local reading is a merged copy of the store, built once per process on the first such
+query: memory for a second copy of the dataset, not a second parse.
+
 `target` is **exactly** connect target version 1 — `data`, `endpoint`, `timeout_ms`,
 `lenient`, `store`, and nothing else. Any other key is rejected rather than ignored, which
 is what lets `la-source` hand its `target` through unchanged: a caller that merges manifest
@@ -102,6 +113,7 @@ Summing `load_ms` across the results therefore gives one load.
 | `load_ms` | Milliseconds spent obtaining the store before the query ran, as distinct from running it. `0` for an endpoint, where the question does not apply, and near-zero on a cached local store. Reported because the two are not comparable work: on a large local dataset the load can exceed the query by orders of magnitude while `elapsed_ms` shows single digits. |
 | `dataset_id` | What was queried, stable enough to cite in an answer. |
 | `named_graphs_present` | Whether the loaded data has named graphs, or `null` for an endpoint. Callers use it to warn that a graph-scoped query will behave differently. |
+| `default_graph` | How the default graph was read: `null` as stored, `"union"` as the merge of every graph. Echoed, so a caller that asked for the union can confirm it got it rather than an answer from an empty default graph. |
 | `description` | Multi-line human-readable summary of the target — store kind, counts, one line per file, then where the store came from and what that cost, and the cache directory when one was used. Diagnostics only; do not parse it. Read `load_ms` for the number and `store` for the setting. |
 
 There is no `row_count` on the wire. Count `rows`, or read `boolean`. A count field would

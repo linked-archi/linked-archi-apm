@@ -182,9 +182,13 @@ class TestCatalogueIntegrity(unittest.TestCase):
                     self.assertIn(alternative, self.catalog)
 
     def test_gated_templates_offer_an_alternative(self):
-        """A refusal that offers nowhere to go is only half an answer."""
+        """A refusal that offers nowhere to go is only half an answer.
+
+        Templates only. A model question with no template of its name has no alternative to
+        offer, so its refusal names what lifts it instead - see tests/test_questions.py.
+        """
         for entry in self.catalog:
-            if not entry.requires.capabilities:
+            if not entry.file or not entry.requires.capabilities:
                 continue
             with self.subTest(entry.name):
                 self.assertTrue(
@@ -237,6 +241,8 @@ class TestCatalogueIntegrity(unittest.TestCase):
         names its own placeholders as documentation.
         """
         for entry in self.catalog:
+            if not entry.file:
+                continue  # a model question renders no roles
             code = "".join(
                 "" if is_comment else chunk
                 for is_comment, chunk in split_comments(entry.path.read_text())
@@ -264,6 +270,8 @@ class TestCatalogueIntegrity(unittest.TestCase):
         independent scope on the same role, so `semantic2` declares `semantic`.
         """
         for entry in self.catalog:
+            if not entry.file:
+                continue  # a model question reads the dataset as one graph
             code = "".join(
                 "" if is_comment else chunk
                 for is_comment, chunk in split_comments(entry.path.read_text())
@@ -289,6 +297,8 @@ class TestCatalogueIntegrity(unittest.TestCase):
         answers wrongly instead of refusing.
         """
         for entry in self.catalog:
+            if not entry.file:
+                continue
             code = "".join(
                 "" if is_comment else chunk
                 for is_comment, chunk in split_comments(entry.path.read_text())
@@ -305,7 +315,7 @@ class TestCatalogueIntegrity(unittest.TestCase):
 
     def test_notation_templates_live_under_their_notation(self):
         for entry in self.catalog:
-            if entry.notation:
+            if entry.notation and entry.file:
                 with self.subTest(entry.name):
                     self.assertTrue(entry.file.startswith(f"notation/{entry.notation}/"))
 
@@ -362,11 +372,14 @@ class TestGating(unittest.TestCase):
         changes what the package claims real datasets can answer.
         """
         profile = load_profile("linked-archi-default")
-        refused = {entry.name for entry, _ in self.catalog.refused(profile)}
+        # Templates; the model questions refused here are pinned in tests/test_questions.py.
+        refused = {entry.name for entry, _ in self.catalog.refused(profile) if entry.file}
         self.assertEqual(
             refused,
             {
-                # --emit-direct-rel-triples is off by default: zero direct triples.
+                # The profile describes output without direct triples
+                # (--no-emit-direct-rel-triples, or a converter from before they were
+                # the default): zero direct triples.
                 "core/dependents-direct",
                 # Identity is authored; owl:sameAs and skos:exactMatch are both zero.
                 "core/identity-audit",
@@ -390,15 +403,18 @@ class TestGating(unittest.TestCase):
         )
 
     def test_curated_profile_supports_everything(self):
+        """Every template; the model questions it refuses are ArchiMate 4.0's, a notation
+        the curated store does not declare (tests/test_questions.py)."""
         profile = load_profile("curated-store")
-        self.assertEqual(self.catalog.refused(profile), [])
-        self.assertEqual(len(self.catalog.available(profile)), len(self.catalog))
+        self.assertEqual([e.name for e, _ in self.catalog.refused(profile) if e.file], [])
+        templates = [entry for entry in self.catalog if entry.file]
+        self.assertTrue(all(entry.check_template(profile).ok for entry in templates))
 
     def test_missing_graph_role_is_a_warning_when_there_are_no_graphs(self):
         """Flattened data may still hold the facts; it just cannot separate them."""
         flat = load_profile("flattened-turtle")
         entry = self.catalog.get("core/neighbours-qualified")
-        verdict = entry.check(flat)
+        verdict = entry.check_template(flat)
         self.assertTrue(verdict.ok)
         self.assertTrue(verdict.warnings)
 
@@ -545,7 +561,9 @@ class TestGating(unittest.TestCase):
         for name in ("linked-archi-default", "curated-store", "flattened-turtle"):
             profile = load_profile(name)
             for entry in self.catalog:
-                if not entry.notation_namespace:
+                # Templates: the ArchiMate 4.0 model questions are refused by these
+                # profiles legitimately - none of them describes an ArchiMate 4.0 dataset.
+                if not entry.notation_namespace or not entry.file:
                     continue
                 with self.subTest(f"{name}:{entry.name}"):
                     self.assertIsNotNone(

@@ -20,6 +20,11 @@ packages got wrong:
     nothing against flattened Turtle - both verified, not assumed. Because the profile
     decides, one template serves both, plus a curated store with literal graph IRIs.
 
+A model question is rendered differently: it has no placeholders, because it is written
+for one graph and the published vocabulary. Its prefixes come from its question set, its
+parameters are pre-bound with ``VALUES`` where la-gram and meta's question check bind them,
+and the result records that it must be asked of the dataset read as one graph.
+
 Plus ``{{PARAM}}`` for typed user input. Parameters are type-checked and escaped rather than
 substituted: a raw ``str.replace`` on user input is an injection hole, and it also forces the
 caller to supply their own angle brackets, which is the kind of detail that silently produces
@@ -35,6 +40,7 @@ from urllib.parse import urlparse
 
 from .catalog import Catalog, TemplateEntry, Verdict, load_catalog
 from .contract import ResolvedProfile
+from .questions import Probe, QuestionError, build_query, metamodel_probes
 from .validate import QueryError, split_comments, validate_readonly
 
 def graph_var(role: str) -> str:
@@ -111,6 +117,33 @@ class UnsupportedTemplate(RenderError):
             f"{profile.name!r}:\n{reasons}{hint}\n"
             "This is a refusal, not an empty result: running it anyway would "
             "return no rows and read as 'nothing exists'."
+        )
+
+
+class QuestionNotAsked(RenderError):
+    """A model question whose metamodel the dataset does not carry.
+
+    Decided after the dataset is read, by the question's probes, so it is a refusal at run
+    time rather than at render time - but a refusal all the same: asked anyway, the question
+    answers from what is loaded, and its empty result reads as "none".
+    """
+
+    def __init__(self, name: str, missing: Sequence[Probe], alternatives: Sequence[str] = ()) -> None:
+        self.missing = tuple(missing)
+        needs = "\n".join(
+            f"  - {probe.needs}" + (f": load {probe.load} beside the data" if probe.load else "")
+            for probe in missing
+        )
+        hint = (
+            "\nTry instead: " + ", ".join(alternatives) + " (same question, different evidence)."
+            if alternatives else ""
+        )
+        super().__init__(
+            f"Model question {name!r} was not asked: the dataset does not carry what it reads.\n"
+            f"{needs}\n"
+            "Pass the published Turtle with another --data. This is a refusal, not an empty "
+            "result: asked without it, the question would answer from what is loaded, and "
+            f"no rows would read as 'none'.{hint}"
         )
 
 
@@ -449,6 +482,17 @@ class Rendered:
     #: default, so a complete 200-row result was flagged incomplete and a result
     #: genuinely capped at 25 was flagged complete. One producer, one value.
     row_limit: int | None = None
+    #: ``template``, ``question``, or ``None`` for an ad-hoc query.
+    implementation: str | None = "template"
+    #: The model question's IRI, when one was rendered.
+    question: str | None = None
+    #: How the query must read the default graph: ``"union"`` - the dataset as one graph -
+    #: for a model question on local data with named graphs; ``None`` as stored.
+    default_graph: str | None = None
+    #: ASKs the dataset must answer true for a model question to mean what it says.
+    probes: tuple[Probe, ...] = ()
+    #: For a model question that is a finding: its focus column and severity.
+    finding: dict[str, str] | None = None
 
     def __str__(self) -> str:
         return self.query
@@ -460,20 +504,38 @@ def render(
     params: Mapping[str, Any] | None = None,
     catalog: Catalog | None = None,
     strict: bool = True,
+    transport: str | None = None,
+    implementation: str | None = None,
 ) -> Rendered:
     """Render ``template`` against ``profile``.
 
     ``strict=False`` renders a template the profile does not support, for
     inspection only. It still validates read-only, and the caller is expected not
     to execute it - the point of looking is usually to explain the refusal.
+
+    ``transport`` (``local``, ``endpoint`` or ``None``) decides how a model question reads
+    the dataset, and whether it can. ``implementation`` forces ``question`` or ``template``
+    for an entry that has both; by default the entry chooses (:meth:`TemplateEntry.choose`).
     """
     if catalog is None:
         catalog = load_catalog()
     entry = catalog.get(template)
+    supplied_names = [name for name, value in (params or {}).items() if value is not None]
 
-    verdict = entry.check(profile)
+    if implementation is None:
+        chosen, verdict = entry.choose(profile, transport, supplied_names)
+    elif implementation == "question" and entry.question is not None:
+        chosen, verdict = "question", entry.check_question(profile, transport, supplied_names)
+    elif implementation == "template" and entry.file:
+        chosen, verdict = "template", entry.check_template(profile, supplied_names)
+    else:
+        raise RenderError(f"{entry.name!r} has no {implementation} to render")
     if not verdict.ok and strict:
         raise UnsupportedTemplate(entry, verdict, profile)
+    if chosen == "question" or (chosen is None and not entry.file):
+        return _render_question(entry, profile, params, verdict, transport)
+    if not verdict.ok:
+        verdict = entry.check_template(profile)
 
     supplied = dict(params or {})
     unknown = set(supplied) - set(entry.parameters)
@@ -592,6 +654,84 @@ def render(
     )
 
 
+def _render_question(
+    entry: TemplateEntry,
+    profile: ResolvedProfile,
+    params: Mapping[str, Any] | None,
+    verdict: Verdict,
+    transport: str | None,
+) -> Rendered:
+    """A model question with its parameters bound, and how it must be asked."""
+    question = entry.question
+    assert question is not None
+    specs = entry.question_parameters
+    supplied = {name: value for name, value in dict(params or {}).items() if value is not None}
+    unknown = set(supplied) - set(specs)
+    if unknown:
+        raise RenderError(
+            f"Model question {entry.name!r} got unknown parameter(s): "
+            f"{', '.join(sorted(unknown))}. Expected: {', '.join(sorted(specs))}"
+        )
+
+    bindings: dict[str, str] = {}
+    for parameter in question.parameters:
+        name = parameter.catalogue_name
+        if name not in supplied or str(supplied[name]).strip() == "":
+            if not parameter.optional:
+                raise RenderError(
+                    f"Model question {entry.name!r} requires parameter {name!r} "
+                    f"({specs[name].get('description') or 'an IRI'})"
+                )
+            continue
+        bindings[parameter.variable] = coerce(name, supplied[name], specs[name])
+
+    ceiling_caveats: list[str] = []
+    asked_for = "LIMIT" in supplied
+    limit = int(coerce("LIMIT", supplied.get("LIMIT", question.default_limit), specs["LIMIT"]))
+    limit = _within_profile_ceiling(limit, profile, entry, asked_for, ceiling_caveats)
+
+    try:
+        query = build_query(question, bindings, limit)
+    except QuestionError as exc:
+        raise RenderError(str(exc)) from exc
+    try:
+        validate_readonly(query)
+    except QueryError as exc:
+        raise RenderError(
+            f"Rendered model question {entry.name!r} did not pass read-only validation: {exc}"
+        ) from exc
+
+    # One graph: local data with named graphs is read as their merge, on request. An
+    # endpoint gets the query unchanged - the verdict refused it unless its default graph
+    # is declared the union - and a dataset without named graphs is one graph already.
+    default_graph = (
+        "union" if profile.graphs.named_graphs and transport != "endpoint" else None
+    )
+    reading = []
+    if transport is None and profile.graphs.named_graphs:
+        reading.append(
+            f"{entry.name} is a model question: ask it of the dataset read as one graph - "
+            "`la-query query run` does so on local data - not as rendered against a store "
+            "whose default graph is empty."
+        )
+    return Rendered(
+        query=query,
+        template=entry.name,
+        profile=profile.name,
+        profile_version=profile.profile_version,
+        warnings=tuple(verdict.warnings) + tuple(ceiling_caveats) + tuple(reading),
+        row_limit=limit,
+        implementation="question",
+        question=question.iri,
+        default_graph=default_graph,
+        probes=metamodel_probes(question),
+        finding=(
+            {"focus": question.finding_focus, "severity": question.severity}
+            if question.finding else None
+        ),
+    )
+
+
 def render_literal(query: str, profile: ResolvedProfile) -> Rendered:
     """Render an ad-hoc query, expanding directives but taking no parameters.
 
@@ -651,6 +791,7 @@ def render_literal(query: str, profile: ResolvedProfile) -> Rendered:
         template="<literal>",
         profile=profile.name,
         profile_version=profile.profile_version,
+        implementation=None,
         warnings=tuple(dict.fromkeys(warnings)),
         # Read from the query the author wrote, because there is no parameter to read it
         # from. The profile's `default_row_limit` is NOT a substitute: it describes what

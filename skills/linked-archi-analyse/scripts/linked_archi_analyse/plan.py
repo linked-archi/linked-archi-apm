@@ -37,8 +37,45 @@ PARAMETER_SOURCES: Mapping[str, str] = {
     "PREDICATE_PATH": "a predicate from core/discover-relationship-types",
     "CONCEPT_IRI": "from core/resolve-concept after reviewing its scheme and ambiguity",
     "VIEWPOINT_IRI": "from core/viewpoint-catalog after reviewing the scheme and audience",
+    "FROM_IRI": "a plateau IRI from core/resolve-element",
+    "TO_IRI": "the other plateau IRI from core/resolve-element",
     "TERM": "a name from the question",
 }
+
+#: The query owner's stages, in the order an investigation moves through them. Restated
+#: rather than imported: this owner reaches the query owner only over its commands.
+STAGE_ORDER = (
+    "orientation", "resolution", "discovery", "analysis", "enrichment", "quality", "views",
+)
+
+
+def concern_pattern(concerns: Sequence[str], entries: Mapping[str, Mapping[str, Any]]) -> Pattern:
+    """The model questions informing ``concerns``, in stage order, planned as a pattern.
+
+    The selection a deliverable section makes with ``arch:sectionAddressesConcern``: what
+    the published question sets say informs the concern (``arch:questionAddressesConcern``),
+    read from the query owner's catalogue rather than guessed from wording.
+    """
+    order = {stage: index for index, stage in enumerate(STAGE_ORDER)}
+    names = sorted(
+        entries, key=lambda name: (order.get(str(entries[name].get("stage")), len(order)), name)
+    )
+    return Pattern(
+        name="concern",
+        title="Questions informing " + ", ".join(concerns),
+        file="",
+        triggers=(),
+        templates=tuple(names),
+        capabilities={},
+        stop_when=(
+            "the published question sets are what say a question informs the concern - the "
+            "concern may need evidence they do not ask for; say what is left unasked",
+            "a finding with no rows says the model records none, not that none exist; check "
+            "the orientation steps before reading it as absence",
+        ),
+        notation_mentions=(),
+        resolution="none",
+    )
 
 #: Steps every investigation starts with, in doctrine order. Orientation is first because
 #: skipping it is how a partial export becomes a confident answer.
@@ -260,7 +297,8 @@ class Plan:
         lines: list[str] = [f"question   {self.question}"]
         if self.pattern:
             lines.append(f"pattern    {self.pattern} — {self.pattern_title}")
-            lines.append(f"read       {self.pattern_file}")
+            if self.pattern_file:
+                lines.append(f"read       {self.pattern_file}")
         else:
             lines.append("pattern    none matched")
         if self.ranked:
@@ -346,6 +384,8 @@ def _parameters_for(
             continue  # the catalogue default is right until a result truncates
         if "default" in spec:
             continue  # a documented default beats a guess
+        if spec.get("optional"):
+            continue  # unset, a model question answers for every value
         if name == "TERM":
             parameters[name] = term if term else f"<{name}: {PARAMETER_SOURCES['TERM']}>"
             continue
@@ -409,7 +449,9 @@ def build_plan(
         )
 
     terms = terms_in(question)
-    if not terms and (pattern is None or pattern.resolution not in ("viewpoint", "vocabulary")):
+    if not terms and (
+        pattern is None or pattern.resolution not in ("viewpoint", "vocabulary", "none")
+    ):
         notes.append(
             "No quoted name in the question, so resolve steps carry a placeholder. Quote the "
             "names you mean - inventing a TERM value is what the resolve step exists to stop."
@@ -503,7 +545,7 @@ def build_plan(
     # One resolve step per quoted name: a question naming two things needs both resolved, and
     # a plan that resolves the first and assumes the second is how the second gets invented.
     resolve_terms = ((None,) if resolution == "viewpoint" else
-                     () if resolution == "vocabulary" and not terms else
+                     () if resolution in ("vocabulary", "none") and not terms else
                      (terms or (None,)))
     for term in resolve_terms:
         subject = f'"{term}"' if term else "each name in the question"
@@ -534,9 +576,15 @@ def build_plan(
         for template in pattern.templates:
             if template == "core/define-term" and not definitions_needed(question, definitions):
                 continue
+            # A model question states what it asks; say that rather than the pattern's name.
+            metadata = templates.get(template) or {}
+            asked = (
+                (metadata.get("question") or {}).get("label") or metadata.get("purpose")
+                if pattern.name == "concern" else None
+            )
             add(
                 template, "pattern",
-                f"{pattern.title}: evidence from {template}.",
+                asked or f"{pattern.title}: evidence from {template}.",
                 "the pattern's own evidence",
                 term=terms[0] if terms else None,
             )

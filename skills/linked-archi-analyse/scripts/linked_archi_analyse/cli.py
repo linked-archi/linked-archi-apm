@@ -19,7 +19,7 @@ from typing import Any, Sequence
 
 from .bundle import CLAIM_CLASSES, DEFAULT_STATE_DIR, STATE_DIR_ENV, build_bundle, render_markdown
 from .patterns import AnalyseError, load_patterns, pattern_summary, resolve_mode
-from .plan import DEFAULT_BUDGET, build_plan, required_templates
+from .plan import DEFAULT_BUDGET, build_plan, concern_pattern, required_templates
 
 OK, REFUSED, ERROR = 0, 1, 2
 
@@ -115,6 +115,66 @@ def _catalogue(profile: str | None, names: Sequence[str] = ()) -> tuple[dict[str
     return None, False
 
 
+def _concern_questions(profile: str | None, concerns: Sequence[str]) -> dict[str, Any]:
+    """The query owner's entries for the model questions informing ``concerns``.
+
+    Unlike :func:`_catalogue` this does not degrade: which questions inform a concern is
+    published in the question sets the query owner reads, and nowhere else, so a plan by
+    concern without it has nothing to plan.
+    """
+    executable = _companion(REQUIRED_QUERY_SKILL, "la-query")
+    command = [sys.executable, str(executable), "catalog", "dump"]
+    if profile:
+        command += ["--profile", profile]
+    for concern in concerns:
+        command += ["--concern", concern]
+    try:
+        done = subprocess.run(command, capture_output=True, text=True, timeout=120)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise AnalyseError(f"la-query catalog dump failed: {exc}") from exc
+    if done.returncode != 0:
+        raise AnalyseError(done.stderr.strip() or "la-query catalog dump failed")
+    try:
+        document = json.loads(done.stdout)
+    except json.JSONDecodeError as exc:
+        raise AnalyseError("la-query catalog dump returned invalid JSON") from exc
+    templates = document.get("templates") if isinstance(document, dict) else None
+    if not isinstance(templates, dict) or not templates:
+        raise AnalyseError("no model question informs " + ", ".join(concerns))
+    return templates
+
+
+def _pattern_for(question: str | None, mode: str | None, concerns: Sequence[str], profile: str | None):
+    """The pattern and ranking a plan follows, the question it is for, and notes on it."""
+    if concerns:
+        if mode:
+            raise AnalyseError("give --concern or --mode, not both: each chooses the evidence")
+        entries = _concern_questions(profile, concerns)
+        # A question in a language the profile does not declare is not refused for this
+        # dataset so much as about another one: left out, and said once.
+        foreign = sorted(name for name, item in entries.items() if item.get("notation_declared") is False)
+        notes = []
+        if foreign:
+            languages = sorted({str(entries[name].get("notation")) for name in foreign})
+            notes.append(
+                f"{len(foreign)} question(s) informing the concern are for "
+                f"{', '.join(languages)}, which profile {profile!r} does not declare, and are "
+                "left out. Name the concern by IRI to choose one language's questions."
+            )
+        kept = {name: item for name, item in entries.items() if name not in foreign}
+        if not kept:
+            raise AnalyseError(
+                "every model question informing " + ", ".join(concerns)
+                + f" is for a language profile {profile!r} does not declare"
+            )
+        pattern = concern_pattern(concerns, kept)
+        return question or ("What the model says about " + ", ".join(concerns)), pattern, [], notes
+    if not question or not question.strip():
+        raise AnalyseError("plan needs --question or --concern, or --list-patterns")
+    pattern, ranked = resolve_mode(mode, question, load_patterns())
+    return question, pattern, ranked, []
+
+
 # ---------------------------------------------------------------------------
 # plan
 # ---------------------------------------------------------------------------
@@ -129,13 +189,10 @@ def cmd_plan(args: argparse.Namespace) -> int:
             if entry["notation_mentions"]:
                 print(f"{'':24} fallback: two of {', '.join(entry['notation_mentions'])}")
         return OK
-    if not args.question:
-        raise AnalyseError("plan needs --question, or --list-patterns")
-
-    pattern, ranked = resolve_mode(args.mode, args.question, patterns)
-    catalogue, preview = _catalogue(args.profile, required_templates(args.question, pattern, args.definitions))
+    question, pattern, ranked, notes = _pattern_for(args.question, args.mode, args.concern, args.profile)
+    catalogue, preview = _catalogue(args.profile, required_templates(question, pattern, args.definitions))
     plan = build_plan(
-        args.question,
+        question,
         pattern=pattern,
         ranked=ranked,
         catalogue=catalogue,
@@ -148,6 +205,7 @@ def cmd_plan(args: argparse.Namespace) -> int:
         batch_dir=args.batch_dir,
         preview=preview,
     )
+    plan.notes.extend(notes)
     if args.batch_dir:
         for batch in plan.batches():
             target = Path(batch["manifest_path"])
@@ -301,11 +359,18 @@ def _machine_input(allowed: set[str], label: str) -> dict[str, Any]:
 def cmd_machine_plan(_args: argparse.Namespace) -> int:
     request = _machine_input(
         {"question", "mode", "profile", "data", "endpoint", "budget", "steps_dir",
-         "definitions", "batch_dir"}, "plan"
+         "definitions", "batch_dir", "concerns"}, "plan"
     )
     question = request.get("question")
-    if not isinstance(question, str) or not question.strip():
-        raise AnalyseError("machine plan requires a non-empty question")
+    concerns = request.get("concerns") or []
+    if not isinstance(concerns, list) or any(
+        not isinstance(item, str) or not item.strip() for item in concerns
+    ):
+        raise AnalyseError("machine plan concerns must be an array of non-empty strings")
+    if not concerns and (not isinstance(question, str) or not question.strip()):
+        raise AnalyseError("machine plan requires a non-empty question, or concerns")
+    if question is not None and not isinstance(question, str):
+        raise AnalyseError("machine plan question must be a string")
     data = request.get("data") or []
     if not isinstance(data, list) or any(not isinstance(item, str) for item in data):
         raise AnalyseError("machine plan data must be a string array")
@@ -318,8 +383,9 @@ def cmd_machine_plan(_args: argparse.Namespace) -> int:
     batch_dir = request.get("batch_dir")
     if batch_dir is not None and (not isinstance(batch_dir, str) or not batch_dir.strip()):
         raise AnalyseError("machine plan batch_dir must be a non-empty string")
-    patterns = load_patterns()
-    pattern, ranked = resolve_mode(request.get("mode"), question, patterns)
+    question, pattern, ranked, notes = _pattern_for(
+        question, request.get("mode"), concerns, request.get("profile")
+    )
     catalogue, preview = _catalogue(request.get("profile"), required_templates(question, pattern, definitions))
     plan = build_plan(
         question,
@@ -335,6 +401,7 @@ def cmd_machine_plan(_args: argparse.Namespace) -> int:
         batch_dir=batch_dir,
         preview=preview,
     )
+    plan.notes.extend(notes)
     print(json.dumps(plan.as_dict(), ensure_ascii=False))
     return OK
 
@@ -412,6 +479,13 @@ def build_parser() -> argparse.ArgumentParser:
     plan.add_argument(
         "--mode", metavar="PATTERN",
         help="name the analysis pattern instead of routing to one (see --list-patterns)",
+    )
+    plan.add_argument(
+        "--concern", action="append", default=[], metavar="CONCERN",
+        help=(
+            "plan the model questions informing this stakeholder concern - an IRI, label or "
+            "local name (repeatable); `la-query catalog concerns` lists them. Replaces routing"
+        ),
     )
     plan.add_argument(
         "--list-patterns", action="store_true",

@@ -15,9 +15,17 @@ from typing import Any, Sequence
 
 from . import verification
 from .catalog import STAGES, CatalogError, load_catalog
+from .questions import load_index, metamodel_probes
 from .contract import ContractError, ResolvedProfile
 from .envelope import Envelope
-from .render import RenderError, UnsupportedTemplate, render, render_literal
+from .render import (
+    QuestionNotAsked,
+    RenderError,
+    Rendered,
+    UnsupportedTemplate,
+    render,
+    render_literal,
+)
 from .validate import QueryError, validate_readonly
 
 OK, REFUSED, ERROR = 0, 1, 2
@@ -128,6 +136,10 @@ def _validate_raw_result(raw: object) -> dict[str, Any]:
         )
     if not isinstance(raw["description"], str):
         raise CompanionError("linked-archi-connect returned a malformed raw result: invalid description")
+    # Optional, as load_ms is: a connect from before model questions does not send it. A
+    # caller that ASKED for a reading checks it was given one - see _execute_rendered.
+    if raw.get("default_graph") not in (None, "union"):
+        raise CompanionError("linked-archi-connect returned a malformed raw result: invalid default_graph")
 
     if form == "SELECT" and (boolean is not None or triples is not None):
         raise CompanionError("linked-archi-connect returned an inconsistent SELECT result")
@@ -563,6 +575,96 @@ def _execute(query: str, target: dict[str, Any]) -> dict[str, Any]:
     return _validate_raw_result(raw)
 
 
+def _execute_rendered(
+    items: Sequence[Rendered], target: dict[str, Any]
+) -> list[tuple[dict[str, Any], list[Any]]]:
+    """Run rendered queries in one connect call, each model question after its probes.
+
+    Returns, per item, its raw result and the probes the dataset answered false. The
+    dataset is opened once whatever the count, which is what a batch is for; a probe costs
+    an ASK, not a parse.
+    """
+    queries: list[str] = []
+    modes: list[str | None] = []
+    owners: list[tuple[int, Any]] = []
+    for index, item in enumerate(items):
+        for probe in item.probes:
+            queries.append(probe.query); modes.append(item.default_graph); owners.append((index, probe))
+        queries.append(item.query); modes.append(item.default_graph); owners.append((index, None))
+    request: dict[str, Any] = {"schema_version": 1, "target": target, "queries": queries}
+    if any(modes):
+        request["default_graphs"] = modes
+    results = _machine("linked-archi-connect", "la-connect", "execute-many", request).get("results")
+    if not isinstance(results, list) or len(results) != len(queries):
+        raise CompanionError(
+            "linked-archi-connect returned a batch of the wrong size: expected "
+            f"{len(queries)} result(s)"
+        )
+    out: list[list[Any]] = [[None, [], 0] for _ in items]
+    for (index, probe), raw, mode in zip(owners, results, modes):
+        raw = _validate_raw_result(raw)
+        if mode is not None and raw.get("default_graph") != mode:
+            # An older connect ignores the request and answers from the default graph as
+            # stored - empty for converter output - which reads as "none found".
+            raise CompanionError(
+                "linked-archi-connect did not read the dataset as one graph, which a model "
+                "question needs. Update linked-archi-connect beside this skill."
+            )
+        out[index][2] += int(raw.get("load_ms") or 0)
+        if probe is None:
+            out[index][0] = raw
+        elif raw.get("boolean") is not True:
+            out[index][1].append(probe)
+    # The load is paid once, before the first query of the call, which may be a probe:
+    # carried on the item it belongs to, so the envelope still says what loading cost.
+    return [({**raw, "load_ms": load_ms}, missing) for raw, missing, load_ms in out]
+
+
+def _transport(target: dict[str, Any]) -> str:
+    return "endpoint" if target.get("endpoint") else "local"
+
+
+def _ask(
+    template: str,
+    profile: ResolvedProfile,
+    values: dict[str, Any],
+    catalog,
+    target: dict[str, Any],
+) -> tuple[Rendered, dict[str, Any]]:
+    """Render and execute one catalogue entry, a model question with its probes.
+
+    A question whose metamodel the dataset lacks falls back to the template of its name
+    when that fits, saying why on the result; with no template to fall back on it is
+    refused, naming what to load.
+    """
+    transport = _transport(target)
+    rendered = render(template, profile, values, catalog=catalog, transport=transport)
+    if rendered.implementation != "question":
+        return rendered, _execute(rendered.query, target)
+    ((raw, missing),) = _execute_rendered([rendered], target)
+    if not missing:
+        return rendered, raw
+    return _fallback(template, profile, values, catalog, target, missing)
+
+
+def _fallback(template, profile, values, catalog, target, missing) -> tuple[Rendered, dict[str, Any]]:
+    entry = catalog.get(template)
+    supplied = [name for name, value in values.items() if value is not None]
+    if entry.file and entry.check_template(profile, supplied).ok:
+        fallback = render(
+            template, profile, values, catalog=catalog,
+            transport=_transport(target), implementation="template",
+        )
+        note = (
+            f"the model question {entry.name} was not asked - the dataset does not carry "
+            + "; ".join(probe.needs for probe in missing)
+            + " - so the template of its name answered instead."
+        )
+        fallback.warnings = tuple(fallback.warnings) + (note,)
+        return fallback, _execute(fallback.query, target)
+    raise QuestionNotAsked(entry.name, missing, entry.alternatives)
+
+
 def _parse_sets(pairs: Sequence[str]) -> dict[str, Any]:
     values: dict[str, Any] = {}
     for pair in pairs:
@@ -574,7 +676,74 @@ def _parse_sets(pairs: Sequence[str]) -> dict[str, Any]:
 
 
 def _selected_catalog(args: argparse.Namespace):
-    return load_catalog(extensions=args.catalog)
+    catalog = load_catalog(extensions=args.catalog)
+    concerns = getattr(args, "concern", None) or []
+    if concerns:
+        labels = load_index().labels
+        wanted = [_concern_matcher(concern, labels) for concern in concerns]
+        catalog._entries = {
+            name: entry for name, entry in catalog._entries.items()
+            if entry.question is not None
+            and any(match(c) for match in wanted for c in entry.question.concerns)
+        }
+        if not catalog._entries:
+            raise CatalogError(
+                "No model question informs " + ", ".join(repr(c) for c in concerns)
+                + ". `la-query catalog concerns` lists the concerns questions inform."
+            )
+    return catalog
+
+
+def _concern_matcher(text: str, labels: dict[str, str]):
+    """A concern by IRI, label or local name - the last two without regard to case."""
+    wanted = text.strip().lower()
+
+    def match(iri: str) -> bool:
+        local = iri.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
+        return wanted in {iri.lower(), labels.get(iri, "").lower(), local.lower()}
+
+    return match
+
+
+def _concepts(iris, labels: dict[str, str]) -> list[dict[str, str]]:
+    return [{"iri": iri, "label": labels.get(iri, iri.rsplit("#", 1)[-1])} for iri in iris]
+
+
+def _question_metadata(entry, labels: dict[str, str]) -> dict[str, Any]:
+    question = entry.question
+    return {
+        "iri": question.iri,
+        "set": question.set,
+        "label": question.label,
+        "description": question.description,
+        "answers": question.answers,
+        "does_not_prove": question.does_not_prove,
+        "stage": question.stage,
+        "finding": question.finding,
+        "finding_focus": question.finding_focus,
+        "severity": question.severity,
+        "dataset": question.dataset,
+        "metamodels": list(question.metamodels),
+        "concerns": _concepts(question.concerns, labels),
+        "stakeholders": _concepts(question.stakeholders, labels),
+        "viewpoints": _concepts(question.viewpoints, labels),
+        "parameters": entry.question_parameters,
+        "requires": {"capabilities": question.capabilities},
+        "checked_when_run": [
+            {"needs": probe.needs, "load": probe.load} for probe in metamodel_probes(question)
+        ],
+    }
+
+
+def cmd_catalog_concerns(args: argparse.Namespace) -> int:
+    """The concerns model questions inform, each with the entries that inform it."""
+    catalog = _selected_catalog(args)
+    labels = load_index().labels
+    for concern, names in catalog.concerns().items():
+        print(f"{labels.get(concern, concern.rsplit('#', 1)[-1])}  <{concern}>")
+        for name in names:
+            print(f"    {name}")
+    return OK
 
 
 def cmd_catalog_list(args: argparse.Namespace) -> int:
@@ -603,7 +772,7 @@ def cmd_catalog_show(args: argparse.Namespace) -> int:
     entry = _selected_catalog(args).get(args.template)
     profile = _profile(args.profile) if args.profile else None
     print(f"name            {entry.name}")
-    print(f"file            {entry.file}")
+    print(f"file            {entry.file or '(none: a model question)'}")
     print(f"stage           {entry.stage}")
     if entry.notation:
         print(f"notation        {entry.notation}")
@@ -627,7 +796,8 @@ def cmd_catalog_show(args: argparse.Namespace) -> int:
             if spec.get("choices"):
                 # Printed, because an unlisted value is refused rather than ignored.
                 choices = " one of=" + "|".join(spec["choices"])
-            print(f"  {name:16} {spec['type']}{default}{bounds}{choices}")
+            optional = " optional" if spec.get("optional") else ""
+            print(f"  {name:16} {spec['type']}{default}{bounds}{choices}{optional}")
             if spec.get("description"):
                 print(f"  {'':16} {spec['description']}")
     requirement = entry.requires
@@ -648,6 +818,40 @@ def cmd_catalog_show(args: argparse.Namespace) -> int:
             print("  membership     the profile must be able to express model membership")
     if entry.alternatives:
         print(f"alternatives    {', '.join(entry.alternatives)}")
+    if entry.question is not None:
+        labels = load_index().labels
+        question = entry.question
+        print(f"\nmodel question  {question.label}")
+        print(f"  iri           {question.iri}")
+        if entry.file:
+            print(f"  answers       {question.answers}")
+            print(f"  not proved    {question.does_not_prove}")
+        if question.finding:
+            print(f"  finding       each row is about ?{question.finding_focus} ({question.severity})")
+        for title, iris in (
+            ("concerns", question.concerns),
+            ("stakeholders", question.stakeholders),
+            ("fits", question.viewpoints),
+        ):
+            if iris:
+                print(f"  {title:13} " + ", ".join(c["label"] for c in _concepts(iris, labels)))
+        for name, spec in entry.question_parameters.items():
+            if name != "LIMIT":
+                need = "optional" if spec.get("optional") else "required"
+                print(f"  parameter     {name} ({need}): {spec['description']}")
+        if question.capabilities:
+            print("  needs         " + ", ".join(f"capability {c}" for c in question.capabilities))
+        for probe in metamodel_probes(question):
+            print(f"  needs loaded  {probe.needs}" + (f" ({probe.load})" if probe.load else ""))
+        print(
+            "  reads         the dataset as one graph: local data always; an endpoint "
+            "only with capabilities.union_default_graph"
+        )
+        if entry.file:
+            print(
+                "implementations the model question where the dataset fits it, the "
+                "template otherwise"
+            )
     if profile is not None:
         verdict = entry.check(profile)
         print(f"\nunder profile {profile.name!r}: {'available' if verdict.ok else 'REFUSED'}")
@@ -655,6 +859,13 @@ def cmd_catalog_show(args: argparse.Namespace) -> int:
             print(f"  - {reason}")
         for warning in verdict.warnings:
             print(f"  caveat: {warning}")
+        if entry.question is not None:
+            for transport in ("local", "endpoint"):
+                chosen, _ = entry.choose(profile, transport)
+                runs = {"question": "the model question", "template": "the template"}.get(
+                    chosen, "nothing (refused)"
+                )
+                print(f"  on {transport} data: {runs}")
     if args.source:
         print("\n--- template source ---")
         print(entry.text(), end="")
@@ -675,6 +886,7 @@ def cmd_catalog_dump(args: argparse.Namespace) -> int:
     if unknown_notations:
         raise CatalogError("Unknown notation: " + ", ".join(sorted(unknown_notations)))
     profile = _profile(args.profile) if args.profile else None
+    labels = load_index().labels
     payload: dict[str, Any] = {"schema_version": 1, "templates": {}}
     if profile is not None:
         payload["profile"] = {"id": profile.name, "version": profile.profile_version}
@@ -701,10 +913,24 @@ def cmd_catalog_dump(args: argparse.Namespace) -> int:
             },
             "alternatives": list(entry.alternatives),
         }
+        item["implementations"] = list(entry.implementations or ("template",))
+        if entry.question is not None:
+            item["question"] = _question_metadata(entry, labels)
         if profile is not None:
             verdict = entry.check(profile)
             item["available"] = verdict.ok
             item["unmet"] = list(verdict.unmet)
+            if entry.notation_namespace:
+                # Whether the dataset speaks the entry's language at all - a refusal for a
+                # language it does not hold is not a decision to put to anyone.
+                item["notation_declared"] = (
+                    profile.notation_for_namespace(entry.notation_namespace) is not None
+                )
+            if entry.question is not None:
+                item["runs"] = {
+                    transport: entry.choose(profile, transport)[0]
+                    for transport in ("local", "endpoint")
+                }
             # Named for where it comes from. `caveat` above is the template's own
             # statement about its rows; these come from this profile's fit, and a
             # caller that conflates them cannot tell "always true of this template"
@@ -722,6 +948,8 @@ def cmd_render(args: argparse.Namespace) -> int:
     )
     for warning in rendered.warnings:
         print(f"caveat: {warning}", file=sys.stderr)
+    for probe in rendered.probes:
+        print(f"checked when it runs: the dataset carries {probe.needs}", file=sys.stderr)
     if args.output:
         target = Path(args.output); target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(rendered.query, encoding="utf-8")
@@ -775,6 +1003,11 @@ def _envelope(raw: dict[str, Any], rendered, profile: ResolvedProfile) -> Envelo
             and len(rows) >= rendered.row_limit
         ),
         warnings=caveats,
+        implementation=getattr(rendered, "implementation", None),
+        question=getattr(rendered, "question", None),
+        # What connect did, not what was asked: the two agree, or _execute_rendered refused.
+        default_graph=raw.get("default_graph"),
+        finding=getattr(rendered, "finding", None),
     )
 
 
@@ -820,10 +1053,9 @@ def _check_preview(args: argparse.Namespace, *, require_output: bool = False) ->
 def cmd_run(args: argparse.Namespace) -> int:
     _check_preview(args, require_output=True)
     profile = _profile(args.profile)
-    rendered = render(
-        args.template, profile, _parse_sets(args.set), catalog=_selected_catalog(args)
+    rendered, raw = _ask(
+        args.template, profile, _parse_sets(args.set), _selected_catalog(args), _target(args)
     )
-    raw = _execute(rendered.query, _target(args))
     return _emit(_envelope(raw, rendered, profile), args)
 
 
@@ -907,10 +1139,14 @@ def cmd_batch(args: argparse.Namespace) -> int:
     entries = _batch_manifest(args.manifest)
     catalog = _selected_catalog(args)
 
+    target = _target(args)
     rendered = []
     for entry in entries:
         if entry["template"]:
-            rendered.append(render(entry["template"], profile, entry["set"], catalog=catalog))
+            rendered.append(render(
+                entry["template"], profile, entry["set"], catalog=catalog,
+                transport=_transport(target),
+            ))
         else:
             text = (
                 Path(entry["file"]).read_text(encoding="utf-8")
@@ -918,26 +1154,24 @@ def cmd_batch(args: argparse.Namespace) -> int:
             )
             rendered.append(render_literal(text, profile))
 
-    results = _machine(
-        "linked-archi-connect", "la-connect", "execute-many",
-        {
-            "schema_version": 1,
-            "target": _target(args),
-            "queries": [item.query for item in rendered],
-        },
-    ).get("results")
-    if not isinstance(results, list) or len(results) != len(rendered):
-        raise CompanionError(
-            "linked-archi-connect returned a batch of the wrong size: expected "
-            f"{len(rendered)} result(s)"
-        )
+    results = _execute_rendered(rendered, target)
+    # A model question whose metamodel is missing falls back to its template, or is
+    # refused, as `query run` does - after the batch, so the dataset is still parsed once
+    # for everything that could be asked.
+    raws = []
+    for position, (entry, (raw, missing)) in enumerate(zip(entries, results)):
+        if missing:
+            rendered[position], raw = _fallback(
+                entry["template"], profile, entry["set"], catalog, target, missing
+            )
+        raws.append(raw)
 
     lines = []
     previews = []
     total_query_ms = 0
     load_ms = 0
-    for entry, item, raw in zip(entries, rendered, results):
-        envelope = _envelope(_validate_raw_result(raw), item, profile)
+    for entry, item, raw in zip(entries, rendered, raws):
+        envelope = _envelope(raw, item, profile)
         # Only the first result carries the load; see Adapter.execute_many.
         load_ms = load_ms or envelope.load_ms
         total_query_ms += envelope.elapsed_ms
@@ -1128,7 +1362,20 @@ def _profile_arg(parser: argparse.ArgumentParser) -> None:
 def _catalog_arg(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--catalog", action="append", default=[], metavar="PATH",
-        help="add a trusted project catalogue (repeatable); never auto-discovered",
+        help=(
+            "add a trusted project catalogue (repeatable): a catalog.json, or a question "
+            "set (.ttl, needs pyoxigraph); never auto-discovered"
+        ),
+    )
+
+
+def _concern_arg(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--concern", action="append", default=[], metavar="CONCERN",
+        help=(
+            "only the model questions informing this concern - an IRI, its label or its "
+            "local name (repeatable; any matches). `catalog concerns` lists them"
+        ),
     )
 
 
@@ -1268,8 +1515,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="explain every refusal and name an alternative template",
     )
     _catalog_arg(listing)
+    _concern_arg(listing)
     _output_arg(listing)
     listing.set_defaults(func=cmd_catalog_list)
+    concerns = catalog_sub.add_parser(
+        "concerns",
+        help="the concerns model questions inform, and the questions informing each",
+        description=(
+            "Model questions name the stakeholder concerns they inform "
+            "(arch:questionAddressesConcern). Select by concern with --concern on list and dump."
+        ),
+    )
+    _catalog_arg(concerns)
+    _output_arg(concerns)
+    concerns.set_defaults(func=cmd_catalog_concerns)
     show = catalog_sub.add_parser(
         "show",
         help="one template's purpose, parameters and requirements",
@@ -1316,6 +1575,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="include only these catalogue notations, e.g. bpmn (repeatable)",
     )
     _catalog_arg(dump)
+    _concern_arg(dump)
     _output_arg(dump)
     dump.set_defaults(func=cmd_catalog_dump)
 

@@ -253,7 +253,18 @@ class EndpointAdapter(Adapter):
                 "scope or lower the row limit rather than raising the timeout."
             ) from exc
 
-    def _execute_raw(self, query: str, timeout_ms: int | None = None) -> RawResult:
+    def _execute_raw(
+        self, query: str, timeout_ms: int | None = None, default_graph: str | None = None
+    ) -> RawResult:
+        if default_graph is not None:
+            # The server decides what its default graph holds. A query owner that knows
+            # it is the union - because the profile says so - sends the query unchanged.
+            raise AdapterError(
+                "An endpoint's default graph is the server's to define, so it cannot be "
+                "read as the union of the dataset's graphs on request. If this endpoint's "
+                "default graph is that union, declare capabilities.union_default_graph in "
+                "the profile."
+            )
         self._last_result_has_triple_terms = False
         payload, content_type = self._post(query, timeout_ms)
 

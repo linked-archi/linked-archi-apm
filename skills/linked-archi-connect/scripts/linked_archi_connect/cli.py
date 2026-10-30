@@ -437,9 +437,18 @@ def cmd_machine_execute(_args: argparse.Namespace) -> int:
     if not isinstance(query, str) or not query.strip():
         raise AdapterError("machine input requires a non-empty query")
     target = request.get("target") or {}
+    default_graph = request.get("default_graph")
+    if default_graph not in (None, "union"):
+        raise AdapterError('machine input default_graph must be null or "union"')
     validate_queries_readonly([query])
     with _open(target) as adapter:
-        raw = adapter.execute(query, timeout_ms=target.get("timeout_ms"))
+        raw = (
+            adapter.execute(query, timeout_ms=target.get("timeout_ms"))
+            if default_graph is None
+            else adapter.execute(
+                query, timeout_ms=target.get("timeout_ms"), default_graph=default_graph
+            )
+        )
     print(json.dumps(raw.as_contract(), ensure_ascii=False))
     return OK
 
@@ -454,9 +463,24 @@ def cmd_machine_execute_many(_args: argparse.Namespace) -> int:
     ):
         raise AdapterError("machine input requires a non-empty queries string array")
     target = request.get("target") or {}
+    default_graphs = request.get("default_graphs")
+    if default_graphs is not None and (
+        not isinstance(default_graphs, list)
+        or len(default_graphs) != len(queries)
+        or any(mode not in (None, "union") for mode in default_graphs)
+    ):
+        raise AdapterError(
+            'machine input default_graphs must be an array of null or "union", one per query'
+        )
     validate_queries_readonly(queries)
     with _open(target) as adapter:
-        results = adapter.execute_many(queries, timeout_ms=target.get("timeout_ms"))
+        results = (
+            adapter.execute_many(queries, timeout_ms=target.get("timeout_ms"))
+            if not default_graphs or not any(default_graphs)
+            else adapter.execute_many(
+                queries, timeout_ms=target.get("timeout_ms"), default_graphs=default_graphs
+            )
+        )
     print(json.dumps({
         "schema_version": 1,
         "results": [result.as_contract() for result in results],
@@ -581,7 +605,8 @@ def build_parser() -> argparse.ArgumentParser:
             'Request {"schema_version": 1, "query": "...", "target": {...}}, where target '
             "is exactly connect target version 1. Every query is sent to the query "
             "owner's read-only lint first; if that companion is missing, this fails "
-            "rather than executing unchecked."
+            'rather than executing unchecked. Optional "default_graph": "union" reads the '
+            "default graph as the merge of every graph in local data; an endpoint refuses it."
         ),
     )
     execute.set_defaults(func=cmd_machine_execute)
@@ -589,7 +614,8 @@ def build_parser() -> argparse.ArgumentParser:
         "execute-many",
         help="execute several queries against one opened target",
         description=(
-            'As execute, with "queries" instead of "query". The target is opened once, so '
+            'As execute, with "queries" instead of "query", and "default_graphs" (one '
+            'entry per query) instead of "default_graph". The target is opened once, so '
             "a local file is parsed once - which is why profile verification can afford a "
             "dozen probes."
         ),

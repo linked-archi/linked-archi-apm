@@ -35,8 +35,11 @@ used. `plan` emits commands, decisions and batch manifests; `bundle` reads what 
 }
 ```
 
-Only `question` is required. `mode` names a pattern instead of routing to one and is
-validated against `assets/patterns.json`. `data` and `endpoint` are **recorded into the
+Only `question` is required, or `concerns` in its place. `mode` names a pattern instead of
+routing to one and is validated against `assets/patterns.json`. `concerns`, an array of
+concern IRIs, labels or local names, plans the model questions published as informing them
+instead (pattern `concern`): their entries come from `la-query catalog dump --concern`, so
+it needs the query owner, and it cannot be combined with `mode`. `data` and `endpoint` are **recorded into the
 emitted commands, not used** — nothing here reads them.
 
 `definitions` is an optional boolean, default `false`. Definitions are planned when this is

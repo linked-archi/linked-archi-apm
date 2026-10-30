@@ -562,3 +562,22 @@ rdflib so blank nodes nest and lists print as collections, then parses the resul
 compares quad for quad, because the graph wrapper around it is text assembly. Blank-node
 names are content hashes — without that, two runs over identical shapes differed by 34 lines
 of reordered constraints, and a rebuild that cannot diff clean hides real changes in noise.
+
+## `questions/`: what meta's question check runs on
+
+`tests/test_questions.py` asks every case of linked-archi-meta's two question examples
+through this skill and requires the answers meta's own question check expects. So this
+directory holds what that check loads, refreshed by `make questions`:
+
+- `archimate4-questions-example.ttl`, `archimate3.2-questions-example.ttl` and their
+  `.expected.tsv` files, copied as they are;
+- `core-onto.ttl` and each ArchiMate version's `-onto.ttl` and `-viewpoints.ttl`, with every
+  statement but those naming a host outside meta.linked.archi and the W3C: the
+  `dcterms:source`, `rdfs:seeAlso` and `prov:wasQuotedFrom` citations of the
+  specifications they transcribe. No question reads a citation, and the package names no
+  host it does not document. Each file's first line says how many were left out.
+
+The test asks each example twice: flattened, as meta checks it, and with the model moved
+into converter-style named graphs, read as one graph the way `query run` reads converter
+output.
+

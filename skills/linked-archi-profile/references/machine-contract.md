@@ -45,7 +45,7 @@ these keys:
   "schema_version": 1,
   "name": "linked-archi-default",
   "version": 1,
-  "description": "Converter output with default flags: ...",
+  "description": "Converter output with qualified relationships only: ...",
   "base_iri": "https://example.org/la/",
   "source": "/abs/path/skills/linked-archi-profile/assets/profiles/linked-archi-default.yaml",
   "namespaces": {"arch": "https://meta.linked.archi/core#"},

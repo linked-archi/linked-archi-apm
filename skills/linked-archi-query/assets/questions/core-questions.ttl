@@ -1,0 +1,688 @@
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix bibo:    <http://purl.org/ontology/bibo/> .
+@prefix cc:      <http://creativecommons.org/ns#> .
+@prefix vann:    <http://purl.org/vocab/vann/> .
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix arch:    <https://meta.linked.archi/core#> .
+@prefix archvp:  <https://meta.linked.archi/core-viewpoints#> .
+@prefix :        <https://meta.linked.archi/core-questions#> .
+
+#################################################################
+# Linked.Archi Core Questions
+#
+# Questions any Linked.Archi model answers, whatever its language:
+# model data in the default graph (arch:inModel, arch:inView,
+# qualified relationships with arch:source and arch:target), the
+# metamodel in the default graph or in one named graph per document.
+#
+# How they are written (see arch:ModelQuestion):
+#  - no PREFIX lines (sh:declare below) and no LIMIT (arch:defaultLimit);
+#  - parameters on the core parameter properties, pre-bound with VALUES;
+#  - a concept's type is its most specific one: the core classes and
+#    abstract classes are left out wherever a question reports or
+#    groups by type, so the answer is the same whether they are
+#    asserted, inferred or absent;
+#  - the metamodel is read once per query, in a sub-select.
+#
+# dcterms:identifier names the counterpart template in the
+# linked-archi-query catalogue.
+#################################################################
+
+<https://meta.linked.archi/core-questions#>
+    a                             arch:QuestionSet ;
+    cc:license                    "http://creativecommons.org/licenses/by/4.0/" ;
+    vann:preferredNamespaceUri    "https://meta.linked.archi/core-questions#" ;
+    vann:preferredNamespacePrefix "archq" ;
+    dcterms:creator               "Kalin Maldzhanski"^^xsd:string ;
+    dcterms:title                 "Linked.Archi Core Questions"@en ;
+    dcterms:description           '''The questions any Linked.Archi model answers, whatever its modelling language:
+what it contains, what an element is related to, which views show what, and how sound the description
+is. Each is executable SPARQL bound to the concerns it informs (see arch:ModelQuestion).'''@en ;
+    dcterms:created               "2026-10-27"^^xsd:date ;
+    dcterms:modified              "2026-10-27"^^xsd:date ;
+    dcterms:publisher             "Linked.Archi"@en, <https://linked.archi> ;
+    bibo:status                   "draft" ;
+    owl:versionInfo               "0.1.0" ;
+    sh:declare
+        [ sh:prefix "arch" ; sh:namespace "https://meta.linked.archi/core#"^^xsd:anyURI ],
+        [ sh:prefix "rdf" ; sh:namespace "http://www.w3.org/1999/02/22-rdf-syntax-ns#"^^xsd:anyURI ],
+        [ sh:prefix "rdfs" ; sh:namespace "http://www.w3.org/2000/01/rdf-schema#"^^xsd:anyURI ],
+        [ sh:prefix "skos" ; sh:namespace "http://www.w3.org/2004/02/skos/core#"^^xsd:anyURI ] ;
+.
+
+# ── Orientation and resolution ──────────────────────────────────
+
+:model-inventory
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "core/inventory" ;
+    skos:prefLabel                "What does the model contain?"@en ;
+    dcterms:description           "The model's elements, relationships and views, counted by type."@en ;
+    arch:answers                  "One row per type: its kind (element, relationship, view) and how many of the model's concepts are of it."@en ;
+    arch:doesNotProve             "That the model is complete. The counts describe what was modelled, not what exists in the enterprise."@en ;
+    arch:questionStage            arch:OrientationStage ;
+    arch:resultIsFinding          false ;
+    arch:requiresDataset          arch:ModelDataset ;
+    arch:resultKey                "inventory" ;
+    arch:defaultLimit             200 ;
+    sh:parameter [ sh:path arch:model ; sh:name "model" ; sh:class arch:Model ; sh:optional true ; sh:order 1 ;
+                   sh:description "The model to count. A modelling tool binds the open model; a deliverable, the model it is produced from."@en ] ;
+    sh:prefixes                   <https://meta.linked.archi/core-questions#> ;
+    sh:select """
+        SELECT ?kind ?type (COUNT(DISTINCT ?concept) AS ?count)
+        WHERE {
+          ?concept arch:inModel ?model ;
+                   rdf:type ?type .
+          # The most specific type: neither a core class nor an abstract one.
+          FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+          MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }
+                                                UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }
+          # A view by its own kind, not also as arch:View.
+          FILTER(?type != arch:View || NOT EXISTS { ?concept rdf:type ?viewKind . FILTER(?viewKind IN (arch:Diagram, arch:Catalog, arch:Matrix)) })
+          BIND(IF(EXISTS { ?concept arch:source ?anySource }, "relationship",
+               IF(EXISTS { ?concept rdf:type ?anyViewType . FILTER(?anyViewType IN (arch:View, arch:Diagram, arch:Catalog, arch:Matrix)) },
+                  "view", "element")) AS ?kind)
+        }
+        GROUP BY ?kind ?type
+        ORDER BY ?kind DESC(?count) ?type
+    """ ;
+.
+
+:elements-of-type
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "core/elements-by-type" ;
+    skos:prefLabel                "Which elements are of this type?"@en ;
+    dcterms:description           "The elements of one type (of every type when none is given), with their names and definitions."@en ;
+    arch:answers                  "One row per element, with its most specific type."@en ;
+    arch:doesNotProve             "That no other element plays the part: an element of a specialisation is listed only where it is also typed with the type asked for."@en ;
+    arch:questionStage            arch:ResolutionStage ;
+    arch:resultIsFinding          false ;
+    arch:requiresDataset          arch:ModelDataset ;
+    arch:resultKey                "elements" ;
+    arch:defaultLimit             500 ;
+    sh:parameter [ sh:path arch:conceptType ; sh:name "concept type" ; sh:nodeKind sh:IRI ; sh:optional true ; sh:order 1 ;
+                   sh:description "An element type, such as an application component."@en ] ;
+    sh:parameter [ sh:path arch:model ; sh:name "model" ; sh:class arch:Model ; sh:optional true ; sh:order 2 ;
+                   sh:description "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from."@en ] ;
+    sh:prefixes                   <https://meta.linked.archi/core-questions#> ;
+    sh:select """
+        SELECT DISTINCT ?element ?label ?type ?definition
+        WHERE {
+          ?element arch:inModel ?model ;
+                   rdf:type ?conceptType ;
+                   rdf:type ?type .
+          FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+          MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }
+                                                UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }
+          # Elements only: not relationships, views or folders.
+          FILTER NOT EXISTS { ?element arch:source ?anySource }
+          FILTER NOT EXISTS { ?element rdf:type ?notElement . FILTER(?notElement IN (arch:View, arch:Diagram, arch:Catalog, arch:Matrix, arch:Folder)) }
+          OPTIONAL { ?element skos:prefLabel ?label . FILTER(lang(?label) = "" || langMatches(lang(?label), "en")) }
+          OPTIONAL { ?element skos:definition ?definition . FILTER(lang(?definition) = "" || langMatches(lang(?definition), "en")) }
+        }
+        ORDER BY ?type ?label
+    """ ;
+.
+
+:element-detail
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "core/element-detail" ;
+    skos:prefLabel                "What is recorded about this element?"@en ;
+    dcterms:description           "Every statement about one concept, with the name of each value that has one."@en ;
+    arch:answers                  "One row per property and value of the concept."@en ;
+    arch:doesNotProve             "That an unrecorded property is false. The model records what was said, nothing about what was not."@en ;
+    arch:questionStage            arch:ResolutionStage ;
+    arch:resultIsFinding          false ;
+    arch:requiresDataset          arch:ModelDataset ;
+    arch:resultKey                "detail" ;
+    arch:defaultLimit             500 ;
+    sh:parameter [ sh:path arch:focus ; sh:name "focus" ; sh:nodeKind sh:IRI ; sh:optional false ; sh:order 1 ;
+                   sh:description "The concept the question is about. A modelling tool binds the selected element."@en ] ;
+    sh:prefixes                   <https://meta.linked.archi/core-questions#> ;
+    sh:select """
+        SELECT DISTINCT ?property ?value ?valueLabel
+        WHERE {
+          ?focus ?property ?value .
+          # Its own type: not the core or abstract classes it is also an instance of.
+          FILTER(?property != rdf:type || ?value NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+          MINUS {
+            SELECT DISTINCT ?property ?value
+            WHERE {
+              BIND(rdf:type AS ?property)
+              { ?value arch:isAbstractClass true } UNION { GRAPH ?abstractClassGraph { ?value arch:isAbstractClass true } }
+            }
+          }
+          # A value's name: a concept's from the model, a type's from its metamodel.
+          OPTIONAL {
+            { ?value skos:prefLabel ?valueLabel } UNION { GRAPH ?labelGraph { ?value skos:prefLabel ?valueLabel } }
+            FILTER(lang(?valueLabel) = "" || langMatches(lang(?valueLabel), "en"))
+          }
+        }
+        ORDER BY ?property
+    """ ;
+.
+
+# ── Analysis ────────────────────────────────────────────────────
+
+:neighbours
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "core/neighbours-qualified" ;
+    skos:prefLabel                "What is this element directly related to?"@en ;
+    dcterms:description           "Every relationship that starts or ends at the element, read from the qualified relationships."@en ;
+    arch:answers                  "One row per relationship: its direction seen from the element, its type and the concept at its other end."@en ;
+    arch:doesNotProve             "A runtime dependency. A modelled relationship is a statement someone made, not an observed call."@en ;
+    arch:questionStage            arch:AnalysisStage ;
+    arch:questionAddressesConcern archvp:DependencyConcern ;
+    arch:resultIsFinding          false ;
+    arch:requiresDataset          arch:ModelDataset ;
+    arch:resultKey                "neighbours" ;
+    arch:defaultLimit             500 ;
+    sh:parameter [ sh:path arch:focus ; sh:name "focus" ; sh:nodeKind sh:IRI ; sh:optional false ; sh:order 1 ;
+                   sh:description "The element the question is about. A modelling tool binds the selected element."@en ] ;
+    sh:prefixes                   <https://meta.linked.archi/core-questions#> ;
+    sh:select """
+        SELECT DISTINCT ?direction ?relationship ?relationshipType ?other ?otherLabel
+        WHERE {
+          {
+            ?relationship arch:source ?focus ;
+                          arch:target ?other .
+            BIND("outgoing" AS ?direction)
+          }
+          UNION
+          {
+            ?relationship arch:target ?focus ;
+                          arch:source ?other .
+            BIND("incoming" AS ?direction)
+          }
+          ?relationship rdf:type ?relationshipType .
+          FILTER(?relationshipType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+          MINUS { SELECT DISTINCT ?relationshipType WHERE { { ?relationshipType arch:isAbstractClass true }
+                                                            UNION { GRAPH ?abstractClassGraph { ?relationshipType arch:isAbstractClass true } } } }
+          OPTIONAL { ?other skos:prefLabel ?otherLabel . FILTER(lang(?otherLabel) = "" || langMatches(lang(?otherLabel), "en")) }
+        }
+        ORDER BY ?direction ?relationshipType ?otherLabel
+    """ ;
+.
+
+:reaches-in-two-hops
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "core/dependents-qualified" ;
+    skos:prefLabel                "What reaches this element within two hops?"@en ;
+    dcterms:description           "Concepts from which a path of one or two relationships ends at the element, with the relationship types along the way."@en ;
+    arch:answers                  "One row per path: its length, the concept it starts from, the concept between, and the relationship types."@en ;
+    arch:doesNotProve             "Impact. Reachability is not dependency: an assignment followed by an association does not make the last concept depend on the first. Read the types, and use a language's impact question where there is one."@en ;
+    arch:questionStage            arch:AnalysisStage ;
+    arch:questionAddressesConcern archvp:DependencyConcern ;
+    arch:resultIsFinding          false ;
+    arch:requiresDataset          arch:ModelDataset ;
+    arch:resultKey                "reaches" ;
+    arch:defaultLimit             500 ;
+    sh:parameter [ sh:path arch:focus ; sh:name "focus" ; sh:nodeKind sh:IRI ; sh:optional false ; sh:order 1 ;
+                   sh:description "The element the question is about. A modelling tool binds the selected element."@en ] ;
+    sh:prefixes                   <https://meta.linked.archi/core-questions#> ;
+    sh:select """
+        SELECT DISTINCT ?hops ?dependent ?dependentLabel ?firstType ?via ?secondType
+        WHERE {
+          {
+            ?first arch:source ?dependent ;
+                   arch:target ?focus ;
+                   rdf:type ?firstType .
+            BIND(1 AS ?hops)
+          }
+          UNION
+          {
+            ?first arch:source ?via ;
+                   arch:target ?focus ;
+                   rdf:type ?firstType .
+            ?second arch:source ?dependent ;
+                    arch:target ?via ;
+                    rdf:type ?secondType .
+            FILTER(?dependent != ?focus)
+            FILTER(?secondType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+            BIND(2 AS ?hops)
+          }
+          FILTER(?firstType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+          MINUS { SELECT DISTINCT ?firstType WHERE { { ?firstType arch:isAbstractClass true }
+                                                     UNION { GRAPH ?abstractClassGraph { ?firstType arch:isAbstractClass true } } } }
+          MINUS { SELECT DISTINCT ?secondType WHERE { { ?secondType arch:isAbstractClass true }
+                                                      UNION { GRAPH ?abstractClassGraph { ?secondType arch:isAbstractClass true } } } }
+          OPTIONAL { ?dependent skos:prefLabel ?dependentLabel . FILTER(lang(?dependentLabel) = "" || langMatches(lang(?dependentLabel), "en")) }
+        }
+        ORDER BY ?hops ?dependentLabel
+    """ ;
+.
+
+# ── Quality ─────────────────────────────────────────────────────
+
+:orphans
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "core/orphans" ;
+    skos:prefLabel                "Which elements take part in no relationship?"@en ;
+    dcterms:description           "Elements that are neither the source nor the target of any relationship."@en ;
+    arch:answers                  "One row per unconnected element."@en ;
+    arch:doesNotProve             "That the element is unused or safe to delete. It may be context drawn on a diagram, or its relationships may be in a model that is not loaded."@en ;
+    arch:questionStage            arch:QualityStage ;
+    arch:questionAddressesConcern archvp:QualityConcern ;
+    arch:resultIsFinding          true ;
+    arch:findingSeverity          sh:Info ;
+    arch:findingFocus             "element" ;
+    arch:requiresDataset          arch:ModelDataset ;
+    arch:resultKey                "orphans" ;
+    arch:defaultLimit             500 ;
+    sh:parameter [ sh:path arch:model ; sh:name "model" ; sh:class arch:Model ; sh:optional true ; sh:order 1 ;
+                   sh:description "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from."@en ] ;
+    sh:prefixes                   <https://meta.linked.archi/core-questions#> ;
+    sh:select """
+        SELECT ?element ?label ?type
+        WHERE {
+          ?element arch:inModel ?model ;
+                   rdf:type ?type .
+          FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+          MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }
+                                                UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }
+          FILTER NOT EXISTS { ?element arch:source ?anySource }
+          FILTER NOT EXISTS { ?element rdf:type ?notElement . FILTER(?notElement IN (arch:View, arch:Diagram, arch:Catalog, arch:Matrix, arch:Folder)) }
+          FILTER NOT EXISTS { ?incoming arch:target ?element }
+          FILTER NOT EXISTS { ?outgoing arch:source ?element }
+          OPTIONAL { ?element skos:prefLabel ?label . FILTER(lang(?label) = "" || langMatches(lang(?label), "en")) }
+        }
+        ORDER BY ?type ?label
+    """ ;
+.
+
+:not-in-any-view
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "core/unpresented" ;
+    skos:prefLabel                "Which elements appear in no view?"@en ;
+    dcterms:description           "Elements of the model that no diagram, catalogue or matrix presents."@en ;
+    arch:answers                  "One row per element without arch:inView."@en ;
+    arch:doesNotProve             "That the element is irrelevant. Much of a model is only ever queried; this matters where a deliverable is read as complete."@en ;
+    arch:questionStage            arch:QualityStage ;
+    arch:questionAddressesConcern archvp:QualityConcern ;
+    arch:resultIsFinding          true ;
+    arch:findingSeverity          sh:Info ;
+    arch:findingFocus             "element" ;
+    arch:requiresDataset          arch:ModelDataset ;
+    arch:resultKey                "unpresented" ;
+    arch:defaultLimit             500 ;
+    sh:parameter [ sh:path arch:model ; sh:name "model" ; sh:class arch:Model ; sh:optional true ; sh:order 1 ;
+                   sh:description "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from."@en ] ;
+    sh:prefixes                   <https://meta.linked.archi/core-questions#> ;
+    sh:select """
+        SELECT ?element ?label ?type
+        WHERE {
+          ?element arch:inModel ?model ;
+                   rdf:type ?type .
+          FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+          MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }
+                                                UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }
+          FILTER NOT EXISTS { ?element arch:source ?anySource }
+          FILTER NOT EXISTS { ?element rdf:type ?notElement . FILTER(?notElement IN (arch:View, arch:Diagram, arch:Catalog, arch:Matrix, arch:Folder)) }
+          FILTER NOT EXISTS { ?element arch:inView ?anyView }
+          OPTIONAL { ?element skos:prefLabel ?label . FILTER(lang(?label) = "" || langMatches(lang(?label), "en")) }
+        }
+        ORDER BY ?type ?label
+    """ ;
+.
+
+:missing-definitions
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "core/coverage-gaps" ;
+    skos:prefLabel                "Which elements have no definition?"@en ;
+    dcterms:description           "Elements, of one type or of any, with no skos:definition."@en ;
+    arch:answers                  "One row per element without a definition."@en ;
+    arch:doesNotProve             "That the element is unclear to its readers. A self-explanatory name may need no definition."@en ;
+    arch:questionStage            arch:QualityStage ;
+    arch:questionAddressesConcern archvp:QualityConcern ;
+    arch:resultIsFinding          true ;
+    arch:findingSeverity          sh:Info ;
+    arch:findingFocus             "element" ;
+    arch:requiresDataset          arch:ModelDataset ;
+    arch:resultKey                "undefined" ;
+    arch:defaultLimit             500 ;
+    sh:parameter [ sh:path arch:conceptType ; sh:name "concept type" ; sh:nodeKind sh:IRI ; sh:optional true ; sh:order 1 ;
+                   sh:description "An element type, such as an application component."@en ] ;
+    sh:parameter [ sh:path arch:model ; sh:name "model" ; sh:class arch:Model ; sh:optional true ; sh:order 2 ;
+                   sh:description "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from."@en ] ;
+    sh:prefixes                   <https://meta.linked.archi/core-questions#> ;
+    sh:select """
+        SELECT DISTINCT ?element ?label ?type
+        WHERE {
+          ?element arch:inModel ?model ;
+                   rdf:type ?conceptType ;
+                   rdf:type ?type .
+          FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+          MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }
+                                                UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }
+          FILTER NOT EXISTS { ?element arch:source ?anySource }
+          FILTER NOT EXISTS { ?element rdf:type ?notElement . FILTER(?notElement IN (arch:View, arch:Diagram, arch:Catalog, arch:Matrix, arch:Folder)) }
+          FILTER NOT EXISTS { ?element skos:definition ?anyDefinition }
+          OPTIONAL { ?element skos:prefLabel ?label . FILTER(lang(?label) = "" || langMatches(lang(?label), "en")) }
+        }
+        ORDER BY ?type ?label
+    """ ;
+.
+
+:duplicate-labels
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "core/label-collisions" ;
+    skos:prefLabel                "Which elements share a name with another of the same type?"@en ;
+    dcterms:description           "Elements whose name, compared without regard to case, another element of the same most specific type also has, in any loaded model."@en ;
+    arch:answers                  "One row per element in a collision, with how many elements share the name."@en ;
+    arch:doesNotProve             "That they are the same thing. A shared name makes two elements candidates for a person to compare, never a merge."@en ;
+    arch:questionStage            arch:QualityStage ;
+    arch:questionAddressesConcern archvp:QualityConcern ;
+    arch:resultIsFinding          true ;
+    arch:findingSeverity          sh:Warning ;
+    arch:findingFocus             "element" ;
+    arch:requiresDataset          arch:ModelDataset ;
+    arch:resultKey                "collisions" ;
+    arch:defaultLimit             500 ;
+    sh:parameter [ sh:path arch:model ; sh:name "model" ; sh:class arch:Model ; sh:optional true ; sh:order 1 ;
+                   sh:description "The model whose elements are reported. A modelling tool binds the open model; a deliverable, the model it is produced from."@en ] ;
+    sh:prefixes                   <https://meta.linked.archi/core-questions#> ;
+    sh:select """
+        SELECT DISTINCT ?element ?label ?type ?sharedBy
+        WHERE {
+          {
+            SELECT ?type ?key (COUNT(DISTINCT ?candidate) AS ?sharedBy)
+            WHERE {
+              ?candidate arch:inModel ?anyModel ;
+                         rdf:type ?type ;
+                         skos:prefLabel ?candidateLabel .
+              FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+              MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }
+                                                    UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }
+              FILTER NOT EXISTS { ?candidate arch:source ?anySource }
+              FILTER NOT EXISTS { ?candidate rdf:type ?notElement . FILTER(?notElement IN (arch:View, arch:Diagram, arch:Catalog, arch:Matrix, arch:Folder)) }
+              BIND(LCASE(STR(?candidateLabel)) AS ?key)
+            }
+            GROUP BY ?type ?key
+            HAVING (COUNT(DISTINCT ?candidate) > 1)
+          }
+          ?element arch:inModel ?model ;
+                   rdf:type ?type ;
+                   skos:prefLabel ?label .
+          FILTER(LCASE(STR(?label)) = ?key)
+        }
+        ORDER BY ?key ?type
+    """ ;
+.
+
+:relationship-integrity
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "core/reifies-audit" ;
+    skos:prefLabel                "Which relationships are out of step with their direct triple?"@en ;
+    dcterms:description           '''Qualified relationships whose type has an unqualified form (arch:unqualifiedForm) but whose
+rdf:reifies triple term is missing or names other ends, or whose direct triple is not asserted. Needs RDF 1.2
+triple terms.'''@en ;
+    arch:answers                  "One row per relationship in error, with what is wrong."@en ;
+    arch:doesNotProve             "That a query over the direct triples is wrong everywhere: it misses or misreports exactly these relationships."@en ;
+    arch:questionStage            arch:QualityStage ;
+    arch:questionAddressesConcern archvp:QualityConcern ;
+    arch:resultIsFinding          true ;
+    arch:findingSeverity          sh:Violation ;
+    arch:findingFocus             "relationship" ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
+    arch:resultKey                "integrity" ;
+    arch:defaultLimit             500 ;
+    sh:prefixes                   <https://meta.linked.archi/core-questions#> ;
+    sh:select """
+        SELECT DISTINCT ?relationship ?type ?source ?target ?problem
+        WHERE {
+          ?relationship arch:source ?source ;
+                        arch:target ?target ;
+                        rdf:type ?type .
+          # Only types with an unqualified form carry the direct triple.
+          { ?type arch:unqualifiedForm ?predicate }
+          UNION
+          { GRAPH ?mappingGraph { ?type arch:unqualifiedForm ?predicate } }
+          FILTER NOT EXISTS {
+            ?relationship rdf:reifies <<( ?source ?predicate ?target )>> .
+            ?source ?predicate ?target .
+          }
+          BIND(IF(NOT EXISTS { ?relationship rdf:reifies ?anyTerm }, "no rdf:reifies",
+               IF(NOT EXISTS { ?source ?predicate ?target }, "direct triple not asserted",
+                  "rdf:reifies names a different triple")) AS ?problem)
+        }
+        ORDER BY ?problem ?type
+    """ ;
+.
+
+# ── Views ───────────────────────────────────────────────────────
+
+:views-showing
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "core/view-usage-semantic" ;
+    skos:prefLabel                "Which views show this element?"@en ;
+    dcterms:description           "The views that present the element, with their viewpoints."@en ;
+    arch:answers                  "One row per view presenting the element."@en ;
+    arch:doesNotProve             "That a view not listed leaves it out on purpose: a view drawn without arch:inView may still place it."@en ;
+    arch:questionStage            arch:ViewsStage ;
+    arch:resultIsFinding          false ;
+    arch:requiresDataset          arch:ModelDataset ;
+    arch:resultKey                "views" ;
+    arch:defaultLimit             200 ;
+    sh:parameter [ sh:path arch:focus ; sh:name "focus" ; sh:nodeKind sh:IRI ; sh:optional false ; sh:order 1 ;
+                   sh:description "The element the question is about. A modelling tool binds the selected element."@en ] ;
+    sh:prefixes                   <https://meta.linked.archi/core-questions#> ;
+    sh:select """
+        SELECT ?view ?viewLabel ?viewpoint
+        WHERE {
+          ?focus arch:inView ?view .
+          OPTIONAL { ?view skos:prefLabel ?viewLabel . FILTER(lang(?viewLabel) = "" || langMatches(lang(?viewLabel), "en")) }
+          OPTIONAL { ?view arch:viewConformsToViewpoint ?viewpoint }
+        }
+        ORDER BY ?viewLabel
+    """ ;
+.
+
+:view-contents
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "core/view-contents-semantic" ;
+    skos:prefLabel                "What does this view present?"@en ;
+    dcterms:description           "The elements and relationships a view presents."@en ;
+    arch:answers                  "One row per presented concept, with its most specific type."@en ;
+    arch:doesNotProve             "Layout or grouping: nesting on a diagram is geometry, not a relationship."@en ;
+    arch:questionStage            arch:ViewsStage ;
+    arch:resultIsFinding          false ;
+    arch:requiresDataset          arch:ModelDataset ;
+    arch:resultKey                "contents" ;
+    arch:defaultLimit             1000 ;
+    sh:parameter [ sh:path arch:view ; sh:name "view" ; sh:class arch:View ; sh:optional false ; sh:order 1 ;
+                   sh:description "A view. A modelling tool binds the open view."@en ] ;
+    sh:prefixes                   <https://meta.linked.archi/core-questions#> ;
+    sh:select """
+        SELECT ?concept ?label ?type ?kind
+        WHERE {
+          ?concept arch:inView ?view ;
+                   rdf:type ?type .
+          FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+          MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }
+                                                UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }
+          BIND(IF(EXISTS { ?concept arch:source ?anySource }, "relationship", "element") AS ?kind)
+          OPTIONAL { ?concept skos:prefLabel ?label . FILTER(lang(?label) = "" || langMatches(lang(?label), "en")) }
+        }
+        ORDER BY ?kind ?type ?label
+    """ ;
+.
+
+:viewpoint-conformance
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "core/viewpoint-conformance" ;
+    skos:prefLabel                "Which elements does their view's viewpoint not admit?"@en ;
+    dcterms:description           '''Elements presented in a view whose viewpoint states the concepts it admits
+(arch:includesConcept), and whose type is neither one of them nor a specialisation of one. Views whose
+viewpoint the loaded metamodels do not define are the subject of "Which views follow a viewpoint the loaded
+metamodels do not define?".'''@en ;
+    arch:answers                  "One row per element out of place: the view, its viewpoint, the element and its type."@en ;
+    arch:doesNotProve             "That the view is wrong. A viewpoint is a convention; the finding is that the view departs from it, which may be deliberate."@en ;
+    arch:questionStage            arch:ViewsStage ;
+    arch:questionAddressesConcern archvp:QualityConcern, archvp:GovernanceConcern ;
+    arch:resultIsFinding          true ;
+    arch:findingSeverity          sh:Warning ;
+    arch:findingFocus             "element" ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
+    arch:resultKey                "nonConforming" ;
+    arch:defaultLimit             500 ;
+    sh:parameter [ sh:path arch:view ; sh:name "view" ; sh:class arch:View ; sh:optional true ; sh:order 1 ;
+                   sh:description "A view to check; every view when none is given. A modelling tool binds the open view."@en ] ;
+    sh:prefixes                   <https://meta.linked.archi/core-questions#> ;
+    sh:select """
+        SELECT DISTINCT ?view ?viewpoint ?element ?label ?type
+        WHERE {
+          ?element arch:inView ?view ;
+                   rdf:type ?type .
+          FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+          MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }
+                                                UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }
+          FILTER NOT EXISTS { ?element arch:source ?anySource }
+          ?view arch:viewConformsToViewpoint ?viewpoint .
+          # Only viewpoints that state what they admit are judged.
+          { SELECT DISTINCT ?viewpoint WHERE { { ?viewpoint arch:includesConcept ?anyConcept }
+                                               UNION { GRAPH ?declaringGraph { ?viewpoint arch:includesConcept ?anyConcept } } } }
+          # What each admits: the types it names and their specialisations.
+          MINUS {
+            SELECT DISTINCT ?viewpoint ?type
+            WHERE {
+              { ?viewpoint arch:includesConcept ?admitted }
+              UNION
+              { GRAPH ?admittingGraph { ?viewpoint arch:includesConcept ?admitted } }
+              { ?type rdfs:subClassOf* ?admitted }
+              UNION
+              { GRAPH ?hierarchyGraph { ?type rdfs:subClassOf* ?admitted } }
+            }
+          }
+          OPTIONAL { ?element skos:prefLabel ?label . FILTER(lang(?label) = "" || langMatches(lang(?label), "en")) }
+        }
+        ORDER BY ?view ?type ?label
+    """ ;
+.
+
+:views-with-unknown-viewpoint
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "core/unknown-viewpoints" ;
+    skos:prefLabel                "Which views follow a viewpoint the loaded metamodels do not define?"@en ;
+    dcterms:description           '''Views whose arch:viewConformsToViewpoint names a resource nothing loaded defines — a
+misspelt or outdated viewpoint IRI, or a metamodel that is not loaded. Their conformance cannot be judged.'''@en ;
+    arch:answers                  "One row per view, with the viewpoint it names."@en ;
+    arch:doesNotProve             "That the viewpoint does not exist: it may be defined in a metamodel that is not loaded."@en ;
+    arch:questionStage            arch:ViewsStage ;
+    arch:questionAddressesConcern archvp:QualityConcern, archvp:GovernanceConcern ;
+    arch:resultIsFinding          true ;
+    arch:findingSeverity          sh:Warning ;
+    arch:findingFocus             "view" ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
+    arch:resultKey                "unknownViewpoints" ;
+    arch:defaultLimit             200 ;
+    sh:prefixes                   <https://meta.linked.archi/core-questions#> ;
+    sh:select """
+        SELECT ?view ?viewLabel ?viewpoint
+        WHERE {
+          ?view arch:viewConformsToViewpoint ?viewpoint .
+          FILTER NOT EXISTS {
+            { ?viewpoint rdf:type ?anyType }
+            UNION
+            { GRAPH ?definingGraph { ?viewpoint rdf:type ?anyType } }
+          }
+          OPTIONAL { ?view skos:prefLabel ?viewLabel . FILTER(lang(?viewLabel) = "" || langMatches(lang(?viewLabel), "en")) }
+        }
+        ORDER BY ?viewLabel
+    """ ;
+.
+
+:viewpoint-scope
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "core/viewpoint-scope" ;
+    skos:prefLabel                "What in the model belongs in a view of this viewpoint?"@en ;
+    dcterms:description           '''Elements whose type the viewpoint admits — a type it names or a specialisation of
+one — each with its outgoing relationships summarised. The viewpoint is the one statement of what a view or a
+deliverable section covers.'''@en ;
+    arch:answers                  "One row per element: name, type, definition and a \"relationship → target\" summary of what it points to."@en ;
+    arch:doesNotProve             "That the elements belong in one diagram. A viewpoint says what may appear, not what should be drawn together."@en ;
+    arch:questionStage            arch:ViewsStage ;
+    arch:resultIsFinding          false ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
+    arch:resultKey                "scope" ;
+    arch:defaultLimit             1000 ;
+    sh:parameter [ sh:path arch:viewpoint ; sh:name "viewpoint" ; sh:class arch:Viewpoint ; sh:optional false ; sh:order 1 ;
+                   sh:description "A viewpoint. A modelling tool binds the open view's viewpoint; a deliverable, the section's."@en ] ;
+    sh:parameter [ sh:path arch:model ; sh:name "model" ; sh:class arch:Model ; sh:optional true ; sh:order 2 ;
+                   sh:description "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from."@en ] ;
+    sh:prefixes                   <https://meta.linked.archi/core-questions#> ;
+    sh:select """
+        SELECT ?element (SAMPLE(?anyLabel) AS ?label) ?type (SAMPLE(?anyDefinition) AS ?definition)
+               (GROUP_CONCAT(DISTINCT ?link; separator = "; ") AS ?outgoing)
+        WHERE {
+          # What each viewpoint admits: the types it names and their specialisations.
+          {
+            SELECT DISTINCT ?viewpoint ?type
+            WHERE {
+              { ?viewpoint arch:includesConcept ?admitted }
+              UNION
+              { GRAPH ?admittingGraph { ?viewpoint arch:includesConcept ?admitted } }
+              { ?type rdfs:subClassOf* ?admitted }
+              UNION
+              { GRAPH ?hierarchyGraph { ?type rdfs:subClassOf* ?admitted } }
+            }
+          }
+          ?element rdf:type ?type ;
+                   arch:inModel ?model .
+          FILTER NOT EXISTS { ?element arch:source ?anySource }
+          OPTIONAL { ?element skos:prefLabel ?anyLabel . FILTER(lang(?anyLabel) = "" || langMatches(lang(?anyLabel), "en")) }
+          OPTIONAL { ?element skos:definition ?anyDefinition . FILTER(lang(?anyDefinition) = "" || langMatches(lang(?anyDefinition), "en")) }
+          OPTIONAL {
+            ?relationship arch:source ?element ;
+                          arch:target ?other ;
+                          rdf:type ?relationshipType .
+            FILTER(?relationshipType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+            MINUS { SELECT DISTINCT ?relationshipType WHERE { { ?relationshipType arch:isAbstractClass true }
+                                                              UNION { GRAPH ?abstractClassGraph { ?relationshipType arch:isAbstractClass true } } } }
+            OPTIONAL { ?other skos:prefLabel ?otherLabel . FILTER(lang(?otherLabel) = "" || langMatches(lang(?otherLabel), "en")) }
+            BIND(CONCAT(REPLACE(STR(?relationshipType), "^.*[#/]", ""), " → ",
+                        COALESCE(STR(?otherLabel), STR(?other))) AS ?link)
+          }
+        }
+        GROUP BY ?element ?type
+        ORDER BY ?type ?label
+    """ ;
+.
+
+# ── Enrichment ──────────────────────────────────────────────────
+
+:architecture-state
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "core/lifecycle" ;
+    skos:prefLabel                "What is baseline, target or still awaiting approval?"@en ;
+    dcterms:description           "Concepts with an architecture state (baseline, target, transitional) or an approval state (proposed, approved)."@en ;
+    arch:answers                  "One row per concept with either state recorded."@en ;
+    arch:doesNotProve             "That a concept without a state is current. An unstated state is unknown."@en ;
+    arch:questionStage            arch:EnrichmentStage ;
+    arch:questionAddressesConcern archvp:EvolutionConcern, archvp:GovernanceConcern ;
+    arch:resultIsFinding          false ;
+    arch:requiresDataset          arch:ModelDataset ;
+    arch:resultKey                "states" ;
+    arch:defaultLimit             500 ;
+    sh:parameter [ sh:path arch:model ; sh:name "model" ; sh:class arch:Model ; sh:optional true ; sh:order 1 ;
+                   sh:description "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from."@en ] ;
+    sh:prefixes                   <https://meta.linked.archi/core-questions#> ;
+    sh:select """
+        SELECT ?element ?label ?type ?state ?approval
+        WHERE {
+          ?element arch:inModel ?model ;
+                   rdf:type ?type .
+          FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+          MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }
+                                                UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }
+          OPTIONAL { ?element arch:architectureState ?state }
+          OPTIONAL { ?element arch:approvalState ?approval }
+          FILTER(BOUND(?state) || BOUND(?approval))
+          OPTIONAL { ?element skos:prefLabel ?label . FILTER(lang(?label) = "" || langMatches(lang(?label), "en")) }
+        }
+        ORDER BY ?approval ?state ?type ?label
+    """ ;
+.

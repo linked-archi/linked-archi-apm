@@ -14,17 +14,31 @@ That is the single behaviour this package exists to fix. Both predecessors could
 emit a query that ran, returned nothing, and was wrong - because the term was
 spelled differently, or because the relationship form it assumed is not emitted
 by default.
+
+An entry may also be a model question from a published question set, the source of truth
+for what it asks (see ``questions``). Where a question and a template share a name they are
+one question with two implementations: the question runs where the dataset fits it - read
+as one graph, with what its query reads present - and the template elsewhere. See
+:meth:`TemplateEntry.choose`.
 """
 
 from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
 from .contract import _is_absolute_iri
+from .questions import (
+    HELD_BACK,
+    Question,
+    QuestionError,
+    catalogue_parameters,
+    load_index,
+    read_set,
+)
 
 #: Templates are committed assets owned by this skill.
 TEMPLATE_DIR = Path(__file__).resolve().parents[2] / "assets" / "templates"
@@ -201,9 +215,29 @@ class TemplateEntry:
     #: that matter would go with it.
     caveat: str = ""
     template_dir: Path = TEMPLATE_DIR
+    #: The model question of this name, when a question set has one. With ``file`` empty
+    #: the entry is a question only, and its other fields are read from it.
+    question: Question | None = None
+
+    @property
+    def has_template(self) -> bool:
+        return bool(self.file)
+
+    @property
+    def implementations(self) -> tuple[str, ...]:
+        return (("question",) if self.question else ()) + (("template",) if self.file else ())
+
+    @property
+    def question_parameters(self) -> dict[str, dict[str, Any]]:
+        """The question's parameters under their catalogue names, and its LIMIT."""
+        if self.question is None:
+            return {}
+        return catalogue_parameters(self.question)
 
     @property
     def path(self) -> Path:
+        if not self.file:
+            raise CatalogError(f"{self.name!r} is a model question; it has no template file")
         root = self.template_dir.resolve()
         path = (self.template_dir / self.file).resolve()
         if not path.is_relative_to(root):
@@ -213,6 +247,8 @@ class TemplateEntry:
         return path
 
     def text(self) -> str:
+        if not self.file and self.question is not None:
+            return self.question.text
         if not self.path.is_file():
             raise CatalogError(
                 f"Template {self.name!r} is catalogued as {self.file} but that file "
@@ -223,7 +259,100 @@ class TemplateEntry:
         except (OSError, UnicodeError) as exc:
             raise CatalogError(f"Could not read template {self.name!r}: {exc}") from exc
 
-    def check(self, profile: ResolvedProfile) -> Verdict:
+    def check(self, profile: ResolvedProfile, transport: str | None = None) -> Verdict:
+        """Whether ``profile`` supports this entry: the verdict of what would run.
+
+        ``transport`` is ``local``, ``endpoint``, or ``None`` when no dataset is in view (a
+        listing). It matters to a model question only, which reads the dataset as one graph.
+        """
+        return self.choose(profile, transport)[1]
+
+    def choose(
+        self,
+        profile: ResolvedProfile,
+        transport: str | None = None,
+        supplied: Sequence[str] = (),
+    ) -> tuple[str | None, Verdict]:
+        """Which implementation runs - ``question``, ``template`` or ``None`` - and its verdict.
+
+        The question when the dataset fits it, else the template; refused only when neither
+        fits, with both sets of reasons. ``supplied`` names the parameters given: one only
+        the other implementation takes makes this one unfit, rather than silently dropped.
+        """
+        verdicts: dict[str, Verdict] = {}
+        if (
+            transport is None
+            and self.question is not None
+            and self.file
+            and profile.graphs.named_graphs
+        ):
+            # Nothing will run it here - `query render` - so prefer the SPARQL that runs as
+            # rendered on this layout. The question needs the dataset read as one graph,
+            # which `query run` arranges and a pasted query does not.
+            template = self.check_template(profile, supplied)
+            if template.ok:
+                return "template", template
+        if self.question is not None:
+            verdicts["question"] = self.check_question(profile, transport, supplied)
+            if verdicts["question"].ok:
+                return "question", verdicts["question"]
+        if self.file:
+            verdicts["template"] = self.check_template(profile, supplied)
+            if verdicts["template"].ok:
+                return "template", verdicts["template"]
+        if len(verdicts) == 1:
+            return None, next(iter(verdicts.values()))
+        return None, Verdict(
+            ok=False,
+            unmet=tuple(f"as a model question: {reason}" for reason in verdicts["question"].unmet)
+            + tuple(f"as a template: {reason}" for reason in verdicts["template"].unmet),
+        )
+
+    def check_question(
+        self,
+        profile: ResolvedProfile,
+        transport: str | None = None,
+        supplied: Sequence[str] = (),
+    ) -> Verdict:
+        """Whether the model question can be asked on this dataset.
+
+        What its query reads is gated as a template's ``requires`` is; the metamodel it needs
+        is checked when it runs, against the data. Beyond that a question needs the dataset
+        read as ONE graph: local data is read so on request, an endpoint only when the
+        profile says its default graph is the union of its graphs.
+        """
+        question = self.question
+        if question is None:
+            return Verdict(ok=False, unmet=(f"{self.name!r} has no model question",))
+        unmet: list[str] = []
+        warnings: list[str] = []
+        _gate_capabilities(
+            profile, question.capabilities, unmet, warnings, "model question", QUESTION_REMEDIES
+        )
+        _gate_notation(
+            profile, question.notation, question.notation_namespace, unmet, warnings,
+            "model question",
+        )
+        if profile.graphs.named_graphs and transport == "endpoint":
+            if profile.capability("union_default_graph") is not True:
+                unmet.append(
+                    "a model question reads the dataset as one graph - the model and its "
+                    "metamodel together - and this endpoint's default graph is not declared "
+                    "to be the union of its graphs (capabilities.union_default_graph in "
+                    f"profile {profile.name!r}). Run it on local data, or declare the "
+                    "capability if the endpoint's default graph is that union."
+                )
+        taken = set(self.question_parameters)
+        foreign = sorted(set(supplied) - taken)
+        if foreign:
+            unmet.append(
+                "the model question takes no "
+                + ", ".join(foreign)
+                + f" (it takes: {', '.join(sorted(taken))})"
+            )
+        return Verdict(ok=not unmet, unmet=tuple(unmet), warnings=tuple(warnings))
+
+    def check_template(self, profile: ResolvedProfile, supplied: Sequence[str] = ()) -> Verdict:
         """Whether ``profile`` supports this template.
 
         Refusals are phrased for a reader who must decide what to do next, so each
@@ -231,6 +360,14 @@ class TemplateEntry:
         """
         unmet: list[str] = []
         warnings: list[str] = []
+        if not self.file:
+            return Verdict(ok=False, unmet=(f"{self.name!r} has no template",))
+        foreign = sorted(set(supplied) - set(self.parameters))
+        if foreign:
+            unmet.append(
+                "the template takes no " + ", ".join(foreign)
+                + f" (it takes: {', '.join(sorted(self.parameters)) or 'none'})"
+            )
 
         for role in self.requires.roles:
             if not profile.has_role(role):
@@ -259,76 +396,123 @@ class TemplateEntry:
                     f"{profile.name!r} (has: {available})"
                 )
 
-        for capability, required in self.requires.capabilities.items():
-            actual = profile.capability(capability)
-            if actual == required:
-                continue
-            if actual == "partial" and required is True:
-                warnings.append(
-                    f"capability {capability!r} is partial: present for some models "
-                    "and absent for others. A short result may be coverage rather "
-                    "than absence - check with the orientation templates."
-                )
-                continue
-            unmet.append(
-                f"capability {capability!r} is {actual!r} in profile "
-                f"{profile.name!r} but this template needs {required!r}"
-            )
+        _gate_capabilities(profile, self.requires.capabilities, unmet, warnings)
 
         if self.requires.membership:
             gap = profile.membership_gap()
             if gap:
                 unmet.append(gap)
 
-        # A notation template names that notation's own terms, because there is no role
-        # indirection for `bpmn:SequenceFlow` or `c4:hasContainer`. Against a dataset
-        # without the notation it therefore runs and returns nothing, which reads as "this
-        # notation has none of those" rather than "this dataset has no such notation" -
-        # and an empty result is the one answer this package refuses to leave ambiguous.
-        #
-        # The catalogue has carried a `notation` label since the beginning without ever
-        # consulting it. Matching is on the vocabulary's namespace IRI rather than that
-        # label, because a profile's slug for a notation is its own choice.
-        if self.notation_namespace:
-            slug = profile.notation_for_namespace(self.notation_namespace)
-            if slug is None:
-                declared = ", ".join(sorted(profile.notations)) or "none"
-                unmet.append(
-                    f"profile {profile.name!r} declares no notation using the vocabulary "
-                    f"{self.notation_namespace} that this {self.notation} template is "
-                    f"written against (it declares: {declared}). The query would run and "
-                    "return nothing, which is not the same as an empty answer. Add the "
-                    "notation to the profile if the dataset does carry it."
-                )
-            else:
-                # Declaring a notation says the profile speaks it. Presence says the data
-                # holds a model in it, and only the second decides whether this template
-                # can answer. Both are gated here rather than in a `requires` key, because
-                # every notation template already names its vocabulary and none of them
-                # should have to opt in to being refused against a dataset that lacks it.
-                present = profile.notation_present(slug)
-                if present is False:
-                    unmet.append(
-                        f"profile {profile.name!r} declares notation {slug!r} but records it "
-                        f"as absent from this dataset, so no model this {self.notation} "
-                        "template asks about is here. Refused rather than answered with no "
-                        "rows, which would read as 'none exist'. Confirm with "
-                        "core/inventory-summary, and if the notation is in fact loaded, set "
-                        f"notations.{slug}.present true - `la-profile verify` reports which "
-                        "notations have models here."
-                    )
-                elif present == "partial":
-                    warnings.append(
-                        f"notation {slug!r} is present for some models in this dataset and "
-                        "absent for others, so rows here cover part of it. "
-                        "core/inventory-summary reports which models carry it."
-                    )
+        _gate_notation(profile, self.notation, self.notation_namespace, unmet, warnings)
 
         return Verdict(ok=not unmet, unmet=tuple(unmet), warnings=tuple(warnings))
 
     def summary_line(self) -> str:
         tag = f"[{self.notation}]" if self.notation else ""
-        return f"{self.name:38} {self.stage:12} {tag:12} {self.purpose}"
+        # Q: a model question only; Q+T: a question with a template for other layouts.
+        kind = {("question",): "Q ", ("question", "template"): "Q+T "}.get(self.implementations, "")
+        return f"{self.name:38} {self.stage:12} {tag:12} {kind}{self.purpose}"
+
+
+#: What lifts a model question's capability refusal. A question has no template to name as
+#: an alternative where it is the only implementation, so the refusal says how the data
+#: comes to carry what it reads.
+QUESTION_REMEDIES: Mapping[str, str] = {
+    "direct_rel_triples": (
+        "The converters write the direct triples unless run with "
+        "--no-emit-direct-rel-triples; data that has them is described by a profile "
+        "claiming the capability, such as linked-archi-direct."
+    ),
+    "rdf_reifies": (
+        "The converters write rdf:reifies with the direct triples; a profile claiming the "
+        "capability, such as linked-archi-direct, describes data that has it."
+    ),
+    "part_of_model_edge": (
+        "Output of a converter from before arch:inModel lacks it; reconvert the model."
+    ),
+}
+
+
+def _gate_capabilities(
+    profile: "ResolvedProfile",
+    required_capabilities: Mapping[str, Any],
+    unmet: list[str],
+    warnings: list[str],
+    kind: str = "template",
+    remedies: Mapping[str, str] | None = None,
+) -> None:
+    """The profile's capabilities against what a query needs."""
+    for capability, required in required_capabilities.items():
+        actual = profile.capability(capability)
+        if actual == required:
+            continue
+        if actual == "partial" and required is True:
+            warnings.append(
+                f"capability {capability!r} is partial: present for some models "
+                "and absent for others. A short result may be coverage rather "
+                "than absence - check with the orientation templates."
+            )
+            continue
+        remedy = (remedies or {}).get(capability)
+        unmet.append(
+            f"capability {capability!r} is {actual!r} in profile "
+            f"{profile.name!r} but this {kind} needs {required!r}"
+            + (f". {remedy}" if remedy else "")
+        )
+
+
+def _gate_notation(
+    profile: "ResolvedProfile",
+    notation: str | None,
+    notation_namespace: str | None,
+    unmet: list[str],
+    warnings: list[str],
+    kind: str = "template",
+) -> None:
+    """A notation query against the notations the profile declares, and their presence."""
+    # A notation template names that notation's own terms, because there is no role
+    # indirection for `bpmn:SequenceFlow` or `c4:hasContainer`. Against a dataset
+    # without the notation it therefore runs and returns nothing, which reads as "this
+    # notation has none of those" rather than "this dataset has no such notation" -
+    # and an empty result is the one answer this package refuses to leave ambiguous.
+    #
+    # The catalogue has carried a `notation` label since the beginning without ever
+    # consulting it. Matching is on the vocabulary's namespace IRI rather than that
+    # label, because a profile's slug for a notation is its own choice.
+    if notation_namespace:
+        slug = profile.notation_for_namespace(notation_namespace)
+        if slug is None:
+            declared = ", ".join(sorted(profile.notations)) or "none"
+            unmet.append(
+                f"profile {profile.name!r} declares no notation using the vocabulary "
+                f"{notation_namespace} that this {notation} {kind} is "
+                f"written against (it declares: {declared}). The query would run and "
+                "return nothing, which is not the same as an empty answer. Add the "
+                "notation to the profile if the dataset does carry it."
+            )
+        else:
+            # Declaring a notation says the profile speaks it. Presence says the data
+            # holds a model in it, and only the second decides whether this template
+            # can answer. Both are gated here rather than in a `requires` key, because
+            # every notation template already names its vocabulary and none of them
+            # should have to opt in to being refused against a dataset that lacks it.
+            present = profile.notation_present(slug)
+            if present is False:
+                unmet.append(
+                    f"profile {profile.name!r} declares notation {slug!r} but records it "
+                    f"as absent from this dataset, so no model this {notation} "
+                    f"{kind} asks about is here. Refused rather than answered with no "
+                    "rows, which would read as 'none exist'. Confirm with "
+                    "core/inventory-summary, and if the notation is in fact loaded, set "
+                    f"notations.{slug}.present true - `la-profile verify` reports which "
+                    "notations have models here."
+                )
+            elif present == "partial":
+                warnings.append(
+                    f"notation {slug!r} is present for some models in this dataset and "
+                    "absent for others, so rows here cover part of it. "
+                    "core/inventory-summary reports which models carry it."
+                )
 
 
 class Catalog:
@@ -355,6 +539,9 @@ class Catalog:
 
         self.version = version
         self._entries: dict[str, TemplateEntry] = {}
+        #: Bundled questions kept out because a template of their name asks something else:
+        #: (identifier, question IRI, why). See ``questions.HELD_BACK``.
+        self.held_back: list[tuple[str, str, str]] = []
         for name, spec in raw.items():
             if (
                 not isinstance(name, str)
@@ -555,6 +742,56 @@ class Catalog:
             template_dir=self.template_dir,
         )
 
+    def add_questions(self, questions: Iterable[Question], *, bundled: bool) -> list[TemplateEntry]:
+        """Add model questions: beside the template of their name, or as entries of their own.
+
+        A bundled question and a bundled template of one name are one question with two
+        implementations, unless :data:`questions.HELD_BACK` says the two ask different
+        things. A project's question may not take a name already in the catalogue.
+        """
+        added: list[TemplateEntry] = []
+        for question in questions:
+            name = question.identifier
+            existing = self._entries.get(name)
+            if existing is not None and bundled and existing.file and name in HELD_BACK:
+                self.held_back.append((name, question.iri, HELD_BACK[name]))
+                continue
+            if existing is not None:
+                if not bundled or not existing.file or existing.question is not None:
+                    raise CatalogError(
+                        f"Model question {name!r} ({question.iri}) duplicates an existing "
+                        "catalogue entry"
+                    )
+                entry = replace(existing, question=question)
+            else:
+                if question.stage not in STAGES:
+                    raise CatalogError(f"Model question {name!r} has stage {question.stage!r}")
+                entry = TemplateEntry(
+                    name=name,
+                    file="",
+                    stage=question.stage,
+                    purpose=question.label,
+                    answers=question.answers,
+                    does_not_prove=question.does_not_prove,
+                    parameters=catalogue_parameters(question),
+                    requires=Requirement(capabilities=question.capabilities),
+                    notation=question.notation,
+                    notation_namespace=question.notation_namespace,
+                    template_dir=self.template_dir,
+                    question=question,
+                )
+            self._entries[name] = entry
+            added.append(entry)
+        return added
+
+    def concerns(self) -> dict[str, list[str]]:
+        """Each concern a model question informs, with the entries that inform it."""
+        found: dict[str, list[str]] = {}
+        for entry in self:
+            for concern in entry.question.concerns if entry.question else ():
+                found.setdefault(concern, []).append(entry.name)
+        return {concern: sorted(names) for concern, names in sorted(found.items())}
+
     # -- access -------------------------------------------------------------
 
     def __contains__(self, name: object) -> bool:
@@ -618,7 +855,7 @@ class Catalog:
         """
         problems: list[str] = []
         for entry in self:
-            if not entry.path.is_file():
+            if entry.file and not entry.path.is_file():
                 problems.append(f"{entry.name}: file not found at {entry.file}")
         if self.source is None or self.source.resolve() == CATALOG_PATH.resolve():
             catalogued = {e.file for e in self if e.template_dir == TEMPLATE_DIR}
@@ -648,15 +885,36 @@ class Catalog:
                     if verdict.ok and verdict.warnings:
                         mark = "! "
                 lines.append(f"{mark}{entry.summary_line()}")
-        total = len(self)
+        # Templates and questions are counted apart, each by its own verdict, so a figure
+        # quoted for the templates stays true as question sets grow.
+        templates = [entry for entry in self if entry.file]
+        questions = [entry for entry in self if entry.question]
+        both = sum(1 for entry in questions if entry.file)
         if profile is None:
-            lines.append(f"\n{total} template(s)")
+            lines.append(f"\n{len(templates)} template(s)")
         else:
-            usable = len(self.available(profile))
+            usable = sum(1 for entry in templates if entry.check_template(profile).ok)
             lines.append(
-                f"\n{total} template(s): {usable} available under profile "
-                f"{profile.name!r}, {total - usable} refused "
+                f"\n{len(templates)} template(s): {usable} available under profile "
+                f"{profile.name!r}, {len(templates) - usable} refused "
                 "(x = refused, ! = runs with a caveat)"
+            )
+        if questions:
+            line = (
+                f"{len(questions)} model question(s), {both} of them with a template of the "
+                "same name"
+            )
+            if profile is not None:
+                asked = sum(1 for entry in questions if entry.check_question(profile).ok)
+                line += f": {asked} can be asked under profile {profile.name!r}"
+            lines.append(
+                line + " (Q = model question; Q+T = the question where the dataset fits it, "
+                "the template elsewhere)"
+            )
+        for name, question, reason in self.held_back:
+            lines.append(
+                f"held back: the model question {question} shares the name {name} with a "
+                f"template that asks something else - {reason}"
             )
         return "\n".join(lines).lstrip("\n")
 
@@ -753,30 +1011,53 @@ def _validate_extension_entry(entry: TemplateEntry) -> None:
         )
 
 
+def _check_project_name(name: str, kind: str) -> None:
+    segments = name.split("/")
+    if (
+        len(segments) < 2
+        or segments[0] in {"core", "notation", "custom"}
+        or any(not re.fullmatch(r"[a-z][a-z0-9_-]*", segment) for segment in segments)
+    ):
+        raise CatalogError(
+            f"{kind} {name!r} needs a project namespace, for example acme/my-question"
+        )
+
+
 def load_catalog(
     path: Path | str = CATALOG_PATH,
     *,
     extensions: Sequence[Path | str] = (),
 ) -> Catalog:
     catalog = _read_catalog(path)
+    if Path(path).resolve() == CATALOG_PATH.resolve():
+        try:
+            catalog.add_questions(load_index().questions, bundled=True)
+        except QuestionError as exc:
+            raise CatalogError(str(exc)) from exc
     external_entries: list[TemplateEntry] = []
     for extension_path in extensions:
+        if str(extension_path).endswith(".ttl"):
+            # A project's question set. Its questions take project names, as a project
+            # template does, and must say what they do not prove.
+            try:
+                questions = read_set(Path(extension_path).resolve())
+            except QuestionError as exc:
+                raise CatalogError(f"Invalid question set {extension_path}: {exc}") from exc
+            for question in questions:
+                _check_project_name(question.identifier, "Model question")
+                if not question.does_not_prove.strip():
+                    raise CatalogError(
+                        f"Model question {question.identifier!r} needs arch:doesNotProve"
+                    )
+            catalog.add_questions(questions, bundled=False)
+            continue
         extension = _read_catalog(extension_path)
         problems = extension.validate_files()
         if problems:
             raise CatalogError("Invalid extension catalogue: " + "; ".join(problems))
         for entry in extension:
             _validate_extension_entry(entry)
-            segments = entry.name.split("/")
-            if (
-                len(segments) < 2
-                or segments[0] in {"core", "notation", "custom"}
-                or any(not re.fullmatch(r"[a-z][a-z0-9_-]*", segment) for segment in segments)
-            ):
-                raise CatalogError(
-                    f"Extension template {entry.name!r} needs a project namespace, "
-                    "for example acme/my-question"
-                )
+            _check_project_name(entry.name, "Extension template")
             if entry.name in catalog:
                 raise CatalogError(
                     f"Extension template {entry.name!r} duplicates an existing template"

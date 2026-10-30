@@ -8,12 +8,15 @@ PYPATH  := PYTHONPATH=$(SCRIPTS)
 # checkout of the converters and of linked-archi-meta alongside this repo. A consumer never
 # needs it: the fixtures are committed. Override when your checkouts sit elsewhere.
 CONV    ?= ../converters/example-architecture-project
+# Maintainer-only too. `make questions` refreshes the bundled question sets and the
+# documents their check runs on from a linked-archi-meta checkout.
+META    ?= ../../../linked-archi-meta
 BASE_IRI?= https://example.org/la/
 SKILLS_DIR ?= $(HOME)/.kiro/skills
 BIN_DIR ?= $(HOME)/.local/bin
 BENCH_ARGS ?= --output out/query-benchmark.json
 
-.PHONY: help check test test-quiet catalog profile verify verify-curated fixtures \
+.PHONY: help check test test-quiet catalog profile verify verify-curated fixtures questions \
         skills install-local uninstall-local link-cli unlink-cli dist version bump \
         release-notes release-check clean docs docs-serve benchmark
 
@@ -37,6 +40,8 @@ help:
 	@echo "profile        show the default profile"
 	@echo "verify         verify the default profile against the base fixture"
 	@echo "verify-curated verify the curated profile against augmented.trig"
+	@echo "questions      refresh the bundled question sets and their check's documents"
+	@echo "               from linked-archi-meta (META=path, default $(META))"
 	@echo "fixtures       regenerate fixtures from converter output"
 	@echo "               (converter-1.3.trig is a separate step: it needs the"
 	@echo "                converter jars - see fixtures/PROVENANCE.md)"
@@ -115,6 +120,15 @@ verify-curated:
 
 # Maintainer-only, and it says so rather than failing on a missing path. The fixtures are
 # committed; a consumer has no reason to rebuild them and no checkout to rebuild them from.
+questions:
+	@test -d "$(META)" || { \
+	  echo "make questions needs linked-archi-meta checked out."; \
+	  echo "  looked for: $(META)"; \
+	  echo "  override:   make questions META=/path/to/linked-archi-meta"; \
+	  exit 1; }
+	$(PYPATH) $(PY) -c 'import sys; from linked_archi_query.questions import main; sys.exit(main(sys.argv[1:]))' --refresh "$(META)"
+	LINKED_ARCHI_META="$(META)" $(PY) fixtures/build_fixtures.py --refresh-questions
+
 fixtures:
 	@test -d "$(CONV)" || { \
 	  echo "make fixtures needs the converters checked out alongside this repo."; \

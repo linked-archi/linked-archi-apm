@@ -1,0 +1,804 @@
+# modelingLanguages/archimate/3.2/archimate3.2-onto.ttl from linked-archi-meta, every statement but the 104 citing a source elsewhere.
+# Written by `make questions`; do not edit.
+
+@prefix am4vp: <https://meta.linked.archi/archimate4/viewpoints#> .
+@prefix amvp: <https://meta.linked.archi/archimate3/viewpoints#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix am: <https://meta.linked.archi/archimate3/onto#> .
+@prefix am4: <https://meta.linked.archi/archimate4/onto#> .
+@prefix archvp: <https://meta.linked.archi/core-viewpoints#> .
+@prefix bs: <https://meta.linked.archi/backstage/onto#> .
+@prefix lmm: <https://meta.linked.archi/leanix/onto#> .
+@prefix infra: <https://meta.linked.archi/bpmn/infra#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix bpmn: <https://meta.linked.archi/bpmn/onto#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix arch-tax: <https://meta.linked.archi/core-tax#> .
+@prefix archvis: <https://meta.linked.archi/core-vis#> .
+@prefix c4: <https://meta.linked.archi/c4/onto#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix arch: <https://meta.linked.archi/core#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix adms: <http://www.w3.org/ns/adms#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix schema: <https://schema.org/> .
+am: a owl:Ontology ;
+	owl:imports arch: ;
+	<http://purl.org/vocab/vann/preferredNamespaceUri> "https://meta.linked.archi/archimate3/onto#" ;
+	<http://purl.org/vocab/vann/preferredNamespacePrefix> "am" ;
+	dct:creator "Kalin Maldzhanski" ;
+	dct:title "Linked.Archi ArchiMate 3.2 Ontology"@en ;
+	dct:description "Linked.Archi ArchiMate ontology aligned to the ArchiMate 3.2 specification,\nmodernized to conform to Linked.Archi core ontology conventions, the qualified relationship\npattern, and RDF 1.2. Each relationship class has as its skos:notation the letter the relationship\ntables of Appendix B write it with (c composition, r realization, v serving …). This is not an\nofficial Open Group document."@en ;
+	dct:abstract "Linked.Archi ArchiMate ontology based on the ArchiMate 3.2 specification.\nRepresents ArchiMate elements, relationship types (using the three-declaration qualified\nrelationship pattern), and composite/connector concepts as RDF/OWL. Version 3.2 modernizes\nthe ontology to current Linked.Archi conventions and RDF 1.2 rdf:reifies."@en ;
+	dct:created "2019-03-17"^^xsd:date ;
+	dct:issued "2019-03-17"^^xsd:date ;
+	dct:modified "2026-10-10"^^xsd:date ;
+	dct:publisher "Linked.Archi"@en ;
+	<http://purl.org/ontology/bibo/status> "draft" ;
+	owl:versionIRI <https://meta.linked.archi/archimate3/onto/3.2#> ;
+	owl:versionInfo "3.2"@en ;
+	owl:priorVersion <https://meta.linked.archi/archimate3/onto/3.1#> ;
+	<http://schema.org/citation> "Linked.Archi ArchiMate Ontology" ;
+	skos:historyNote "3.2.0: Modernized to current Linked.Archi conventions. Replaced legacy\nrelationship declarations with three-declaration qualified relationship pattern. Added\nqualified relationship classes (: namespace) and qualified properties. Replaced rdfs:label\nwith skos:prefLabel, arch:specURL with dcterms:source. Added RDF 1.2 rdf:reifies bridge in\nrelationship examples. Updated license to CC-BY 4.0. Aligned all elements with\narchimate-tax ontology (:)."@en ;
+	skos:changeNote "2026-10-10: the kinds of access are subclasses of Access — ReadAccess, WriteAccess and\nReadWriteAccess, an Access that is none of them being unspecified — and a directed association is a\nDirectedAssociation, so each has a notation of its own (DD-31). accessType is deprecated."@en ;
+	rdfs:seeAlso <https://www.w3.org/TR/rdf12-concepts/> ;
+	skos:scopeNote "This namespace (archimate/onto#) covers ArchiMate 3.x (versions 3.0,\n3.1, 3.2). ArchiMate 2.x used a substantially different metamodel (different element\nnames, relationship rules, and layer structure) and is not represented here. A future\nArchiMate 4.x major revision may introduce a separate namespace if the metamodel\nchanges are breaking."@en .
+am:BehaviorElement a owl:Class ;
+	rdfs:subClassOf arch:Element ;
+	arch:isAbstractClass true ;
+	skos:prefLabel "BehaviorElement"@en ;
+	skos:definition "Behavior elements represent the dynamic aspects of the enterprise."@en ;
+	skos:scopeNote "Superclass for all behavior: internal behavior (processes, functions, interactions), external behavior (services), and events. SHACL shapes use this class to enforce that triggering and flow relationships connect behavior elements only."@en .
+am:InternalBehaviorElement a owl:Class ;
+	rdfs:subClassOf am:BehaviorElement ;
+	arch:isAbstractClass true ;
+	skos:prefLabel "InternalBehaviorElement"@en ;
+	skos:definition "An internal behavior element represents a unit of activity."@en ;
+	skos:scopeNote "Internal behavior is what active structure elements actually do — processes, functions, and interactions. Assigned to internal active structure via assignment relationships. Realizes external behavior (services)."@en .
+am:ExternalBehaviorElement a owl:Class ;
+	rdfs:subClassOf am:BehaviorElement ;
+	arch:isAbstractClass true ;
+	skos:prefLabel "ExternalBehaviorElement"@en ;
+	skos:definition "An external behavior element (service) represents explicitly defined exposed behavior."@en ;
+	skos:scopeNote "Services are the externally visible behavior offered to consumers. Realized by internal behavior and exposed through interfaces. Connected to consumers via serving relationships."@en .
+am:Event a owl:Class ;
+	rdfs:subClassOf am:BehaviorElement ;
+	arch:isAbstractClass true ;
+	skos:prefLabel "Event"@en ;
+	skos:definition "An event represents a state change."@en ;
+	skos:scopeNote "Events are instantaneous — they trigger or are triggered by other behavior via triggering relationships. They can be external (received from outside) or internal (produced by a process)."@en .
+am:Interaction a owl:Class ;
+	rdfs:subClassOf am:InternalBehaviorElement ;
+	arch:isAbstractClass true ;
+	skos:prefLabel "Interaction"@en ;
+	skos:definition "A unit of collective behavior performed by two or more active structure elements."@en ;
+	skos:scopeNote "Interactions are assigned to collaborations. They represent behavior that requires multiple participants and cannot be attributed to a single actor or component."@en .
+am:StructureElement a owl:Class ;
+	rdfs:subClassOf arch:Element ;
+	arch:isAbstractClass true ;
+	skos:prefLabel "StructureElement"@en ;
+	skos:definition "Abstract superclass for all structure elements."@en ;
+	skos:scopeNote "Parent of both active structure (performers) and passive structure (objects acted upon). Not used directly in models."@en .
+am:ActiveStructureElement a owl:Class ;
+	rdfs:subClassOf am:StructureElement ;
+	arch:isAbstractClass true ;
+	skos:prefLabel "ActiveStructureElement"@en ;
+	skos:definition "Active structure elements are the subjects that can perform behavior."@en ;
+	skos:scopeNote "Superclass for all performers: internal active structure (actors, components, nodes) and external active structure (interfaces). Also includes paths and communication networks. SHACL shapes use this class to enforce that assignment originates from active structure."@en .
+am:InternalActiveStructureElement a owl:Class ;
+	rdfs:subClassOf am:ActiveStructureElement ;
+	arch:isAbstractClass true ;
+	skos:prefLabel "InternalActiveStructureElement"@en ;
+	skos:definition "An internal active structure element represents an entity capable of performing behavior."@en ;
+	skos:scopeNote "The performers — actors, roles, collaborations, components, nodes, devices, system software. Connected to behavior via assignment. Can be composed of or aggregated with other internal active structure elements."@en .
+am:ExternalActiveStructureElement a owl:Class ;
+	rdfs:subClassOf am:ActiveStructureElement ;
+	arch:isAbstractClass true ;
+	skos:prefLabel "ExternalActiveStructureElement"@en ;
+	skos:definition "An external active structure element (interface) represents a point of access."@en ;
+	skos:scopeNote "Interfaces expose services to the environment and hide internal complexity. Typically composed by the internal active structure element they belong to. Assigned to the services they expose."@en .
+am:Collaboration a owl:Class ;
+	rdfs:subClassOf am:InternalActiveStructureElement ;
+	arch:isAbstractClass true ;
+	skos:prefLabel "Collaboration"@en ;
+	skos:definition "An aggregate of two or more internal active structure elements working together."@en ;
+	skos:scopeNote "Collaborations aggregate roles or actors that perform collective behavior (interactions). They are temporary or permanent groupings aimed at specific interactions."@en .
+am:PassiveStructureElement a owl:Class ;
+	rdfs:subClassOf am:StructureElement ;
+	arch:isAbstractClass true ;
+	skos:prefLabel "PassiveStructureElement"@en ;
+	skos:definition "Passive structure elements can be accessed by behavior elements."@en ;
+	skos:scopeNote "Objects acted upon by behavior — business objects, data objects, artifacts, materials, contracts, representations. Connected to behavior via access relationships (read, write, read-write)."@en .
+am:MotivationElement a owl:Class ;
+	rdfs:subClassOf arch:Element ;
+	arch:isAbstractClass true ;
+	skos:prefLabel "MotivationElement"@en ;
+	skos:definition "A motivation element represents the context of or reason behind the architecture."@en ;
+	skos:scopeNote "The 'why' behind the architecture: stakeholders, drivers, assessments, goals, outcomes, principles, requirements, constraints, meanings, and values. Connected to other elements via influence relationships."@en .
+am:CompositeElement a owl:Class ;
+	rdfs:subClassOf arch:Element ;
+	arch:isAbstractClass true ;
+	skos:prefLabel "CompositeElement"@en ;
+	skos:definition "Composite elements consist of other concepts, possibly from multiple aspects or layers."@en ;
+	skos:scopeNote "Elements that cross aspect boundaries: products (bundle services and objects), groupings (generic containers), locations (physical or logical places), and plateaus (stable architecture states)."@en .
+am:CoreLayerElement a owl:Class ;
+	rdfs:subClassOf arch:Element ;
+	arch:isAbstractClass true ;
+	skos:prefLabel "CoreLayerElement"@en ;
+	skos:definition "Core layers are Business, Application, and Technology (including Physical)."@en ;
+	skos:scopeNote "Superclass for the three core layers. SHACL shapes use this to enforce cross-layer relationship direction rules (e.g., serving flows from lower to higher layers)."@en .
+am:BusinessLayerElement a owl:Class ;
+	rdfs:subClassOf am:CoreLayerElement ;
+	arch:isAbstractClass true ;
+	skos:prefLabel "BusinessLayerElement"@en ;
+	skos:scopeNote "Layer marker for business domain elements. Served by Application layer elements."@en .
+am:ApplicationLayerElement a owl:Class ;
+	rdfs:subClassOf am:CoreLayerElement ;
+	arch:isAbstractClass true ;
+	skos:prefLabel "ApplicationLayerElement"@en ;
+	skos:scopeNote "Layer marker for application domain elements. Serves Business layer, realized by Technology layer."@en .
+am:TechnologyLayerElement a owl:Class ;
+	rdfs:subClassOf am:CoreLayerElement ;
+	arch:isAbstractClass true ;
+	skos:prefLabel "TechnologyLayerElement"@en ;
+	skos:scopeNote "Layer marker for technology and infrastructure elements. Realizes Application layer elements."@en .
+am:PhysicalLayerElement a owl:Class ;
+	rdfs:subClassOf am:CoreLayerElement ;
+	arch:isAbstractClass true ;
+	skos:prefLabel "PhysicalLayerElement"@en ;
+	skos:scopeNote "Layer marker for physical assets — equipment, facilities, distribution networks, and materials."@en .
+am:StrategyLayerElement a owl:Class ;
+	rdfs:subClassOf arch:Element ;
+	arch:isAbstractClass true ;
+	skos:prefLabel "StrategyLayerElement"@en ;
+	skos:scopeNote "Layer marker for strategy elements. Strategy elements are realized by combinations of Business, Application, and Technology layer elements."@en .
+am:ImplementationAndMigrationLayerElement a owl:Class ;
+	rdfs:subClassOf arch:Element ;
+	arch:isAbstractClass true ;
+	skos:prefLabel "ImplementationAndMigrationLayerElement"@en ;
+	skos:scopeNote "Layer marker for implementation and migration planning elements — work packages, deliverables, events, plateaus, and gaps."@en .
+am:Stakeholder a owl:Class ;
+	rdfs:subClassOf am:MotivationElement ;
+	skos:prefLabel "Stakeholder"@en ;
+	skos:definition "A stakeholder is the role of an individual, team, or organization (or classes thereof)\nthat represents their interests in the outcome of the architecture."@en ;
+	skos:scopeNote "This definition is based on the definition in the TOGAF framework. A stakeholder has one\nor more interests in, or concerns about, the organization and its Enterprise Architecture. In order to direct\nefforts to these interests and concerns, stakeholders change, set, and emphasize goals. Stakeholders may also\ninfluence each other. Examples of stakeholders are the CEO, the board of directors, shareholders, customers,\nbusiness and application architects, but also legislative authorities."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/mot_stakeholder.svg" .
+am:Driver a owl:Class ;
+	rdfs:subClassOf am:MotivationElement ;
+	skos:prefLabel "Driver"@en ;
+	skos:definition "A driver represents an external or internal condition that motivates an organization to\ndefine its goals and implement the changes necessary to achieve them."@en ;
+	skos:scopeNote "Drivers may be internal, in which case they are usually associated with a stakeholder,\nand are often called \"concerns\". Examples of internal drivers are Customer satisfaction and Profitability. Drivers\nof change may also be external; e.g., economic changes or changing legislation."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/mot_driver.svg" .
+am:Assessment a owl:Class ;
+	rdfs:subClassOf am:MotivationElement ;
+	skos:prefLabel "Assessment"@en ;
+	skos:definition "An assessment represents the result of an analysis of the state of affairs of the\nenterprise with respect to some driver."@en ;
+	skos:scopeNote "An assessment may reveal strengths, weaknesses, opportunities, or threats for some area\nof interest. These need to be addressed by adjusting existing goals or setting new ones, which may trigger changes\nto the Enterprise Architecture."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/mot_assesment.svg" .
+am:Goal a owl:Class ;
+	rdfs:subClassOf am:MotivationElement ;
+	skos:prefLabel "Goal"@en ;
+	skos:definition "A goal represents a high-level statement of intent, direction, or desired end state for\nan organization and its stakeholders."@en ;
+	skos:scopeNote "Goals are generally expressed using qualitative words; e.g., \"increase\", \"improve\", or\n\"easier\". Goals can also be decomposed. Goals are typically used to measure success of an organization."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/mot_goal.svg" .
+am:Outcome a owl:Class ;
+	rdfs:subClassOf am:MotivationElement ;
+	skos:prefLabel "Outcome"@en ;
+	skos:definition "An outcome represents an end result that has been achieved."@en ;
+	skos:changeNote "3.0: Introduced."@en ;
+	skos:scopeNote "Outcomes are high-level, business-oriented results produced by capabilities of an\norganization. Outcomes are tangible, possibly quantitative, and time-related, and can be associated with\nassessments."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/mot_outcome.svg" .
+am:Principle a owl:Class ;
+	rdfs:subClassOf am:MotivationElement ;
+	skos:prefLabel "Principle"@en ;
+	skos:definition "A principle represents a qualitative statement of intent that should be met by the\narchitecture."@en ;
+	skos:scopeNote "Principles are strongly related to goals and requirements. A principle defines a general\nproperty that applies to any system in a certain context. Principles are intended to be more stable than\nrequirements."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/mot_principle.svg" .
+am:Requirement a owl:Class ;
+	rdfs:subClassOf am:MotivationElement ;
+	skos:prefLabel "Requirement"@en ;
+	skos:definition "A requirement represents a statement of need that must be met by the architecture."@en ;
+	skos:scopeNote "Requirements model the properties of elements that are needed to achieve the \"ends\"\nmodeled by goals. Requirements represent the \"means\" to realize goals."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/mot_requirement.svg" .
+am:Constraint a owl:Class ;
+	rdfs:subClassOf am:Requirement ;
+	skos:prefLabel "Constraint"@en ;
+	skos:definition "A constraint represents a factor that prevents or obstructs the realization of\ngoals."@en ;
+	skos:changeNote "3.2: Definition improved."@en ;
+	skos:scopeNote "A constraint does not prescribe intended functionality but imposes a restriction on the\nway the system operates or may be realized."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/mot_constraint.svg" .
+am:Meaning a owl:Class ;
+	rdfs:subClassOf am:MotivationElement ;
+	skos:prefLabel "Meaning"@en ;
+	skos:definition "Meaning represents the knowledge or expertise present in, or the interpretation given\nto, a core element in a particular context."@en ;
+	skos:changeNote "3.0: Moved from Business Layer to Motivation elements. 3.2: Icon notation changed."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/mot_meaning.svg" .
+am:Value a owl:Class ;
+	rdfs:subClassOf am:MotivationElement ;
+	skos:prefLabel "Value"@en ;
+	skos:definition "Value represents the relative worth, utility, or importance of a core element or an\noutcome."@en ;
+	skos:changeNote "3.0: Moved from Business Layer to Motivation elements."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/mot_value.svg" .
+am:StrategyBehaviorElement a owl:Class ;
+	rdfs:subClassOf am:BehaviorElement , am:StrategyLayerElement ;
+	arch:isAbstractClass true ;
+	skos:prefLabel "StrategyBehaviorElement"@en ;
+	skos:definition "The behaviour elements of the strategy layer that the Strategy Elements Metamodel (Figure 46) generalizes as Strategy Behavior Element: capability and value stream. A course of action is a behaviour element beside them, not one of them."@en ;
+	skos:scopeNote "What the strategy figures relate as a whole: a resource is assigned to one; one triggers, flows to and serves another, and serves and realizes a course of action; internal and external behaviour elements realize one; and one realizes and influences requirements (Figures 46 and 51)."@en .
+am:Resource a owl:Class ;
+	rdfs:subClassOf am:StructureElement , am:StrategyLayerElement ;
+	skos:prefLabel "Resource"@en ;
+	skos:definition "A resource represents an asset owned or controlled by an individual or\norganization."@en ;
+	skos:changeNote "3.0: Introduced as part of the new Strategy layer."@en ;
+	skos:scopeNote "Resources are a central concept in strategic management. They are often considered,\ntogether with capabilities, to be sources of competitive advantage. Resources can be classified into tangible\nassets, intangible assets, and human assets."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/stategy_resource.svg" .
+am:Capability a owl:Class ;
+	rdfs:subClassOf am:StrategyBehaviorElement ;
+	skos:prefLabel "Capability"@en ;
+	skos:altLabel "Business Capability"@en ;
+	skos:definition "A capability represents an ability that an active structure element, such as an\norganization, person, or system, possesses."@en ;
+	skos:changeNote "3.0: Introduced as part of the new Strategy layer."@en ;
+	skos:scopeNote "Capabilities help reduce the gap between strategic goals and implementable architecture\nby focusing on business outcomes. They are typically realized by a combination of organization, people, processes,\ninformation, and technology."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/strategy_capability.svg" .
+am:ValueStream a owl:Class ;
+	rdfs:subClassOf am:StrategyBehaviorElement ;
+	skos:prefLabel "Value Stream"@en ;
+	skos:definition "A value stream represents a sequence of activities that create an overall result for a\ncustomer, stakeholder, or end user."@en ;
+	skos:changeNote "3.1: Introduced."@en ;
+	skos:scopeNote "A value stream describes how an enterprise organizes its activities to create value.\nValue is always defined from the perspective of the stakeholder. Value streams may be defined at different levels\nof the organization and can be a composition or aggregation of value-adding stages."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/strategy_value_stream.svg" .
+am:CourseOfAction a owl:Class ;
+	rdfs:subClassOf am:BehaviorElement , am:StrategyLayerElement ;
+	skos:prefLabel "Course of Action"@en ;
+	skos:definition "A course of action is an approach or plan for configuring some capabilities and resources\nof the enterprise, undertaken to achieve a goal."@en ;
+	skos:changeNote "3.0: Introduced as part of the new Strategy layer."@en ;
+	skos:scopeNote "Courses of action can be categorized as strategies and tactics. Strategies tend to be\nlong-term and broad in scope, while tactics tend to be shorter-term and narrower."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/strategy_course_of_action.svg" .
+am:BusinessActor a owl:Class ;
+	rdfs:subClassOf am:InternalActiveStructureElement , am:BusinessLayerElement ;
+	skos:prefLabel "Business Actor"@en ;
+	skos:altLabel "Organization"@en , "Department"@en , "Person"@en ;
+	skos:definition "A business actor is a business entity that is capable of performing behavior."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/business_actor.svg" .
+am:BusinessRole a owl:Class ;
+	rdfs:subClassOf am:InternalActiveStructureElement , am:BusinessLayerElement ;
+	skos:prefLabel "Business Role"@en ;
+	skos:altLabel "Role"@en ;
+	skos:definition "A business role represents the responsibility for performing specific behavior, to which\nan actor can be assigned, or the part an actor plays in a particular action or event."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/business_role.svg" .
+am:BusinessCollaboration a owl:Class ;
+	rdfs:subClassOf am:Collaboration , am:BusinessLayerElement ;
+	skos:prefLabel "Business Collaboration"@en ;
+	skos:definition "A business collaboration is an aggregate of two or more business internal active structure\nelements that work together to perform collective behavior."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/business_collaboration.svg" .
+am:BusinessInterface a owl:Class ;
+	rdfs:subClassOf am:ExternalActiveStructureElement , am:BusinessLayerElement ;
+	skos:prefLabel "Business Interface"@en ;
+	skos:definition "A business interface is a point of access where a business service is made available to\nthe environment."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/business_interface.svg" .
+am:BusinessProcess a owl:Class ;
+	rdfs:subClassOf am:InternalBehaviorElement , am:BusinessLayerElement ;
+	skos:prefLabel "Business Process"@en ;
+	skos:altLabel "Process"@en , "Workflow"@en ;
+	skos:definition "A business process represents a sequence of business behaviors that achieves a specific\noutcome such as a defined set of products or business services."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/business_process.svg" .
+am:BusinessFunction a owl:Class ;
+	rdfs:subClassOf am:InternalBehaviorElement , am:BusinessLayerElement ;
+	skos:prefLabel "Business Function"@en ;
+	skos:altLabel "Function"@en ;
+	skos:definition "A business function is a collection of business behavior based on a chosen set of criteria,\nclosely aligned to an organization, but not necessarily explicitly governed by the organization."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/business_function.svg" .
+am:BusinessInteraction a owl:Class ;
+	rdfs:subClassOf am:Interaction , am:BusinessLayerElement ;
+	skos:prefLabel "Business Interaction"@en ;
+	skos:definition "A business interaction is a unit of collective business behavior performed by (a\ncollaboration of) two or more business roles."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/business_interaction.svg" .
+am:BusinessEvent a owl:Class ;
+	rdfs:subClassOf am:Event , am:BusinessLayerElement ;
+	skos:prefLabel "Business Event"@en ;
+	skos:definition "A business event is a business behavior element that denotes an organizational state\nchange."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/business_event.svg" .
+am:BusinessService a owl:Class ;
+	rdfs:subClassOf am:ExternalBehaviorElement , am:BusinessLayerElement ;
+	skos:prefLabel "Business Service"@en ;
+	skos:altLabel "Service"@en ;
+	skos:definition "A business service represents an explicitly defined exposed business behavior."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/business_service.svg" .
+am:BusinessObject a owl:Class ;
+	rdfs:subClassOf am:PassiveStructureElement , am:BusinessLayerElement ;
+	skos:prefLabel "Business Object"@en ;
+	skos:altLabel "Information Object"@en ;
+	skos:definition "A business object represents a concept used within a particular business domain."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/business_object.svg" .
+am:Contract a owl:Class ;
+	rdfs:subClassOf am:BusinessObject ;
+	skos:prefLabel "Contract"@en ;
+	skos:definition "A contract represents a formal or informal specification of an agreement between a\nprovider and a consumer that specifies the rights and obligations associated with a product."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/business_contract.svg" .
+am:Representation a owl:Class ;
+	rdfs:subClassOf am:PassiveStructureElement , am:BusinessLayerElement ;
+	skos:prefLabel "Representation"@en ;
+	skos:definition "A representation represents a perceptible form of the information carried by a business\nobject."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/business_representation.svg" .
+am:Product a owl:Class ;
+	rdfs:subClassOf am:CompositeElement , am:BusinessLayerElement ;
+	skos:prefLabel "Product"@en ;
+	skos:definition "A product represents a coherent collection of services and/or passive structure elements,\naccompanied by a contract/set of agreements, which is offered as a whole to customers."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/business_product.svg" .
+am:ApplicationComponent a owl:Class ;
+	rdfs:subClassOf am:InternalActiveStructureElement , am:ApplicationLayerElement ;
+	skos:prefLabel "Application Component"@en ;
+	skos:altLabel "Software Component"@en , "Application"@en ;
+	skos:definition "An application component represents an encapsulation of application functionality aligned\nto implementation structure, which is modular and replaceable."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/app_component.svg" .
+am:ApplicationCollaboration a owl:Class ;
+	rdfs:subClassOf am:Collaboration , am:ApplicationLayerElement ;
+	skos:prefLabel "Application Collaboration"@en ;
+	skos:definition "An application collaboration represents an aggregate of two or more application components\nthat work together to perform collective application behavior."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/app_collaboration.svg" .
+am:ApplicationInterface a owl:Class ;
+	rdfs:subClassOf am:ExternalActiveStructureElement , am:ApplicationLayerElement ;
+	skos:prefLabel "Application Interface"@en ;
+	skos:altLabel "API"@en , "App Interface"@en ;
+	skos:definition "An application interface represents a point of access where application services are made\navailable to a user, another application component, or a node."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/app_interface.svg" .
+am:ApplicationFunction a owl:Class ;
+	rdfs:subClassOf am:InternalBehaviorElement , am:ApplicationLayerElement ;
+	skos:prefLabel "Application Function"@en ;
+	skos:altLabel "App Function"@en ;
+	skos:definition "An application function represents automated behavior that can be performed by an\napplication component."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/app_function.svg" .
+am:ApplicationInteraction a owl:Class ;
+	rdfs:subClassOf am:Interaction , am:ApplicationLayerElement ;
+	skos:prefLabel "Application Interaction"@en ;
+	skos:definition "An application interaction represents a unit of collective application behavior performed\nby (a collaboration of) two or more application components."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/app_interaction.svg" .
+am:ApplicationProcess a owl:Class ;
+	rdfs:subClassOf am:InternalBehaviorElement , am:ApplicationLayerElement ;
+	skos:prefLabel "Application Process"@en ;
+	skos:altLabel "App Process"@en ;
+	skos:definition "An application process represents a sequence of application behaviors that achieves a\nspecific outcome."@en ;
+	skos:changeNote "3.0: Introduced to increase regularity across layers."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/app_process.svg" .
+am:ApplicationEvent a owl:Class ;
+	rdfs:subClassOf am:Event , am:ApplicationLayerElement ;
+	skos:prefLabel "Application Event"@en ;
+	skos:definition "An application event is an application behavior element that denotes a state change."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/app_event.svg" .
+am:ApplicationService a owl:Class ;
+	rdfs:subClassOf am:ExternalBehaviorElement , am:ApplicationLayerElement ;
+	skos:prefLabel "Application Service"@en ;
+	skos:altLabel "Software Service"@en ;
+	skos:definition "An application service represents an explicitly defined exposed application\nbehavior."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/app_service.svg" .
+am:DataObject a owl:Class ;
+	rdfs:subClassOf am:PassiveStructureElement , am:ApplicationLayerElement ;
+	skos:prefLabel "Data Object"@en ;
+	skos:altLabel "Data Entity"@en , "Data Asset"@en ;
+	skos:definition "A data object represents data structured for automated processing."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/app_data_object.svg" .
+am:Node a owl:Class ;
+	rdfs:subClassOf am:InternalActiveStructureElement , am:TechnologyLayerElement ;
+	skos:prefLabel "Node"@en ;
+	skos:altLabel "Server"@en , "Host"@en , "Compute Node"@en ;
+	skos:definition "A node represents a computational or physical resource that hosts, manipulates, or\ninteracts with other computational or physical resources."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/tech_node.svg" .
+am:Device a owl:Class ;
+	rdfs:subClassOf am:Node ;
+	skos:prefLabel "Device"@en ;
+	skos:altLabel "Hardware"@en , "Physical Server"@en ;
+	skos:definition "A device is a physical IT resource upon which system software and artifacts may be stored\nor deployed for execution."@en ;
+	skos:changeNote "3.2: No longer a subtype of Node; now a subtype of technology internal active structure element, with composition and aggregation relationships to Node."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/tech_device.svg" .
+am:SystemSoftware a owl:Class ;
+	rdfs:subClassOf am:Node ;
+	skos:prefLabel "System Software"@en ;
+	skos:altLabel "Platform Software"@en , "Middleware"@en , "Operating System"@en ;
+	skos:definition "System software represents software that provides or contributes to an environment for\nstoring, executing, and using software or data deployed within it."@en ;
+	skos:changeNote "3.2: No longer a subtype of Node; now a subtype of technology internal active structure element, with composition and aggregation relationships to Node."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/tech_software.svg" .
+am:TechnologyCollaboration a owl:Class ;
+	rdfs:subClassOf am:Collaboration , am:TechnologyLayerElement ;
+	skos:prefLabel "Technology Collaboration"@en ;
+	skos:definition "A technology collaboration represents an aggregate of two or more nodes that work together\nto perform collective technology behavior."@en ;
+	skos:changeNote "3.0: Introduced to increase regularity across layers."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/tech_collaboration.svg" .
+am:TechnologyInterface a owl:Class ;
+	rdfs:subClassOf am:ExternalActiveStructureElement , am:TechnologyLayerElement ;
+	skos:prefLabel "Technology Interface"@en ;
+	skos:definition "A technology interface represents a point of access where technology services offered by a\nnode can be accessed."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/tech_interface.svg" .
+am:Path a owl:Class ;
+	rdfs:subClassOf am:ActiveStructureElement , am:TechnologyLayerElement ;
+	skos:prefLabel "Path"@en ;
+	skos:altLabel "Link"@en , "Connection"@en ;
+	skos:definition "A path represents a link between two or more nodes, through which these nodes can exchange\ndata or material."@en ;
+	skos:changeNote "3.0: Renamed from CommunicationPath; meaning extended to integrate with physical elements."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/tech_path.svg" .
+am:CommunicationNetwork a owl:Class ;
+	rdfs:subClassOf am:ActiveStructureElement , am:TechnologyLayerElement ;
+	skos:prefLabel "Communication Network"@en ;
+	skos:altLabel "Network"@en , "LAN"@en , "WAN"@en ;
+	skos:definition "A communication network represents a set of structures that connects computer systems or\nother electronic devices for transmission, routing, and reception of data."@en ;
+	skos:changeNote "3.2: Icon notation changed."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/tech_communication_network.svg" .
+am:TechnologyFunction a owl:Class ;
+	rdfs:subClassOf am:InternalBehaviorElement , am:TechnologyLayerElement ;
+	skos:prefLabel "Technology Function"@en ;
+	skos:definition "A technology function represents a collection of technology behavior that can be performed\nby a node."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/tech_function.svg" .
+am:TechnologyProcess a owl:Class ;
+	rdfs:subClassOf am:InternalBehaviorElement , am:TechnologyLayerElement ;
+	skos:prefLabel "Technology Process"@en ;
+	skos:definition "A technology process represents a sequence of technology behaviors that achieves a specific\noutcome."@en ;
+	skos:changeNote "3.0: Introduced to increase regularity across layers."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/tech_process.svg" .
+am:TechnologyInteraction a owl:Class ;
+	rdfs:subClassOf am:Interaction , am:TechnologyLayerElement ;
+	skos:prefLabel "Technology Interaction"@en ;
+	skos:definition "A technology interaction represents a unit of collective technology behavior performed by\n(a collaboration of) two or more nodes."@en ;
+	skos:changeNote "3.0: Introduced to increase regularity across layers."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/tech_interaction.svg" .
+am:TechnologyEvent a owl:Class ;
+	rdfs:subClassOf am:Event , am:TechnologyLayerElement ;
+	skos:prefLabel "Technology Event"@en ;
+	skos:definition "A technology event is a technology behavior element that denotes a state change."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/tech_event.svg" .
+am:TechnologyService a owl:Class ;
+	rdfs:subClassOf am:ExternalBehaviorElement , am:TechnologyLayerElement ;
+	skos:prefLabel "Technology Service"@en ;
+	skos:altLabel "Infrastructure Service"@en ;
+	skos:definition "A technology service represents an explicitly defined exposed technology behavior."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/tech_service.svg" .
+am:Artifact a owl:Class ;
+	rdfs:subClassOf am:PassiveStructureElement , am:TechnologyLayerElement ;
+	skos:prefLabel "Artifact"@en ;
+	skos:altLabel "Deployment Unit"@en , "Binary"@en , "Package"@en ;
+	skos:definition "An artifact represents a piece of data that is used or produced in a software development\nprocess, or by deployment and operation of an IT system."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/tech_artifact.svg" .
+am:Equipment a owl:Class ;
+	rdfs:subClassOf am:Node , am:PhysicalLayerElement ;
+	skos:prefLabel "Equipment"@en ;
+	skos:altLabel "Machine"@en , "Physical Device"@en ;
+	skos:definition "Equipment represents one or more physical machines, tools, or instruments that can create,\nuse, store, move, or transform materials."@en ;
+	skos:changeNote "3.0: Introduced as part of the new Physical layer. 3.2: No longer a subtype of Node; now a subtype of technology internal active structure element, with composition and aggregation relationships to Node."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/tech_equipment.svg" .
+am:Facility a owl:Class ;
+	rdfs:subClassOf am:Node , am:PhysicalLayerElement ;
+	skos:prefLabel "Facility"@en ;
+	skos:altLabel "Building"@en , "Data Center"@en , "Site"@en ;
+	skos:definition "A facility represents a physical structure or environment."@en ;
+	skos:changeNote "3.0: Introduced as part of the new Physical layer. 3.2: No longer a subtype of Node; now a subtype of technology internal active structure element, with composition and aggregation relationships to Node."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/tech_facility.svg" .
+am:DistributionNetwork a owl:Class ;
+	rdfs:subClassOf am:ActiveStructureElement , am:PhysicalLayerElement ;
+	skos:prefLabel "Distribution Network"@en ;
+	skos:definition "A distribution network represents a physical network used to transport materials or\nenergy."@en ;
+	skos:changeNote "3.0: Introduced as part of the new Physical layer."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/tech_distribution_network.svg" .
+am:Material a owl:Class ;
+	rdfs:subClassOf am:PassiveStructureElement , am:PhysicalLayerElement ;
+	skos:prefLabel "Material"@en ;
+	skos:definition "Material represents tangible physical matter or physical elements."@en ;
+	skos:changeNote "3.0: Introduced as part of the new Physical layer. 3.2: Realization from Material to Equipment added."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/tech_material.svg" .
+am:WorkPackage a owl:Class ;
+	rdfs:subClassOf am:InternalBehaviorElement , am:ImplementationAndMigrationLayerElement ;
+	skos:prefLabel "Work Package"@en ;
+	skos:altLabel "Project"@en , "Initiative"@en ;
+	skos:definition "A work package represents a series of actions identified and designed to achieve specific\nresults within specified time and resource constraints."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/impl_work_package.svg" .
+am:Deliverable a owl:Class ;
+	rdfs:subClassOf am:PassiveStructureElement , am:ImplementationAndMigrationLayerElement ;
+	skos:prefLabel "Deliverable"@en ;
+	skos:definition "A deliverable represents a precisely-defined outcome of a work package."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/impl_deliverable.svg" .
+am:ImplementationEvent a owl:Class ;
+	rdfs:subClassOf am:Event , am:ImplementationAndMigrationLayerElement ;
+	skos:prefLabel "Implementation Event"@en ;
+	skos:definition "An implementation event is a behavior element that denotes a state change related to\nimplementation or migration."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/impl_event.svg" .
+am:Plateau a owl:Class ;
+	rdfs:subClassOf am:CompositeElement , am:ImplementationAndMigrationLayerElement ;
+	skos:prefLabel "Plateau"@en ;
+	skos:altLabel "Architecture State"@en , "Baseline"@en , "Target State"@en ;
+	skos:definition "A plateau represents a relatively stable state of the architecture that exists during a\nlimited period of time."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/impl_plateau.svg" .
+am:Gap a owl:Class ;
+	rdfs:subClassOf am:PassiveStructureElement , am:ImplementationAndMigrationLayerElement ;
+	skos:prefLabel "Gap"@en ;
+	skos:definition "A gap represents a statement of difference between two plateaus."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/impl_gap.svg" .
+am:Grouping a owl:Class ;
+	rdfs:subClassOf am:CompositeElement ;
+	skos:prefLabel "Grouping"@en ;
+	skos:definition "The grouping element aggregates or composes concepts that belong together based on some\ncommon characteristic."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/grouping.svg" .
+am:Location a owl:Class ;
+	rdfs:subClassOf am:CompositeElement ;
+	skos:prefLabel "Location"@en ;
+	skos:definition "A location is a place or position where structure elements can be located or behavior can\nbe performed."@en ;
+	skos:changeNote "3.0: Moved from Business Layer to generic metamodel."@en ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/location.svg" .
+am:Junction_And a owl:Class ;
+	rdfs:subClassOf arch:Element ;
+	skos:prefLabel "And Junction"@en ;
+	skos:definition "An and junction is used to connect relationships of the same type where all must be\nsatisfied."@en .
+am:Junction_Or a owl:Class ;
+	rdfs:subClassOf arch:Element ;
+	skos:prefLabel "Or Junction"@en ;
+	skos:definition "An or junction is used to connect relationships of the same type where one or more must\nbe satisfied."@en .
+am:composedOf a owl:ObjectProperty ;
+	skos:prefLabel "Composed Of"@en ;
+	skos:definition "Indicates that an element consists of one or more other elements."@en ;
+	arch:domainIncludes arch:Element ;
+	arch:rangeIncludes arch:Element .
+am:Composition a owl:Class ;
+	rdfs:subClassOf arch:QualifiedRelationship ;
+	arch:unqualifiedForm am:composedOf ;
+	skos:prefLabel "Composition"@en ;
+	skos:notation "c" ;
+	skos:definition "A composition relationship indicates that an element consists of one or more other\nelements. The contained element exists only within the context of the container."@en ;
+	arch:domainIncludes arch:Element ;
+	arch:rangeIncludes arch:Element ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/rel_composition.svg" .
+am:qualifiedComposition a owl:ObjectProperty ;
+	rdfs:range am:Composition ;
+	arch:unqualifiedForm am:composedOf ;
+	arch:domainIncludes arch:Element ;
+	skos:prefLabel "qualified Composition"@en ;
+	skos:definition "Navigates from a source element to a Composition qualified relationship\nresource. Use this to reach the full relationship object with metadata, provenance, and\nlifecycle state."@en ;
+	skos:example "ex:System1 am:qualifiedComposition ex:qr-001 .\nex:qr-001 a am:Composition ;\n    arch:source ex:System1 ;\n    arch:target ex:Module1 ."@en .
+am:aggregates a owl:ObjectProperty ;
+	skos:prefLabel "Aggregates"@en ;
+	skos:definition "Indicates that an element combines one or more other elements."@en ;
+	arch:domainIncludes arch:Element ;
+	arch:rangeIncludes arch:Element .
+am:Aggregation a owl:Class ;
+	rdfs:subClassOf arch:QualifiedRelationship ;
+	arch:unqualifiedForm am:aggregates ;
+	skos:prefLabel "Aggregation"@en ;
+	skos:notation "g" ;
+	skos:definition "An aggregation relationship indicates that an element combines one or more other elements.\nUnlike composition, the aggregated element can exist independently."@en ;
+	arch:domainIncludes arch:Element ;
+	arch:rangeIncludes arch:Element ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/rel_aggregation.svg" .
+am:qualifiedAggregation a owl:ObjectProperty ;
+	rdfs:range am:Aggregation ;
+	arch:unqualifiedForm am:aggregates ;
+	arch:domainIncludes arch:Element ;
+	skos:prefLabel "qualified Aggregation"@en ;
+	skos:definition "Navigates from a source element to an Aggregation qualified relationship\nresource."@en ;
+	skos:example "ex:Department1 am:qualifiedAggregation ex:qr-002 .\nex:qr-002 a am:Aggregation ;\n    arch:source ex:Department1 ;\n    arch:target ex:Team1 ."@en .
+am:assignedTo a owl:ObjectProperty ;
+	skos:prefLabel "Assigned To"@en ;
+	skos:definition "Indicates the allocation of responsibility, performance of behavior, storage, or\nexecution."@en ;
+	skos:changeNote "3.0: Directional notation introduced (arrow replaces black circle at 'to' end)."@en ;
+	arch:domainIncludes arch:Element ;
+	arch:rangeIncludes arch:Element .
+am:Assignment a owl:Class ;
+	rdfs:subClassOf arch:QualifiedRelationship ;
+	arch:unqualifiedForm am:assignedTo ;
+	skos:prefLabel "Assignment"@en ;
+	skos:notation "i" ;
+	skos:definition "An assignment relationship indicates the allocation of responsibility, performance of\nbehavior, storage, or execution."@en ;
+	arch:domainIncludes arch:Element ;
+	arch:rangeIncludes arch:Element ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/rel_assignment.svg" .
+am:qualifiedAssignment a owl:ObjectProperty ;
+	rdfs:range am:Assignment ;
+	arch:unqualifiedForm am:assignedTo ;
+	arch:domainIncludes arch:Element ;
+	skos:prefLabel "qualified Assignment"@en ;
+	skos:definition "Navigates from a source element to an Assignment qualified relationship\nresource. Assignment links active structure elements with behavior they perform, or actors\nwith roles they fulfill."@en ;
+	skos:example "ex:DevTeam am:qualifiedAssignment ex:qr-003 .\nex:qr-003 a am:Assignment ;\n    arch:source ex:DevTeam ;\n    arch:target ex:DeploymentProcess ."@en .
+am:realizes a owl:ObjectProperty ;
+	skos:prefLabel "Realizes"@en ;
+	skos:definition "Indicates that an entity plays a critical role in the creation, achievement, sustenance,\nor operation of a more abstract entity."@en ;
+	arch:domainIncludes arch:Element ;
+	arch:rangeIncludes arch:Element .
+am:Realization a owl:Class ;
+	rdfs:subClassOf arch:QualifiedRelationship ;
+	arch:unqualifiedForm am:realizes ;
+	skos:prefLabel "Realization"@en ;
+	skos:notation "r" ;
+	skos:definition "A realization relationship indicates that an entity plays a critical role in the creation,\nachievement, sustenance, or operation of a more abstract entity."@en ;
+	arch:domainIncludes arch:Element ;
+	arch:rangeIncludes arch:Element ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/rel_realization.svg" .
+am:qualifiedRealization a owl:ObjectProperty ;
+	rdfs:range am:Realization ;
+	arch:unqualifiedForm am:realizes ;
+	arch:domainIncludes arch:Element ;
+	skos:prefLabel "qualified Realization"@en ;
+	skos:definition "Navigates from a source element to a Realization qualified relationship\nresource. Realization links a concrete element with a more abstract element it realizes."@en ;
+	skos:example "ex:PaymentSvc am:qualifiedRealization ex:qr-004 .\nex:qr-004 a am:Realization ;\n    arch:source ex:PaymentSvc ;\n    arch:target ex:PaymentCapability ."@en .
+am:serves a owl:ObjectProperty ;
+	skos:prefLabel "Serves"@en ;
+	skos:definition "Indicates that an element provides its functionality to another element."@en ;
+	skos:changeNote "3.0: Renamed from 'Used By' to 'Serves', in line with the other active names of relationships."@en ;
+	arch:domainIncludes arch:Element ;
+	arch:rangeIncludes arch:Element .
+am:Serving a owl:Class ;
+	rdfs:subClassOf arch:QualifiedRelationship ;
+	arch:unqualifiedForm am:serves ;
+	skos:prefLabel "Serving"@en ;
+	skos:notation "v" ;
+	skos:definition "A serving relationship indicates that an element provides its functionality to another\nelement."@en ;
+	skos:changeNote "3.0: Renamed from 'Used By'. Cross-layer relationship constraints relaxed."@en ;
+	arch:domainIncludes arch:Element ;
+	arch:rangeIncludes arch:Element ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/rel_serving.svg" .
+am:qualifiedServing a owl:ObjectProperty ;
+	rdfs:range am:Serving ;
+	arch:unqualifiedForm am:serves ;
+	arch:domainIncludes arch:Element ;
+	skos:prefLabel "qualified Serving"@en ;
+	skos:definition "Navigates from a source element to a Serving qualified relationship\nresource. Serving indicates that an element provides its functionality to another."@en ;
+	skos:example "ex:AppSvc1 am:qualifiedServing ex:qr-005 .\nex:qr-005 a am:Serving ;\n    arch:source ex:AppSvc1 ;\n    arch:target ex:BizProc1 ;\n    rdf:reifies <<( ex:AppSvc1 am:serves ex:BizProc1 )>> ;\n    prov:wasDerivedFrom ex:diagramEdge-81 ."@en .
+am:accesses a owl:ObjectProperty ;
+	skos:prefLabel "Accesses"@en ;
+	skos:definition "Indicates that a behavior element may access a business or data object."@en ;
+	arch:domainIncludes arch:Element ;
+	arch:rangeIncludes arch:Element .
+am:Access a owl:Class ;
+	rdfs:subClassOf arch:QualifiedRelationship ;
+	arch:unqualifiedForm am:accesses ;
+	skos:prefLabel "Access"@en ;
+	skos:notation "a" ;
+	skos:definition "An access relationship indicates that a behavior element may access a business or data\nobject. Its subclasses say the kind of access — am:ReadAccess, am:WriteAccess, am:ReadWriteAccess; an\nam:Access that is none of them is unspecified."@en ;
+	arch:domainIncludes arch:Element ;
+	arch:rangeIncludes arch:Element ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/rel_access.svg" .
+am:ReadAccess a owl:Class ;
+	rdfs:subClassOf am:Access ;
+	arch:unqualifiedForm am:accesses ;
+	skos:prefLabel "Read Access"@en ;
+	skos:definition "An access relationship in which the accessing element reads or uses the passive structure element."@en ;
+	skos:scopeNote "The relationship still runs from the accessing element to the passive structure element; the notation points the other way, with the arrowhead at the source end. In the exchange format, accessType=\"Read\"."@en .
+am:WriteAccess a owl:Class ;
+	rdfs:subClassOf am:Access ;
+	arch:unqualifiedForm am:accesses ;
+	skos:prefLabel "Write Access"@en ;
+	skos:definition "An access relationship in which the accessing element creates, changes or writes the passive structure element."@en ;
+	skos:scopeNote "Drawn with the arrowhead at the target end, the passive structure element. In the exchange format, accessType=\"Write\", its default."@en .
+am:ReadWriteAccess a owl:Class ;
+	rdfs:subClassOf am:Access ;
+	arch:unqualifiedForm am:accesses ;
+	skos:prefLabel "Read-Write Access"@en ;
+	skos:definition "An access relationship in which the accessing element both reads and changes the passive structure element."@en ;
+	skos:scopeNote "Drawn with arrowheads at both ends. In the exchange format, accessType=\"ReadWrite\"."@en .
+am:qualifiedAccess a owl:ObjectProperty ;
+	rdfs:range am:Access ;
+	arch:unqualifiedForm am:accesses ;
+	arch:domainIncludes arch:Element ;
+	skos:prefLabel "qualified Access"@en ;
+	skos:definition "Navigates from a source element to an Access qualified relationship\nresource. The resource's class says the kind of access: am:ReadAccess, am:WriteAccess or\nam:ReadWriteAccess, or am:Access when it is unspecified."@en ;
+	skos:example "ex:OrderProcess am:qualifiedAccess ex:qr-006 .\nex:qr-006 a am:ReadWriteAccess ;\n    arch:source ex:OrderProcess ;\n    arch:target ex:CustomerData ."@en .
+am:influences a owl:ObjectProperty ;
+	skos:prefLabel "Influences"@en ;
+	skos:definition "Indicates that an element affects the implementation or achievement of some motivation\nelement."@en ;
+	skos:changeNote "3.0: Notation changed for consistency with other dependency relationships (access and serving)."@en ;
+	arch:domainIncludes arch:Element ;
+	arch:rangeIncludes arch:Element .
+am:Influence a owl:Class ;
+	rdfs:subClassOf arch:QualifiedRelationship ;
+	arch:unqualifiedForm am:influences ;
+	skos:prefLabel "Influence"@en ;
+	skos:notation "n" ;
+	skos:definition "An influence relationship indicates that an element affects the implementation or\nachievement of some motivation element. The influenceStrength property specifies the degree."@en ;
+	arch:domainIncludes arch:Element ;
+	arch:rangeIncludes arch:Element ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/rel_influence.svg" .
+am:qualifiedInfluence a owl:ObjectProperty ;
+	rdfs:range am:Influence ;
+	arch:unqualifiedForm am:influences ;
+	arch:domainIncludes arch:Element ;
+	skos:prefLabel "qualified Influence"@en ;
+	skos:definition "Navigates from a source element to an Influence qualified relationship\nresource. The Influence resource carries the influenceStrength (+, ++, -, --)."@en ;
+	skos:example "ex:CostReduction am:qualifiedInfluence ex:qr-007 .\nex:qr-007 a am:Influence ;\n    arch:source ex:CostReduction ;\n    arch:target ex:Profitability ;\n    am:influenceStrength \"++\" ."@en .
+am:triggers a owl:ObjectProperty ;
+	skos:prefLabel "Triggers"@en ;
+	skos:definition "Indicates a temporal or causal relationship between elements."@en ;
+	arch:domainIncludes arch:Element ;
+	arch:rangeIncludes arch:Element .
+am:Triggering a owl:Class ;
+	rdfs:subClassOf arch:QualifiedRelationship ;
+	arch:unqualifiedForm am:triggers ;
+	skos:prefLabel "Triggering"@en ;
+	skos:notation "t" ;
+	skos:definition "A triggering relationship indicates a temporal or causal relationship between\nelements."@en ;
+	arch:domainIncludes arch:Element ;
+	arch:rangeIncludes arch:Element ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/rel_triggering.svg" .
+am:qualifiedTriggering a owl:ObjectProperty ;
+	rdfs:range am:Triggering ;
+	arch:unqualifiedForm am:triggers ;
+	arch:domainIncludes arch:Element ;
+	skos:prefLabel "qualified Triggering"@en ;
+	skos:definition "Navigates from a source element to a Triggering qualified relationship\nresource. Triggering indicates a temporal or causal dependency."@en ;
+	skos:example "ex:OrderReceived am:qualifiedTriggering ex:qr-008 .\nex:qr-008 a am:Triggering ;\n    arch:source ex:OrderReceived ;\n    arch:target ex:FulfillmentProcess ."@en .
+am:flowsTo a owl:ObjectProperty ;
+	skos:prefLabel "Flows To"@en ;
+	skos:definition "Indicates transfer from one element to another."@en ;
+	arch:domainIncludes arch:Element ;
+	arch:rangeIncludes arch:Element .
+am:Flow a owl:Class ;
+	rdfs:subClassOf arch:QualifiedRelationship ;
+	arch:unqualifiedForm am:flowsTo ;
+	skos:prefLabel "Flow"@en ;
+	skos:notation "f" ;
+	skos:definition "A flow relationship indicates transfer from one element to another."@en ;
+	arch:domainIncludes arch:Element ;
+	arch:rangeIncludes arch:Element ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/rel_flow.svg" .
+am:qualifiedFlow a owl:ObjectProperty ;
+	rdfs:range am:Flow ;
+	arch:unqualifiedForm am:flowsTo ;
+	arch:domainIncludes arch:Element ;
+	skos:prefLabel "qualified Flow"@en ;
+	skos:definition "Navigates from a source element to a Flow qualified relationship\nresource. Flow indicates transfer of information, goods, or money."@en ;
+	skos:example "ex:Invoicing am:qualifiedFlow ex:qr-009 .\nex:qr-009 a am:Flow ;\n    arch:source ex:Invoicing ;\n    arch:target ex:Payment ;\n    skos:prefLabel \"Invoice data flow\"@en ."@en .
+am:specializes a owl:ObjectProperty ;
+	skos:prefLabel "Specializes"@en ;
+	skos:definition "Indicates that an element is a particular kind of another element."@en ;
+	arch:domainIncludes arch:Element ;
+	arch:rangeIncludes arch:Element .
+am:Specialization a owl:Class ;
+	rdfs:subClassOf arch:QualifiedRelationship ;
+	arch:unqualifiedForm am:specializes ;
+	skos:prefLabel "Specialization"@en ;
+	skos:notation "s" ;
+	skos:definition "A specialization relationship indicates that an element is a particular kind of another\nelement."@en ;
+	arch:domainIncludes arch:Element ;
+	arch:rangeIncludes arch:Element ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/rel_specialization.svg" .
+am:qualifiedSpecialization a owl:ObjectProperty ;
+	rdfs:range am:Specialization ;
+	arch:unqualifiedForm am:specializes ;
+	arch:domainIncludes arch:Element ;
+	skos:prefLabel "qualified Specialization"@en ;
+	skos:definition "Navigates from a source element to a Specialization qualified relationship\nresource. Specialization indicates that an element is a particular kind of another."@en ;
+	skos:example "ex:OnlineBanking am:qualifiedSpecialization ex:qr-010 .\nex:qr-010 a am:Specialization ;\n    arch:source ex:OnlineBanking ;\n    arch:target ex:BankingService ."@en .
+am:associatedWith a owl:ObjectProperty ;
+	skos:prefLabel "Associated With"@en ;
+	skos:definition "Indicates an unspecified relationship, or one that is not represented by another\nArchiMate relationship."@en ;
+	arch:domainIncludes arch:Element ;
+	arch:rangeIncludes arch:Element .
+am:Association a owl:Class ;
+	rdfs:subClassOf arch:QualifiedRelationship ;
+	arch:unqualifiedForm am:associatedWith ;
+	skos:prefLabel "Association"@en ;
+	skos:notation "o" ;
+	skos:definition "An association relationship indicates an unspecified relationship, or one that is not\nrepresented by another ArchiMate relationship."@en ;
+	arch:domainIncludes arch:Element ;
+	arch:rangeIncludes arch:Element ;
+	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/rel_association.svg" .
+am:DirectedAssociation a owl:Class ;
+	rdfs:subClassOf am:Association ;
+	arch:unqualifiedForm am:associatedWith ;
+	skos:prefLabel "Directed Association"@en ;
+	skos:definition "An association relationship with a direction, from its source to its target."@en ;
+	skos:scopeNote "A directed association can be used in derivations in its direction only. Drawn with a\nhalf arrowhead at the target end; an association that is not directed has none. In the exchange format,\nisDirected=\"true\"."@en .
+am:qualifiedAssociation a owl:ObjectProperty ;
+	rdfs:range am:Association ;
+	arch:unqualifiedForm am:associatedWith ;
+	arch:domainIncludes arch:Element ;
+	skos:prefLabel "qualified Association"@en ;
+	skos:definition "Navigates from a source element to an Association qualified relationship\nresource. Association is the most generic relationship — used when no more specific type\napplies."@en ;
+	skos:example "ex:Stakeholder1 am:qualifiedAssociation ex:qr-011 .\nex:qr-011 a am:Association ;\n    arch:source ex:Stakeholder1 ;\n    arch:target ex:Driver1 ."@en .
+am:accessType a owl:DatatypeProperty ;
+	skos:prefLabel "Access Type"@en ;
+	skos:definition "Specifies the type of access: read, write, read-write, or unspecified."@en ;
+	rdfs:domain am:Access ;
+	rdfs:range xsd:string ;
+	owl:deprecated true ;
+	dct:isReplacedBy am:ReadAccess , am:WriteAccess , am:ReadWriteAccess ;
+	skos:historyNote "Deprecated 2026-10-10: the kind of access is the relationship's class — am:ReadAccess,\nam:WriteAccess or am:ReadWriteAccess, and am:Access when it is unspecified — so the notation, the palette,\nviewpoints, SHACL and SPARQL all see it as a type (DD-31). An importer maps the exchange format's\naccessType attribute to these classes."@en .
+am:influenceStrength a owl:DatatypeProperty ;
+	skos:prefLabel "Influence Strength"@en ;
+	skos:definition "Specifies the strength or sign of an influence (e.g., +, ++, -, --)."@en ;
+	rdfs:domain am:Influence ;
+	rdfs:range xsd:string .

@@ -122,6 +122,20 @@ metadata, availability, unmet requirements and profile caveats. Repeated values 
 kind are alternatives; different kinds intersect. Unknown filter values are errors, not
 an empty catalogue that could be mistaken for unavailable evidence.
 
+`--concern CONCERN` (repeatable) keeps the model questions informing a concern, named by
+IRI, label or local name; `catalog concerns` lists them. With a model question, an entry
+also carries `implementations` (`question`, `template` or both), `question` (its IRI, set,
+label, answers, does-not-prove, finding focus and severity, concerns, stakeholders and
+viewpoints with labels, parameters, required capabilities, and what is checked when it
+runs), and under a profile `runs` (which implementation runs on `local` data and on an
+`endpoint`, or `null`) and `notation_declared` (whether the profile speaks the entry's
+notation at all).
+
+A result envelope says which implementation answered: `implementation` (`template`,
+`question`, or `null` for an ad-hoc query), `question` (the model question's IRI),
+`default_graph` (`"union"` when the dataset was read as one graph, as connect reported it)
+and `finding` (`focus` and `severity`, for a question whose rows are findings).
+
 `query run|literal -o FILE --preview --limit N` saves the same full version-1 envelope
 while printing a bounded TSV view with citation and warnings. Preview requires `-o` and
 a positive display limit; invalid options are rejected before execution. `query batch`

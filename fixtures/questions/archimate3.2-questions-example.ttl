@@ -1,0 +1,161 @@
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix skos:  <http://www.w3.org/2004/02/skos/core#> .
+@prefix arch:  <https://meta.linked.archi/core#> .
+@prefix am:    <https://meta.linked.archi/archimate3/onto#> .
+@prefix amvp:  <https://meta.linked.archi/archimate3/viewpoints#> .
+@prefix :      <https://meta.linked.archi/examples/archimate3.2-questions/> .
+
+#################################################################
+# The model the core and ArchiMate 3.2 questions are checked against
+# (the questions check of the validation pipeline): each finding question has the
+# culprits it is meant to catch and a near miss it must not report.
+# Expected answers: archimate3.2-questions-example.expected.tsv.
+#
+# Written as a modelling tool writes a model: each concept typed with
+# its own type only. The check also runs it with every inferable core
+# and abstract type added, as converters and RDFS inference add them,
+# and requires the same answers.
+#
+# Three specialisations the model declares, each counting where the
+# type it specialises does: a cloud server is a device (a node, in
+# the ontology), a regulatory constraint a constraint (a requirement),
+# a strategic capability a capability.
+#################################################################
+
+:model a arch:Model ; skos:prefLabel "Claims handling"@en .
+
+:CloudServer a owl:Class ; rdfs:subClassOf am:Device ; skos:prefLabel "Cloud Server"@en .
+:RegulatoryConstraint a owl:Class ; rdfs:subClassOf am:Constraint ; skos:prefLabel "Regulatory Constraint"@en .
+:StrategicCapability a owl:Class ; rdfs:subClassOf am:Capability ; skos:prefLabel "Strategic Capability"@en .
+
+# ── Views ───────────────────────────────────────────────────────
+
+:orgView a arch:Diagram ; arch:inModel :model ; skos:prefLabel "Organisation"@en ;
+    arch:viewConformsToViewpoint amvp:OrganizationViewpoint .
+:techView a arch:Diagram ; arch:inModel :model ; skos:prefLabel "Hosting"@en ;
+    arch:viewConformsToViewpoint amvp:TechnologyViewpoint .
+# Its viewpoint is defined nowhere: not judged for conformance, reported as unknown.
+:legacyView a arch:Diagram ; arch:inModel :model ; skos:prefLabel "Legacy"@en ;
+    arch:viewConformsToViewpoint amvp:LegacyOrganizationViewpoint .
+
+# ── Elements ────────────────────────────────────────────────────
+
+:customer a am:BusinessActor ; arch:inModel :model ; skos:prefLabel "Customer"@en ; arch:inView :orgView .
+:clerk a am:BusinessRole ; arch:inModel :model ; skos:prefLabel "Claims Clerk"@en ; arch:inView :orgView .
+# A node on an organisation view: the viewpoint does not admit it.
+:server a am:Node ; arch:inModel :model ; skos:prefLabel "Application Server"@en ; arch:inView :orgView .
+# A specialised device on a technology view: admitted through its superclass.
+:cloudServer a :CloudServer ; arch:inModel :model ; skos:prefLabel "Cloud Server 1"@en ; arch:inView :techView .
+:handleClaim a am:BusinessProcess ; arch:inModel :model ; skos:prefLabel "Handle Claim"@en ; skos:definition "Settle a claim."@en .
+:registerClaim a am:BusinessProcess ; arch:inModel :model ; skos:prefLabel "Register Claim"@en .
+:claimService a am:BusinessService ; arch:inModel :model ; skos:prefLabel "Claim Service"@en .
+:orphanService a am:ApplicationService ; arch:inModel :model ; skos:prefLabel "Orphan Service"@en .
+:crm a am:ApplicationComponent ; arch:inModel :model ; skos:prefLabel "CRM"@en .
+# Shares its name with the CRM, by case only: a duplicate.
+:crmDup a am:ApplicationComponent ; arch:inModel :model ; skos:prefLabel "crm"@en .
+:policyApp a am:ApplicationComponent ; arch:inModel :model ; skos:prefLabel "Policy Administration"@en .
+:newApp a am:ApplicationComponent ; arch:inModel :model ; skos:prefLabel "Claims Portal"@en ;
+    arch:architectureState arch:Target ; arch:approvalState arch:Proposed .
+:brokerPortal a am:ApplicationComponent ; arch:inModel :model ; skos:prefLabel "Broker Portal"@en .
+# The CRM's function, and the service it realises for the policy application.
+:crmFunction a am:ApplicationFunction ; arch:inModel :model ; skos:prefLabel "Customer Management"@en .
+:customerService a am:ApplicationService ; arch:inModel :model ; skos:prefLabel "Customer Lookup"@en .
+:customerData a am:DataObject ; arch:inModel :model ; skos:prefLabel "Customer Data"@en .
+# Read by one, written by another: not a finding.
+:policyData a am:DataObject ; arch:inModel :model ; skos:prefLabel "Policy Data"@en .
+:ceo a am:Stakeholder ; arch:inModel :model ; skos:prefLabel "CEO"@en .
+:goal a am:Goal ; arch:inModel :model ; skos:prefLabel "Faster claims"@en .
+:req a am:Requirement ; arch:inModel :model ; skos:prefLabel "Claims settled within 24h"@en .
+:req2 a am:Requirement ; arch:inModel :model ; skos:prefLabel "Unrealised requirement"@en .
+:constraint a :RegulatoryConstraint ; arch:inModel :model ; skos:prefLabel "Keep claims for ten years"@en .
+:principle a am:Principle ; arch:inModel :model ; skos:prefLabel "Digital first"@en .
+:principle2 a am:Principle ; arch:inModel :model ; skos:prefLabel "Unbacked principle"@en .
+:capability a am:Capability ; arch:inModel :model ; skos:prefLabel "Claims Management"@en .
+:capability2 a am:Capability ; arch:inModel :model ; skos:prefLabel "Fraud Detection"@en .
+:capability3 a :StrategicCapability ; arch:inModel :model ; skos:prefLabel "Customer Insight"@en .
+:wp a am:WorkPackage ; arch:inModel :model ; skos:prefLabel "CRM upgrade"@en .
+:deliv a am:Deliverable ; arch:inModel :model ; skos:prefLabel "Upgraded CRM"@en .
+:plateauA a am:Plateau ; arch:inModel :model ; skos:prefLabel "Baseline"@en .
+:plateauB a am:Plateau ; arch:inModel :model ; skos:prefLabel "Target"@en .
+# The same name, different types: not a duplicate.
+:bankActor a am:BusinessActor ; arch:inModel :model ; skos:prefLabel "Bank"@en ; arch:inView :legacyView .
+:bankRole a am:BusinessRole ; arch:inModel :model ; skos:prefLabel "Bank"@en .
+
+# ── Relationships: the qualified resource, the direct triple and rdf:reifies ──
+
+:r1 a am:Assignment ; arch:inModel :model ; arch:source :clerk ; arch:target :handleClaim ;
+    rdf:reifies <<( :clerk am:assignedTo :handleClaim )>> .
+:clerk am:assignedTo :handleClaim .
+:r2 a am:Assignment ; arch:inModel :model ; arch:source :customer ; arch:target :clerk ;
+    rdf:reifies <<( :customer am:assignedTo :clerk )>> .
+:customer am:assignedTo :clerk .
+:r3 a am:Realization ; arch:inModel :model ; arch:source :handleClaim ; arch:target :claimService ;
+    rdf:reifies <<( :handleClaim am:realizes :claimService )>> .
+:handleClaim am:realizes :claimService .
+:r4 a am:Serving ; arch:inModel :model ; arch:source :claimService ; arch:target :customer ;
+    rdf:reifies <<( :claimService am:serves :customer )>> .
+:claimService am:serves :customer .
+# Without rdf:reifies: out of step with its direct triple.
+:r5 a am:Serving ; arch:inModel :model ; arch:source :server ; arch:target :crm .
+:server am:serves :crm .
+# The CRM performs a function that realises a service the policy application is served by.
+:r6 a am:Assignment ; arch:inModel :model ; arch:source :crm ; arch:target :crmFunction ;
+    rdf:reifies <<( :crm am:assignedTo :crmFunction )>> .
+:crm am:assignedTo :crmFunction .
+:r7 a am:Realization ; arch:inModel :model ; arch:source :crmFunction ; arch:target :customerService ;
+    rdf:reifies <<( :crmFunction am:realizes :customerService )>> .
+:crmFunction am:realizes :customerService .
+:r8 a am:Serving ; arch:inModel :model ; arch:source :customerService ; arch:target :policyApp ;
+    rdf:reifies <<( :customerService am:serves :policyApp )>> .
+:customerService am:serves :policyApp .
+:r9 a am:ReadAccess ; arch:inModel :model ; arch:source :crm ; arch:target :customerData ;
+    rdf:reifies <<( :crm am:accesses :customerData )>> .
+:crm am:accesses :customerData .
+:r10 a am:ReadAccess ; arch:inModel :model ; arch:source :policyApp ; arch:target :policyData ;
+    rdf:reifies <<( :policyApp am:accesses :policyData )>> .
+:policyApp am:accesses :policyData .
+:r11 a am:WriteAccess ; arch:inModel :model ; arch:source :crm ; arch:target :policyData ;
+    rdf:reifies <<( :crm am:accesses :policyData )>> .
+:crm am:accesses :policyData .
+:r12 a am:Realization ; arch:inModel :model ; arch:source :handleClaim ; arch:target :req ;
+    rdf:reifies <<( :handleClaim am:realizes :req )>> .
+:handleClaim am:realizes :req .
+:r13 a am:Realization ; arch:inModel :model ; arch:source :req ; arch:target :goal ;
+    rdf:reifies <<( :req am:realizes :goal )>> .
+:req am:realizes :goal .
+:r14 a am:Realization ; arch:inModel :model ; arch:source :req ; arch:target :principle ;
+    rdf:reifies <<( :req am:realizes :principle )>> .
+:req am:realizes :principle .
+:r15 a am:Influence ; arch:inModel :model ; arch:source :ceo ; arch:target :goal ;
+    rdf:reifies <<( :ceo am:influences :goal )>> .
+:ceo am:influences :goal .
+:r16 a am:Realization ; arch:inModel :model ; arch:source :handleClaim ; arch:target :capability ;
+    rdf:reifies <<( :handleClaim am:realizes :capability )>> .
+:handleClaim am:realizes :capability .
+:r17 a am:Realization ; arch:inModel :model ; arch:source :wp ; arch:target :deliv ;
+    rdf:reifies <<( :wp am:realizes :deliv )>> .
+:wp am:realizes :deliv .
+:r18 a am:Realization ; arch:inModel :model ; arch:source :deliv ; arch:target :crm ;
+    rdf:reifies <<( :deliv am:realizes :crm )>> .
+:deliv am:realizes :crm .
+:r19 a am:Aggregation ; arch:inModel :model ; arch:source :plateauA ; arch:target :crm ;
+    rdf:reifies <<( :plateauA am:aggregates :crm )>> .
+:plateauA am:aggregates :crm .
+:r20 a am:Aggregation ; arch:inModel :model ; arch:source :plateauA ; arch:target :policyApp ;
+    rdf:reifies <<( :plateauA am:aggregates :policyApp )>> .
+:plateauA am:aggregates :policyApp .
+:r21 a am:Aggregation ; arch:inModel :model ; arch:source :plateauB ; arch:target :crm ;
+    rdf:reifies <<( :plateauB am:aggregates :crm )>> .
+:plateauB am:aggregates :crm .
+:r22 a am:Aggregation ; arch:inModel :model ; arch:source :plateauB ; arch:target :newApp ;
+    rdf:reifies <<( :plateauB am:aggregates :newApp )>> .
+:plateauB am:aggregates :newApp .
+# The specialised device serves the broker portal: technology under it.
+:r23 a am:Serving ; arch:inModel :model ; arch:source :cloudServer ; arch:target :brokerPortal ;
+    rdf:reifies <<( :cloudServer am:serves :brokerPortal )>> .
+:cloudServer am:serves :brokerPortal .
+:r24 a am:Assignment ; arch:inModel :model ; arch:source :bankActor ; arch:target :bankRole ;
+    rdf:reifies <<( :bankActor am:assignedTo :bankRole )>> .
+:bankActor am:assignedTo :bankRole .

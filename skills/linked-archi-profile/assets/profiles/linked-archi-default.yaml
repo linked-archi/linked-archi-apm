@@ -24,7 +24,8 @@ profile: linked-archi-default
 # number, so anything checked against version 1 stops vouching automatically.
 version: 2
 description: >-
-  Converter output with default flags: qualified relationships only, model
+  Converter output with qualified relationships only - from a converter before direct
+  triples became its default, or run with --no-emit-direct-rel-triples - model
   resources in their own graph/model, a semantic graph partitioned per input, and
   model membership as a direct arch:inModel edge.
 
@@ -384,9 +385,10 @@ capabilities:
   # model has more than one input, so a single-input conversion has none and the
   # `descendants` selector simply matches the one unpartitioned graph.
   partitioned_semantic_graphs: true
-  # Direct source->predicate->target triples alongside the qualified form.
-  # Opt-in per converter (--emit-direct-rel-triples); default false. Verified
-  # zero in every default-flag fixture.
+  # Direct source->predicate->target triples alongside the qualified form. The
+  # converters write them by default now; this profile describes output without
+  # them (an older converter, or --no-emit-direct-rel-triples), which every
+  # committed fixture is. linked-archi-direct describes output with them.
   direct_rel_triples: false
   # RDF 1.2 triple terms bridging the qualified resource to the unqualified
   # predicate. Every converter emits it — but only alongside the direct triple,

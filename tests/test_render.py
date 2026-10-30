@@ -101,6 +101,8 @@ class TestRendering(unittest.TestCase):
     def test_no_template_carries_its_own_prefixes(self):
         """A template with its own PREFIX lines is how one query goes stale alone."""
         for entry in self.catalog:
+            if not entry.file:
+                continue  # a model question's prefixes are its question set's sh:declare
             with self.subTest(entry.name):
                 body = "\n".join(
                     line for line in entry.text().splitlines()
@@ -323,7 +325,8 @@ class TestRefusals(unittest.TestCase):
     def test_flat_profile_warns_rather_than_refusing_a_scoped_template(self):
         flat = load_profile("flattened-turtle")
         rendered = render("core/neighbours-qualified", flat,
-                          {"FOCUS_IRI": support.BPMN_TASK}, catalog=self.catalog)
+                          {"FOCUS_IRI": support.BPMN_TASK}, catalog=self.catalog,
+                          implementation="template")
         self.assertTrue(rendered.warnings)
         self.assertIn("no named graphs", " ".join(rendered.warnings))
 
@@ -349,6 +352,9 @@ def _sample_params(entry) -> dict:
         "VIEW_IRI": support.C4_VIEW,
         "VIEW_A_IRI": support.C4_VIEW,
         "VIEW_B_IRI": support.C4_CONTEXT_VIEW,
+        "VIEWPOINT_IRI": "https://meta.linked.archi/archimate3/viewpoints#LayeredViewpoint",
+        "FROM_IRI": support.BPMN_MODEL,
+        "TO_IRI": support.BPMN_MODEL,
         "PREDICATE_PATH": support.ARCHIMATE_FLOWS_TO,
         "LIMIT": 5,
     }
@@ -623,8 +629,9 @@ class TestRenderedCarriesTheRowCap(unittest.TestCase):
         """
         curated = load_profile("curated-store")
         checked = 0
-        for entry in self.catalog:
-            if not entry.check(curated).ok:
+        templates = [entry for entry in self.catalog if entry.file]
+        for entry in templates:
+            if not entry.check_template(curated).ok:
                 continue
             params = {"LIMIT": entry.parameters["LIMIT"]["default"]}
             for name, other in entry.parameters.items():
@@ -632,14 +639,15 @@ class TestRenderedCarriesTheRowCap(unittest.TestCase):
                     continue
                 params[name] = _placeholder_for(other["type"])
             with self.subTest(entry.name):
-                rendered = render(entry.name, curated, params, catalog=self.catalog)
+                rendered = render(entry.name, curated, params, catalog=self.catalog,
+                                  implementation="template")
                 self.assertEqual(
                     rendered.row_limit, trailing_row_limit(rendered.query),
                     f"{entry.name} carries a cap its query does not apply",
                 )
             checked += 1
         self.assertEqual(
-            checked, len(self.catalog),
+            checked, len(templates),
             "the curated profile is meant to support every template",
         )
 

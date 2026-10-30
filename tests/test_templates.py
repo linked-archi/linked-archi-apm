@@ -113,7 +113,8 @@ CASES: dict[str, tuple[dict, int]] = {
 
 class TestEveryTemplateIsTested(unittest.TestCase):
     def test_no_catalogued_template_lacks_a_case(self):
-        catalogued = set(load_catalog().names)
+        # Templates; the model questions are asked in tests/test_questions.py.
+        catalogued = {entry.name for entry in load_catalog() if entry.file}
         untested = catalogued - set(CASES)
         self.assertEqual(
             untested, set(),
@@ -928,7 +929,8 @@ class TestAgainstFlatFixture(unittest.TestCase):
 
     def test_scoped_templates_run_unscoped_with_a_caveat(self):
         rendered = render("core/neighbours-qualified", self.profile,
-                          {"FOCUS_IRI": BPMN_TASK}, catalog=self.catalog)
+                          {"FOCUS_IRI": BPMN_TASK}, catalog=self.catalog,
+                          implementation="template")
         self.assertNotIn("GRAPH ?g", rendered.query)
         self.assertTrue(rendered.warnings)
         raw = self.adapter.execute(rendered.query)

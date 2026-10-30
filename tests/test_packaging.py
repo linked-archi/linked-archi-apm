@@ -1265,6 +1265,9 @@ class TestNoPrivateHostsShip(unittest.TestCase):
         # This package's own documentation site, as `site_url` in mkdocs.yml. Material needs
         # the canonical URL to emit correct sitemap and social-card links.
         "linked-archi.github.io",
+        # The publisher and the licence of the question sets bundled from meta.linked.archi,
+        # carried verbatim: the published documents, not an extract of them.
+        "linked.archi", "creativecommons.org",
     }
 
     #: Reserved for documentation and testing, so allowed by suffix.

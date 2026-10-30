@@ -55,7 +55,10 @@ throughout the investigation, and store artifacts in the project, not the skill 
      --steps-dir steps --batch-dir plans --json -o plan.json
    ```
 
-   `--mode` overrides routing; `--list-patterns` lists choices. If no pattern matches,
+   `--mode` overrides routing; `--list-patterns` lists choices. `--concern NAME`
+   (repeatable) plans instead the model questions published as informing a stakeholder
+   concern - `la-query catalog concerns` lists them - in stage order; questions for a
+   language the profile does not declare are left out, with a note. If no pattern matches,
    clarify or state the method gap; orientation alone is not an answer. The plan is a
    starting point: record why you omit, add or reorder a step.
 

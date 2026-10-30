@@ -210,6 +210,48 @@ patterns. A custom template can be chosen as an explicit analyst-led query step;
 automatic planner integration is a separate extension. See the complete example in
 `examples/fixed-graph-downstream/` in the package repository.
 
+## Model questions
+
+A question in a published question set (`arch:QuestionSet`) is a catalogue entry too, and
+the source of truth for what it asks: its label is the question, `arch:answers` and
+`arch:doesNotProve` say what a row means and what it does not, and it names the concerns,
+stakeholders and viewpoints it serves. Write a new question there, not as a template, when
+the question is about a Linked.Archi model: la-gram and the deliverable generator ask the
+same set.
+
+How the catalogue reads one:
+
+- **Name.** `dcterms:identifier`. A question and a template of one name are one entry with
+  two implementations: `query run` asks the question where the dataset fits it - read as
+  one graph, with what its query reads present - and runs the template elsewhere. A name
+  the two use for *different* questions is held back from the catalogue until the question
+  set names them apart (`catalog list` says which).
+- **Query.** Written for one graph, the model and its metamodel together; no placeholders,
+  no `GRAPH` scoping, prefixes from the set's `sh:declare`. It is asked of the dataset read
+  as one graph: local data on request (each triple once, however many graphs hold it), an
+  endpoint only with `capabilities.union_default_graph`.
+- **Parameters.** One per `sh:parameter`, every one an IRI, named after the core property
+  it is declared on: `arch:focus` is `FOCUS_IRI`, `arch:model` `MODEL_IRI`, `arch:view`
+  `VIEW_IRI`, `arch:viewpoint` `VIEWPOINT_IRI`, `arch:conceptType` `TYPE_IRI`, `arch:from`
+  and `arch:to` `FROM_IRI` and `TO_IRI`. A parameter declared `sh:optional` may be left
+  unset, and the question then answers for every value. Each is pre-bound with `VALUES`
+  at the start of the outermost `WHERE` group, as la-gram and meta's question check bind
+  it. `LIMIT` is `arch:defaultLimit`.
+- **Requirements.** Read from the query: a published unqualified predicate needs
+  `direct_rel_triples`, `rdf:reifies` needs `rdf_reifies`, `arch:inModel` needs
+  `part_of_model_edge`. A refusal names what lifts it. A question declaring
+  `arch:ModelAndMetamodelDataset` is also checked when it runs, with an ASK per thing it
+  reads: each `arch:requiresMetamodel` ontology, a viewpoint catalogue where it reads
+  viewpoints, unqualified forms where it reads them.
+- **Notation.** `notation/<slug>/...` makes it a notation entry, gated on the vocabulary of
+  its one `arch:requiresMetamodel`, as a notation template is on `notation_namespace`.
+
+The bundled sets are copied from linked-archi-meta, with an index of them that listing reads
+without an RDF library; `make questions` refreshes both, and a test fails when they
+disagree. A project's own set is passed with `--catalog questions.ttl`, read with
+pyoxigraph, and follows the extension rules: project namespace, no taken name, a
+`arch:doesNotProve` on every question.
+
 ## Testing
 
 The suite fails when a catalogued template has no test case, so the catalogue cannot

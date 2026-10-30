@@ -1,0 +1,2886 @@
+{
+ "_comment": "Generated from the question sets beside this file by `make questions`; do not edit. tests/test_questions.py fails when it and the Turtle disagree.",
+ "labels": {
+  "https://meta.linked.archi/archimate3/viewpoints#AddedValueOfProcesses": "Added value of business processes",
+  "https://meta.linked.archi/archimate3/viewpoints#ApplicationArchitect": "Application Architect",
+  "https://meta.linked.archi/archimate3/viewpoints#ApplicationCooperationViewpoint": "Application Cooperation Viewpoint",
+  "https://meta.linked.archi/archimate3/viewpoints#ApplicationDependencies": "Relationships and dependencies between applications",
+  "https://meta.linked.archi/archimate3/viewpoints#ApplicationPlatforms": "Structure of application platforms and how they relate to supporting technology",
+  "https://meta.linked.archi/archimate3/viewpoints#ApplicationUsageViewpoint": "Application Usage Viewpoint",
+  "https://meta.linked.archi/archimate3/viewpoints#ArchitectureMission": "Architecture mission",
+  "https://meta.linked.archi/archimate3/viewpoints#ArchitecturePolicies": "Architecture policies",
+  "https://meta.linked.archi/archimate3/viewpoints#ArchitectureStrategy": "Architecture strategy",
+  "https://meta.linked.archi/archimate3/viewpoints#ArchitectureTactics": "Architecture tactics",
+  "https://meta.linked.archi/archimate3/viewpoints#ArchitectureVision": "Architecture vision",
+  "https://meta.linked.archi/archimate3/viewpoints#BusinessAnalyst": "Business Analyst",
+  "https://meta.linked.archi/archimate3/viewpoints#BusinessArchitect": "Business Architect",
+  "https://meta.linked.archi/archimate3/viewpoints#BusinessManager": "Business Manager",
+  "https://meta.linked.archi/archimate3/viewpoints#BusinessProcessCooperationViewpoint": "Business Process Cooperation Viewpoint",
+  "https://meta.linked.archi/archimate3/viewpoints#CapabilityMapViewpoint": "Capability Map Viewpoint",
+  "https://meta.linked.archi/archimate3/viewpoints#CompetenciesAuthorityResponsibilities": "Competencies, authority and responsibilities",
+  "https://meta.linked.archi/archimate3/viewpoints#Completeness": "Completeness",
+  "https://meta.linked.archi/archimate3/viewpoints#Consistency": "Consistency",
+  "https://meta.linked.archi/archimate3/viewpoints#CxO": "CxO",
+  "https://meta.linked.archi/archimate3/viewpoints#Dependencies": "Dependencies",
+  "https://meta.linked.archi/archimate3/viewpoints#EnterpriseArchitect": "Enterprise Architect",
+  "https://meta.linked.archi/archimate3/viewpoints#GoalRealizationViewpoint": "Goal Realization Viewpoint",
+  "https://meta.linked.archi/archimate3/viewpoints#ImpactOfChange": "Impact of change",
+  "https://meta.linked.archi/archimate3/viewpoints#ImplementationAndDeploymentViewpoint": "Implementation and Deployment Viewpoint",
+  "https://meta.linked.archi/archimate3/viewpoints#ImplementationAndMigrationViewpoint": "Implementation and Migration Viewpoint",
+  "https://meta.linked.archi/archimate3/viewpoints#InformationArchitect": "Information Architect",
+  "https://meta.linked.archi/archimate3/viewpoints#InformationStructure": "Structure and dependencies of the data and information used",
+  "https://meta.linked.archi/archimate3/viewpoints#InformationStructureViewpoint": "Information Structure Viewpoint",
+  "https://meta.linked.archi/archimate3/viewpoints#InfrastructureArchitect": "Infrastructure Architect",
+  "https://meta.linked.archi/archimate3/viewpoints#InfrastructureQuality": "Stability, security, dependencies and costs of the infrastructure",
+  "https://meta.linked.archi/archimate3/viewpoints#LayeredViewpoint": "Layered Viewpoint",
+  "https://meta.linked.archi/archimate3/viewpoints#Manager": "Manager",
+  "https://meta.linked.archi/archimate3/viewpoints#MigrationViewpoint": "Migration Viewpoint",
+  "https://meta.linked.archi/archimate3/viewpoints#ModelHistory": "History of models",
+  "https://meta.linked.archi/archimate3/viewpoints#Motivation": "Motivation",
+  "https://meta.linked.archi/archimate3/viewpoints#MotivationViewpoint": "Motivation Viewpoint",
+  "https://meta.linked.archi/archimate3/viewpoints#OperationalManager": "Operational Manager",
+  "https://meta.linked.archi/archimate3/viewpoints#OrganizationViewpoint": "Organization Viewpoint",
+  "https://meta.linked.archi/archimate3/viewpoints#ProcessArchitect": "Process Architect",
+  "https://meta.linked.archi/archimate3/viewpoints#ProjectViewpoint": "Project Viewpoint",
+  "https://meta.linked.archi/archimate3/viewpoints#ReductionOfComplexity": "Reduction of complexity",
+  "https://meta.linked.archi/archimate3/viewpoints#RequirementsManager": "Requirements Manager",
+  "https://meta.linked.archi/archimate3/viewpoints#RequirementsRealizationViewpoint": "Requirements Realization Viewpoint",
+  "https://meta.linked.archi/archimate3/viewpoints#Responsibilities": "Responsibilities",
+  "https://meta.linked.archi/archimate3/viewpoints#ServiceOrchestration": "Orchestration and choreography of services",
+  "https://meta.linked.archi/archimate3/viewpoints#ServiceRealizationViewpoint": "Service Realization Viewpoint",
+  "https://meta.linked.archi/archimate3/viewpoints#StakeholderViewpoint": "Stakeholder Viewpoint",
+  "https://meta.linked.archi/archimate3/viewpoints#StrategyDevelopment": "Strategy development",
+  "https://meta.linked.archi/archimate3/viewpoints#StrategyViewpoint": "Strategy Viewpoint",
+  "https://meta.linked.archi/archimate3/viewpoints#TechnologyUsageViewpoint": "Technology Usage Viewpoint",
+  "https://meta.linked.archi/archimate4/viewpoints#AddedValueOfProcesses": "Added value of processes",
+  "https://meta.linked.archi/archimate4/viewpoints#ApplicationArchitect": "Application Architect",
+  "https://meta.linked.archi/archimate4/viewpoints#ApplicationCooperationViewpoint": "Application Cooperation Viewpoint",
+  "https://meta.linked.archi/archimate4/viewpoints#ApplicationDependencies": "Relationships and dependencies between applications",
+  "https://meta.linked.archi/archimate4/viewpoints#ApplicationPlatforms": "Structure of application platforms and the technology supporting them",
+  "https://meta.linked.archi/archimate4/viewpoints#ApplicationUsageViewpoint": "Application Usage Viewpoint",
+  "https://meta.linked.archi/archimate4/viewpoints#ArchitectureMission": "Architecture mission",
+  "https://meta.linked.archi/archimate4/viewpoints#ArchitecturePolicies": "Architecture policies",
+  "https://meta.linked.archi/archimate4/viewpoints#ArchitectureStrategy": "Architecture strategy",
+  "https://meta.linked.archi/archimate4/viewpoints#ArchitectureTactics": "Architecture tactics",
+  "https://meta.linked.archi/archimate4/viewpoints#ArchitectureVision": "Architecture vision",
+  "https://meta.linked.archi/archimate4/viewpoints#BusinessAnalyst": "Business Analyst",
+  "https://meta.linked.archi/archimate4/viewpoints#BusinessArchitect": "Business Architect",
+  "https://meta.linked.archi/archimate4/viewpoints#BusinessManager": "Business Manager",
+  "https://meta.linked.archi/archimate4/viewpoints#CapabilityMapViewpoint": "Capability Map Viewpoint",
+  "https://meta.linked.archi/archimate4/viewpoints#CompetenciesAuthorityResponsibilities": "Competencies, authority and responsibilities",
+  "https://meta.linked.archi/archimate4/viewpoints#Completeness": "Completeness",
+  "https://meta.linked.archi/archimate4/viewpoints#Consistency": "Consistency",
+  "https://meta.linked.archi/archimate4/viewpoints#CxO": "CxO",
+  "https://meta.linked.archi/archimate4/viewpoints#Dependencies": "Dependencies",
+  "https://meta.linked.archi/archimate4/viewpoints#EnterpriseArchitect": "Enterprise Architect",
+  "https://meta.linked.archi/archimate4/viewpoints#GoalRealizationViewpoint": "Goal Realization Viewpoint",
+  "https://meta.linked.archi/archimate4/viewpoints#ImpactOfChange": "Impact of change",
+  "https://meta.linked.archi/archimate4/viewpoints#ImplementationAndDeploymentViewpoint": "Implementation and Deployment Viewpoint",
+  "https://meta.linked.archi/archimate4/viewpoints#ImplementationAndMigrationViewpoint": "Implementation and Migration Viewpoint",
+  "https://meta.linked.archi/archimate4/viewpoints#InformationArchitect": "Information Architect",
+  "https://meta.linked.archi/archimate4/viewpoints#InformationStructure": "Structure and dependencies of data and information",
+  "https://meta.linked.archi/archimate4/viewpoints#InformationStructureViewpoint": "Information Structure Viewpoint",
+  "https://meta.linked.archi/archimate4/viewpoints#InfrastructureArchitect": "Infrastructure Architect",
+  "https://meta.linked.archi/archimate4/viewpoints#InfrastructureQuality": "Stability, security, dependencies and costs of infrastructure",
+  "https://meta.linked.archi/archimate4/viewpoints#LayeredViewpoint": "Layered Viewpoint",
+  "https://meta.linked.archi/archimate4/viewpoints#Manager": "Manager",
+  "https://meta.linked.archi/archimate4/viewpoints#MigrationViewpoint": "Migration Viewpoint",
+  "https://meta.linked.archi/archimate4/viewpoints#ModelHistory": "History of models",
+  "https://meta.linked.archi/archimate4/viewpoints#Motivation": "Motivation",
+  "https://meta.linked.archi/archimate4/viewpoints#MotivationViewpoint": "Motivation Viewpoint",
+  "https://meta.linked.archi/archimate4/viewpoints#OperationalManager": "Operational Manager",
+  "https://meta.linked.archi/archimate4/viewpoints#OrganizationViewpoint": "Organization Viewpoint",
+  "https://meta.linked.archi/archimate4/viewpoints#ProcessArchitect": "Process Architect",
+  "https://meta.linked.archi/archimate4/viewpoints#ProcessCooperationViewpoint": "Process Cooperation Viewpoint",
+  "https://meta.linked.archi/archimate4/viewpoints#ProjectViewpoint": "Project Viewpoint",
+  "https://meta.linked.archi/archimate4/viewpoints#ReductionOfComplexity": "Reduction of complexity",
+  "https://meta.linked.archi/archimate4/viewpoints#RequirementsManager": "Requirements Manager",
+  "https://meta.linked.archi/archimate4/viewpoints#RequirementsRealizationViewpoint": "Requirements Realization Viewpoint",
+  "https://meta.linked.archi/archimate4/viewpoints#Responsibilities": "Responsibilities",
+  "https://meta.linked.archi/archimate4/viewpoints#ServiceOrchestration": "Orchestration and choreography of services",
+  "https://meta.linked.archi/archimate4/viewpoints#ServiceRealizationViewpoint": "Service Realization Viewpoint",
+  "https://meta.linked.archi/archimate4/viewpoints#StakeholderViewpoint": "Stakeholder Viewpoint",
+  "https://meta.linked.archi/archimate4/viewpoints#StrategyDevelopment": "Strategy development",
+  "https://meta.linked.archi/archimate4/viewpoints#StrategyViewpoint": "Strategy Viewpoint",
+  "https://meta.linked.archi/archimate4/viewpoints#TechnologyUsageViewpoint": "Technology Usage Viewpoint",
+  "https://meta.linked.archi/core-viewpoints#DependencyConcern": "Dependencies",
+  "https://meta.linked.archi/core-viewpoints#EvolutionConcern": "Evolution",
+  "https://meta.linked.archi/core-viewpoints#GovernanceConcern": "Governance",
+  "https://meta.linked.archi/core-viewpoints#QualityConcern": "Quality"
+ },
+ "questions": [
+  {
+   "answers": "One row per element without a definition.",
+   "concerns": [
+    "https://meta.linked.archi/core-viewpoints#QualityConcern"
+   ],
+   "dataset": "model",
+   "default_limit": 500,
+   "description": "Elements, of one type or of any, with no skos:definition.",
+   "does_not_prove": "That the element is unclear to its readers. A self-explanatory name may need no definition.",
+   "finding": true,
+   "finding_focus": "element",
+   "identifier": "core/coverage-gaps",
+   "iri": "https://meta.linked.archi/core-questions#missing-definitions",
+   "label": "Which elements have no definition?",
+   "metamodels": [],
+   "parameters": [
+    {
+     "description": "An element type, such as an application component.",
+     "name": "concept type",
+     "optional": true,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#conceptType",
+     "variable": "conceptType"
+    },
+    {
+     "description": "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from.",
+     "name": "model",
+     "optional": true,
+     "order": 2.0,
+     "path": "https://meta.linked.archi/core#model",
+     "variable": "model"
+    }
+   ],
+   "prefixes": {
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": true,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "undefined",
+   "set": "https://meta.linked.archi/core-questions#",
+   "severity": "info",
+   "stage": "quality",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?element ?label ?type\nWHERE {\n  ?element arch:inModel ?model ;\n           rdf:type ?conceptType ;\n           rdf:type ?type .\n  FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }\n                                        UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }\n  FILTER NOT EXISTS { ?element arch:source ?anySource }\n  FILTER NOT EXISTS { ?element rdf:type ?notElement . FILTER(?notElement IN (arch:View, arch:Diagram, arch:Catalog, arch:Matrix, arch:Folder)) }\n  FILTER NOT EXISTS { ?element skos:definition ?anyDefinition }\n  OPTIONAL { ?element skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?type ?label",
+   "viewpoints": []
+  },
+  {
+   "answers": "One row per path: its length, the concept it starts from, the concept between, and the relationship types.",
+   "concerns": [
+    "https://meta.linked.archi/core-viewpoints#DependencyConcern"
+   ],
+   "dataset": "model",
+   "default_limit": 500,
+   "description": "Concepts from which a path of one or two relationships ends at the element, with the relationship types along the way.",
+   "does_not_prove": "Impact. Reachability is not dependency: an assignment followed by an association does not make the last concept depend on the first. Read the types, and use a language's impact question where there is one.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "core/dependents-qualified",
+   "iri": "https://meta.linked.archi/core-questions#reaches-in-two-hops",
+   "label": "What reaches this element within two hops?",
+   "metamodels": [],
+   "parameters": [
+    {
+     "description": "The element the question is about. A modelling tool binds the selected element.",
+     "name": "focus",
+     "optional": false,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#focus",
+     "variable": "focus"
+    }
+   ],
+   "prefixes": {
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "reaches",
+   "set": "https://meta.linked.archi/core-questions#",
+   "severity": "",
+   "stage": "analysis",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?hops ?dependent ?dependentLabel ?firstType ?via ?secondType\nWHERE {\n  {\n    ?first arch:source ?dependent ;\n           arch:target ?focus ;\n           rdf:type ?firstType .\n    BIND(1 AS ?hops)\n  }\n  UNION\n  {\n    ?first arch:source ?via ;\n           arch:target ?focus ;\n           rdf:type ?firstType .\n    ?second arch:source ?dependent ;\n            arch:target ?via ;\n            rdf:type ?secondType .\n    FILTER(?dependent != ?focus)\n    FILTER(?secondType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n    BIND(2 AS ?hops)\n  }\n  FILTER(?firstType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?firstType WHERE { { ?firstType arch:isAbstractClass true }\n                                             UNION { GRAPH ?abstractClassGraph { ?firstType arch:isAbstractClass true } } } }\n  MINUS { SELECT DISTINCT ?secondType WHERE { { ?secondType arch:isAbstractClass true }\n                                              UNION { GRAPH ?abstractClassGraph { ?secondType arch:isAbstractClass true } } } }\n  OPTIONAL { ?dependent skos:prefLabel ?dependentLabel . FILTER(lang(?dependentLabel) = \"\" || langMatches(lang(?dependentLabel), \"en\")) }\n}\nORDER BY ?hops ?dependentLabel",
+   "viewpoints": []
+  },
+  {
+   "answers": "One row per property and value of the concept.",
+   "concerns": [],
+   "dataset": "model",
+   "default_limit": 500,
+   "description": "Every statement about one concept, with the name of each value that has one.",
+   "does_not_prove": "That an unrecorded property is false. The model records what was said, nothing about what was not.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "core/element-detail",
+   "iri": "https://meta.linked.archi/core-questions#element-detail",
+   "label": "What is recorded about this element?",
+   "metamodels": [],
+   "parameters": [
+    {
+     "description": "The concept the question is about. A modelling tool binds the selected element.",
+     "name": "focus",
+     "optional": false,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#focus",
+     "variable": "focus"
+    }
+   ],
+   "prefixes": {
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "detail",
+   "set": "https://meta.linked.archi/core-questions#",
+   "severity": "",
+   "stage": "resolution",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?property ?value ?valueLabel\nWHERE {\n  ?focus ?property ?value .\n  # Its own type: not the core or abstract classes it is also an instance of.\n  FILTER(?property != rdf:type || ?value NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS {\n    SELECT DISTINCT ?property ?value\n    WHERE {\n      BIND(rdf:type AS ?property)\n      { ?value arch:isAbstractClass true } UNION { GRAPH ?abstractClassGraph { ?value arch:isAbstractClass true } }\n    }\n  }\n  # A value's name: a concept's from the model, a type's from its metamodel.\n  OPTIONAL {\n    { ?value skos:prefLabel ?valueLabel } UNION { GRAPH ?labelGraph { ?value skos:prefLabel ?valueLabel } }\n    FILTER(lang(?valueLabel) = \"\" || langMatches(lang(?valueLabel), \"en\"))\n  }\n}\nORDER BY ?property",
+   "viewpoints": []
+  },
+  {
+   "answers": "One row per element, with its most specific type.",
+   "concerns": [],
+   "dataset": "model",
+   "default_limit": 500,
+   "description": "The elements of one type (of every type when none is given), with their names and definitions.",
+   "does_not_prove": "That no other element plays the part: an element of a specialisation is listed only where it is also typed with the type asked for.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "core/elements-by-type",
+   "iri": "https://meta.linked.archi/core-questions#elements-of-type",
+   "label": "Which elements are of this type?",
+   "metamodels": [],
+   "parameters": [
+    {
+     "description": "An element type, such as an application component.",
+     "name": "concept type",
+     "optional": true,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#conceptType",
+     "variable": "conceptType"
+    },
+    {
+     "description": "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from.",
+     "name": "model",
+     "optional": true,
+     "order": 2.0,
+     "path": "https://meta.linked.archi/core#model",
+     "variable": "model"
+    }
+   ],
+   "prefixes": {
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": true,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "elements",
+   "set": "https://meta.linked.archi/core-questions#",
+   "severity": "",
+   "stage": "resolution",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?element ?label ?type ?definition\nWHERE {\n  ?element arch:inModel ?model ;\n           rdf:type ?conceptType ;\n           rdf:type ?type .\n  FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }\n                                        UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }\n  # Elements only: not relationships, views or folders.\n  FILTER NOT EXISTS { ?element arch:source ?anySource }\n  FILTER NOT EXISTS { ?element rdf:type ?notElement . FILTER(?notElement IN (arch:View, arch:Diagram, arch:Catalog, arch:Matrix, arch:Folder)) }\n  OPTIONAL { ?element skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n  OPTIONAL { ?element skos:definition ?definition . FILTER(lang(?definition) = \"\" || langMatches(lang(?definition), \"en\")) }\n}\nORDER BY ?type ?label",
+   "viewpoints": []
+  },
+  {
+   "answers": "One row per type: its kind (element, relationship, view) and how many of the model's concepts are of it.",
+   "concerns": [],
+   "dataset": "model",
+   "default_limit": 200,
+   "description": "The model's elements, relationships and views, counted by type.",
+   "does_not_prove": "That the model is complete. The counts describe what was modelled, not what exists in the enterprise.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "core/inventory",
+   "iri": "https://meta.linked.archi/core-questions#model-inventory",
+   "label": "What does the model contain?",
+   "metamodels": [],
+   "parameters": [
+    {
+     "description": "The model to count. A modelling tool binds the open model; a deliverable, the model it is produced from.",
+     "name": "model",
+     "optional": true,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#model",
+     "variable": "model"
+    }
+   ],
+   "prefixes": {
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": true,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "inventory",
+   "set": "https://meta.linked.archi/core-questions#",
+   "severity": "",
+   "stage": "orientation",
+   "stakeholders": [],
+   "text": "SELECT ?kind ?type (COUNT(DISTINCT ?concept) AS ?count)\nWHERE {\n  ?concept arch:inModel ?model ;\n           rdf:type ?type .\n  # The most specific type: neither a core class nor an abstract one.\n  FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }\n                                        UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }\n  # A view by its own kind, not also as arch:View.\n  FILTER(?type != arch:View || NOT EXISTS { ?concept rdf:type ?viewKind . FILTER(?viewKind IN (arch:Diagram, arch:Catalog, arch:Matrix)) })\n  BIND(IF(EXISTS { ?concept arch:source ?anySource }, \"relationship\",\n       IF(EXISTS { ?concept rdf:type ?anyViewType . FILTER(?anyViewType IN (arch:View, arch:Diagram, arch:Catalog, arch:Matrix)) },\n          \"view\", \"element\")) AS ?kind)\n}\nGROUP BY ?kind ?type\nORDER BY ?kind DESC(?count) ?type",
+   "viewpoints": []
+  },
+  {
+   "answers": "One row per element in a collision, with how many elements share the name.",
+   "concerns": [
+    "https://meta.linked.archi/core-viewpoints#QualityConcern"
+   ],
+   "dataset": "model",
+   "default_limit": 500,
+   "description": "Elements whose name, compared without regard to case, another element of the same most specific type also has, in any loaded model.",
+   "does_not_prove": "That they are the same thing. A shared name makes two elements candidates for a person to compare, never a merge.",
+   "finding": true,
+   "finding_focus": "element",
+   "identifier": "core/label-collisions",
+   "iri": "https://meta.linked.archi/core-questions#duplicate-labels",
+   "label": "Which elements share a name with another of the same type?",
+   "metamodels": [],
+   "parameters": [
+    {
+     "description": "The model whose elements are reported. A modelling tool binds the open model; a deliverable, the model it is produced from.",
+     "name": "model",
+     "optional": true,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#model",
+     "variable": "model"
+    }
+   ],
+   "prefixes": {
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": true,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "collisions",
+   "set": "https://meta.linked.archi/core-questions#",
+   "severity": "warning",
+   "stage": "quality",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?element ?label ?type ?sharedBy\nWHERE {\n  {\n    SELECT ?type ?key (COUNT(DISTINCT ?candidate) AS ?sharedBy)\n    WHERE {\n      ?candidate arch:inModel ?anyModel ;\n                 rdf:type ?type ;\n                 skos:prefLabel ?candidateLabel .\n      FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n      MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }\n                                            UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }\n      FILTER NOT EXISTS { ?candidate arch:source ?anySource }\n      FILTER NOT EXISTS { ?candidate rdf:type ?notElement . FILTER(?notElement IN (arch:View, arch:Diagram, arch:Catalog, arch:Matrix, arch:Folder)) }\n      BIND(LCASE(STR(?candidateLabel)) AS ?key)\n    }\n    GROUP BY ?type ?key\n    HAVING (COUNT(DISTINCT ?candidate) > 1)\n  }\n  ?element arch:inModel ?model ;\n           rdf:type ?type ;\n           skos:prefLabel ?label .\n  FILTER(LCASE(STR(?label)) = ?key)\n}\nORDER BY ?key ?type",
+   "viewpoints": []
+  },
+  {
+   "answers": "One row per concept with either state recorded.",
+   "concerns": [
+    "https://meta.linked.archi/core-viewpoints#EvolutionConcern",
+    "https://meta.linked.archi/core-viewpoints#GovernanceConcern"
+   ],
+   "dataset": "model",
+   "default_limit": 500,
+   "description": "Concepts with an architecture state (baseline, target, transitional) or an approval state (proposed, approved).",
+   "does_not_prove": "That a concept without a state is current. An unstated state is unknown.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "core/lifecycle",
+   "iri": "https://meta.linked.archi/core-questions#architecture-state",
+   "label": "What is baseline, target or still awaiting approval?",
+   "metamodels": [],
+   "parameters": [
+    {
+     "description": "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from.",
+     "name": "model",
+     "optional": true,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#model",
+     "variable": "model"
+    }
+   ],
+   "prefixes": {
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": true,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "states",
+   "set": "https://meta.linked.archi/core-questions#",
+   "severity": "",
+   "stage": "enrichment",
+   "stakeholders": [],
+   "text": "SELECT ?element ?label ?type ?state ?approval\nWHERE {\n  ?element arch:inModel ?model ;\n           rdf:type ?type .\n  FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }\n                                        UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }\n  OPTIONAL { ?element arch:architectureState ?state }\n  OPTIONAL { ?element arch:approvalState ?approval }\n  FILTER(BOUND(?state) || BOUND(?approval))\n  OPTIONAL { ?element skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?approval ?state ?type ?label",
+   "viewpoints": []
+  },
+  {
+   "answers": "One row per relationship: its direction seen from the element, its type and the concept at its other end.",
+   "concerns": [
+    "https://meta.linked.archi/core-viewpoints#DependencyConcern"
+   ],
+   "dataset": "model",
+   "default_limit": 500,
+   "description": "Every relationship that starts or ends at the element, read from the qualified relationships.",
+   "does_not_prove": "A runtime dependency. A modelled relationship is a statement someone made, not an observed call.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "core/neighbours-qualified",
+   "iri": "https://meta.linked.archi/core-questions#neighbours",
+   "label": "What is this element directly related to?",
+   "metamodels": [],
+   "parameters": [
+    {
+     "description": "The element the question is about. A modelling tool binds the selected element.",
+     "name": "focus",
+     "optional": false,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#focus",
+     "variable": "focus"
+    }
+   ],
+   "prefixes": {
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "neighbours",
+   "set": "https://meta.linked.archi/core-questions#",
+   "severity": "",
+   "stage": "analysis",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?direction ?relationship ?relationshipType ?other ?otherLabel\nWHERE {\n  {\n    ?relationship arch:source ?focus ;\n                  arch:target ?other .\n    BIND(\"outgoing\" AS ?direction)\n  }\n  UNION\n  {\n    ?relationship arch:target ?focus ;\n                  arch:source ?other .\n    BIND(\"incoming\" AS ?direction)\n  }\n  ?relationship rdf:type ?relationshipType .\n  FILTER(?relationshipType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?relationshipType WHERE { { ?relationshipType arch:isAbstractClass true }\n                                                    UNION { GRAPH ?abstractClassGraph { ?relationshipType arch:isAbstractClass true } } } }\n  OPTIONAL { ?other skos:prefLabel ?otherLabel . FILTER(lang(?otherLabel) = \"\" || langMatches(lang(?otherLabel), \"en\")) }\n}\nORDER BY ?direction ?relationshipType ?otherLabel",
+   "viewpoints": []
+  },
+  {
+   "answers": "One row per unconnected element.",
+   "concerns": [
+    "https://meta.linked.archi/core-viewpoints#QualityConcern"
+   ],
+   "dataset": "model",
+   "default_limit": 500,
+   "description": "Elements that are neither the source nor the target of any relationship.",
+   "does_not_prove": "That the element is unused or safe to delete. It may be context drawn on a diagram, or its relationships may be in a model that is not loaded.",
+   "finding": true,
+   "finding_focus": "element",
+   "identifier": "core/orphans",
+   "iri": "https://meta.linked.archi/core-questions#orphans",
+   "label": "Which elements take part in no relationship?",
+   "metamodels": [],
+   "parameters": [
+    {
+     "description": "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from.",
+     "name": "model",
+     "optional": true,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#model",
+     "variable": "model"
+    }
+   ],
+   "prefixes": {
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": true,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "orphans",
+   "set": "https://meta.linked.archi/core-questions#",
+   "severity": "info",
+   "stage": "quality",
+   "stakeholders": [],
+   "text": "SELECT ?element ?label ?type\nWHERE {\n  ?element arch:inModel ?model ;\n           rdf:type ?type .\n  FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }\n                                        UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }\n  FILTER NOT EXISTS { ?element arch:source ?anySource }\n  FILTER NOT EXISTS { ?element rdf:type ?notElement . FILTER(?notElement IN (arch:View, arch:Diagram, arch:Catalog, arch:Matrix, arch:Folder)) }\n  FILTER NOT EXISTS { ?incoming arch:target ?element }\n  FILTER NOT EXISTS { ?outgoing arch:source ?element }\n  OPTIONAL { ?element skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?type ?label",
+   "viewpoints": []
+  },
+  {
+   "answers": "One row per relationship in error, with what is wrong.",
+   "concerns": [
+    "https://meta.linked.archi/core-viewpoints#QualityConcern"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Qualified relationships whose type has an unqualified form (arch:unqualifiedForm) but whose\nrdf:reifies triple term is missing or names other ends, or whose direct triple is not asserted. Needs RDF 1.2\ntriple terms.",
+   "does_not_prove": "That a query over the direct triples is wrong everywhere: it misses or misreports exactly these relationships.",
+   "finding": true,
+   "finding_focus": "relationship",
+   "identifier": "core/reifies-audit",
+   "iri": "https://meta.linked.archi/core-questions#relationship-integrity",
+   "label": "Which relationships are out of step with their direct triple?",
+   "metamodels": [],
+   "parameters": [],
+   "prefixes": {
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": false,
+    "rdf_reifies": true,
+    "unqualified_forms": true,
+    "viewpoints": false
+   },
+   "result_key": "integrity",
+   "set": "https://meta.linked.archi/core-questions#",
+   "severity": "violation",
+   "stage": "quality",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?relationship ?type ?source ?target ?problem\nWHERE {\n  ?relationship arch:source ?source ;\n                arch:target ?target ;\n                rdf:type ?type .\n  # Only types with an unqualified form carry the direct triple.\n  { ?type arch:unqualifiedForm ?predicate }\n  UNION\n  { GRAPH ?mappingGraph { ?type arch:unqualifiedForm ?predicate } }\n  FILTER NOT EXISTS {\n    ?relationship rdf:reifies <<( ?source ?predicate ?target )>> .\n    ?source ?predicate ?target .\n  }\n  BIND(IF(NOT EXISTS { ?relationship rdf:reifies ?anyTerm }, \"no rdf:reifies\",\n       IF(NOT EXISTS { ?source ?predicate ?target }, \"direct triple not asserted\",\n          \"rdf:reifies names a different triple\")) AS ?problem)\n}\nORDER BY ?problem ?type",
+   "viewpoints": []
+  },
+  {
+   "answers": "One row per view, with the viewpoint it names.",
+   "concerns": [
+    "https://meta.linked.archi/core-viewpoints#GovernanceConcern",
+    "https://meta.linked.archi/core-viewpoints#QualityConcern"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 200,
+   "description": "Views whose arch:viewConformsToViewpoint names a resource nothing loaded defines — a\nmisspelt or outdated viewpoint IRI, or a metamodel that is not loaded. Their conformance cannot be judged.",
+   "does_not_prove": "That the viewpoint does not exist: it may be defined in a metamodel that is not loaded.",
+   "finding": true,
+   "finding_focus": "view",
+   "identifier": "core/unknown-viewpoints",
+   "iri": "https://meta.linked.archi/core-questions#views-with-unknown-viewpoint",
+   "label": "Which views follow a viewpoint the loaded metamodels do not define?",
+   "metamodels": [],
+   "parameters": [],
+   "prefixes": {
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": true
+   },
+   "result_key": "unknownViewpoints",
+   "set": "https://meta.linked.archi/core-questions#",
+   "severity": "warning",
+   "stage": "views",
+   "stakeholders": [],
+   "text": "SELECT ?view ?viewLabel ?viewpoint\nWHERE {\n  ?view arch:viewConformsToViewpoint ?viewpoint .\n  FILTER NOT EXISTS {\n    { ?viewpoint rdf:type ?anyType }\n    UNION\n    { GRAPH ?definingGraph { ?viewpoint rdf:type ?anyType } }\n  }\n  OPTIONAL { ?view skos:prefLabel ?viewLabel . FILTER(lang(?viewLabel) = \"\" || langMatches(lang(?viewLabel), \"en\")) }\n}\nORDER BY ?viewLabel",
+   "viewpoints": []
+  },
+  {
+   "answers": "One row per element without arch:inView.",
+   "concerns": [
+    "https://meta.linked.archi/core-viewpoints#QualityConcern"
+   ],
+   "dataset": "model",
+   "default_limit": 500,
+   "description": "Elements of the model that no diagram, catalogue or matrix presents.",
+   "does_not_prove": "That the element is irrelevant. Much of a model is only ever queried; this matters where a deliverable is read as complete.",
+   "finding": true,
+   "finding_focus": "element",
+   "identifier": "core/unpresented",
+   "iri": "https://meta.linked.archi/core-questions#not-in-any-view",
+   "label": "Which elements appear in no view?",
+   "metamodels": [],
+   "parameters": [
+    {
+     "description": "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from.",
+     "name": "model",
+     "optional": true,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#model",
+     "variable": "model"
+    }
+   ],
+   "prefixes": {
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": true,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "unpresented",
+   "set": "https://meta.linked.archi/core-questions#",
+   "severity": "info",
+   "stage": "quality",
+   "stakeholders": [],
+   "text": "SELECT ?element ?label ?type\nWHERE {\n  ?element arch:inModel ?model ;\n           rdf:type ?type .\n  FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }\n                                        UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }\n  FILTER NOT EXISTS { ?element arch:source ?anySource }\n  FILTER NOT EXISTS { ?element rdf:type ?notElement . FILTER(?notElement IN (arch:View, arch:Diagram, arch:Catalog, arch:Matrix, arch:Folder)) }\n  FILTER NOT EXISTS { ?element arch:inView ?anyView }\n  OPTIONAL { ?element skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?type ?label",
+   "viewpoints": []
+  },
+  {
+   "answers": "One row per presented concept, with its most specific type.",
+   "concerns": [],
+   "dataset": "model",
+   "default_limit": 1000,
+   "description": "The elements and relationships a view presents.",
+   "does_not_prove": "Layout or grouping: nesting on a diagram is geometry, not a relationship.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "core/view-contents-semantic",
+   "iri": "https://meta.linked.archi/core-questions#view-contents",
+   "label": "What does this view present?",
+   "metamodels": [],
+   "parameters": [
+    {
+     "description": "A view. A modelling tool binds the open view.",
+     "name": "view",
+     "optional": false,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#view",
+     "variable": "view"
+    }
+   ],
+   "prefixes": {
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "contents",
+   "set": "https://meta.linked.archi/core-questions#",
+   "severity": "",
+   "stage": "views",
+   "stakeholders": [],
+   "text": "SELECT ?concept ?label ?type ?kind\nWHERE {\n  ?concept arch:inView ?view ;\n           rdf:type ?type .\n  FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }\n                                        UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }\n  BIND(IF(EXISTS { ?concept arch:source ?anySource }, \"relationship\", \"element\") AS ?kind)\n  OPTIONAL { ?concept skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?kind ?type ?label",
+   "viewpoints": []
+  },
+  {
+   "answers": "One row per view presenting the element.",
+   "concerns": [],
+   "dataset": "model",
+   "default_limit": 200,
+   "description": "The views that present the element, with their viewpoints.",
+   "does_not_prove": "That a view not listed leaves it out on purpose: a view drawn without arch:inView may still place it.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "core/view-usage-semantic",
+   "iri": "https://meta.linked.archi/core-questions#views-showing",
+   "label": "Which views show this element?",
+   "metamodels": [],
+   "parameters": [
+    {
+     "description": "The element the question is about. A modelling tool binds the selected element.",
+     "name": "focus",
+     "optional": false,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#focus",
+     "variable": "focus"
+    }
+   ],
+   "prefixes": {
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": true
+   },
+   "result_key": "views",
+   "set": "https://meta.linked.archi/core-questions#",
+   "severity": "",
+   "stage": "views",
+   "stakeholders": [],
+   "text": "SELECT ?view ?viewLabel ?viewpoint\nWHERE {\n  ?focus arch:inView ?view .\n  OPTIONAL { ?view skos:prefLabel ?viewLabel . FILTER(lang(?viewLabel) = \"\" || langMatches(lang(?viewLabel), \"en\")) }\n  OPTIONAL { ?view arch:viewConformsToViewpoint ?viewpoint }\n}\nORDER BY ?viewLabel",
+   "viewpoints": []
+  },
+  {
+   "answers": "One row per element out of place: the view, its viewpoint, the element and its type.",
+   "concerns": [
+    "https://meta.linked.archi/core-viewpoints#GovernanceConcern",
+    "https://meta.linked.archi/core-viewpoints#QualityConcern"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Elements presented in a view whose viewpoint states the concepts it admits\n(arch:includesConcept), and whose type is neither one of them nor a specialisation of one. Views whose\nviewpoint the loaded metamodels do not define are the subject of \"Which views follow a viewpoint the loaded\nmetamodels do not define?\".",
+   "does_not_prove": "That the view is wrong. A viewpoint is a convention; the finding is that the view departs from it, which may be deliberate.",
+   "finding": true,
+   "finding_focus": "element",
+   "identifier": "core/viewpoint-conformance",
+   "iri": "https://meta.linked.archi/core-questions#viewpoint-conformance",
+   "label": "Which elements does their view's viewpoint not admit?",
+   "metamodels": [],
+   "parameters": [
+    {
+     "description": "A view to check; every view when none is given. A modelling tool binds the open view.",
+     "name": "view",
+     "optional": true,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#view",
+     "variable": "view"
+    }
+   ],
+   "prefixes": {
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": true
+   },
+   "result_key": "nonConforming",
+   "set": "https://meta.linked.archi/core-questions#",
+   "severity": "warning",
+   "stage": "views",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?view ?viewpoint ?element ?label ?type\nWHERE {\n  ?element arch:inView ?view ;\n           rdf:type ?type .\n  FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }\n                                        UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }\n  FILTER NOT EXISTS { ?element arch:source ?anySource }\n  ?view arch:viewConformsToViewpoint ?viewpoint .\n  # Only viewpoints that state what they admit are judged.\n  { SELECT DISTINCT ?viewpoint WHERE { { ?viewpoint arch:includesConcept ?anyConcept }\n                                       UNION { GRAPH ?declaringGraph { ?viewpoint arch:includesConcept ?anyConcept } } } }\n  # What each admits: the types it names and their specialisations.\n  MINUS {\n    SELECT DISTINCT ?viewpoint ?type\n    WHERE {\n      { ?viewpoint arch:includesConcept ?admitted }\n      UNION\n      { GRAPH ?admittingGraph { ?viewpoint arch:includesConcept ?admitted } }\n      { ?type rdfs:subClassOf* ?admitted }\n      UNION\n      { GRAPH ?hierarchyGraph { ?type rdfs:subClassOf* ?admitted } }\n    }\n  }\n  OPTIONAL { ?element skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?view ?type ?label",
+   "viewpoints": []
+  },
+  {
+   "answers": "One row per element: name, type, definition and a \"relationship → target\" summary of what it points to.",
+   "concerns": [],
+   "dataset": "model-and-metamodel",
+   "default_limit": 1000,
+   "description": "Elements whose type the viewpoint admits — a type it names or a specialisation of\none — each with its outgoing relationships summarised. The viewpoint is the one statement of what a view or a\ndeliverable section covers.",
+   "does_not_prove": "That the elements belong in one diagram. A viewpoint says what may appear, not what should be drawn together.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "core/viewpoint-scope",
+   "iri": "https://meta.linked.archi/core-questions#viewpoint-scope",
+   "label": "What in the model belongs in a view of this viewpoint?",
+   "metamodels": [],
+   "parameters": [
+    {
+     "description": "A viewpoint. A modelling tool binds the open view's viewpoint; a deliverable, the section's.",
+     "name": "viewpoint",
+     "optional": false,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#viewpoint",
+     "variable": "viewpoint"
+    },
+    {
+     "description": "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from.",
+     "name": "model",
+     "optional": true,
+     "order": 2.0,
+     "path": "https://meta.linked.archi/core#model",
+     "variable": "model"
+    }
+   ],
+   "prefixes": {
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": true,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": true
+   },
+   "result_key": "scope",
+   "set": "https://meta.linked.archi/core-questions#",
+   "severity": "",
+   "stage": "views",
+   "stakeholders": [],
+   "text": "SELECT ?element (SAMPLE(?anyLabel) AS ?label) ?type (SAMPLE(?anyDefinition) AS ?definition)\n       (GROUP_CONCAT(DISTINCT ?link; separator = \"; \") AS ?outgoing)\nWHERE {\n  # What each viewpoint admits: the types it names and their specialisations.\n  {\n    SELECT DISTINCT ?viewpoint ?type\n    WHERE {\n      { ?viewpoint arch:includesConcept ?admitted }\n      UNION\n      { GRAPH ?admittingGraph { ?viewpoint arch:includesConcept ?admitted } }\n      { ?type rdfs:subClassOf* ?admitted }\n      UNION\n      { GRAPH ?hierarchyGraph { ?type rdfs:subClassOf* ?admitted } }\n    }\n  }\n  ?element rdf:type ?type ;\n           arch:inModel ?model .\n  FILTER NOT EXISTS { ?element arch:source ?anySource }\n  OPTIONAL { ?element skos:prefLabel ?anyLabel . FILTER(lang(?anyLabel) = \"\" || langMatches(lang(?anyLabel), \"en\")) }\n  OPTIONAL { ?element skos:definition ?anyDefinition . FILTER(lang(?anyDefinition) = \"\" || langMatches(lang(?anyDefinition), \"en\")) }\n  OPTIONAL {\n    ?relationship arch:source ?element ;\n                  arch:target ?other ;\n                  rdf:type ?relationshipType .\n    FILTER(?relationshipType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n    MINUS { SELECT DISTINCT ?relationshipType WHERE { { ?relationshipType arch:isAbstractClass true }\n                                                      UNION { GRAPH ?abstractClassGraph { ?relationshipType arch:isAbstractClass true } } } }\n    OPTIONAL { ?other skos:prefLabel ?otherLabel . FILTER(lang(?otherLabel) = \"\" || langMatches(lang(?otherLabel), \"en\")) }\n    BIND(CONCAT(REPLACE(STR(?relationshipType), \"^.*[#/]\", \"\"), \" → \",\n                COALESCE(STR(?otherLabel), STR(?other))) AS ?link)\n  }\n}\nGROUP BY ?element ?type\nORDER BY ?type ?label",
+   "viewpoints": []
+  },
+  {
+   "answers": "One row per dependency: the provider, how it provides, the relationship or service between, and the consumer.",
+   "concerns": [
+    "https://meta.linked.archi/archimate3/viewpoints#ApplicationDependencies",
+    "https://meta.linked.archi/archimate3/viewpoints#ServiceOrchestration"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Application components that serve, flow to or trigger one another, directly or through an application service one realises — itself or through the function assigned to it — and the other is served by.",
+   "does_not_prove": "Runtime coupling or data volume. A modelled flow says that information moves, not how much or how often.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate/application-dependencies",
+   "iri": "https://meta.linked.archi/archimate3/questions#application-dependencies",
+   "label": "Which applications depend on which?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate3/onto#"
+   ],
+   "parameters": [],
+   "prefixes": {
+    "am": "https://meta.linked.archi/archimate3/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "applicationDependencies",
+   "set": "https://meta.linked.archi/archimate3/questions#",
+   "severity": "",
+   "stage": "analysis",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?provider ?providerLabel ?how ?via ?consumer ?consumerLabel\nWHERE {\n  # From the relationships to their ends, each branch anchored on its relationships: never every pair of\n  # components. Both ends are then checked against the component types, read once each.\n  {\n    VALUES ?linkType { am:Serving am:Flow am:Triggering }\n    ?via rdf:type ?linkType ;\n         arch:source ?provider ;\n         arch:target ?consumer .\n    BIND(REPLACE(STR(?linkType), \"^.*[#/]\", \"\") AS ?how)\n  }\n  UNION\n  {\n    {\n      SELECT DISTINCT ?serviceType\n      WHERE {\n        { ?askedService rdfs:subClassOf* am:ApplicationService } UNION { GRAPH ?serviceOntologyGraph { ?askedService rdfs:subClassOf* am:ApplicationService } }\n        { ?serviceType rdfs:subClassOf* ?askedService } UNION { GRAPH ?serviceSpecialisationGraph { ?serviceType rdfs:subClassOf* ?askedService } }\n      }\n    }\n    ?via rdf:type ?serviceType ;\n         am:serves ?consumer .\n    ?provider am:realizes|(am:assignedTo/am:realizes) ?via .\n    BIND(\"realises a service serving\" AS ?how)\n  }\n  ?provider rdf:type ?providerType .\n  ?consumer rdf:type ?consumerType .\n  {\n    SELECT DISTINCT ?providerType\n    WHERE {\n      { ?askedProvider rdfs:subClassOf* am:ApplicationComponent } UNION { GRAPH ?providerGraph { ?askedProvider rdfs:subClassOf* am:ApplicationComponent } }\n      { ?providerType rdfs:subClassOf* ?askedProvider } UNION { GRAPH ?providerSpecialisationGraph { ?providerType rdfs:subClassOf* ?askedProvider } }\n    }\n  }\n  {\n    SELECT DISTINCT ?consumerType\n    WHERE {\n      { ?askedConsumer rdfs:subClassOf* am:ApplicationComponent } UNION { GRAPH ?consumerGraph { ?askedConsumer rdfs:subClassOf* am:ApplicationComponent } }\n      { ?consumerType rdfs:subClassOf* ?askedConsumer } UNION { GRAPH ?consumerSpecialisationGraph { ?consumerType rdfs:subClassOf* ?askedConsumer } }\n    }\n  }\n  FILTER(?provider != ?consumer)\n  OPTIONAL { ?provider skos:prefLabel ?providerLabel . FILTER(lang(?providerLabel) = \"\" || langMatches(lang(?providerLabel), \"en\")) }\n  OPTIONAL { ?consumer skos:prefLabel ?consumerLabel . FILTER(lang(?consumerLabel) = \"\" || langMatches(lang(?consumerLabel), \"en\")) }\n}\nORDER BY ?providerLabel ?consumerLabel",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate3/viewpoints#ApplicationCooperationViewpoint",
+    "https://meta.linked.archi/archimate3/viewpoints#ApplicationUsageViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per application component with no technology under it.",
+   "concerns": [
+    "https://meta.linked.archi/archimate3/viewpoints#ApplicationPlatforms",
+    "https://meta.linked.archi/archimate3/viewpoints#InfrastructureQuality"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Application components that no element of the technology layer serves or realises, directly or by realising a service that serves them. Equipment and facilities are nodes, so they count as technology.",
+   "does_not_prove": "That it runs nowhere. Where it is hosted may be outside the model, or recorded only in a deployment model that is not loaded.",
+   "finding": true,
+   "finding_focus": "application",
+   "identifier": "notation/archimate/applications-without-technology",
+   "iri": "https://meta.linked.archi/archimate3/questions#applications-without-technology",
+   "label": "Which application components run on no technology?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate3/onto#"
+   ],
+   "parameters": [
+    {
+     "description": "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from.",
+     "name": "model",
+     "optional": true,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#model",
+     "variable": "model"
+    }
+   ],
+   "prefixes": {
+    "am": "https://meta.linked.archi/archimate3/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": true,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "unhosted",
+   "set": "https://meta.linked.archi/archimate3/questions#",
+   "severity": "warning",
+   "stage": "quality",
+   "stakeholders": [
+    "https://meta.linked.archi/archimate3/viewpoints#ApplicationArchitect",
+    "https://meta.linked.archi/archimate3/viewpoints#InfrastructureArchitect"
+   ],
+   "text": "SELECT DISTINCT ?application ?label\nWHERE {\n  {\n    SELECT DISTINCT ?componentType\n    WHERE {\n      { ?asked rdfs:subClassOf* am:ApplicationComponent } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:ApplicationComponent } }\n      { ?componentType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?componentType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?application rdf:type ?componentType ;\n               arch:inModel ?model .\n  MINUS {\n    # The technology layer's types, read once.\n    {\n      SELECT DISTINCT ?technologyType\n      WHERE {\n        { ?layerType rdfs:subClassOf* am:TechnologyLayerElement }\n        UNION { GRAPH ?layerGraph { ?layerType rdfs:subClassOf* am:TechnologyLayerElement } }\n        { ?technologyType rdfs:subClassOf* ?layerType }\n        UNION { GRAPH ?layerSpecialisationGraph { ?technologyType rdfs:subClassOf* ?layerType } }\n      }\n    }\n    ?technology rdf:type ?technologyType ;\n                am:serves|am:realizes|(am:realizes/am:serves) ?application .\n  }\n  OPTIONAL { ?application skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?label",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate3/viewpoints#ImplementationAndDeploymentViewpoint",
+    "https://meta.linked.archi/archimate3/viewpoints#TechnologyUsageViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per capability and what realises it; a capability nothing realises appears once, with nothing beside it.",
+   "concerns": [
+    "https://meta.linked.archi/archimate3/viewpoints#ArchitectureStrategy",
+    "https://meta.linked.archi/archimate3/viewpoints#StrategyDevelopment"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Capabilities with the behaviour, active structure or resources that realise them.",
+   "does_not_prove": "Maturity. That a capability is realised says it is delivered somehow, not how well.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate/capability-realisation",
+   "iri": "https://meta.linked.archi/archimate3/questions#capability-realisation",
+   "label": "What realises each capability?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate3/onto#"
+   ],
+   "parameters": [],
+   "prefixes": {
+    "am": "https://meta.linked.archi/archimate3/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "capabilities",
+   "set": "https://meta.linked.archi/archimate3/questions#",
+   "severity": "",
+   "stage": "analysis",
+   "stakeholders": [
+    "https://meta.linked.archi/archimate3/viewpoints#BusinessArchitect",
+    "https://meta.linked.archi/archimate3/viewpoints#CxO"
+   ],
+   "text": "SELECT DISTINCT ?capability ?capabilityLabel ?realizer ?realizerLabel ?realizerType\nWHERE {\n  {\n    SELECT DISTINCT ?capabilityType\n    WHERE {\n      { ?asked rdfs:subClassOf* am:Capability } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:Capability } }\n      { ?capabilityType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?capabilityType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?capability rdf:type ?capabilityType .\n  OPTIONAL {\n    ?realizer am:realizes ?capability ;\n              rdf:type ?realizerType .\n    FILTER(?realizerType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n    MINUS { SELECT DISTINCT ?realizerType WHERE { { ?realizerType arch:isAbstractClass true }\n                                                  UNION { GRAPH ?abstractClassGraph { ?realizerType arch:isAbstractClass true } } } }\n    OPTIONAL { ?realizer skos:prefLabel ?realizerLabel . FILTER(lang(?realizerLabel) = \"\" || langMatches(lang(?realizerLabel), \"en\")) }\n  }\n  OPTIONAL { ?capability skos:prefLabel ?capabilityLabel . FILTER(lang(?capabilityLabel) = \"\" || langMatches(lang(?capabilityLabel), \"en\")) }\n}\nORDER BY ?capabilityLabel ?realizerLabel",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate3/viewpoints#CapabilityMapViewpoint",
+    "https://meta.linked.archi/archimate3/viewpoints#StrategyViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per access: what accesses, the kind of access, and the object accessed.",
+   "concerns": [
+    "https://meta.linked.archi/archimate3/viewpoints#Consistency",
+    "https://meta.linked.archi/archimate3/viewpoints#InformationStructure"
+   ],
+   "dataset": "model",
+   "default_limit": 500,
+   "description": "Access relationships by kind: ArchiMate 3.2 types the kind (am:ReadAccess, am:WriteAccess, am:ReadWriteAccess, and am:Access when it is not stated).",
+   "does_not_prove": "Ownership of the data. Write access is not mastery; arch:masterDataSource says where that is recorded.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate/data-access",
+   "iri": "https://meta.linked.archi/archimate3/questions#data-access",
+   "label": "Who reads and writes which information?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate3/onto#"
+   ],
+   "parameters": [],
+   "prefixes": {
+    "am": "https://meta.linked.archi/archimate3/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "access",
+   "set": "https://meta.linked.archi/archimate3/questions#",
+   "severity": "",
+   "stage": "analysis",
+   "stakeholders": [
+    "https://meta.linked.archi/archimate3/viewpoints#InformationArchitect"
+   ],
+   "text": "SELECT DISTINCT ?accessor ?accessorLabel ?access ?accessKind ?object ?objectLabel ?objectType\nWHERE {\n  VALUES ?accessKind { am:Access am:ReadAccess am:WriteAccess am:ReadWriteAccess }\n  ?access rdf:type ?accessKind ;\n          arch:source ?accessor ;\n          arch:target ?object .\n  # am:Access only when no kind is stated: the kinds are its subclasses.\n  FILTER(?accessKind != am:Access || NOT EXISTS {\n    ?access rdf:type ?statedKind .\n    FILTER(?statedKind IN (am:ReadAccess, am:WriteAccess, am:ReadWriteAccess))\n  })\n  ?object rdf:type ?objectType .\n  FILTER(?objectType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?objectType WHERE { { ?objectType arch:isAbstractClass true }\n                                              UNION { GRAPH ?abstractClassGraph { ?objectType arch:isAbstractClass true } } } }\n  OPTIONAL { ?accessor skos:prefLabel ?accessorLabel . FILTER(lang(?accessorLabel) = \"\" || langMatches(lang(?accessorLabel), \"en\")) }\n  OPTIONAL { ?object skos:prefLabel ?objectLabel . FILTER(lang(?objectLabel) = \"\" || langMatches(lang(?objectLabel), \"en\")) }\n}\nORDER BY ?objectLabel ?accessKind ?accessorLabel",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate3/viewpoints#ApplicationCooperationViewpoint",
+    "https://meta.linked.archi/archimate3/viewpoints#InformationStructureViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per object, with how many elements read it.",
+   "concerns": [
+    "https://meta.linked.archi/archimate3/viewpoints#Completeness",
+    "https://meta.linked.archi/archimate3/viewpoints#InformationStructure"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Data objects, business objects (contracts too) and artifacts that something reads and nothing writes. Access of an unstated kind (am:Access) counts as a possible write.",
+   "does_not_prove": "That the data has no source. It may be written by a system outside the model; that boundary is what the finding asks to discuss.",
+   "finding": true,
+   "finding_focus": "object",
+   "identifier": "notation/archimate/data-never-written",
+   "iri": "https://meta.linked.archi/archimate3/questions#data-never-written",
+   "label": "Which information is read but never written?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate3/onto#"
+   ],
+   "parameters": [],
+   "prefixes": {
+    "am": "https://meta.linked.archi/archimate3/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "neverWritten",
+   "set": "https://meta.linked.archi/archimate3/questions#",
+   "severity": "warning",
+   "stage": "quality",
+   "stakeholders": [],
+   "text": "SELECT ?object ?label ?readers\nWHERE {\n  {\n    SELECT ?object (COUNT(DISTINCT ?reader) AS ?readers)\n    WHERE {\n      {\n        SELECT DISTINCT ?objectType\n        WHERE {\n          VALUES ?askedObject { am:DataObject am:BusinessObject am:Artifact }\n          { ?asked rdfs:subClassOf* ?askedObject } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* ?askedObject } }\n          { ?objectType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?objectType rdfs:subClassOf* ?asked } }\n        }\n      }\n      ?read rdf:type am:ReadAccess ;\n            arch:source ?reader ;\n            arch:target ?object .\n      ?object rdf:type ?objectType .\n    }\n    GROUP BY ?object\n  }\n  # Written: a write, a read-write, or an access whose kind is not stated.\n  FILTER NOT EXISTS {\n    VALUES ?writeKind { am:WriteAccess am:ReadWriteAccess am:Access }\n    ?write rdf:type ?writeKind ;\n           arch:target ?object .\n    FILTER NOT EXISTS { ?write rdf:type am:ReadAccess }\n  }\n  OPTIONAL { ?object skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY DESC(?readers) ?label",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate3/viewpoints#InformationStructureViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per layer, with the number of elements in it.",
+   "concerns": [
+    "https://meta.linked.archi/archimate3/viewpoints#Completeness",
+    "https://meta.linked.archi/archimate3/viewpoints#ReductionOfComplexity"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 50,
+   "description": "Elements counted by ArchiMate 3.2 layer, read from the layer classes their types specialise, so specialisations count where they belong.",
+   "does_not_prove": "Balance. Equipment and facilities are nodes as well as physical, so they count in both the technology and the physical layer; location, grouping and junctions belong to no layer and are not counted.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate/elements-by-layer",
+   "iri": "https://meta.linked.archi/archimate3/questions#elements-by-layer",
+   "label": "How is the model spread over the ArchiMate layers?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate3/onto#"
+   ],
+   "parameters": [
+    {
+     "description": "The model to count. A modelling tool binds the open model; a deliverable, the model it is produced from.",
+     "name": "model",
+     "optional": true,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#model",
+     "variable": "model"
+    }
+   ],
+   "prefixes": {
+    "am": "https://meta.linked.archi/archimate3/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": true,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "layers",
+   "set": "https://meta.linked.archi/archimate3/questions#",
+   "severity": "",
+   "stage": "orientation",
+   "stakeholders": [],
+   "text": "SELECT ?layer (COUNT(DISTINCT ?element) AS ?elements)\nWHERE {\n  # Each layer's types, read once.\n  {\n    SELECT DISTINCT ?layer ?type\n    WHERE {\n      VALUES ?layer {\n        am:StrategyLayerElement am:MotivationElement am:BusinessLayerElement am:ApplicationLayerElement\n        am:TechnologyLayerElement am:PhysicalLayerElement am:ImplementationAndMigrationLayerElement\n      }\n      { ?layerType rdfs:subClassOf* ?layer } UNION { GRAPH ?ontologyGraph { ?layerType rdfs:subClassOf* ?layer } }\n      { ?type rdfs:subClassOf* ?layerType } UNION { GRAPH ?specialisationGraph { ?type rdfs:subClassOf* ?layerType } }\n    }\n  }\n  ?element rdf:type ?type ;\n           arch:inModel ?model .\n}\nGROUP BY ?layer\nORDER BY DESC(?elements)",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate3/viewpoints#LayeredViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per element that depends on the element, directly or through others.",
+   "concerns": [
+    "https://meta.linked.archi/archimate3/viewpoints#Dependencies",
+    "https://meta.linked.archi/archimate3/viewpoints#ImpactOfChange"
+   ],
+   "dataset": "model",
+   "default_limit": 500,
+   "description": "Everything that depends on the element, transitively, by ArchiMate's dependency relationships: what it serves, realises or is assigned to, and what accesses it.",
+   "does_not_prove": "That each is broken by the change. Dynamic relationships (flow, triggering) and structure (composition, aggregation) are not followed, and a dependency may tolerate the change.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate/impact-of-change",
+   "iri": "https://meta.linked.archi/archimate3/questions#impact-of-change",
+   "label": "What is affected if this element changes?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate3/onto#"
+   ],
+   "parameters": [
+    {
+     "description": "The element that changes. A modelling tool binds the selected element; a deliverable, the element it is produced for.",
+     "name": "focus",
+     "optional": false,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#focus",
+     "variable": "focus"
+    }
+   ],
+   "prefixes": {
+    "am": "https://meta.linked.archi/archimate3/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "impacted",
+   "set": "https://meta.linked.archi/archimate3/questions#",
+   "severity": "",
+   "stage": "analysis",
+   "stakeholders": [
+    "https://meta.linked.archi/archimate3/viewpoints#ApplicationArchitect",
+    "https://meta.linked.archi/archimate3/viewpoints#EnterpriseArchitect",
+    "https://meta.linked.archi/archimate3/viewpoints#InfrastructureArchitect"
+   ],
+   "text": "SELECT DISTINCT ?impacted ?label ?type\nWHERE {\n  ?focus (am:serves|am:realizes|am:assignedTo|^am:accesses)+ ?impacted .\n  FILTER(?impacted != ?focus)\n  FILTER NOT EXISTS { ?impacted arch:source ?anySource }\n  ?impacted rdf:type ?type .\n  FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }\n                                        UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }\n  OPTIONAL { ?impacted skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?type ?label",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate3/viewpoints#ApplicationCooperationViewpoint",
+    "https://meta.linked.archi/archimate3/viewpoints#LayeredViewpoint",
+    "https://meta.linked.archi/archimate3/viewpoints#TechnologyUsageViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per source layer, relationship type and target layer, with the number of relationships.",
+   "concerns": [
+    "https://meta.linked.archi/archimate3/viewpoints#Consistency",
+    "https://meta.linked.archi/archimate3/viewpoints#ImpactOfChange"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 200,
+   "description": "Relationships whose ends are in different ArchiMate 3.2 layers, counted by pair of layers and relationship type. The layers are read from the layer classes, not from type names.",
+   "does_not_prove": "Coupling. A relationship to an element of no layer (location, grouping, junction) is not counted, and one between equipment and a node crosses from the physical to the technology layer though both are nodes.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate/layer-crossing",
+   "iri": "https://meta.linked.archi/archimate3/questions#cross-layer-relationships",
+   "label": "Which relationships cross layers, and of which kind?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate3/onto#"
+   ],
+   "parameters": [],
+   "prefixes": {
+    "am": "https://meta.linked.archi/archimate3/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "crossings",
+   "set": "https://meta.linked.archi/archimate3/questions#",
+   "severity": "",
+   "stage": "analysis",
+   "stakeholders": [],
+   "text": "SELECT ?sourceLayer ?relationshipType ?targetLayer (COUNT(DISTINCT ?relationship) AS ?relationships)\nWHERE {\n  ?relationship arch:source ?source ;\n                arch:target ?target ;\n                rdf:type ?relationshipType .\n  FILTER(?relationshipType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?relationshipType WHERE { { ?relationshipType arch:isAbstractClass true }\n                                                    UNION { GRAPH ?abstractClassGraph { ?relationshipType arch:isAbstractClass true } } } }\n  ?source rdf:type ?sourceType .\n  ?target rdf:type ?targetType .\n  {\n    SELECT DISTINCT ?sourceLayer ?sourceType\n    WHERE {\n      VALUES ?sourceLayer {\n        am:StrategyLayerElement am:MotivationElement am:BusinessLayerElement am:ApplicationLayerElement\n        am:TechnologyLayerElement am:PhysicalLayerElement am:ImplementationAndMigrationLayerElement\n      }\n      { ?sourceLayerType rdfs:subClassOf* ?sourceLayer } UNION { GRAPH ?sourceOntologyGraph { ?sourceLayerType rdfs:subClassOf* ?sourceLayer } }\n      { ?sourceType rdfs:subClassOf* ?sourceLayerType } UNION { GRAPH ?sourceSpecialisationGraph { ?sourceType rdfs:subClassOf* ?sourceLayerType } }\n    }\n  }\n  {\n    SELECT DISTINCT ?targetLayer ?targetType\n    WHERE {\n      VALUES ?targetLayer {\n        am:StrategyLayerElement am:MotivationElement am:BusinessLayerElement am:ApplicationLayerElement\n        am:TechnologyLayerElement am:PhysicalLayerElement am:ImplementationAndMigrationLayerElement\n      }\n      { ?targetLayerType rdfs:subClassOf* ?targetLayer } UNION { GRAPH ?targetOntologyGraph { ?targetLayerType rdfs:subClassOf* ?targetLayer } }\n      { ?targetType rdfs:subClassOf* ?targetLayerType } UNION { GRAPH ?targetSpecialisationGraph { ?targetType rdfs:subClassOf* ?targetLayerType } }\n    }\n  }\n  FILTER(?sourceLayer != ?targetLayer)\n}\nGROUP BY ?sourceLayer ?relationshipType ?targetLayer\nORDER BY DESC(?relationships)",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate3/viewpoints#LayeredViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per element added or removed.",
+   "concerns": [
+    "https://meta.linked.archi/archimate3/viewpoints#ArchitectureVision",
+    "https://meta.linked.archi/archimate3/viewpoints#ModelHistory"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 1000,
+   "description": "Elements a later plateau aggregates or is composed of that an earlier one is not (added), and the reverse (removed).",
+   "does_not_prove": "The migration path. The difference is the gap; the work packages that close it are another question.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate/plateau-difference",
+   "iri": "https://meta.linked.archi/archimate3/questions#plateau-difference",
+   "label": "What changes between these two plateaus?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate3/onto#"
+   ],
+   "parameters": [
+    {
+     "description": "The earlier plateau, such as the baseline.",
+     "name": "from",
+     "optional": false,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#from",
+     "variable": "from"
+    },
+    {
+     "description": "The later plateau, such as the target.",
+     "name": "to",
+     "optional": false,
+     "order": 2.0,
+     "path": "https://meta.linked.archi/core#to",
+     "variable": "to"
+    }
+   ],
+   "prefixes": {
+    "am": "https://meta.linked.archi/archimate3/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "plateauChanges",
+   "set": "https://meta.linked.archi/archimate3/questions#",
+   "severity": "",
+   "stage": "analysis",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?change ?element ?label ?type\nWHERE {\n  # Both are plateaus, or a specialisation of one.\n  FILTER EXISTS {\n    ?from rdf:type ?fromType .\n    { ?fromType rdfs:subClassOf* am:Plateau } UNION { GRAPH ?fromGraph { ?fromType rdfs:subClassOf* am:Plateau } }\n  }\n  FILTER EXISTS {\n    ?to rdf:type ?toType .\n    { ?toType rdfs:subClassOf* am:Plateau } UNION { GRAPH ?toGraph { ?toType rdfs:subClassOf* am:Plateau } }\n  }\n  FILTER(?from != ?to)\n  { ?to am:aggregates|am:composedOf ?element . BIND(\"added\" AS ?change) }\n  UNION\n  { ?from am:aggregates|am:composedOf ?element . BIND(\"removed\" AS ?change) }\n  # Here, where both are bound: in the other plateau it is not.\n  FILTER(IF(?change = \"added\",\n            NOT EXISTS { ?from am:aggregates|am:composedOf ?element },\n            NOT EXISTS { ?to am:aggregates|am:composedOf ?element }))\n  ?element rdf:type ?type .\n  FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }\n                                        UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }\n  OPTIONAL { ?element skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?change ?type ?label",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate3/viewpoints#MigrationViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per relationship between a principle and another element.",
+   "concerns": [
+    "https://meta.linked.archi/archimate3/viewpoints#ArchitecturePolicies",
+    "https://meta.linked.archi/archimate3/viewpoints#Motivation"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Principles with the elements they relate to in either direction: the drivers and goals behind them, the requirements that realise them.",
+   "does_not_prove": "Compliance. A requirement realising a principle states an intent, not that designs follow it.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate/principle-rationale",
+   "iri": "https://meta.linked.archi/archimate3/questions#principle-rationale",
+   "label": "What motivates each principle, and what does it constrain?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate3/onto#"
+   ],
+   "parameters": [],
+   "prefixes": {
+    "am": "https://meta.linked.archi/archimate3/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "principles",
+   "set": "https://meta.linked.archi/archimate3/questions#",
+   "severity": "",
+   "stage": "analysis",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?principle ?principleLabel ?direction ?predicate ?other ?otherLabel ?otherType\nWHERE {\n  {\n    SELECT DISTINCT ?principleType\n    WHERE {\n      { ?asked rdfs:subClassOf* am:Principle } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:Principle } }\n      { ?principleType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?principleType rdfs:subClassOf* ?asked } }\n    }\n  }\n  VALUES ?predicate { am:realizes am:influences am:associatedWith }\n  ?principle rdf:type ?principleType .\n  { ?principle ?predicate ?other . BIND(\"outgoing\" AS ?direction) }\n  UNION\n  { ?other ?predicate ?principle . BIND(\"incoming\" AS ?direction) }\n  ?other rdf:type ?otherType .\n  FILTER(?otherType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?otherType WHERE { { ?otherType arch:isAbstractClass true }\n                                             UNION { GRAPH ?abstractClassGraph { ?otherType arch:isAbstractClass true } } } }\n  OPTIONAL { ?principle skos:prefLabel ?principleLabel . FILTER(lang(?principleLabel) = \"\" || langMatches(lang(?principleLabel), \"en\")) }\n  OPTIONAL { ?other skos:prefLabel ?otherLabel . FILTER(lang(?otherLabel) = \"\" || langMatches(lang(?otherLabel), \"en\")) }\n}\nORDER BY ?principleLabel ?direction ?otherLabel",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate3/viewpoints#MotivationViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per principle no requirement realises.",
+   "concerns": [
+    "https://meta.linked.archi/archimate3/viewpoints#ArchitecturePolicies"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Principles that no requirement or constraint realises.",
+   "does_not_prove": "That the principle is ignored. It may be applied by review rather than through stated requirements.",
+   "finding": true,
+   "finding_focus": "principle",
+   "identifier": "notation/archimate/principles-without-requirements",
+   "iri": "https://meta.linked.archi/archimate3/questions#principles-without-requirements",
+   "label": "Which principles has no requirement made concrete?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate3/onto#"
+   ],
+   "parameters": [
+    {
+     "description": "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from.",
+     "name": "model",
+     "optional": true,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#model",
+     "variable": "model"
+    }
+   ],
+   "prefixes": {
+    "am": "https://meta.linked.archi/archimate3/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": true,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "unbackedPrinciples",
+   "set": "https://meta.linked.archi/archimate3/questions#",
+   "severity": "info",
+   "stage": "quality",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?principle ?label\nWHERE {\n  {\n    SELECT DISTINCT ?principleType\n    WHERE {\n      { ?asked rdfs:subClassOf* am:Principle } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:Principle } }\n      { ?principleType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?principleType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?principle rdf:type ?principleType ;\n             arch:inModel ?model .\n  FILTER NOT EXISTS {\n    {\n      SELECT DISTINCT ?requirementType\n      WHERE {\n        { ?askedRequirement rdfs:subClassOf* am:Requirement } UNION { GRAPH ?requirementGraph { ?askedRequirement rdfs:subClassOf* am:Requirement } }\n        { ?requirementType rdfs:subClassOf* ?askedRequirement } UNION { GRAPH ?requirementSpecialisationGraph { ?requirementType rdfs:subClassOf* ?askedRequirement } }\n      }\n    }\n    ?requirement am:realizes ?principle ;\n                 rdf:type ?requirementType .\n  }\n  OPTIONAL { ?principle skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?label",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate3/viewpoints#MotivationViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per traced link: the requirement, the direction, the predicate and the element at the other end.",
+   "concerns": [
+    "https://meta.linked.archi/archimate3/viewpoints#ArchitectureTactics",
+    "https://meta.linked.archi/archimate3/viewpoints#Motivation"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 1000,
+   "description": "Requirements and constraints with what realises them, below, and the goals, outcomes and principles they realise or influence, above, as a list of links.",
+   "does_not_prove": "Verification. A realisation relationship is a design claim; it does not show the requirement is met.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate/requirement-traceability",
+   "iri": "https://meta.linked.archi/archimate3/questions#requirement-traceability",
+   "label": "How does each requirement trace to goals and to the elements that realise it?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate3/onto#"
+   ],
+   "parameters": [],
+   "prefixes": {
+    "am": "https://meta.linked.archi/archimate3/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "traceability",
+   "set": "https://meta.linked.archi/archimate3/questions#",
+   "severity": "",
+   "stage": "analysis",
+   "stakeholders": [
+    "https://meta.linked.archi/archimate3/viewpoints#BusinessAnalyst",
+    "https://meta.linked.archi/archimate3/viewpoints#RequirementsManager"
+   ],
+   "text": "SELECT DISTINCT ?requirement ?requirementLabel ?direction ?predicate ?other ?otherLabel ?otherType\nWHERE {\n  {\n    SELECT DISTINCT ?requirementType\n    WHERE {\n      { ?asked rdfs:subClassOf* am:Requirement } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:Requirement } }\n      { ?requirementType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?requirementType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?requirement rdf:type ?requirementType .\n  {\n    ?other am:realizes ?requirement .\n    BIND(am:realizes AS ?predicate)\n    BIND(\"realised by\" AS ?direction)\n  }\n  UNION\n  {\n    VALUES ?predicate { am:realizes am:influences }\n    ?requirement ?predicate ?other .\n    BIND(\"contributes to\" AS ?direction)\n  }\n  ?other rdf:type ?otherType .\n  FILTER(?otherType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?otherType WHERE { { ?otherType arch:isAbstractClass true }\n                                             UNION { GRAPH ?abstractClassGraph { ?otherType arch:isAbstractClass true } } } }\n  OPTIONAL { ?requirement skos:prefLabel ?requirementLabel . FILTER(lang(?requirementLabel) = \"\" || langMatches(lang(?requirementLabel), \"en\")) }\n  OPTIONAL { ?other skos:prefLabel ?otherLabel . FILTER(lang(?otherLabel) = \"\" || langMatches(lang(?otherLabel), \"en\")) }\n}\nORDER BY ?requirementLabel ?direction ?otherLabel",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate3/viewpoints#GoalRealizationViewpoint",
+    "https://meta.linked.archi/archimate3/viewpoints#RequirementsRealizationViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per assignment, with both ends and their types.",
+   "concerns": [
+    "https://meta.linked.archi/archimate3/viewpoints#CompetenciesAuthorityResponsibilities",
+    "https://meta.linked.archi/archimate3/viewpoints#Responsibilities"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Assignment relationships: which actor, role, collaboration, component or node performs which behaviour or plays which role.",
+   "does_not_prove": "Accountability in the RACI sense. An ArchiMate assignment states who performs, not who answers for the outcome.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate/responsibility-assignments",
+   "iri": "https://meta.linked.archi/archimate3/questions#responsibility-assignments",
+   "label": "Who is responsible for what?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate3/onto#"
+   ],
+   "parameters": [],
+   "prefixes": {
+    "am": "https://meta.linked.archi/archimate3/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "assignments",
+   "set": "https://meta.linked.archi/archimate3/questions#",
+   "severity": "",
+   "stage": "analysis",
+   "stakeholders": [
+    "https://meta.linked.archi/archimate3/viewpoints#Manager",
+    "https://meta.linked.archi/archimate3/viewpoints#ProcessArchitect"
+   ],
+   "text": "SELECT DISTINCT ?performer ?performerLabel ?performerType ?assignment ?assigned ?assignedLabel ?assignedType\nWHERE {\n  {\n    SELECT DISTINCT ?assignmentType\n    WHERE {\n      { ?asked rdfs:subClassOf* am:Assignment } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:Assignment } }\n      { ?assignmentType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?assignmentType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?assignment rdf:type ?assignmentType ;\n              arch:source ?performer ;\n              arch:target ?assigned .\n  ?performer rdf:type ?performerType .\n  ?assigned rdf:type ?assignedType .\n  FILTER(?performerType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  FILTER(?assignedType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?performerType WHERE { { ?performerType arch:isAbstractClass true }\n                                                 UNION { GRAPH ?abstractClassGraph { ?performerType arch:isAbstractClass true } } } }\n  MINUS { SELECT DISTINCT ?assignedType WHERE { { ?assignedType arch:isAbstractClass true }\n                                                UNION { GRAPH ?abstractClassGraph { ?assignedType arch:isAbstractClass true } } } }\n  OPTIONAL { ?performer skos:prefLabel ?performerLabel . FILTER(lang(?performerLabel) = \"\" || langMatches(lang(?performerLabel), \"en\")) }\n  OPTIONAL { ?assigned skos:prefLabel ?assignedLabel . FILTER(lang(?assignedLabel) = \"\" || langMatches(lang(?assignedLabel), \"en\")) }\n}\nORDER BY ?performerLabel ?assignedLabel",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate3/viewpoints#BusinessProcessCooperationViewpoint",
+    "https://meta.linked.archi/archimate3/viewpoints#OrganizationViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per relationship between a stakeholder and a motivation element.",
+   "concerns": [
+    "https://meta.linked.archi/archimate3/viewpoints#ArchitectureMission",
+    "https://meta.linked.archi/archimate3/viewpoints#Motivation"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Stakeholders and the motivation elements (drivers, assessments, goals, outcomes, principles, requirements, constraints, values, meanings) they are related to, in either direction.",
+   "does_not_prove": "Priority. That a stakeholder is associated with a goal does not rank it among their concerns.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate/stakeholder-motivation",
+   "iri": "https://meta.linked.archi/archimate3/questions#stakeholder-motivation",
+   "label": "What do stakeholders care about?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate3/onto#"
+   ],
+   "parameters": [],
+   "prefixes": {
+    "am": "https://meta.linked.archi/archimate3/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "stakeholderMotivation",
+   "set": "https://meta.linked.archi/archimate3/questions#",
+   "severity": "",
+   "stage": "analysis",
+   "stakeholders": [
+    "https://meta.linked.archi/archimate3/viewpoints#BusinessManager",
+    "https://meta.linked.archi/archimate3/viewpoints#EnterpriseArchitect"
+   ],
+   "text": "SELECT DISTINCT ?stakeholder ?stakeholderLabel ?direction ?predicate ?motivation ?motivationLabel ?motivationType\nWHERE {\n  {\n    SELECT DISTINCT ?stakeholderType\n    WHERE {\n      { ?asked rdfs:subClassOf* am:Stakeholder } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:Stakeholder } }\n      { ?stakeholderType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?stakeholderType rdfs:subClassOf* ?asked } }\n    }\n  }\n  {\n    SELECT DISTINCT ?motivationType\n    WHERE {\n      { ?motivationLayerType rdfs:subClassOf* am:MotivationElement } UNION { GRAPH ?motivationGraph { ?motivationLayerType rdfs:subClassOf* am:MotivationElement } }\n      { ?motivationType rdfs:subClassOf* ?motivationLayerType } UNION { GRAPH ?motivationSpecialisationGraph { ?motivationType rdfs:subClassOf* ?motivationLayerType } }\n    }\n  }\n  VALUES ?predicate { am:associatedWith am:influences am:realizes am:aggregates am:composedOf }\n  ?stakeholder rdf:type ?stakeholderType .\n  { ?stakeholder ?predicate ?motivation . BIND(\"outgoing\" AS ?direction) }\n  UNION\n  { ?motivation ?predicate ?stakeholder . BIND(\"incoming\" AS ?direction) }\n  ?motivation rdf:type ?motivationType .\n  MINUS { SELECT DISTINCT ?motivationType WHERE { { ?motivationType arch:isAbstractClass true }\n                                                  UNION { GRAPH ?abstractClassGraph { ?motivationType arch:isAbstractClass true } } } }\n  OPTIONAL { ?stakeholder skos:prefLabel ?stakeholderLabel . FILTER(lang(?stakeholderLabel) = \"\" || langMatches(lang(?stakeholderLabel), \"en\")) }\n  OPTIONAL { ?motivation skos:prefLabel ?motivationLabel . FILTER(lang(?motivationLabel) = \"\" || langMatches(lang(?motivationLabel), \"en\")) }\n}\nORDER BY ?stakeholderLabel ?direction ?motivationLabel",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate3/viewpoints#StakeholderViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per process or function without a performer, with the kind asked about.",
+   "concerns": [
+    "https://meta.linked.archi/archimate3/viewpoints#Completeness",
+    "https://meta.linked.archi/archimate3/viewpoints#Responsibilities"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Business, application and technology processes and functions that no active structure element is assigned to.",
+   "does_not_prove": "That nobody performs it. The performer may be assigned to an enclosing process, or the model may stop above that level of detail.",
+   "finding": true,
+   "finding_focus": "behaviour",
+   "identifier": "notation/archimate/unassigned-behaviour",
+   "iri": "https://meta.linked.archi/archimate3/questions#unassigned-behaviour",
+   "label": "Which processes and functions has nobody been assigned to?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate3/onto#"
+   ],
+   "parameters": [
+    {
+     "description": "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from.",
+     "name": "model",
+     "optional": true,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#model",
+     "variable": "model"
+    }
+   ],
+   "prefixes": {
+    "am": "https://meta.linked.archi/archimate3/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": true,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "unassigned",
+   "set": "https://meta.linked.archi/archimate3/questions#",
+   "severity": "warning",
+   "stage": "quality",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?behaviour ?label ?type\nWHERE {\n  {\n    SELECT DISTINCT ?type ?behaviourType\n    WHERE {\n      VALUES ?type {\n        am:BusinessProcess am:BusinessFunction am:ApplicationProcess am:ApplicationFunction\n        am:TechnologyProcess am:TechnologyFunction\n      }\n      { ?asked rdfs:subClassOf* ?type } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* ?type } }\n      { ?behaviourType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?behaviourType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?behaviour rdf:type ?behaviourType ;\n             arch:inModel ?model .\n  FILTER NOT EXISTS { ?performer am:assignedTo ?behaviour }\n  OPTIONAL { ?behaviour skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?type ?label",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate3/viewpoints#BusinessProcessCooperationViewpoint",
+    "https://meta.linked.archi/archimate3/viewpoints#OrganizationViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per capability with no realisation anywhere beneath it.",
+   "concerns": [
+    "https://meta.linked.archi/archimate3/viewpoints#Completeness",
+    "https://meta.linked.archi/archimate3/viewpoints#StrategyDevelopment"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Capabilities realised neither directly nor through any capability they are composed of or aggregate.",
+   "does_not_prove": "That the enterprise lacks the capability; only that the model does not say what delivers it.",
+   "finding": true,
+   "finding_focus": "capability",
+   "identifier": "notation/archimate/unrealised-capabilities",
+   "iri": "https://meta.linked.archi/archimate3/questions#unrealised-capabilities",
+   "label": "Which capabilities does nothing realise?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate3/onto#"
+   ],
+   "parameters": [
+    {
+     "description": "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from.",
+     "name": "model",
+     "optional": true,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#model",
+     "variable": "model"
+    }
+   ],
+   "prefixes": {
+    "am": "https://meta.linked.archi/archimate3/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": true,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "unrealisedCapabilities",
+   "set": "https://meta.linked.archi/archimate3/questions#",
+   "severity": "info",
+   "stage": "quality",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?capability ?label\nWHERE {\n  {\n    SELECT DISTINCT ?capabilityType\n    WHERE {\n      { ?asked rdfs:subClassOf* am:Capability } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:Capability } }\n      { ?capabilityType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?capabilityType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?capability rdf:type ?capabilityType ;\n              arch:inModel ?model .\n  FILTER NOT EXISTS {\n    ?capability (am:composedOf|am:aggregates)* ?part .\n    ?realizer am:realizes ?part .\n  }\n  OPTIONAL { ?capability skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?label",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate3/viewpoints#CapabilityMapViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per requirement or constraint without a realising design element.",
+   "concerns": [
+    "https://meta.linked.archi/archimate3/viewpoints#ArchitectureTactics",
+    "https://meta.linked.archi/archimate3/viewpoints#Motivation"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Requirements and constraints that no element outside the motivation elements realises: realisation by another motivation element does not count.",
+   "does_not_prove": "That the requirement is unmet; only that the model does not show what meets it.",
+   "finding": true,
+   "finding_focus": "requirement",
+   "identifier": "notation/archimate/unrealised-requirements",
+   "iri": "https://meta.linked.archi/archimate3/questions#unrealised-requirements",
+   "label": "Which requirements does no architecture element realise?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate3/onto#"
+   ],
+   "parameters": [
+    {
+     "description": "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from.",
+     "name": "model",
+     "optional": true,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#model",
+     "variable": "model"
+    }
+   ],
+   "prefixes": {
+    "am": "https://meta.linked.archi/archimate3/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": true,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "unrealisedRequirements",
+   "set": "https://meta.linked.archi/archimate3/questions#",
+   "severity": "warning",
+   "stage": "quality",
+   "stakeholders": [
+    "https://meta.linked.archi/archimate3/viewpoints#RequirementsManager"
+   ],
+   "text": "SELECT DISTINCT ?requirement ?label\nWHERE {\n  {\n    SELECT DISTINCT ?requirementType\n    WHERE {\n      { ?asked rdfs:subClassOf* am:Requirement } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:Requirement } }\n      { ?requirementType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?requirementType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?requirement rdf:type ?requirementType ;\n               arch:inModel ?model .\n  # Realised by a design element: one whose own type is not a motivation element.\n  MINUS {\n    ?realizer am:realizes ?requirement ;\n              rdf:type ?realizerType .\n    FILTER(?realizerType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n    MINUS { SELECT DISTINCT ?realizerType WHERE { { ?realizerType arch:isAbstractClass true }\n                                                  UNION { GRAPH ?abstractClassGraph { ?realizerType arch:isAbstractClass true } } } }\n    MINUS {\n      SELECT DISTINCT ?realizerType\n      WHERE {\n        { ?motivationType rdfs:subClassOf* am:MotivationElement }\n        UNION { GRAPH ?motivationGraph { ?motivationType rdfs:subClassOf* am:MotivationElement } }\n        { ?realizerType rdfs:subClassOf* ?motivationType }\n        UNION { GRAPH ?motivationSpecialisationGraph { ?realizerType rdfs:subClassOf* ?motivationType } }\n      }\n    }\n  }\n  OPTIONAL { ?requirement skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?label",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate3/viewpoints#RequirementsRealizationViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per service nothing realises, with the kind of service.",
+   "concerns": [
+    "https://meta.linked.archi/archimate3/viewpoints#AddedValueOfProcesses",
+    "https://meta.linked.archi/archimate3/viewpoints#Completeness"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Business, application and technology services that no behaviour or active structure element realises.",
+   "does_not_prove": "That the service is not delivered: it may be bought in, or realised in a model that is not loaded.",
+   "finding": true,
+   "finding_focus": "service",
+   "identifier": "notation/archimate/unrealised-services",
+   "iri": "https://meta.linked.archi/archimate3/questions#unrealised-services",
+   "label": "Which services does nothing realise?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate3/onto#"
+   ],
+   "parameters": [
+    {
+     "description": "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from.",
+     "name": "model",
+     "optional": true,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#model",
+     "variable": "model"
+    }
+   ],
+   "prefixes": {
+    "am": "https://meta.linked.archi/archimate3/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": true,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "unrealisedServices",
+   "set": "https://meta.linked.archi/archimate3/questions#",
+   "severity": "warning",
+   "stage": "quality",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?service ?label ?type\nWHERE {\n  {\n    SELECT DISTINCT ?type ?serviceType\n    WHERE {\n      VALUES ?type { am:BusinessService am:ApplicationService am:TechnologyService }\n      { ?asked rdfs:subClassOf* ?type } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* ?type } }\n      { ?serviceType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?serviceType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?service rdf:type ?serviceType ;\n           arch:inModel ?model .\n  FILTER NOT EXISTS { ?realizer am:realizes ?service }\n  OPTIONAL { ?service skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?type ?label",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate3/viewpoints#BusinessProcessCooperationViewpoint",
+    "https://meta.linked.archi/archimate3/viewpoints#ServiceRealizationViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per work package, deliverable and element realised.",
+   "concerns": [
+    "https://meta.linked.archi/archimate3/viewpoints#ArchitecturePolicies",
+    "https://meta.linked.archi/archimate3/viewpoints#ArchitectureVision"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Work packages, the deliverables they realise, and the architecture elements those deliverables realise.",
+   "does_not_prove": "Schedule or progress. ArchiMate records what a work package produces, not when.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate/work-package-deliverables",
+   "iri": "https://meta.linked.archi/archimate3/questions#work-package-deliverables",
+   "label": "What does each work package deliver, and what does that realise?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate3/onto#"
+   ],
+   "parameters": [],
+   "prefixes": {
+    "am": "https://meta.linked.archi/archimate3/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "workPackages",
+   "set": "https://meta.linked.archi/archimate3/questions#",
+   "severity": "",
+   "stage": "analysis",
+   "stakeholders": [
+    "https://meta.linked.archi/archimate3/viewpoints#EnterpriseArchitect",
+    "https://meta.linked.archi/archimate3/viewpoints#OperationalManager"
+   ],
+   "text": "SELECT DISTINCT ?workPackage ?workPackageLabel ?deliverable ?deliverableLabel ?realized ?realizedLabel ?realizedType\nWHERE {\n  {\n    SELECT DISTINCT ?workPackageType\n    WHERE {\n      { ?asked rdfs:subClassOf* am:WorkPackage } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:WorkPackage } }\n      { ?workPackageType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?workPackageType rdfs:subClassOf* ?asked } }\n    }\n  }\n  {\n    SELECT DISTINCT ?deliverableType\n    WHERE {\n      { ?askedDeliverable rdfs:subClassOf* am:Deliverable } UNION { GRAPH ?deliverableGraph { ?askedDeliverable rdfs:subClassOf* am:Deliverable } }\n      { ?deliverableType rdfs:subClassOf* ?askedDeliverable } UNION { GRAPH ?deliverableSpecialisationGraph { ?deliverableType rdfs:subClassOf* ?askedDeliverable } }\n    }\n  }\n  ?workPackage rdf:type ?workPackageType ;\n               am:realizes ?deliverable .\n  ?deliverable rdf:type ?deliverableType .\n  OPTIONAL {\n    ?deliverable am:realizes ?realized .\n    ?realized rdf:type ?realizedType .\n    FILTER(?realizedType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n    MINUS { SELECT DISTINCT ?realizedType WHERE { { ?realizedType arch:isAbstractClass true }\n                                                  UNION { GRAPH ?abstractClassGraph { ?realizedType arch:isAbstractClass true } } } }\n    OPTIONAL { ?realized skos:prefLabel ?realizedLabel . FILTER(lang(?realizedLabel) = \"\" || langMatches(lang(?realizedLabel), \"en\")) }\n  }\n  OPTIONAL { ?workPackage skos:prefLabel ?workPackageLabel . FILTER(lang(?workPackageLabel) = \"\" || langMatches(lang(?workPackageLabel), \"en\")) }\n  OPTIONAL { ?deliverable skos:prefLabel ?deliverableLabel . FILTER(lang(?deliverableLabel) = \"\" || langMatches(lang(?deliverableLabel), \"en\")) }\n}\nORDER BY ?workPackageLabel ?deliverableLabel",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate3/viewpoints#ImplementationAndMigrationViewpoint",
+    "https://meta.linked.archi/archimate3/viewpoints#ProjectViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per dependency: the provider, how it provides, the relationship or service between, and the consumer.",
+   "concerns": [
+    "https://meta.linked.archi/archimate4/viewpoints#ApplicationDependencies",
+    "https://meta.linked.archi/archimate4/viewpoints#ServiceOrchestration"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Application components that serve, flow to or trigger one another, directly or through a service one realises — itself or through the function assigned to it — and the other is served by.",
+   "does_not_prove": "Runtime coupling or data volume. A modelled flow says that information moves, not how much or how often.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate4/application-dependencies",
+   "iri": "https://meta.linked.archi/archimate4/questions#application-dependencies",
+   "label": "Which applications depend on which?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate4/onto#"
+   ],
+   "parameters": [],
+   "prefixes": {
+    "am4": "https://meta.linked.archi/archimate4/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "applicationDependencies",
+   "set": "https://meta.linked.archi/archimate4/questions#",
+   "severity": "",
+   "stage": "analysis",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?provider ?providerLabel ?how ?via ?consumer ?consumerLabel\nWHERE {\n  # From the relationships to their ends, each branch anchored on its relationships: never every pair of\n  # components. Both ends are then checked against the component types, read once each.\n  {\n    VALUES ?linkType { am4:Serving am4:Flow am4:Triggering }\n    ?via rdf:type ?linkType ;\n         arch:source ?provider ;\n         arch:target ?consumer .\n    BIND(REPLACE(STR(?linkType), \"^.*[#/]\", \"\") AS ?how)\n  }\n  UNION\n  {\n    {\n      SELECT DISTINCT ?serviceType\n      WHERE {\n        { ?askedService rdfs:subClassOf* am4:Service } UNION { GRAPH ?serviceOntologyGraph { ?askedService rdfs:subClassOf* am4:Service } }\n        { ?serviceType rdfs:subClassOf* ?askedService } UNION { GRAPH ?serviceSpecialisationGraph { ?serviceType rdfs:subClassOf* ?askedService } }\n      }\n    }\n    ?via rdf:type ?serviceType ;\n         am4:serves ?consumer .\n    ?provider am4:realizes|(am4:assignedTo/am4:realizes) ?via .\n    BIND(\"realises a service serving\" AS ?how)\n  }\n  ?provider rdf:type ?providerType .\n  ?consumer rdf:type ?consumerType .\n  {\n    SELECT DISTINCT ?providerType\n    WHERE {\n      { ?askedProvider rdfs:subClassOf* am4:ApplicationComponent } UNION { GRAPH ?providerGraph { ?askedProvider rdfs:subClassOf* am4:ApplicationComponent } }\n      { ?providerType rdfs:subClassOf* ?askedProvider } UNION { GRAPH ?providerSpecialisationGraph { ?providerType rdfs:subClassOf* ?askedProvider } }\n    }\n  }\n  {\n    SELECT DISTINCT ?consumerType\n    WHERE {\n      { ?askedConsumer rdfs:subClassOf* am4:ApplicationComponent } UNION { GRAPH ?consumerGraph { ?askedConsumer rdfs:subClassOf* am4:ApplicationComponent } }\n      { ?consumerType rdfs:subClassOf* ?askedConsumer } UNION { GRAPH ?consumerSpecialisationGraph { ?consumerType rdfs:subClassOf* ?askedConsumer } }\n    }\n  }\n  FILTER(?provider != ?consumer)\n  OPTIONAL { ?provider skos:prefLabel ?providerLabel . FILTER(lang(?providerLabel) = \"\" || langMatches(lang(?providerLabel), \"en\")) }\n  OPTIONAL { ?consumer skos:prefLabel ?consumerLabel . FILTER(lang(?consumerLabel) = \"\" || langMatches(lang(?consumerLabel), \"en\")) }\n}\nORDER BY ?providerLabel ?consumerLabel",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate4/viewpoints#ApplicationCooperationViewpoint",
+    "https://meta.linked.archi/archimate4/viewpoints#ApplicationUsageViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per application component with no technology under it.",
+   "concerns": [
+    "https://meta.linked.archi/archimate4/viewpoints#ApplicationPlatforms",
+    "https://meta.linked.archi/archimate4/viewpoints#InfrastructureQuality"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Application components that no element of the technology domain serves or realises, directly or by realising a service that serves them.",
+   "does_not_prove": "That it runs nowhere. Where it is hosted may be outside the model, or recorded only in a deployment model that is not loaded.",
+   "finding": true,
+   "finding_focus": "application",
+   "identifier": "notation/archimate4/applications-without-technology",
+   "iri": "https://meta.linked.archi/archimate4/questions#applications-without-technology",
+   "label": "Which application components run on no technology?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate4/onto#"
+   ],
+   "parameters": [
+    {
+     "description": "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from.",
+     "name": "model",
+     "optional": true,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#model",
+     "variable": "model"
+    }
+   ],
+   "prefixes": {
+    "am4": "https://meta.linked.archi/archimate4/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": true,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "unhosted",
+   "set": "https://meta.linked.archi/archimate4/questions#",
+   "severity": "warning",
+   "stage": "quality",
+   "stakeholders": [
+    "https://meta.linked.archi/archimate4/viewpoints#ApplicationArchitect",
+    "https://meta.linked.archi/archimate4/viewpoints#InfrastructureArchitect"
+   ],
+   "text": "SELECT DISTINCT ?application ?label\nWHERE {\n  {\n    SELECT DISTINCT ?componentType\n    WHERE {\n      { ?asked rdfs:subClassOf* am4:ApplicationComponent } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am4:ApplicationComponent } }\n      { ?componentType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?componentType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?application rdf:type ?componentType ;\n               arch:inModel ?model .\n  MINUS {\n    # The technology domain's types, read once.\n    {\n      SELECT DISTINCT ?technologyType\n      WHERE {\n        { ?domainType rdfs:subClassOf* am4:TechnologyDomainElement }\n        UNION { GRAPH ?domainGraph { ?domainType rdfs:subClassOf* am4:TechnologyDomainElement } }\n        { ?technologyType rdfs:subClassOf* ?domainType }\n        UNION { GRAPH ?domainSpecialisationGraph { ?technologyType rdfs:subClassOf* ?domainType } }\n      }\n    }\n    ?technology rdf:type ?technologyType ;\n                am4:serves|am4:realizes|(am4:realizes/am4:serves) ?application .\n  }\n  OPTIONAL { ?application skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?label",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate4/viewpoints#ImplementationAndDeploymentViewpoint",
+    "https://meta.linked.archi/archimate4/viewpoints#TechnologyUsageViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per capability and what realises it; a capability nothing realises appears once, with nothing beside it.",
+   "concerns": [
+    "https://meta.linked.archi/archimate4/viewpoints#ArchitectureStrategy",
+    "https://meta.linked.archi/archimate4/viewpoints#StrategyDevelopment"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Capabilities with the behaviour, active structure or resources that realise them.",
+   "does_not_prove": "Maturity. That a capability is realised says it is delivered somehow, not how well.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate4/capability-realisation",
+   "iri": "https://meta.linked.archi/archimate4/questions#capability-realisation",
+   "label": "What realises each capability?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate4/onto#"
+   ],
+   "parameters": [],
+   "prefixes": {
+    "am4": "https://meta.linked.archi/archimate4/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "capabilities",
+   "set": "https://meta.linked.archi/archimate4/questions#",
+   "severity": "",
+   "stage": "analysis",
+   "stakeholders": [
+    "https://meta.linked.archi/archimate4/viewpoints#BusinessArchitect",
+    "https://meta.linked.archi/archimate4/viewpoints#CxO"
+   ],
+   "text": "SELECT DISTINCT ?capability ?capabilityLabel ?realizer ?realizerLabel ?realizerType\nWHERE {\n  {\n    SELECT DISTINCT ?capabilityType\n    WHERE {\n      { ?asked rdfs:subClassOf* am4:Capability } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am4:Capability } }\n      { ?capabilityType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?capabilityType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?capability rdf:type ?capabilityType .\n  OPTIONAL {\n    ?realizer am4:realizes ?capability ;\n              rdf:type ?realizerType .\n    FILTER(?realizerType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n    MINUS { SELECT DISTINCT ?realizerType WHERE { { ?realizerType arch:isAbstractClass true }\n                                                  UNION { GRAPH ?abstractClassGraph { ?realizerType arch:isAbstractClass true } } } }\n    OPTIONAL { ?realizer skos:prefLabel ?realizerLabel . FILTER(lang(?realizerLabel) = \"\" || langMatches(lang(?realizerLabel), \"en\")) }\n  }\n  OPTIONAL { ?capability skos:prefLabel ?capabilityLabel . FILTER(lang(?capabilityLabel) = \"\" || langMatches(lang(?capabilityLabel), \"en\")) }\n}\nORDER BY ?capabilityLabel ?realizerLabel",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate4/viewpoints#CapabilityMapViewpoint",
+    "https://meta.linked.archi/archimate4/viewpoints#StrategyViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per source domain, relationship type and target domain, with the number of relationships.",
+   "concerns": [
+    "https://meta.linked.archi/archimate4/viewpoints#Consistency",
+    "https://meta.linked.archi/archimate4/viewpoints#ImpactOfChange"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 200,
+   "description": "Relationships whose ends are in different ArchiMate 4.0 domains, counted by pair of domains and relationship type. The domains are read from the domain classes, not from type names.",
+   "does_not_prove": "Coupling. Relationships touching elements of the common domain are not counted: ArchiMate 4.0 assigns those no domain, so whether they cross one is undefined.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate4/cross-domain-relationships",
+   "iri": "https://meta.linked.archi/archimate4/questions#cross-domain-relationships",
+   "label": "Which relationships cross domains, and of which kind?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate4/onto#"
+   ],
+   "parameters": [],
+   "prefixes": {
+    "am4": "https://meta.linked.archi/archimate4/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "crossings",
+   "set": "https://meta.linked.archi/archimate4/questions#",
+   "severity": "",
+   "stage": "analysis",
+   "stakeholders": [],
+   "text": "SELECT ?sourceDomain ?relationshipType ?targetDomain (COUNT(DISTINCT ?relationship) AS ?relationships)\nWHERE {\n  ?relationship arch:source ?source ;\n                arch:target ?target ;\n                rdf:type ?relationshipType .\n  FILTER(?relationshipType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?relationshipType WHERE { { ?relationshipType arch:isAbstractClass true }\n                                                    UNION { GRAPH ?abstractClassGraph { ?relationshipType arch:isAbstractClass true } } } }\n  ?source rdf:type ?sourceType .\n  ?target rdf:type ?targetType .\n  {\n    SELECT DISTINCT ?sourceDomain ?sourceType\n    WHERE {\n      VALUES ?sourceDomain {\n        am4:StrategyElement am4:MotivationElement am4:BusinessDomainElement\n        am4:ApplicationDomainElement am4:TechnologyDomainElement am4:ImplementationAndMigrationDomainElement\n      }\n      { ?sourceDomainType rdfs:subClassOf* ?sourceDomain } UNION { GRAPH ?sourceOntologyGraph { ?sourceDomainType rdfs:subClassOf* ?sourceDomain } }\n      { ?sourceType rdfs:subClassOf* ?sourceDomainType } UNION { GRAPH ?sourceSpecialisationGraph { ?sourceType rdfs:subClassOf* ?sourceDomainType } }\n    }\n  }\n  {\n    SELECT DISTINCT ?targetDomain ?targetType\n    WHERE {\n      VALUES ?targetDomain {\n        am4:StrategyElement am4:MotivationElement am4:BusinessDomainElement\n        am4:ApplicationDomainElement am4:TechnologyDomainElement am4:ImplementationAndMigrationDomainElement\n      }\n      { ?targetDomainType rdfs:subClassOf* ?targetDomain } UNION { GRAPH ?targetOntologyGraph { ?targetDomainType rdfs:subClassOf* ?targetDomain } }\n      { ?targetType rdfs:subClassOf* ?targetDomainType } UNION { GRAPH ?targetSpecialisationGraph { ?targetType rdfs:subClassOf* ?targetDomainType } }\n    }\n  }\n  FILTER(?sourceDomain != ?targetDomain)\n}\nGROUP BY ?sourceDomain ?relationshipType ?targetDomain\nORDER BY DESC(?relationships)",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate4/viewpoints#LayeredViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per access: what accesses, the kind of access, and the object accessed.",
+   "concerns": [
+    "https://meta.linked.archi/archimate4/viewpoints#Consistency",
+    "https://meta.linked.archi/archimate4/viewpoints#InformationStructure"
+   ],
+   "dataset": "model",
+   "default_limit": 500,
+   "description": "Access relationships by kind: ArchiMate 4.0 types the kind (am4:ReadAccess, am4:WriteAccess, am4:ReadWriteAccess, and am4:Access when it is not stated).",
+   "does_not_prove": "Ownership of the data. Write access is not mastery; arch:masterDataSource says where that is recorded.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate4/data-access",
+   "iri": "https://meta.linked.archi/archimate4/questions#data-access",
+   "label": "Who reads and writes which information?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate4/onto#"
+   ],
+   "parameters": [],
+   "prefixes": {
+    "am4": "https://meta.linked.archi/archimate4/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "access",
+   "set": "https://meta.linked.archi/archimate4/questions#",
+   "severity": "",
+   "stage": "analysis",
+   "stakeholders": [
+    "https://meta.linked.archi/archimate4/viewpoints#InformationArchitect"
+   ],
+   "text": "SELECT DISTINCT ?accessor ?accessorLabel ?access ?accessKind ?object ?objectLabel ?objectType\nWHERE {\n  VALUES ?accessKind { am4:Access am4:ReadAccess am4:WriteAccess am4:ReadWriteAccess }\n  ?access rdf:type ?accessKind ;\n          arch:source ?accessor ;\n          arch:target ?object .\n  ?object rdf:type ?objectType .\n  FILTER(?objectType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?objectType WHERE { { ?objectType arch:isAbstractClass true }\n                                              UNION { GRAPH ?abstractClassGraph { ?objectType arch:isAbstractClass true } } } }\n  OPTIONAL { ?accessor skos:prefLabel ?accessorLabel . FILTER(lang(?accessorLabel) = \"\" || langMatches(lang(?accessorLabel), \"en\")) }\n  OPTIONAL { ?object skos:prefLabel ?objectLabel . FILTER(lang(?objectLabel) = \"\" || langMatches(lang(?objectLabel), \"en\")) }\n}\nORDER BY ?objectLabel ?accessKind ?accessorLabel",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate4/viewpoints#ApplicationCooperationViewpoint",
+    "https://meta.linked.archi/archimate4/viewpoints#InformationStructureViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per object, with how many elements read it.",
+   "concerns": [
+    "https://meta.linked.archi/archimate4/viewpoints#Completeness",
+    "https://meta.linked.archi/archimate4/viewpoints#InformationStructure"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Data objects, business objects and artifacts that something reads and nothing writes. Access of an unstated kind (am4:Access) counts as a possible write.",
+   "does_not_prove": "That the data has no source. It may be written by a system outside the model; that boundary is what the finding asks to discuss.",
+   "finding": true,
+   "finding_focus": "object",
+   "identifier": "notation/archimate4/data-never-written",
+   "iri": "https://meta.linked.archi/archimate4/questions#data-never-written",
+   "label": "Which information is read but never written?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate4/onto#"
+   ],
+   "parameters": [],
+   "prefixes": {
+    "am4": "https://meta.linked.archi/archimate4/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "neverWritten",
+   "set": "https://meta.linked.archi/archimate4/questions#",
+   "severity": "warning",
+   "stage": "quality",
+   "stakeholders": [],
+   "text": "SELECT ?object ?label ?readers\nWHERE {\n  {\n    SELECT ?object (COUNT(DISTINCT ?reader) AS ?readers)\n    WHERE {\n      {\n        SELECT DISTINCT ?objectType\n        WHERE {\n          VALUES ?askedObject { am4:DataObject am4:BusinessObject am4:Artifact }\n          { ?asked rdfs:subClassOf* ?askedObject } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* ?askedObject } }\n          { ?objectType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?objectType rdfs:subClassOf* ?asked } }\n        }\n      }\n      ?read rdf:type am4:ReadAccess ;\n            arch:source ?reader ;\n            arch:target ?object .\n      ?object rdf:type ?objectType .\n    }\n    GROUP BY ?object\n  }\n  # Written: a write, a read-write, or an access whose kind is not stated.\n  FILTER NOT EXISTS {\n    VALUES ?writeKind { am4:WriteAccess am4:ReadWriteAccess am4:Access }\n    ?write rdf:type ?writeKind ;\n           arch:target ?object .\n    FILTER NOT EXISTS { ?write rdf:type am4:ReadAccess }\n  }\n  OPTIONAL { ?object skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY DESC(?readers) ?label",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate4/viewpoints#InformationStructureViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per domain, with the number of elements in it.",
+   "concerns": [
+    "https://meta.linked.archi/archimate4/viewpoints#Completeness",
+    "https://meta.linked.archi/archimate4/viewpoints#ReductionOfComplexity"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 50,
+   "description": "Elements counted by ArchiMate 4.0 domain, read from the domain classes their types specialise, so specialisations count where they belong.",
+   "does_not_prove": "Balance. Behaviour of the common domain (process, function, service, event, role …) is counted under am4:CommonDomainElement, because ArchiMate 4.0 gives it no domain of its own.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate4/elements-by-domain",
+   "iri": "https://meta.linked.archi/archimate4/questions#elements-by-domain",
+   "label": "How is the model spread over the ArchiMate domains?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate4/onto#"
+   ],
+   "parameters": [
+    {
+     "description": "The model to count. A modelling tool binds the open model; a deliverable, the model it is produced from.",
+     "name": "model",
+     "optional": true,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#model",
+     "variable": "model"
+    }
+   ],
+   "prefixes": {
+    "am4": "https://meta.linked.archi/archimate4/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": true,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "domains",
+   "set": "https://meta.linked.archi/archimate4/questions#",
+   "severity": "",
+   "stage": "orientation",
+   "stakeholders": [],
+   "text": "SELECT ?domain (COUNT(DISTINCT ?element) AS ?elements)\nWHERE {\n  # Each domain's types, read once.\n  {\n    SELECT DISTINCT ?domain ?type\n    WHERE {\n      VALUES ?domain {\n        am4:StrategyElement am4:MotivationElement am4:BusinessDomainElement\n        am4:ApplicationDomainElement am4:TechnologyDomainElement am4:ImplementationAndMigrationDomainElement\n        am4:CommonDomainElement\n      }\n      { ?domainType rdfs:subClassOf* ?domain } UNION { GRAPH ?ontologyGraph { ?domainType rdfs:subClassOf* ?domain } }\n      { ?type rdfs:subClassOf* ?domainType } UNION { GRAPH ?specialisationGraph { ?type rdfs:subClassOf* ?domainType } }\n    }\n  }\n  ?element rdf:type ?type ;\n           arch:inModel ?model .\n}\nGROUP BY ?domain\nORDER BY DESC(?elements)",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate4/viewpoints#LayeredViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per element that depends on the element, directly or through others.",
+   "concerns": [
+    "https://meta.linked.archi/archimate4/viewpoints#Dependencies",
+    "https://meta.linked.archi/archimate4/viewpoints#ImpactOfChange"
+   ],
+   "dataset": "model",
+   "default_limit": 500,
+   "description": "Everything that depends on the element, transitively, by ArchiMate's dependency relationships: what it serves, realises or is assigned to, and what accesses it.",
+   "does_not_prove": "That each is broken by the change. Dynamic relationships (flow, triggering) and structure (composition, aggregation) are not followed, and a dependency may tolerate the change.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate4/impact-of-change",
+   "iri": "https://meta.linked.archi/archimate4/questions#impact-of-change",
+   "label": "What is affected if this element changes?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate4/onto#"
+   ],
+   "parameters": [
+    {
+     "description": "The element that changes. A modelling tool binds the selected element; a deliverable, the element it is produced for.",
+     "name": "focus",
+     "optional": false,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#focus",
+     "variable": "focus"
+    }
+   ],
+   "prefixes": {
+    "am4": "https://meta.linked.archi/archimate4/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "impacted",
+   "set": "https://meta.linked.archi/archimate4/questions#",
+   "severity": "",
+   "stage": "analysis",
+   "stakeholders": [
+    "https://meta.linked.archi/archimate4/viewpoints#ApplicationArchitect",
+    "https://meta.linked.archi/archimate4/viewpoints#EnterpriseArchitect",
+    "https://meta.linked.archi/archimate4/viewpoints#InfrastructureArchitect"
+   ],
+   "text": "SELECT DISTINCT ?impacted ?label ?type\nWHERE {\n  ?focus (am4:serves|am4:realizes|am4:assignedTo|^am4:accesses)+ ?impacted .\n  FILTER(?impacted != ?focus)\n  FILTER NOT EXISTS { ?impacted arch:source ?anySource }\n  ?impacted rdf:type ?type .\n  FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }\n                                        UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }\n  OPTIONAL { ?impacted skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?type ?label",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate4/viewpoints#ApplicationCooperationViewpoint",
+    "https://meta.linked.archi/archimate4/viewpoints#LayeredViewpoint",
+    "https://meta.linked.archi/archimate4/viewpoints#TechnologyUsageViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per element added or removed.",
+   "concerns": [
+    "https://meta.linked.archi/archimate4/viewpoints#ArchitectureVision",
+    "https://meta.linked.archi/archimate4/viewpoints#ModelHistory"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 1000,
+   "description": "Elements a later plateau aggregates or is composed of that an earlier one is not (added), and the reverse (removed).",
+   "does_not_prove": "The migration path. The difference is the gap; the work packages that close it are another question.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate4/plateau-difference",
+   "iri": "https://meta.linked.archi/archimate4/questions#plateau-difference",
+   "label": "What changes between these two plateaus?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate4/onto#"
+   ],
+   "parameters": [
+    {
+     "description": "The earlier plateau, such as the baseline.",
+     "name": "from",
+     "optional": false,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#from",
+     "variable": "from"
+    },
+    {
+     "description": "The later plateau, such as the target.",
+     "name": "to",
+     "optional": false,
+     "order": 2.0,
+     "path": "https://meta.linked.archi/core#to",
+     "variable": "to"
+    }
+   ],
+   "prefixes": {
+    "am4": "https://meta.linked.archi/archimate4/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "plateauChanges",
+   "set": "https://meta.linked.archi/archimate4/questions#",
+   "severity": "",
+   "stage": "analysis",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?change ?element ?label ?type\nWHERE {\n  # Both are plateaus, or a specialisation of one.\n  FILTER EXISTS {\n    ?from rdf:type ?fromType .\n    { ?fromType rdfs:subClassOf* am4:Plateau } UNION { GRAPH ?fromGraph { ?fromType rdfs:subClassOf* am4:Plateau } }\n  }\n  FILTER EXISTS {\n    ?to rdf:type ?toType .\n    { ?toType rdfs:subClassOf* am4:Plateau } UNION { GRAPH ?toGraph { ?toType rdfs:subClassOf* am4:Plateau } }\n  }\n  FILTER(?from != ?to)\n  { ?to am4:aggregates|am4:composedOf ?element . BIND(\"added\" AS ?change) }\n  UNION\n  { ?from am4:aggregates|am4:composedOf ?element . BIND(\"removed\" AS ?change) }\n  # Here, where both are bound: in the other plateau it is not.\n  FILTER(IF(?change = \"added\",\n            NOT EXISTS { ?from am4:aggregates|am4:composedOf ?element },\n            NOT EXISTS { ?to am4:aggregates|am4:composedOf ?element }))\n  ?element rdf:type ?type .\n  FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }\n                                        UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }\n  OPTIONAL { ?element skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?change ?type ?label",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate4/viewpoints#MigrationViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per relationship between a principle and another element.",
+   "concerns": [
+    "https://meta.linked.archi/archimate4/viewpoints#ArchitecturePolicies",
+    "https://meta.linked.archi/archimate4/viewpoints#Motivation"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Principles with the elements they relate to in either direction: the drivers and goals behind them, the requirements that realise them.",
+   "does_not_prove": "Compliance. A requirement realising a principle states an intent, not that designs follow it.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate4/principle-rationale",
+   "iri": "https://meta.linked.archi/archimate4/questions#principle-rationale",
+   "label": "What motivates each principle, and what does it constrain?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate4/onto#"
+   ],
+   "parameters": [],
+   "prefixes": {
+    "am4": "https://meta.linked.archi/archimate4/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "principles",
+   "set": "https://meta.linked.archi/archimate4/questions#",
+   "severity": "",
+   "stage": "analysis",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?principle ?principleLabel ?direction ?predicate ?other ?otherLabel ?otherType\nWHERE {\n  {\n    SELECT DISTINCT ?principleType\n    WHERE {\n      { ?asked rdfs:subClassOf* am4:Principle } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am4:Principle } }\n      { ?principleType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?principleType rdfs:subClassOf* ?asked } }\n    }\n  }\n  VALUES ?predicate { am4:realizes am4:influences am4:associatedWith }\n  ?principle rdf:type ?principleType .\n  { ?principle ?predicate ?other . BIND(\"outgoing\" AS ?direction) }\n  UNION\n  { ?other ?predicate ?principle . BIND(\"incoming\" AS ?direction) }\n  ?other rdf:type ?otherType .\n  FILTER(?otherType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?otherType WHERE { { ?otherType arch:isAbstractClass true }\n                                             UNION { GRAPH ?abstractClassGraph { ?otherType arch:isAbstractClass true } } } }\n  OPTIONAL { ?principle skos:prefLabel ?principleLabel . FILTER(lang(?principleLabel) = \"\" || langMatches(lang(?principleLabel), \"en\")) }\n  OPTIONAL { ?other skos:prefLabel ?otherLabel . FILTER(lang(?otherLabel) = \"\" || langMatches(lang(?otherLabel), \"en\")) }\n}\nORDER BY ?principleLabel ?direction ?otherLabel",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate4/viewpoints#MotivationViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per principle no requirement realises.",
+   "concerns": [
+    "https://meta.linked.archi/archimate4/viewpoints#ArchitecturePolicies"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Principles that no requirement realises.",
+   "does_not_prove": "That the principle is ignored. It may be applied by review rather than through stated requirements.",
+   "finding": true,
+   "finding_focus": "principle",
+   "identifier": "notation/archimate4/principles-without-requirements",
+   "iri": "https://meta.linked.archi/archimate4/questions#principles-without-requirements",
+   "label": "Which principles has no requirement made concrete?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate4/onto#"
+   ],
+   "parameters": [
+    {
+     "description": "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from.",
+     "name": "model",
+     "optional": true,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#model",
+     "variable": "model"
+    }
+   ],
+   "prefixes": {
+    "am4": "https://meta.linked.archi/archimate4/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": true,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "unbackedPrinciples",
+   "set": "https://meta.linked.archi/archimate4/questions#",
+   "severity": "info",
+   "stage": "quality",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?principle ?label\nWHERE {\n  {\n    SELECT DISTINCT ?principleType\n    WHERE {\n      { ?asked rdfs:subClassOf* am4:Principle } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am4:Principle } }\n      { ?principleType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?principleType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?principle rdf:type ?principleType ;\n             arch:inModel ?model .\n  FILTER NOT EXISTS {\n    {\n      SELECT DISTINCT ?requirementType\n      WHERE {\n        { ?askedRequirement rdfs:subClassOf* am4:Requirement } UNION { GRAPH ?requirementGraph { ?askedRequirement rdfs:subClassOf* am4:Requirement } }\n        { ?requirementType rdfs:subClassOf* ?askedRequirement } UNION { GRAPH ?requirementSpecialisationGraph { ?requirementType rdfs:subClassOf* ?askedRequirement } }\n      }\n    }\n    ?requirement am4:realizes ?principle ;\n                 rdf:type ?requirementType .\n  }\n  OPTIONAL { ?principle skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?label",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate4/viewpoints#MotivationViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per traced link: the requirement, the direction, the predicate and the element at the other end.",
+   "concerns": [
+    "https://meta.linked.archi/archimate4/viewpoints#ArchitectureTactics",
+    "https://meta.linked.archi/archimate4/viewpoints#Motivation"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 1000,
+   "description": "Requirements with what realises them, below, and the goals, outcomes and principles they realise or influence, above, as a list of links.",
+   "does_not_prove": "Verification. A realisation relationship is a design claim; it does not show the requirement is met.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate4/requirement-traceability",
+   "iri": "https://meta.linked.archi/archimate4/questions#requirement-traceability",
+   "label": "How does each requirement trace to goals and to the elements that realise it?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate4/onto#"
+   ],
+   "parameters": [],
+   "prefixes": {
+    "am4": "https://meta.linked.archi/archimate4/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "traceability",
+   "set": "https://meta.linked.archi/archimate4/questions#",
+   "severity": "",
+   "stage": "analysis",
+   "stakeholders": [
+    "https://meta.linked.archi/archimate4/viewpoints#BusinessAnalyst",
+    "https://meta.linked.archi/archimate4/viewpoints#RequirementsManager"
+   ],
+   "text": "SELECT DISTINCT ?requirement ?requirementLabel ?direction ?predicate ?other ?otherLabel ?otherType\nWHERE {\n  {\n    SELECT DISTINCT ?requirementType\n    WHERE {\n      { ?asked rdfs:subClassOf* am4:Requirement } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am4:Requirement } }\n      { ?requirementType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?requirementType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?requirement rdf:type ?requirementType .\n  {\n    ?other am4:realizes ?requirement .\n    BIND(am4:realizes AS ?predicate)\n    BIND(\"realised by\" AS ?direction)\n  }\n  UNION\n  {\n    VALUES ?predicate { am4:realizes am4:influences }\n    ?requirement ?predicate ?other .\n    BIND(\"contributes to\" AS ?direction)\n  }\n  ?other rdf:type ?otherType .\n  FILTER(?otherType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?otherType WHERE { { ?otherType arch:isAbstractClass true }\n                                             UNION { GRAPH ?abstractClassGraph { ?otherType arch:isAbstractClass true } } } }\n  OPTIONAL { ?requirement skos:prefLabel ?requirementLabel . FILTER(lang(?requirementLabel) = \"\" || langMatches(lang(?requirementLabel), \"en\")) }\n  OPTIONAL { ?other skos:prefLabel ?otherLabel . FILTER(lang(?otherLabel) = \"\" || langMatches(lang(?otherLabel), \"en\")) }\n}\nORDER BY ?requirementLabel ?direction ?otherLabel",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate4/viewpoints#GoalRealizationViewpoint",
+    "https://meta.linked.archi/archimate4/viewpoints#RequirementsRealizationViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per assignment, with both ends and their types.",
+   "concerns": [
+    "https://meta.linked.archi/archimate4/viewpoints#CompetenciesAuthorityResponsibilities",
+    "https://meta.linked.archi/archimate4/viewpoints#Responsibilities"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Assignment relationships: which actor, role, collaboration, component or node performs which behaviour or plays which role.",
+   "does_not_prove": "Accountability in the RACI sense. An ArchiMate assignment states who performs, not who answers for the outcome.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate4/responsibility-assignments",
+   "iri": "https://meta.linked.archi/archimate4/questions#responsibility-assignments",
+   "label": "Who is responsible for what?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate4/onto#"
+   ],
+   "parameters": [],
+   "prefixes": {
+    "am4": "https://meta.linked.archi/archimate4/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "assignments",
+   "set": "https://meta.linked.archi/archimate4/questions#",
+   "severity": "",
+   "stage": "analysis",
+   "stakeholders": [
+    "https://meta.linked.archi/archimate4/viewpoints#Manager",
+    "https://meta.linked.archi/archimate4/viewpoints#ProcessArchitect"
+   ],
+   "text": "SELECT DISTINCT ?performer ?performerLabel ?performerType ?assignment ?assigned ?assignedLabel ?assignedType\nWHERE {\n  {\n    SELECT DISTINCT ?assignmentType\n    WHERE {\n      { ?asked rdfs:subClassOf* am4:Assignment } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am4:Assignment } }\n      { ?assignmentType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?assignmentType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?assignment rdf:type ?assignmentType ;\n              arch:source ?performer ;\n              arch:target ?assigned .\n  ?performer rdf:type ?performerType .\n  ?assigned rdf:type ?assignedType .\n  FILTER(?performerType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  FILTER(?assignedType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?performerType WHERE { { ?performerType arch:isAbstractClass true }\n                                                 UNION { GRAPH ?abstractClassGraph { ?performerType arch:isAbstractClass true } } } }\n  MINUS { SELECT DISTINCT ?assignedType WHERE { { ?assignedType arch:isAbstractClass true }\n                                                UNION { GRAPH ?abstractClassGraph { ?assignedType arch:isAbstractClass true } } } }\n  OPTIONAL { ?performer skos:prefLabel ?performerLabel . FILTER(lang(?performerLabel) = \"\" || langMatches(lang(?performerLabel), \"en\")) }\n  OPTIONAL { ?assigned skos:prefLabel ?assignedLabel . FILTER(lang(?assignedLabel) = \"\" || langMatches(lang(?assignedLabel), \"en\")) }\n}\nORDER BY ?performerLabel ?assignedLabel",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate4/viewpoints#OrganizationViewpoint",
+    "https://meta.linked.archi/archimate4/viewpoints#ProcessCooperationViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per relationship between a stakeholder and a motivation element.",
+   "concerns": [
+    "https://meta.linked.archi/archimate4/viewpoints#ArchitectureMission",
+    "https://meta.linked.archi/archimate4/viewpoints#Motivation"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Stakeholders and the motivation elements (drivers, assessments, goals, outcomes, principles, requirements, values, meanings) they are related to, in either direction.",
+   "does_not_prove": "Priority. That a stakeholder is associated with a goal does not rank it among their concerns.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate4/stakeholder-motivation",
+   "iri": "https://meta.linked.archi/archimate4/questions#stakeholder-motivation",
+   "label": "What do stakeholders care about?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate4/onto#"
+   ],
+   "parameters": [],
+   "prefixes": {
+    "am4": "https://meta.linked.archi/archimate4/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "stakeholderMotivation",
+   "set": "https://meta.linked.archi/archimate4/questions#",
+   "severity": "",
+   "stage": "analysis",
+   "stakeholders": [
+    "https://meta.linked.archi/archimate4/viewpoints#BusinessManager",
+    "https://meta.linked.archi/archimate4/viewpoints#EnterpriseArchitect"
+   ],
+   "text": "SELECT DISTINCT ?stakeholder ?stakeholderLabel ?direction ?predicate ?motivation ?motivationLabel ?motivationType\nWHERE {\n  {\n    SELECT DISTINCT ?stakeholderType\n    WHERE {\n      { ?asked rdfs:subClassOf* am4:Stakeholder } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am4:Stakeholder } }\n      { ?stakeholderType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?stakeholderType rdfs:subClassOf* ?asked } }\n    }\n  }\n  {\n    SELECT DISTINCT ?motivationType\n    WHERE {\n      { ?motivationLayerType rdfs:subClassOf* am4:MotivationElement } UNION { GRAPH ?motivationGraph { ?motivationLayerType rdfs:subClassOf* am4:MotivationElement } }\n      { ?motivationType rdfs:subClassOf* ?motivationLayerType } UNION { GRAPH ?motivationSpecialisationGraph { ?motivationType rdfs:subClassOf* ?motivationLayerType } }\n    }\n  }\n  VALUES ?predicate { am4:associatedWith am4:influences am4:realizes am4:aggregates am4:composedOf }\n  ?stakeholder rdf:type ?stakeholderType .\n  { ?stakeholder ?predicate ?motivation . BIND(\"outgoing\" AS ?direction) }\n  UNION\n  { ?motivation ?predicate ?stakeholder . BIND(\"incoming\" AS ?direction) }\n  ?motivation rdf:type ?motivationType .\n  MINUS { SELECT DISTINCT ?motivationType WHERE { { ?motivationType arch:isAbstractClass true }\n                                                  UNION { GRAPH ?abstractClassGraph { ?motivationType arch:isAbstractClass true } } } }\n  OPTIONAL { ?stakeholder skos:prefLabel ?stakeholderLabel . FILTER(lang(?stakeholderLabel) = \"\" || langMatches(lang(?stakeholderLabel), \"en\")) }\n  OPTIONAL { ?motivation skos:prefLabel ?motivationLabel . FILTER(lang(?motivationLabel) = \"\" || langMatches(lang(?motivationLabel), \"en\")) }\n}\nORDER BY ?stakeholderLabel ?direction ?motivationLabel",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate4/viewpoints#StakeholderViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per process or function without a performer.",
+   "concerns": [
+    "https://meta.linked.archi/archimate4/viewpoints#Completeness",
+    "https://meta.linked.archi/archimate4/viewpoints#Responsibilities"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Processes and functions that no active structure element is assigned to.",
+   "does_not_prove": "That nobody performs it. The performer may be assigned to an enclosing process, or the model may stop above that level of detail.",
+   "finding": true,
+   "finding_focus": "behaviour",
+   "identifier": "notation/archimate4/unassigned-behaviour",
+   "iri": "https://meta.linked.archi/archimate4/questions#unassigned-behaviour",
+   "label": "Which processes and functions has nobody been assigned to?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate4/onto#"
+   ],
+   "parameters": [
+    {
+     "description": "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from.",
+     "name": "model",
+     "optional": true,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#model",
+     "variable": "model"
+    }
+   ],
+   "prefixes": {
+    "am4": "https://meta.linked.archi/archimate4/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": true,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "unassigned",
+   "set": "https://meta.linked.archi/archimate4/questions#",
+   "severity": "warning",
+   "stage": "quality",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?behaviour ?label ?type\nWHERE {\n  {\n    SELECT DISTINCT ?type ?behaviourType\n    WHERE {\n      VALUES ?type { am4:Process am4:Function }\n      { ?asked rdfs:subClassOf* ?type } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* ?type } }\n      { ?behaviourType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?behaviourType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?behaviour rdf:type ?behaviourType ;\n             arch:inModel ?model .\n  FILTER NOT EXISTS { ?performer am4:assignedTo ?behaviour }\n  OPTIONAL { ?behaviour skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?type ?label",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate4/viewpoints#OrganizationViewpoint",
+    "https://meta.linked.archi/archimate4/viewpoints#ProcessCooperationViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per capability with no realisation anywhere beneath it.",
+   "concerns": [
+    "https://meta.linked.archi/archimate4/viewpoints#Completeness",
+    "https://meta.linked.archi/archimate4/viewpoints#StrategyDevelopment"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Capabilities realised neither directly nor through any capability they are composed of or aggregate.",
+   "does_not_prove": "That the enterprise lacks the capability; only that the model does not say what delivers it.",
+   "finding": true,
+   "finding_focus": "capability",
+   "identifier": "notation/archimate4/unrealised-capabilities",
+   "iri": "https://meta.linked.archi/archimate4/questions#unrealised-capabilities",
+   "label": "Which capabilities does nothing realise?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate4/onto#"
+   ],
+   "parameters": [
+    {
+     "description": "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from.",
+     "name": "model",
+     "optional": true,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#model",
+     "variable": "model"
+    }
+   ],
+   "prefixes": {
+    "am4": "https://meta.linked.archi/archimate4/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": true,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "unrealisedCapabilities",
+   "set": "https://meta.linked.archi/archimate4/questions#",
+   "severity": "info",
+   "stage": "quality",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?capability ?label\nWHERE {\n  {\n    SELECT DISTINCT ?capabilityType\n    WHERE {\n      { ?asked rdfs:subClassOf* am4:Capability } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am4:Capability } }\n      { ?capabilityType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?capabilityType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?capability rdf:type ?capabilityType ;\n              arch:inModel ?model .\n  FILTER NOT EXISTS {\n    ?capability (am4:composedOf|am4:aggregates)* ?part .\n    ?realizer am4:realizes ?part .\n  }\n  OPTIONAL { ?capability skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?label",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate4/viewpoints#CapabilityMapViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per requirement without a realising design element.",
+   "concerns": [
+    "https://meta.linked.archi/archimate4/viewpoints#ArchitectureTactics",
+    "https://meta.linked.archi/archimate4/viewpoints#Motivation"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Requirements that no element outside the motivation domain realises: realisation by another motivation element does not count.",
+   "does_not_prove": "That the requirement is unmet; only that the model does not show what meets it.",
+   "finding": true,
+   "finding_focus": "requirement",
+   "identifier": "notation/archimate4/unrealised-requirements",
+   "iri": "https://meta.linked.archi/archimate4/questions#unrealised-requirements",
+   "label": "Which requirements does no architecture element realise?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate4/onto#"
+   ],
+   "parameters": [
+    {
+     "description": "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from.",
+     "name": "model",
+     "optional": true,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#model",
+     "variable": "model"
+    }
+   ],
+   "prefixes": {
+    "am4": "https://meta.linked.archi/archimate4/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": true,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "unrealisedRequirements",
+   "set": "https://meta.linked.archi/archimate4/questions#",
+   "severity": "warning",
+   "stage": "quality",
+   "stakeholders": [
+    "https://meta.linked.archi/archimate4/viewpoints#RequirementsManager"
+   ],
+   "text": "SELECT DISTINCT ?requirement ?label\nWHERE {\n  {\n    SELECT DISTINCT ?requirementType\n    WHERE {\n      { ?asked rdfs:subClassOf* am4:Requirement } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am4:Requirement } }\n      { ?requirementType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?requirementType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?requirement rdf:type ?requirementType ;\n               arch:inModel ?model .\n  # Realised by a design element: one whose own type is outside the motivation domain.\n  MINUS {\n    ?realizer am4:realizes ?requirement ;\n              rdf:type ?realizerType .\n    FILTER(?realizerType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n    MINUS { SELECT DISTINCT ?realizerType WHERE { { ?realizerType arch:isAbstractClass true }\n                                                  UNION { GRAPH ?abstractClassGraph { ?realizerType arch:isAbstractClass true } } } }\n    MINUS {\n      SELECT DISTINCT ?realizerType\n      WHERE {\n        { ?motivationType rdfs:subClassOf* am4:MotivationElement }\n        UNION { GRAPH ?motivationGraph { ?motivationType rdfs:subClassOf* am4:MotivationElement } }\n        { ?realizerType rdfs:subClassOf* ?motivationType }\n        UNION { GRAPH ?motivationSpecialisationGraph { ?realizerType rdfs:subClassOf* ?motivationType } }\n      }\n    }\n  }\n  OPTIONAL { ?requirement skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?label",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate4/viewpoints#RequirementsRealizationViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per service nothing realises.",
+   "concerns": [
+    "https://meta.linked.archi/archimate4/viewpoints#AddedValueOfProcesses",
+    "https://meta.linked.archi/archimate4/viewpoints#Completeness"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Services that no behaviour or active structure element realises.",
+   "does_not_prove": "That the service is not delivered: it may be bought in, or realised in a model that is not loaded.",
+   "finding": true,
+   "finding_focus": "service",
+   "identifier": "notation/archimate4/unrealised-services",
+   "iri": "https://meta.linked.archi/archimate4/questions#unrealised-services",
+   "label": "Which services does nothing realise?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate4/onto#"
+   ],
+   "parameters": [
+    {
+     "description": "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from.",
+     "name": "model",
+     "optional": true,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#model",
+     "variable": "model"
+    }
+   ],
+   "prefixes": {
+    "am4": "https://meta.linked.archi/archimate4/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": true,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "unrealisedServices",
+   "set": "https://meta.linked.archi/archimate4/questions#",
+   "severity": "warning",
+   "stage": "quality",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?service ?label\nWHERE {\n  {\n    SELECT DISTINCT ?type ?serviceType\n    WHERE {\n      VALUES ?type { am4:Service }\n      { ?asked rdfs:subClassOf* ?type } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* ?type } }\n      { ?serviceType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?serviceType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?service rdf:type ?serviceType ;\n           arch:inModel ?model .\n  FILTER NOT EXISTS { ?realizer am4:realizes ?service }\n  OPTIONAL { ?service skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?label",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate4/viewpoints#ProcessCooperationViewpoint",
+    "https://meta.linked.archi/archimate4/viewpoints#ServiceRealizationViewpoint"
+   ]
+  },
+  {
+   "answers": "One row per element: name, type, definition and a \"relationship → target\" summary of what it points to.",
+   "concerns": [],
+   "dataset": "model-and-metamodel",
+   "default_limit": 1000,
+   "description": "What belongs in a view of an ArchiMate 4.0 viewpoint. ArchiMate 4.0 places process,\nfunction, service, event and role in a common domain, and viewpoints such as the Technology Viewpoint admit them;\nlisted whenever their type is admitted, every business process would belong in a technology view. An element of the\ncommon domain therefore belongs when a relationship connects it, in either direction, to an element of a\ndomain-specific type the same viewpoint admits; every other element belongs when the viewpoint admits its type.",
+   "does_not_prove": "That an element of the common domain left out is irrelevant to the viewpoint; only that nothing of a domain-specific type the viewpoint admits is related to it.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate4/viewpoint-scope",
+   "iri": "https://meta.linked.archi/archimate4/questions#viewpoint-scope",
+   "label": "What in the model belongs in a view of this ArchiMate viewpoint?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate4/onto#"
+   ],
+   "parameters": [
+    {
+     "description": "A viewpoint. A modelling tool binds the open view's viewpoint; a deliverable, the section's.",
+     "name": "viewpoint",
+     "optional": false,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#viewpoint",
+     "variable": "viewpoint"
+    },
+    {
+     "description": "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from.",
+     "name": "model",
+     "optional": true,
+     "order": 2.0,
+     "path": "https://meta.linked.archi/core#model",
+     "variable": "model"
+    }
+   ],
+   "prefixes": {
+    "am4": "https://meta.linked.archi/archimate4/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": true,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": true
+   },
+   "result_key": "scope",
+   "set": "https://meta.linked.archi/archimate4/questions#",
+   "severity": "",
+   "stage": "views",
+   "stakeholders": [],
+   "text": "SELECT ?element (SAMPLE(?anyLabel) AS ?label) ?type (SAMPLE(?anyDefinition) AS ?definition)\n       (GROUP_CONCAT(DISTINCT ?link; separator = \"; \") AS ?outgoing)\nWHERE {\n  {\n    # Elements of a domain-specific type the viewpoint admits.\n    {\n      SELECT DISTINCT ?viewpoint ?type\n      WHERE {\n        { ?viewpoint arch:includesConcept ?admitted } UNION { GRAPH ?admittingGraph { ?viewpoint arch:includesConcept ?admitted } }\n        { ?type rdfs:subClassOf* ?admitted } UNION { GRAPH ?hierarchyGraph { ?type rdfs:subClassOf* ?admitted } }\n        MINUS {\n          SELECT DISTINCT ?type\n          WHERE {\n            { ?commonType rdfs:subClassOf* am4:CommonDomainElement } UNION { GRAPH ?commonGraph { ?commonType rdfs:subClassOf* am4:CommonDomainElement } }\n            { ?type rdfs:subClassOf* ?commonType } UNION { GRAPH ?commonSpecialisationGraph { ?type rdfs:subClassOf* ?commonType } }\n          }\n        }\n      }\n    }\n    ?element rdf:type ?type ;\n             arch:inModel ?model .\n  }\n  UNION\n  {\n    # Elements of a common-domain type the viewpoint admits, connected to one of a domain-specific type it\n    # admits. The connected elements are found as a set first: per viewpoint, the elements at the other end\n    # of a relationship from an element of an admitted domain-specific type.\n    {\n      SELECT DISTINCT ?viewpoint ?element\n      WHERE {\n        {\n          SELECT DISTINCT ?viewpoint ?anchorType\n          WHERE {\n            { ?viewpoint arch:includesConcept ?anchorAdmitted } UNION { GRAPH ?anchorAdmittingGraph { ?viewpoint arch:includesConcept ?anchorAdmitted } }\n            { ?anchorType rdfs:subClassOf* ?anchorAdmitted } UNION { GRAPH ?anchorHierarchyGraph { ?anchorType rdfs:subClassOf* ?anchorAdmitted } }\n            MINUS {\n              SELECT DISTINCT ?anchorType\n              WHERE {\n                { ?anchorCommonType rdfs:subClassOf* am4:CommonDomainElement } UNION { GRAPH ?anchorCommonGraph { ?anchorCommonType rdfs:subClassOf* am4:CommonDomainElement } }\n                { ?anchorType rdfs:subClassOf* ?anchorCommonType } UNION { GRAPH ?anchorCommonSpecialisationGraph { ?anchorType rdfs:subClassOf* ?anchorCommonType } }\n              }\n            }\n          }\n        }\n        ?anchor rdf:type ?anchorType .\n        { ?connection arch:source ?anchor ; arch:target ?element }\n        UNION\n        { ?connection arch:target ?anchor ; arch:source ?element }\n      }\n    }\n    ?element rdf:type ?type ;\n             arch:inModel ?model .\n    {\n      SELECT DISTINCT ?viewpoint ?type\n      WHERE {\n        { ?viewpoint arch:includesConcept ?admitted } UNION { GRAPH ?admittingGraph { ?viewpoint arch:includesConcept ?admitted } }\n        { ?type rdfs:subClassOf* ?admitted } UNION { GRAPH ?hierarchyGraph { ?type rdfs:subClassOf* ?admitted } }\n        {\n          SELECT DISTINCT ?type\n          WHERE {\n            { ?commonType rdfs:subClassOf* am4:CommonDomainElement } UNION { GRAPH ?commonGraph { ?commonType rdfs:subClassOf* am4:CommonDomainElement } }\n            { ?type rdfs:subClassOf* ?commonType } UNION { GRAPH ?commonSpecialisationGraph { ?type rdfs:subClassOf* ?commonType } }\n          }\n        }\n      }\n    }\n  }\n  FILTER NOT EXISTS { ?element arch:source ?anySource }\n  OPTIONAL { ?element skos:prefLabel ?anyLabel . FILTER(lang(?anyLabel) = \"\" || langMatches(lang(?anyLabel), \"en\")) }\n  OPTIONAL { ?element skos:definition ?anyDefinition . FILTER(lang(?anyDefinition) = \"\" || langMatches(lang(?anyDefinition), \"en\")) }\n  OPTIONAL {\n    ?relationship arch:source ?element ;\n                  arch:target ?other ;\n                  rdf:type ?relationshipType .\n    FILTER(?relationshipType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n    MINUS { SELECT DISTINCT ?relationshipType WHERE { { ?relationshipType arch:isAbstractClass true }\n                                                      UNION { GRAPH ?abstractClassGraph { ?relationshipType arch:isAbstractClass true } } } }\n    OPTIONAL { ?other skos:prefLabel ?otherLabel . FILTER(lang(?otherLabel) = \"\" || langMatches(lang(?otherLabel), \"en\")) }\n    BIND(CONCAT(REPLACE(STR(?relationshipType), \"^.*[#/]\", \"\"), \" → \",\n                COALESCE(STR(?otherLabel), STR(?other))) AS ?link)\n  }\n}\nGROUP BY ?element ?type\nORDER BY ?type ?label",
+   "viewpoints": []
+  },
+  {
+   "answers": "One row per work package, deliverable and element realised.",
+   "concerns": [
+    "https://meta.linked.archi/archimate4/viewpoints#ArchitecturePolicies",
+    "https://meta.linked.archi/archimate4/viewpoints#ArchitectureVision"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Work packages, the deliverables they realise, and the architecture elements those deliverables realise.",
+   "does_not_prove": "Schedule or progress. ArchiMate records what a work package produces, not when.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate4/work-package-deliverables",
+   "iri": "https://meta.linked.archi/archimate4/questions#work-package-deliverables",
+   "label": "What does each work package deliver, and what does that realise?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate4/onto#"
+   ],
+   "parameters": [],
+   "prefixes": {
+    "am4": "https://meta.linked.archi/archimate4/onto#",
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "workPackages",
+   "set": "https://meta.linked.archi/archimate4/questions#",
+   "severity": "",
+   "stage": "analysis",
+   "stakeholders": [
+    "https://meta.linked.archi/archimate4/viewpoints#EnterpriseArchitect",
+    "https://meta.linked.archi/archimate4/viewpoints#OperationalManager"
+   ],
+   "text": "SELECT DISTINCT ?workPackage ?workPackageLabel ?deliverable ?deliverableLabel ?realized ?realizedLabel ?realizedType\nWHERE {\n  {\n    SELECT DISTINCT ?workPackageType\n    WHERE {\n      { ?asked rdfs:subClassOf* am4:WorkPackage } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am4:WorkPackage } }\n      { ?workPackageType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?workPackageType rdfs:subClassOf* ?asked } }\n    }\n  }\n  {\n    SELECT DISTINCT ?deliverableType\n    WHERE {\n      { ?askedDeliverable rdfs:subClassOf* am4:Deliverable } UNION { GRAPH ?deliverableGraph { ?askedDeliverable rdfs:subClassOf* am4:Deliverable } }\n      { ?deliverableType rdfs:subClassOf* ?askedDeliverable } UNION { GRAPH ?deliverableSpecialisationGraph { ?deliverableType rdfs:subClassOf* ?askedDeliverable } }\n    }\n  }\n  ?workPackage rdf:type ?workPackageType ;\n               am4:realizes ?deliverable .\n  ?deliverable rdf:type ?deliverableType .\n  OPTIONAL {\n    ?deliverable am4:realizes ?realized .\n    ?realized rdf:type ?realizedType .\n    FILTER(?realizedType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n    MINUS { SELECT DISTINCT ?realizedType WHERE { { ?realizedType arch:isAbstractClass true }\n                                                  UNION { GRAPH ?abstractClassGraph { ?realizedType arch:isAbstractClass true } } } }\n    OPTIONAL { ?realized skos:prefLabel ?realizedLabel . FILTER(lang(?realizedLabel) = \"\" || langMatches(lang(?realizedLabel), \"en\")) }\n  }\n  OPTIONAL { ?workPackage skos:prefLabel ?workPackageLabel . FILTER(lang(?workPackageLabel) = \"\" || langMatches(lang(?workPackageLabel), \"en\")) }\n  OPTIONAL { ?deliverable skos:prefLabel ?deliverableLabel . FILTER(lang(?deliverableLabel) = \"\" || langMatches(lang(?deliverableLabel), \"en\")) }\n}\nORDER BY ?workPackageLabel ?deliverableLabel",
+   "viewpoints": [
+    "https://meta.linked.archi/archimate4/viewpoints#ImplementationAndMigrationViewpoint",
+    "https://meta.linked.archi/archimate4/viewpoints#ProjectViewpoint"
+   ]
+  }
+ ],
+ "sets": [
+  {
+   "file": "core-questions.ttl",
+   "iri": "https://meta.linked.archi/core-questions#",
+   "published": "https://meta.linked.archi/core-questions/ontology.ttl",
+   "version": "0.1.0"
+  },
+  {
+   "file": "archimate4-questions.ttl",
+   "iri": "https://meta.linked.archi/archimate4/questions#",
+   "published": "https://meta.linked.archi/archimate4/questions/ontology.ttl",
+   "version": "0.1.0"
+  },
+  {
+   "file": "archimate3.2-questions.ttl",
+   "iri": "https://meta.linked.archi/archimate3/questions#",
+   "published": "https://meta.linked.archi/archimate3/questions/ontology.ttl",
+   "version": "0.1.0"
+  }
+ ],
+ "unqualified_forms": [
+  "https://meta.linked.archi/archimate3/onto#accesses",
+  "https://meta.linked.archi/archimate3/onto#aggregates",
+  "https://meta.linked.archi/archimate3/onto#assignedTo",
+  "https://meta.linked.archi/archimate3/onto#associatedWith",
+  "https://meta.linked.archi/archimate3/onto#composedOf",
+  "https://meta.linked.archi/archimate3/onto#flowsTo",
+  "https://meta.linked.archi/archimate3/onto#influences",
+  "https://meta.linked.archi/archimate3/onto#realizes",
+  "https://meta.linked.archi/archimate3/onto#serves",
+  "https://meta.linked.archi/archimate3/onto#specializes",
+  "https://meta.linked.archi/archimate3/onto#triggers",
+  "https://meta.linked.archi/archimate4/onto#accesses",
+  "https://meta.linked.archi/archimate4/onto#aggregates",
+  "https://meta.linked.archi/archimate4/onto#assignedTo",
+  "https://meta.linked.archi/archimate4/onto#associatedWith",
+  "https://meta.linked.archi/archimate4/onto#composedOf",
+  "https://meta.linked.archi/archimate4/onto#flowsTo",
+  "https://meta.linked.archi/archimate4/onto#influences",
+  "https://meta.linked.archi/archimate4/onto#realizes",
+  "https://meta.linked.archi/archimate4/onto#serves",
+  "https://meta.linked.archi/archimate4/onto#specializes",
+  "https://meta.linked.archi/archimate4/onto#triggers",
+  "https://meta.linked.archi/backstage/onto#belongsToDomain",
+  "https://meta.linked.archi/backstage/onto#childOf",
+  "https://meta.linked.archi/backstage/onto#consumesAPI",
+  "https://meta.linked.archi/backstage/onto#dependsOn",
+  "https://meta.linked.archi/backstage/onto#memberOf",
+  "https://meta.linked.archi/backstage/onto#ownedBy",
+  "https://meta.linked.archi/backstage/onto#partOfSystem",
+  "https://meta.linked.archi/backstage/onto#providesAPI",
+  "https://meta.linked.archi/backstage/onto#scaffoldedFrom",
+  "https://meta.linked.archi/backstage/onto#subcomponentOf",
+  "https://meta.linked.archi/backstage/onto#subdomainOf",
+  "https://meta.linked.archi/backstage/onto#techdocsDelegatedTo",
+  "https://meta.linked.archi/backstage/onto#usesResource",
+  "https://meta.linked.archi/basic#aggregation",
+  "https://meta.linked.archi/basic#association",
+  "https://meta.linked.archi/basic#connection",
+  "https://meta.linked.archi/bpmn-lite/onto#dataAssociation",
+  "https://meta.linked.archi/bpmn-lite/onto#messageFlow",
+  "https://meta.linked.archi/bpmn-lite/onto#sequenceFlow",
+  "https://meta.linked.archi/c4/onto#hasComponent",
+  "https://meta.linked.archi/c4/onto#hasContainer",
+  "https://meta.linked.archi/c4/onto#uses",
+  "https://meta.linked.archi/c4/structurizr#deployedOn",
+  "https://meta.linked.archi/edgy/onto#flowsTo",
+  "https://meta.linked.archi/edgy/onto#linksTo",
+  "https://meta.linked.archi/edgy/onto#partOf",
+  "https://meta.linked.archi/leanix/onto#categorizedBy",
+  "https://meta.linked.archi/leanix/onto#composedOf",
+  "https://meta.linked.archi/leanix/onto#consumesInterface",
+  "https://meta.linked.archi/leanix/onto#contextRealizes",
+  "https://meta.linked.archi/leanix/onto#drives",
+  "https://meta.linked.archi/leanix/onto#hasInterface",
+  "https://meta.linked.archi/leanix/onto#impacts",
+  "https://meta.linked.archi/leanix/onto#parentOf",
+  "https://meta.linked.archi/leanix/onto#partOfPlatform",
+  "https://meta.linked.archi/leanix/onto#providedBy",
+  "https://meta.linked.archi/leanix/onto#requires",
+  "https://meta.linked.archi/leanix/onto#supports",
+  "https://meta.linked.archi/leanix/onto#supportsContext",
+  "https://meta.linked.archi/leanix/onto#targetsCapability",
+  "https://meta.linked.archi/leanix/onto#usedByOrg",
+  "https://meta.linked.archi/leanix/onto#usesData",
+  "https://meta.linked.archi/uml/onto#abstracts",
+  "https://meta.linked.archi/uml/onto#aggregates",
+  "https://meta.linked.archi/uml/onto#associatedWith",
+  "https://meta.linked.archi/uml/onto#composedOf",
+  "https://meta.linked.archi/uml/onto#dependsOn",
+  "https://meta.linked.archi/uml/onto#deployedOn",
+  "https://meta.linked.archi/uml/onto#extends",
+  "https://meta.linked.archi/uml/onto#generalizes",
+  "https://meta.linked.archi/uml/onto#importsPackage",
+  "https://meta.linked.archi/uml/onto#includes",
+  "https://meta.linked.archi/uml/onto#mergesPackage",
+  "https://meta.linked.archi/uml/onto#realizes",
+  "https://meta.linked.archi/uml/onto#realizesInterface",
+  "https://meta.linked.archi/uml/onto#uses"
+ ],
+ "version": 1
+}

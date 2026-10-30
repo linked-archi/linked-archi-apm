@@ -325,7 +325,7 @@ This is a refusal, not an empty result: running it anyway would return no rows a
 
 | Profile | Extends | Describes |
 |---|---|---|
-| `linked-archi-default` | — | Converter output with default flags: qualified relationships only, model resources in their own graph, a semantic graph per input, membership as a direct `arch:inModel` edge. |
+| `linked-archi-default` | — | Converter output with qualified relationships only (an older converter, or `--no-emit-direct-rel-triples`): model resources in their own graph, a semantic graph per input, membership as a direct `arch:inModel` edge. |
 | `linked-archi-direct` | default | Output with `--emit-direct-rel-triples`. Traversal templates become available; double-counting becomes possible. |
 | `linked-archi-merged` | default | Merged multi-model store with an authored reconciliation graph. |
 | `examples/curated-store` | merged | Reconciliation graph, direct triples and a loaded SHACL report. The profile `fixtures/augmented.trig` is built for. |

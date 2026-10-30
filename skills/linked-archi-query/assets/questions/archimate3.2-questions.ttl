@@ -1,0 +1,968 @@
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix bibo:    <http://purl.org/ontology/bibo/> .
+@prefix cc:      <http://creativecommons.org/ns#> .
+@prefix vann:    <http://purl.org/vocab/vann/> .
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix arch:    <https://meta.linked.archi/core#> .
+@prefix amvp:    <https://meta.linked.archi/archimate3/viewpoints#> .
+@prefix :        <https://meta.linked.archi/archimate3/questions#> .
+
+#################################################################
+# Linked.Archi ArchiMate 3.2 Questions
+#
+# Questions ArchiMate 3.2 stakeholders ask of a model, bound to the
+# concerns the ArchiMate 3.2 viewpoints frame (amvp:ImpactOfChange,
+# amvp:Completeness …) and to the viewpoints they fit, so a modelling
+# tool offers them beside an open view and a deliverable section asks
+# them for a concern. Written as the core questions are (see
+# arch:ModelQuestion).
+#
+# Layer membership is read from the ArchiMate 3.2 layer classes
+# (am:BusinessLayerElement …). Every type a question asks about is
+# read as a set, once per query, in two steps — the types under it
+# within each document, then their specialisations in any document —
+# so a subtype the language defines (am:Constraint under
+# am:Requirement, am:Device under am:Node) and a model's own
+# specialisation count where the type does.
+#
+# What a view of a viewpoint should hold is the core question
+# (core/viewpoint-scope): each ArchiMate 3.2 type belongs to a layer,
+# so the type a viewpoint admits is enough.
+#################################################################
+
+<https://meta.linked.archi/archimate3/questions#>
+    a                             arch:QuestionSet ;
+    cc:license                    "http://creativecommons.org/licenses/by/4.0/" ;
+    vann:preferredNamespaceUri    "https://meta.linked.archi/archimate3/questions#" ;
+    vann:preferredNamespacePrefix "amq" ;
+    dcterms:creator               "Kalin Maldzhanski"^^xsd:string ;
+    dcterms:title                 "Linked.Archi ArchiMate 3.2 Questions"@en ;
+    dcterms:description           '''Questions ArchiMate 3.2 stakeholders ask of a model — impact of change, application
+dependencies, data access, responsibilities, realisation and traceability — and the findings that show where a
+concern the ArchiMate 3.2 viewpoints frame is not met. Each is executable SPARQL (see arch:ModelQuestion).'''@en ;
+    dcterms:created               "2026-10-27"^^xsd:date ;
+    dcterms:modified              "2026-10-27"^^xsd:date ;
+    dcterms:publisher             "Linked.Archi"@en, <https://linked.archi> ;
+    bibo:status                   "draft" ;
+    owl:versionInfo               "0.1.0" ;
+    sh:declare
+        [ sh:prefix "arch" ; sh:namespace "https://meta.linked.archi/core#"^^xsd:anyURI ],
+        [ sh:prefix "rdf" ; sh:namespace "http://www.w3.org/1999/02/22-rdf-syntax-ns#"^^xsd:anyURI ],
+        [ sh:prefix "rdfs" ; sh:namespace "http://www.w3.org/2000/01/rdf-schema#"^^xsd:anyURI ],
+        [ sh:prefix "skos" ; sh:namespace "http://www.w3.org/2004/02/skos/core#"^^xsd:anyURI ],
+        [ sh:prefix "am" ; sh:namespace "https://meta.linked.archi/archimate3/onto#"^^xsd:anyURI ] ;
+.
+
+# ── Orientation ─────────────────────────────────────────────────
+
+:elements-by-layer
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "notation/archimate/elements-by-layer" ;
+    skos:prefLabel                "How is the model spread over the ArchiMate layers?"@en ;
+    dcterms:description           "Elements counted by ArchiMate 3.2 layer, read from the layer classes their types specialise, so specialisations count where they belong."@en ;
+    arch:answers                  "One row per layer, with the number of elements in it."@en ;
+    arch:doesNotProve             "Balance. Equipment and facilities are nodes as well as physical, so they count in both the technology and the physical layer; location, grouping and junctions belong to no layer and are not counted."@en ;
+    arch:questionStage            arch:OrientationStage ;
+    arch:questionAddressesConcern amvp:ReductionOfComplexity, amvp:Completeness ;
+    arch:questionFitsViewpoint    amvp:LayeredViewpoint ;
+    arch:resultIsFinding          false ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
+    arch:requiresMetamodel        <https://meta.linked.archi/archimate3/onto#> ;
+    arch:resultKey                "layers" ;
+    arch:defaultLimit             50 ;
+    sh:parameter [ sh:path arch:model ; sh:name "model" ; sh:class arch:Model ; sh:optional true ; sh:order 1 ;
+                   sh:description "The model to count. A modelling tool binds the open model; a deliverable, the model it is produced from."@en ] ;
+    sh:prefixes                   <https://meta.linked.archi/archimate3/questions#> ;
+    sh:select """
+        SELECT ?layer (COUNT(DISTINCT ?element) AS ?elements)
+        WHERE {
+          # Each layer's types, read once.
+          {
+            SELECT DISTINCT ?layer ?type
+            WHERE {
+              VALUES ?layer {
+                am:StrategyLayerElement am:MotivationElement am:BusinessLayerElement am:ApplicationLayerElement
+                am:TechnologyLayerElement am:PhysicalLayerElement am:ImplementationAndMigrationLayerElement
+              }
+              { ?layerType rdfs:subClassOf* ?layer } UNION { GRAPH ?ontologyGraph { ?layerType rdfs:subClassOf* ?layer } }
+              { ?type rdfs:subClassOf* ?layerType } UNION { GRAPH ?specialisationGraph { ?type rdfs:subClassOf* ?layerType } }
+            }
+          }
+          ?element rdf:type ?type ;
+                   arch:inModel ?model .
+        }
+        GROUP BY ?layer
+        ORDER BY DESC(?elements)
+    """ ;
+.
+
+# ── Analysis ────────────────────────────────────────────────────
+
+:cross-layer-relationships
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "notation/archimate/layer-crossing" ;
+    skos:prefLabel                "Which relationships cross layers, and of which kind?"@en ;
+    dcterms:description           "Relationships whose ends are in different ArchiMate 3.2 layers, counted by pair of layers and relationship type. The layers are read from the layer classes, not from type names."@en ;
+    arch:answers                  "One row per source layer, relationship type and target layer, with the number of relationships."@en ;
+    arch:doesNotProve             "Coupling. A relationship to an element of no layer (location, grouping, junction) is not counted, and one between equipment and a node crosses from the physical to the technology layer though both are nodes."@en ;
+    arch:questionStage            arch:AnalysisStage ;
+    arch:questionAddressesConcern amvp:Consistency, amvp:ImpactOfChange ;
+    arch:questionFitsViewpoint    amvp:LayeredViewpoint ;
+    arch:resultIsFinding          false ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
+    arch:requiresMetamodel        <https://meta.linked.archi/archimate3/onto#> ;
+    arch:resultKey                "crossings" ;
+    arch:defaultLimit             200 ;
+    sh:prefixes                   <https://meta.linked.archi/archimate3/questions#> ;
+    sh:select """
+        SELECT ?sourceLayer ?relationshipType ?targetLayer (COUNT(DISTINCT ?relationship) AS ?relationships)
+        WHERE {
+          ?relationship arch:source ?source ;
+                        arch:target ?target ;
+                        rdf:type ?relationshipType .
+          FILTER(?relationshipType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+          MINUS { SELECT DISTINCT ?relationshipType WHERE { { ?relationshipType arch:isAbstractClass true }
+                                                            UNION { GRAPH ?abstractClassGraph { ?relationshipType arch:isAbstractClass true } } } }
+          ?source rdf:type ?sourceType .
+          ?target rdf:type ?targetType .
+          {
+            SELECT DISTINCT ?sourceLayer ?sourceType
+            WHERE {
+              VALUES ?sourceLayer {
+                am:StrategyLayerElement am:MotivationElement am:BusinessLayerElement am:ApplicationLayerElement
+                am:TechnologyLayerElement am:PhysicalLayerElement am:ImplementationAndMigrationLayerElement
+              }
+              { ?sourceLayerType rdfs:subClassOf* ?sourceLayer } UNION { GRAPH ?sourceOntologyGraph { ?sourceLayerType rdfs:subClassOf* ?sourceLayer } }
+              { ?sourceType rdfs:subClassOf* ?sourceLayerType } UNION { GRAPH ?sourceSpecialisationGraph { ?sourceType rdfs:subClassOf* ?sourceLayerType } }
+            }
+          }
+          {
+            SELECT DISTINCT ?targetLayer ?targetType
+            WHERE {
+              VALUES ?targetLayer {
+                am:StrategyLayerElement am:MotivationElement am:BusinessLayerElement am:ApplicationLayerElement
+                am:TechnologyLayerElement am:PhysicalLayerElement am:ImplementationAndMigrationLayerElement
+              }
+              { ?targetLayerType rdfs:subClassOf* ?targetLayer } UNION { GRAPH ?targetOntologyGraph { ?targetLayerType rdfs:subClassOf* ?targetLayer } }
+              { ?targetType rdfs:subClassOf* ?targetLayerType } UNION { GRAPH ?targetSpecialisationGraph { ?targetType rdfs:subClassOf* ?targetLayerType } }
+            }
+          }
+          FILTER(?sourceLayer != ?targetLayer)
+        }
+        GROUP BY ?sourceLayer ?relationshipType ?targetLayer
+        ORDER BY DESC(?relationships)
+    """ ;
+.
+
+:responsibility-assignments
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "notation/archimate/responsibility-assignments" ;
+    skos:prefLabel                "Who is responsible for what?"@en ;
+    dcterms:description           "Assignment relationships: which actor, role, collaboration, component or node performs which behaviour or plays which role."@en ;
+    arch:answers                  "One row per assignment, with both ends and their types."@en ;
+    arch:doesNotProve             "Accountability in the RACI sense. An ArchiMate assignment states who performs, not who answers for the outcome."@en ;
+    arch:questionStage            arch:AnalysisStage ;
+    arch:questionAddressesConcern amvp:CompetenciesAuthorityResponsibilities, amvp:Responsibilities ;
+    arch:questionTargetsStakeholder amvp:ProcessArchitect, amvp:Manager ;
+    arch:questionFitsViewpoint    amvp:OrganizationViewpoint, amvp:BusinessProcessCooperationViewpoint ;
+    arch:resultIsFinding          false ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
+    arch:requiresMetamodel        <https://meta.linked.archi/archimate3/onto#> ;
+    arch:resultKey                "assignments" ;
+    arch:defaultLimit             500 ;
+    sh:prefixes                   <https://meta.linked.archi/archimate3/questions#> ;
+    sh:select """
+        SELECT DISTINCT ?performer ?performerLabel ?performerType ?assignment ?assigned ?assignedLabel ?assignedType
+        WHERE {
+          {
+            SELECT DISTINCT ?assignmentType
+            WHERE {
+              { ?asked rdfs:subClassOf* am:Assignment } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:Assignment } }
+              { ?assignmentType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?assignmentType rdfs:subClassOf* ?asked } }
+            }
+          }
+          ?assignment rdf:type ?assignmentType ;
+                      arch:source ?performer ;
+                      arch:target ?assigned .
+          ?performer rdf:type ?performerType .
+          ?assigned rdf:type ?assignedType .
+          FILTER(?performerType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+          FILTER(?assignedType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+          MINUS { SELECT DISTINCT ?performerType WHERE { { ?performerType arch:isAbstractClass true }
+                                                         UNION { GRAPH ?abstractClassGraph { ?performerType arch:isAbstractClass true } } } }
+          MINUS { SELECT DISTINCT ?assignedType WHERE { { ?assignedType arch:isAbstractClass true }
+                                                        UNION { GRAPH ?abstractClassGraph { ?assignedType arch:isAbstractClass true } } } }
+          OPTIONAL { ?performer skos:prefLabel ?performerLabel . FILTER(lang(?performerLabel) = "" || langMatches(lang(?performerLabel), "en")) }
+          OPTIONAL { ?assigned skos:prefLabel ?assignedLabel . FILTER(lang(?assignedLabel) = "" || langMatches(lang(?assignedLabel), "en")) }
+        }
+        ORDER BY ?performerLabel ?assignedLabel
+    """ ;
+.
+
+:application-dependencies
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "notation/archimate/application-dependencies" ;
+    skos:prefLabel                "Which applications depend on which?"@en ;
+    dcterms:description           "Application components that serve, flow to or trigger one another, directly or through an application service one realises — itself or through the function assigned to it — and the other is served by."@en ;
+    arch:answers                  "One row per dependency: the provider, how it provides, the relationship or service between, and the consumer."@en ;
+    arch:doesNotProve             "Runtime coupling or data volume. A modelled flow says that information moves, not how much or how often."@en ;
+    arch:questionStage            arch:AnalysisStage ;
+    arch:questionAddressesConcern amvp:ApplicationDependencies, amvp:ServiceOrchestration ;
+    arch:questionFitsViewpoint    amvp:ApplicationCooperationViewpoint, amvp:ApplicationUsageViewpoint ;
+    arch:resultIsFinding          false ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
+    arch:requiresMetamodel        <https://meta.linked.archi/archimate3/onto#> ;
+    arch:resultKey                "applicationDependencies" ;
+    arch:defaultLimit             500 ;
+    sh:prefixes                   <https://meta.linked.archi/archimate3/questions#> ;
+    sh:select """
+        SELECT DISTINCT ?provider ?providerLabel ?how ?via ?consumer ?consumerLabel
+        WHERE {
+          # From the relationships to their ends, each branch anchored on its relationships: never every pair of
+          # components. Both ends are then checked against the component types, read once each.
+          {
+            VALUES ?linkType { am:Serving am:Flow am:Triggering }
+            ?via rdf:type ?linkType ;
+                 arch:source ?provider ;
+                 arch:target ?consumer .
+            BIND(REPLACE(STR(?linkType), "^.*[#/]", "") AS ?how)
+          }
+          UNION
+          {
+            {
+              SELECT DISTINCT ?serviceType
+              WHERE {
+                { ?askedService rdfs:subClassOf* am:ApplicationService } UNION { GRAPH ?serviceOntologyGraph { ?askedService rdfs:subClassOf* am:ApplicationService } }
+                { ?serviceType rdfs:subClassOf* ?askedService } UNION { GRAPH ?serviceSpecialisationGraph { ?serviceType rdfs:subClassOf* ?askedService } }
+              }
+            }
+            ?via rdf:type ?serviceType ;
+                 am:serves ?consumer .
+            ?provider am:realizes|(am:assignedTo/am:realizes) ?via .
+            BIND("realises a service serving" AS ?how)
+          }
+          ?provider rdf:type ?providerType .
+          ?consumer rdf:type ?consumerType .
+          {
+            SELECT DISTINCT ?providerType
+            WHERE {
+              { ?askedProvider rdfs:subClassOf* am:ApplicationComponent } UNION { GRAPH ?providerGraph { ?askedProvider rdfs:subClassOf* am:ApplicationComponent } }
+              { ?providerType rdfs:subClassOf* ?askedProvider } UNION { GRAPH ?providerSpecialisationGraph { ?providerType rdfs:subClassOf* ?askedProvider } }
+            }
+          }
+          {
+            SELECT DISTINCT ?consumerType
+            WHERE {
+              { ?askedConsumer rdfs:subClassOf* am:ApplicationComponent } UNION { GRAPH ?consumerGraph { ?askedConsumer rdfs:subClassOf* am:ApplicationComponent } }
+              { ?consumerType rdfs:subClassOf* ?askedConsumer } UNION { GRAPH ?consumerSpecialisationGraph { ?consumerType rdfs:subClassOf* ?askedConsumer } }
+            }
+          }
+          FILTER(?provider != ?consumer)
+          OPTIONAL { ?provider skos:prefLabel ?providerLabel . FILTER(lang(?providerLabel) = "" || langMatches(lang(?providerLabel), "en")) }
+          OPTIONAL { ?consumer skos:prefLabel ?consumerLabel . FILTER(lang(?consumerLabel) = "" || langMatches(lang(?consumerLabel), "en")) }
+        }
+        ORDER BY ?providerLabel ?consumerLabel
+    """ ;
+.
+
+:data-access
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "notation/archimate/data-access" ;
+    skos:prefLabel                "Who reads and writes which information?"@en ;
+    dcterms:description           "Access relationships by kind: ArchiMate 3.2 types the kind (am:ReadAccess, am:WriteAccess, am:ReadWriteAccess, and am:Access when it is not stated)."@en ;
+    arch:answers                  "One row per access: what accesses, the kind of access, and the object accessed."@en ;
+    arch:doesNotProve             "Ownership of the data. Write access is not mastery; arch:masterDataSource says where that is recorded."@en ;
+    arch:questionStage            arch:AnalysisStage ;
+    arch:questionAddressesConcern amvp:InformationStructure, amvp:Consistency ;
+    arch:questionTargetsStakeholder amvp:InformationArchitect ;
+    arch:questionFitsViewpoint    amvp:InformationStructureViewpoint, amvp:ApplicationCooperationViewpoint ;
+    arch:resultIsFinding          false ;
+    arch:requiresDataset          arch:ModelDataset ;
+    arch:requiresMetamodel        <https://meta.linked.archi/archimate3/onto#> ;
+    arch:resultKey                "access" ;
+    arch:defaultLimit             500 ;
+    sh:prefixes                   <https://meta.linked.archi/archimate3/questions#> ;
+    sh:select """
+        SELECT DISTINCT ?accessor ?accessorLabel ?access ?accessKind ?object ?objectLabel ?objectType
+        WHERE {
+          VALUES ?accessKind { am:Access am:ReadAccess am:WriteAccess am:ReadWriteAccess }
+          ?access rdf:type ?accessKind ;
+                  arch:source ?accessor ;
+                  arch:target ?object .
+          # am:Access only when no kind is stated: the kinds are its subclasses.
+          FILTER(?accessKind != am:Access || NOT EXISTS {
+            ?access rdf:type ?statedKind .
+            FILTER(?statedKind IN (am:ReadAccess, am:WriteAccess, am:ReadWriteAccess))
+          })
+          ?object rdf:type ?objectType .
+          FILTER(?objectType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+          MINUS { SELECT DISTINCT ?objectType WHERE { { ?objectType arch:isAbstractClass true }
+                                                      UNION { GRAPH ?abstractClassGraph { ?objectType arch:isAbstractClass true } } } }
+          OPTIONAL { ?accessor skos:prefLabel ?accessorLabel . FILTER(lang(?accessorLabel) = "" || langMatches(lang(?accessorLabel), "en")) }
+          OPTIONAL { ?object skos:prefLabel ?objectLabel . FILTER(lang(?objectLabel) = "" || langMatches(lang(?objectLabel), "en")) }
+        }
+        ORDER BY ?objectLabel ?accessKind ?accessorLabel
+    """ ;
+.
+
+:impact-of-change
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "notation/archimate/impact-of-change" ;
+    skos:prefLabel                "What is affected if this element changes?"@en ;
+    dcterms:description           "Everything that depends on the element, transitively, by ArchiMate's dependency relationships: what it serves, realises or is assigned to, and what accesses it."@en ;
+    arch:answers                  "One row per element that depends on the element, directly or through others."@en ;
+    arch:doesNotProve             "That each is broken by the change. Dynamic relationships (flow, triggering) and structure (composition, aggregation) are not followed, and a dependency may tolerate the change."@en ;
+    arch:questionStage            arch:AnalysisStage ;
+    arch:questionAddressesConcern amvp:ImpactOfChange, amvp:Dependencies ;
+    arch:questionTargetsStakeholder amvp:EnterpriseArchitect, amvp:ApplicationArchitect, amvp:InfrastructureArchitect ;
+    arch:questionFitsViewpoint    amvp:LayeredViewpoint, amvp:TechnologyUsageViewpoint, amvp:ApplicationCooperationViewpoint ;
+    arch:resultIsFinding          false ;
+    arch:requiresDataset          arch:ModelDataset ;
+    arch:requiresMetamodel        <https://meta.linked.archi/archimate3/onto#> ;
+    arch:resultKey                "impacted" ;
+    arch:defaultLimit             500 ;
+    sh:parameter [ sh:path arch:focus ; sh:name "focus" ; sh:nodeKind sh:IRI ; sh:optional false ; sh:order 1 ;
+                   sh:description "The element that changes. A modelling tool binds the selected element; a deliverable, the element it is produced for."@en ] ;
+    sh:prefixes                   <https://meta.linked.archi/archimate3/questions#> ;
+    sh:select """
+        SELECT DISTINCT ?impacted ?label ?type
+        WHERE {
+          ?focus (am:serves|am:realizes|am:assignedTo|^am:accesses)+ ?impacted .
+          FILTER(?impacted != ?focus)
+          FILTER NOT EXISTS { ?impacted arch:source ?anySource }
+          ?impacted rdf:type ?type .
+          FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+          MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }
+                                                UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }
+          OPTIONAL { ?impacted skos:prefLabel ?label . FILTER(lang(?label) = "" || langMatches(lang(?label), "en")) }
+        }
+        ORDER BY ?type ?label
+    """ ;
+.
+
+:capability-realisation
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "notation/archimate/capability-realisation" ;
+    skos:prefLabel                "What realises each capability?"@en ;
+    dcterms:description           "Capabilities with the behaviour, active structure or resources that realise them."@en ;
+    arch:answers                  "One row per capability and what realises it; a capability nothing realises appears once, with nothing beside it."@en ;
+    arch:doesNotProve             "Maturity. That a capability is realised says it is delivered somehow, not how well."@en ;
+    arch:questionStage            arch:AnalysisStage ;
+    arch:questionAddressesConcern amvp:StrategyDevelopment, amvp:ArchitectureStrategy ;
+    arch:questionTargetsStakeholder amvp:BusinessArchitect, amvp:CxO ;
+    arch:questionFitsViewpoint    amvp:CapabilityMapViewpoint, amvp:StrategyViewpoint ;
+    arch:resultIsFinding          false ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
+    arch:requiresMetamodel        <https://meta.linked.archi/archimate3/onto#> ;
+    arch:resultKey                "capabilities" ;
+    arch:defaultLimit             500 ;
+    sh:prefixes                   <https://meta.linked.archi/archimate3/questions#> ;
+    sh:select """
+        SELECT DISTINCT ?capability ?capabilityLabel ?realizer ?realizerLabel ?realizerType
+        WHERE {
+          {
+            SELECT DISTINCT ?capabilityType
+            WHERE {
+              { ?asked rdfs:subClassOf* am:Capability } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:Capability } }
+              { ?capabilityType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?capabilityType rdfs:subClassOf* ?asked } }
+            }
+          }
+          ?capability rdf:type ?capabilityType .
+          OPTIONAL {
+            ?realizer am:realizes ?capability ;
+                      rdf:type ?realizerType .
+            FILTER(?realizerType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+            MINUS { SELECT DISTINCT ?realizerType WHERE { { ?realizerType arch:isAbstractClass true }
+                                                          UNION { GRAPH ?abstractClassGraph { ?realizerType arch:isAbstractClass true } } } }
+            OPTIONAL { ?realizer skos:prefLabel ?realizerLabel . FILTER(lang(?realizerLabel) = "" || langMatches(lang(?realizerLabel), "en")) }
+          }
+          OPTIONAL { ?capability skos:prefLabel ?capabilityLabel . FILTER(lang(?capabilityLabel) = "" || langMatches(lang(?capabilityLabel), "en")) }
+        }
+        ORDER BY ?capabilityLabel ?realizerLabel
+    """ ;
+.
+
+:stakeholder-motivation
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "notation/archimate/stakeholder-motivation" ;
+    skos:prefLabel                "What do stakeholders care about?"@en ;
+    dcterms:description           "Stakeholders and the motivation elements (drivers, assessments, goals, outcomes, principles, requirements, constraints, values, meanings) they are related to, in either direction."@en ;
+    arch:answers                  "One row per relationship between a stakeholder and a motivation element."@en ;
+    arch:doesNotProve             "Priority. That a stakeholder is associated with a goal does not rank it among their concerns."@en ;
+    arch:questionStage            arch:AnalysisStage ;
+    arch:questionAddressesConcern amvp:ArchitectureMission, amvp:Motivation ;
+    arch:questionTargetsStakeholder amvp:BusinessManager, amvp:EnterpriseArchitect ;
+    arch:questionFitsViewpoint    amvp:StakeholderViewpoint ;
+    arch:resultIsFinding          false ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
+    arch:requiresMetamodel        <https://meta.linked.archi/archimate3/onto#> ;
+    arch:resultKey                "stakeholderMotivation" ;
+    arch:defaultLimit             500 ;
+    sh:prefixes                   <https://meta.linked.archi/archimate3/questions#> ;
+    sh:select """
+        SELECT DISTINCT ?stakeholder ?stakeholderLabel ?direction ?predicate ?motivation ?motivationLabel ?motivationType
+        WHERE {
+          {
+            SELECT DISTINCT ?stakeholderType
+            WHERE {
+              { ?asked rdfs:subClassOf* am:Stakeholder } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:Stakeholder } }
+              { ?stakeholderType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?stakeholderType rdfs:subClassOf* ?asked } }
+            }
+          }
+          {
+            SELECT DISTINCT ?motivationType
+            WHERE {
+              { ?motivationLayerType rdfs:subClassOf* am:MotivationElement } UNION { GRAPH ?motivationGraph { ?motivationLayerType rdfs:subClassOf* am:MotivationElement } }
+              { ?motivationType rdfs:subClassOf* ?motivationLayerType } UNION { GRAPH ?motivationSpecialisationGraph { ?motivationType rdfs:subClassOf* ?motivationLayerType } }
+            }
+          }
+          VALUES ?predicate { am:associatedWith am:influences am:realizes am:aggregates am:composedOf }
+          ?stakeholder rdf:type ?stakeholderType .
+          { ?stakeholder ?predicate ?motivation . BIND("outgoing" AS ?direction) }
+          UNION
+          { ?motivation ?predicate ?stakeholder . BIND("incoming" AS ?direction) }
+          ?motivation rdf:type ?motivationType .
+          MINUS { SELECT DISTINCT ?motivationType WHERE { { ?motivationType arch:isAbstractClass true }
+                                                          UNION { GRAPH ?abstractClassGraph { ?motivationType arch:isAbstractClass true } } } }
+          OPTIONAL { ?stakeholder skos:prefLabel ?stakeholderLabel . FILTER(lang(?stakeholderLabel) = "" || langMatches(lang(?stakeholderLabel), "en")) }
+          OPTIONAL { ?motivation skos:prefLabel ?motivationLabel . FILTER(lang(?motivationLabel) = "" || langMatches(lang(?motivationLabel), "en")) }
+        }
+        ORDER BY ?stakeholderLabel ?direction ?motivationLabel
+    """ ;
+.
+
+:requirement-traceability
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "notation/archimate/requirement-traceability" ;
+    skos:prefLabel                "How does each requirement trace to goals and to the elements that realise it?"@en ;
+    dcterms:description           "Requirements and constraints with what realises them, below, and the goals, outcomes and principles they realise or influence, above, as a list of links."@en ;
+    arch:answers                  "One row per traced link: the requirement, the direction, the predicate and the element at the other end."@en ;
+    arch:doesNotProve             "Verification. A realisation relationship is a design claim; it does not show the requirement is met."@en ;
+    arch:questionStage            arch:AnalysisStage ;
+    arch:questionAddressesConcern amvp:ArchitectureTactics, amvp:Motivation ;
+    arch:questionTargetsStakeholder amvp:RequirementsManager, amvp:BusinessAnalyst ;
+    arch:questionFitsViewpoint    amvp:RequirementsRealizationViewpoint, amvp:GoalRealizationViewpoint ;
+    arch:resultIsFinding          false ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
+    arch:requiresMetamodel        <https://meta.linked.archi/archimate3/onto#> ;
+    arch:resultKey                "traceability" ;
+    arch:defaultLimit             1000 ;
+    sh:prefixes                   <https://meta.linked.archi/archimate3/questions#> ;
+    sh:select """
+        SELECT DISTINCT ?requirement ?requirementLabel ?direction ?predicate ?other ?otherLabel ?otherType
+        WHERE {
+          {
+            SELECT DISTINCT ?requirementType
+            WHERE {
+              { ?asked rdfs:subClassOf* am:Requirement } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:Requirement } }
+              { ?requirementType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?requirementType rdfs:subClassOf* ?asked } }
+            }
+          }
+          ?requirement rdf:type ?requirementType .
+          {
+            ?other am:realizes ?requirement .
+            BIND(am:realizes AS ?predicate)
+            BIND("realised by" AS ?direction)
+          }
+          UNION
+          {
+            VALUES ?predicate { am:realizes am:influences }
+            ?requirement ?predicate ?other .
+            BIND("contributes to" AS ?direction)
+          }
+          ?other rdf:type ?otherType .
+          FILTER(?otherType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+          MINUS { SELECT DISTINCT ?otherType WHERE { { ?otherType arch:isAbstractClass true }
+                                                     UNION { GRAPH ?abstractClassGraph { ?otherType arch:isAbstractClass true } } } }
+          OPTIONAL { ?requirement skos:prefLabel ?requirementLabel . FILTER(lang(?requirementLabel) = "" || langMatches(lang(?requirementLabel), "en")) }
+          OPTIONAL { ?other skos:prefLabel ?otherLabel . FILTER(lang(?otherLabel) = "" || langMatches(lang(?otherLabel), "en")) }
+        }
+        ORDER BY ?requirementLabel ?direction ?otherLabel
+    """ ;
+.
+
+:principle-rationale
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "notation/archimate/principle-rationale" ;
+    skos:prefLabel                "What motivates each principle, and what does it constrain?"@en ;
+    dcterms:description           "Principles with the elements they relate to in either direction: the drivers and goals behind them, the requirements that realise them."@en ;
+    arch:answers                  "One row per relationship between a principle and another element."@en ;
+    arch:doesNotProve             "Compliance. A requirement realising a principle states an intent, not that designs follow it."@en ;
+    arch:questionStage            arch:AnalysisStage ;
+    arch:questionAddressesConcern amvp:ArchitecturePolicies, amvp:Motivation ;
+    arch:questionFitsViewpoint    amvp:MotivationViewpoint ;
+    arch:resultIsFinding          false ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
+    arch:requiresMetamodel        <https://meta.linked.archi/archimate3/onto#> ;
+    arch:resultKey                "principles" ;
+    arch:defaultLimit             500 ;
+    sh:prefixes                   <https://meta.linked.archi/archimate3/questions#> ;
+    sh:select """
+        SELECT DISTINCT ?principle ?principleLabel ?direction ?predicate ?other ?otherLabel ?otherType
+        WHERE {
+          {
+            SELECT DISTINCT ?principleType
+            WHERE {
+              { ?asked rdfs:subClassOf* am:Principle } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:Principle } }
+              { ?principleType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?principleType rdfs:subClassOf* ?asked } }
+            }
+          }
+          VALUES ?predicate { am:realizes am:influences am:associatedWith }
+          ?principle rdf:type ?principleType .
+          { ?principle ?predicate ?other . BIND("outgoing" AS ?direction) }
+          UNION
+          { ?other ?predicate ?principle . BIND("incoming" AS ?direction) }
+          ?other rdf:type ?otherType .
+          FILTER(?otherType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+          MINUS { SELECT DISTINCT ?otherType WHERE { { ?otherType arch:isAbstractClass true }
+                                                     UNION { GRAPH ?abstractClassGraph { ?otherType arch:isAbstractClass true } } } }
+          OPTIONAL { ?principle skos:prefLabel ?principleLabel . FILTER(lang(?principleLabel) = "" || langMatches(lang(?principleLabel), "en")) }
+          OPTIONAL { ?other skos:prefLabel ?otherLabel . FILTER(lang(?otherLabel) = "" || langMatches(lang(?otherLabel), "en")) }
+        }
+        ORDER BY ?principleLabel ?direction ?otherLabel
+    """ ;
+.
+
+:work-package-deliverables
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "notation/archimate/work-package-deliverables" ;
+    skos:prefLabel                "What does each work package deliver, and what does that realise?"@en ;
+    dcterms:description           "Work packages, the deliverables they realise, and the architecture elements those deliverables realise."@en ;
+    arch:answers                  "One row per work package, deliverable and element realised."@en ;
+    arch:doesNotProve             "Schedule or progress. ArchiMate records what a work package produces, not when."@en ;
+    arch:questionStage            arch:AnalysisStage ;
+    arch:questionAddressesConcern amvp:ArchitectureVision, amvp:ArchitecturePolicies ;
+    arch:questionTargetsStakeholder amvp:OperationalManager, amvp:EnterpriseArchitect ;
+    arch:questionFitsViewpoint    amvp:ProjectViewpoint, amvp:ImplementationAndMigrationViewpoint ;
+    arch:resultIsFinding          false ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
+    arch:requiresMetamodel        <https://meta.linked.archi/archimate3/onto#> ;
+    arch:resultKey                "workPackages" ;
+    arch:defaultLimit             500 ;
+    sh:prefixes                   <https://meta.linked.archi/archimate3/questions#> ;
+    sh:select """
+        SELECT DISTINCT ?workPackage ?workPackageLabel ?deliverable ?deliverableLabel ?realized ?realizedLabel ?realizedType
+        WHERE {
+          {
+            SELECT DISTINCT ?workPackageType
+            WHERE {
+              { ?asked rdfs:subClassOf* am:WorkPackage } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:WorkPackage } }
+              { ?workPackageType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?workPackageType rdfs:subClassOf* ?asked } }
+            }
+          }
+          {
+            SELECT DISTINCT ?deliverableType
+            WHERE {
+              { ?askedDeliverable rdfs:subClassOf* am:Deliverable } UNION { GRAPH ?deliverableGraph { ?askedDeliverable rdfs:subClassOf* am:Deliverable } }
+              { ?deliverableType rdfs:subClassOf* ?askedDeliverable } UNION { GRAPH ?deliverableSpecialisationGraph { ?deliverableType rdfs:subClassOf* ?askedDeliverable } }
+            }
+          }
+          ?workPackage rdf:type ?workPackageType ;
+                       am:realizes ?deliverable .
+          ?deliverable rdf:type ?deliverableType .
+          OPTIONAL {
+            ?deliverable am:realizes ?realized .
+            ?realized rdf:type ?realizedType .
+            FILTER(?realizedType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+            MINUS { SELECT DISTINCT ?realizedType WHERE { { ?realizedType arch:isAbstractClass true }
+                                                          UNION { GRAPH ?abstractClassGraph { ?realizedType arch:isAbstractClass true } } } }
+            OPTIONAL { ?realized skos:prefLabel ?realizedLabel . FILTER(lang(?realizedLabel) = "" || langMatches(lang(?realizedLabel), "en")) }
+          }
+          OPTIONAL { ?workPackage skos:prefLabel ?workPackageLabel . FILTER(lang(?workPackageLabel) = "" || langMatches(lang(?workPackageLabel), "en")) }
+          OPTIONAL { ?deliverable skos:prefLabel ?deliverableLabel . FILTER(lang(?deliverableLabel) = "" || langMatches(lang(?deliverableLabel), "en")) }
+        }
+        ORDER BY ?workPackageLabel ?deliverableLabel
+    """ ;
+.
+
+:plateau-difference
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "notation/archimate/plateau-difference" ;
+    skos:prefLabel                "What changes between these two plateaus?"@en ;
+    dcterms:description           "Elements a later plateau aggregates or is composed of that an earlier one is not (added), and the reverse (removed)."@en ;
+    arch:answers                  "One row per element added or removed."@en ;
+    arch:doesNotProve             "The migration path. The difference is the gap; the work packages that close it are another question."@en ;
+    arch:questionStage            arch:AnalysisStage ;
+    arch:questionAddressesConcern amvp:ModelHistory, amvp:ArchitectureVision ;
+    arch:questionFitsViewpoint    amvp:MigrationViewpoint ;
+    arch:resultIsFinding          false ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
+    arch:requiresMetamodel        <https://meta.linked.archi/archimate3/onto#> ;
+    arch:resultKey                "plateauChanges" ;
+    arch:defaultLimit             1000 ;
+    sh:parameter [ sh:path arch:from ; sh:name "from" ; sh:nodeKind sh:IRI ; sh:optional false ; sh:order 1 ;
+                   sh:description "The earlier plateau, such as the baseline."@en ] ;
+    sh:parameter [ sh:path arch:to ; sh:name "to" ; sh:nodeKind sh:IRI ; sh:optional false ; sh:order 2 ;
+                   sh:description "The later plateau, such as the target."@en ] ;
+    sh:prefixes                   <https://meta.linked.archi/archimate3/questions#> ;
+    sh:select """
+        SELECT DISTINCT ?change ?element ?label ?type
+        WHERE {
+          # Both are plateaus, or a specialisation of one.
+          FILTER EXISTS {
+            ?from rdf:type ?fromType .
+            { ?fromType rdfs:subClassOf* am:Plateau } UNION { GRAPH ?fromGraph { ?fromType rdfs:subClassOf* am:Plateau } }
+          }
+          FILTER EXISTS {
+            ?to rdf:type ?toType .
+            { ?toType rdfs:subClassOf* am:Plateau } UNION { GRAPH ?toGraph { ?toType rdfs:subClassOf* am:Plateau } }
+          }
+          FILTER(?from != ?to)
+          { ?to am:aggregates|am:composedOf ?element . BIND("added" AS ?change) }
+          UNION
+          { ?from am:aggregates|am:composedOf ?element . BIND("removed" AS ?change) }
+          # Here, where both are bound: in the other plateau it is not.
+          FILTER(IF(?change = "added",
+                    NOT EXISTS { ?from am:aggregates|am:composedOf ?element },
+                    NOT EXISTS { ?to am:aggregates|am:composedOf ?element }))
+          ?element rdf:type ?type .
+          FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+          MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }
+                                                UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }
+          OPTIONAL { ?element skos:prefLabel ?label . FILTER(lang(?label) = "" || langMatches(lang(?label), "en")) }
+        }
+        ORDER BY ?change ?type ?label
+    """ ;
+.
+
+# ── Quality: findings against the viewpoints' concerns ──────────
+
+:unassigned-behaviour
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "notation/archimate/unassigned-behaviour" ;
+    skos:prefLabel                "Which processes and functions has nobody been assigned to?"@en ;
+    dcterms:description           "Business, application and technology processes and functions that no active structure element is assigned to."@en ;
+    arch:answers                  "One row per process or function without a performer, with the kind asked about."@en ;
+    arch:doesNotProve             "That nobody performs it. The performer may be assigned to an enclosing process, or the model may stop above that level of detail."@en ;
+    arch:questionStage            arch:QualityStage ;
+    arch:questionAddressesConcern amvp:Responsibilities, amvp:Completeness ;
+    arch:questionFitsViewpoint    amvp:BusinessProcessCooperationViewpoint, amvp:OrganizationViewpoint ;
+    arch:resultIsFinding          true ;
+    arch:findingSeverity          sh:Warning ;
+    arch:findingFocus             "behaviour" ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
+    arch:requiresMetamodel        <https://meta.linked.archi/archimate3/onto#> ;
+    arch:resultKey                "unassigned" ;
+    arch:defaultLimit             500 ;
+    sh:parameter [ sh:path arch:model ; sh:name "model" ; sh:class arch:Model ; sh:optional true ; sh:order 1 ;
+                   sh:description "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from."@en ] ;
+    sh:prefixes                   <https://meta.linked.archi/archimate3/questions#> ;
+    sh:select """
+        SELECT DISTINCT ?behaviour ?label ?type
+        WHERE {
+          {
+            SELECT DISTINCT ?type ?behaviourType
+            WHERE {
+              VALUES ?type {
+                am:BusinessProcess am:BusinessFunction am:ApplicationProcess am:ApplicationFunction
+                am:TechnologyProcess am:TechnologyFunction
+              }
+              { ?asked rdfs:subClassOf* ?type } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* ?type } }
+              { ?behaviourType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?behaviourType rdfs:subClassOf* ?asked } }
+            }
+          }
+          ?behaviour rdf:type ?behaviourType ;
+                     arch:inModel ?model .
+          FILTER NOT EXISTS { ?performer am:assignedTo ?behaviour }
+          OPTIONAL { ?behaviour skos:prefLabel ?label . FILTER(lang(?label) = "" || langMatches(lang(?label), "en")) }
+        }
+        ORDER BY ?type ?label
+    """ ;
+.
+
+:unrealised-services
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "notation/archimate/unrealised-services" ;
+    skos:prefLabel                "Which services does nothing realise?"@en ;
+    dcterms:description           "Business, application and technology services that no behaviour or active structure element realises."@en ;
+    arch:answers                  "One row per service nothing realises, with the kind of service."@en ;
+    arch:doesNotProve             "That the service is not delivered: it may be bought in, or realised in a model that is not loaded."@en ;
+    arch:questionStage            arch:QualityStage ;
+    arch:questionAddressesConcern amvp:Completeness, amvp:AddedValueOfProcesses ;
+    arch:questionFitsViewpoint    amvp:ServiceRealizationViewpoint, amvp:BusinessProcessCooperationViewpoint ;
+    arch:resultIsFinding          true ;
+    arch:findingSeverity          sh:Warning ;
+    arch:findingFocus             "service" ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
+    arch:requiresMetamodel        <https://meta.linked.archi/archimate3/onto#> ;
+    arch:resultKey                "unrealisedServices" ;
+    arch:defaultLimit             500 ;
+    sh:parameter [ sh:path arch:model ; sh:name "model" ; sh:class arch:Model ; sh:optional true ; sh:order 1 ;
+                   sh:description "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from."@en ] ;
+    sh:prefixes                   <https://meta.linked.archi/archimate3/questions#> ;
+    sh:select """
+        SELECT DISTINCT ?service ?label ?type
+        WHERE {
+          {
+            SELECT DISTINCT ?type ?serviceType
+            WHERE {
+              VALUES ?type { am:BusinessService am:ApplicationService am:TechnologyService }
+              { ?asked rdfs:subClassOf* ?type } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* ?type } }
+              { ?serviceType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?serviceType rdfs:subClassOf* ?asked } }
+            }
+          }
+          ?service rdf:type ?serviceType ;
+                   arch:inModel ?model .
+          FILTER NOT EXISTS { ?realizer am:realizes ?service }
+          OPTIONAL { ?service skos:prefLabel ?label . FILTER(lang(?label) = "" || langMatches(lang(?label), "en")) }
+        }
+        ORDER BY ?type ?label
+    """ ;
+.
+
+:applications-without-technology
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "notation/archimate/applications-without-technology" ;
+    skos:prefLabel                "Which application components run on no technology?"@en ;
+    dcterms:description           "Application components that no element of the technology layer serves or realises, directly or by realising a service that serves them. Equipment and facilities are nodes, so they count as technology."@en ;
+    arch:answers                  "One row per application component with no technology under it."@en ;
+    arch:doesNotProve             "That it runs nowhere. Where it is hosted may be outside the model, or recorded only in a deployment model that is not loaded."@en ;
+    arch:questionStage            arch:QualityStage ;
+    arch:questionAddressesConcern amvp:ApplicationPlatforms, amvp:InfrastructureQuality ;
+    arch:questionTargetsStakeholder amvp:ApplicationArchitect, amvp:InfrastructureArchitect ;
+    arch:questionFitsViewpoint    amvp:ImplementationAndDeploymentViewpoint, amvp:TechnologyUsageViewpoint ;
+    arch:resultIsFinding          true ;
+    arch:findingSeverity          sh:Warning ;
+    arch:findingFocus             "application" ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
+    arch:requiresMetamodel        <https://meta.linked.archi/archimate3/onto#> ;
+    arch:resultKey                "unhosted" ;
+    arch:defaultLimit             500 ;
+    sh:parameter [ sh:path arch:model ; sh:name "model" ; sh:class arch:Model ; sh:optional true ; sh:order 1 ;
+                   sh:description "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from."@en ] ;
+    sh:prefixes                   <https://meta.linked.archi/archimate3/questions#> ;
+    sh:select """
+        SELECT DISTINCT ?application ?label
+        WHERE {
+          {
+            SELECT DISTINCT ?componentType
+            WHERE {
+              { ?asked rdfs:subClassOf* am:ApplicationComponent } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:ApplicationComponent } }
+              { ?componentType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?componentType rdfs:subClassOf* ?asked } }
+            }
+          }
+          ?application rdf:type ?componentType ;
+                       arch:inModel ?model .
+          MINUS {
+            # The technology layer's types, read once.
+            {
+              SELECT DISTINCT ?technologyType
+              WHERE {
+                { ?layerType rdfs:subClassOf* am:TechnologyLayerElement }
+                UNION { GRAPH ?layerGraph { ?layerType rdfs:subClassOf* am:TechnologyLayerElement } }
+                { ?technologyType rdfs:subClassOf* ?layerType }
+                UNION { GRAPH ?layerSpecialisationGraph { ?technologyType rdfs:subClassOf* ?layerType } }
+              }
+            }
+            ?technology rdf:type ?technologyType ;
+                        am:serves|am:realizes|(am:realizes/am:serves) ?application .
+          }
+          OPTIONAL { ?application skos:prefLabel ?label . FILTER(lang(?label) = "" || langMatches(lang(?label), "en")) }
+        }
+        ORDER BY ?label
+    """ ;
+.
+
+:data-never-written
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "notation/archimate/data-never-written" ;
+    skos:prefLabel                "Which information is read but never written?"@en ;
+    dcterms:description           "Data objects, business objects (contracts too) and artifacts that something reads and nothing writes. Access of an unstated kind (am:Access) counts as a possible write."@en ;
+    arch:answers                  "One row per object, with how many elements read it."@en ;
+    arch:doesNotProve             "That the data has no source. It may be written by a system outside the model; that boundary is what the finding asks to discuss."@en ;
+    arch:questionStage            arch:QualityStage ;
+    arch:questionAddressesConcern amvp:InformationStructure, amvp:Completeness ;
+    arch:questionFitsViewpoint    amvp:InformationStructureViewpoint ;
+    arch:resultIsFinding          true ;
+    arch:findingSeverity          sh:Warning ;
+    arch:findingFocus             "object" ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
+    arch:requiresMetamodel        <https://meta.linked.archi/archimate3/onto#> ;
+    arch:resultKey                "neverWritten" ;
+    arch:defaultLimit             500 ;
+    sh:prefixes                   <https://meta.linked.archi/archimate3/questions#> ;
+    sh:select """
+        SELECT ?object ?label ?readers
+        WHERE {
+          {
+            SELECT ?object (COUNT(DISTINCT ?reader) AS ?readers)
+            WHERE {
+              {
+                SELECT DISTINCT ?objectType
+                WHERE {
+                  VALUES ?askedObject { am:DataObject am:BusinessObject am:Artifact }
+                  { ?asked rdfs:subClassOf* ?askedObject } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* ?askedObject } }
+                  { ?objectType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?objectType rdfs:subClassOf* ?asked } }
+                }
+              }
+              ?read rdf:type am:ReadAccess ;
+                    arch:source ?reader ;
+                    arch:target ?object .
+              ?object rdf:type ?objectType .
+            }
+            GROUP BY ?object
+          }
+          # Written: a write, a read-write, or an access whose kind is not stated.
+          FILTER NOT EXISTS {
+            VALUES ?writeKind { am:WriteAccess am:ReadWriteAccess am:Access }
+            ?write rdf:type ?writeKind ;
+                   arch:target ?object .
+            FILTER NOT EXISTS { ?write rdf:type am:ReadAccess }
+          }
+          OPTIONAL { ?object skos:prefLabel ?label . FILTER(lang(?label) = "" || langMatches(lang(?label), "en")) }
+        }
+        ORDER BY DESC(?readers) ?label
+    """ ;
+.
+
+:unrealised-capabilities
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "notation/archimate/unrealised-capabilities" ;
+    skos:prefLabel                "Which capabilities does nothing realise?"@en ;
+    dcterms:description           "Capabilities realised neither directly nor through any capability they are composed of or aggregate."@en ;
+    arch:answers                  "One row per capability with no realisation anywhere beneath it."@en ;
+    arch:doesNotProve             "That the enterprise lacks the capability; only that the model does not say what delivers it."@en ;
+    arch:questionStage            arch:QualityStage ;
+    arch:questionAddressesConcern amvp:StrategyDevelopment, amvp:Completeness ;
+    arch:questionFitsViewpoint    amvp:CapabilityMapViewpoint ;
+    arch:resultIsFinding          true ;
+    arch:findingSeverity          sh:Info ;
+    arch:findingFocus             "capability" ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
+    arch:requiresMetamodel        <https://meta.linked.archi/archimate3/onto#> ;
+    arch:resultKey                "unrealisedCapabilities" ;
+    arch:defaultLimit             500 ;
+    sh:parameter [ sh:path arch:model ; sh:name "model" ; sh:class arch:Model ; sh:optional true ; sh:order 1 ;
+                   sh:description "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from."@en ] ;
+    sh:prefixes                   <https://meta.linked.archi/archimate3/questions#> ;
+    sh:select """
+        SELECT DISTINCT ?capability ?label
+        WHERE {
+          {
+            SELECT DISTINCT ?capabilityType
+            WHERE {
+              { ?asked rdfs:subClassOf* am:Capability } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:Capability } }
+              { ?capabilityType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?capabilityType rdfs:subClassOf* ?asked } }
+            }
+          }
+          ?capability rdf:type ?capabilityType ;
+                      arch:inModel ?model .
+          FILTER NOT EXISTS {
+            ?capability (am:composedOf|am:aggregates)* ?part .
+            ?realizer am:realizes ?part .
+          }
+          OPTIONAL { ?capability skos:prefLabel ?label . FILTER(lang(?label) = "" || langMatches(lang(?label), "en")) }
+        }
+        ORDER BY ?label
+    """ ;
+.
+
+:unrealised-requirements
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "notation/archimate/unrealised-requirements" ;
+    skos:prefLabel                "Which requirements does no architecture element realise?"@en ;
+    dcterms:description           "Requirements and constraints that no element outside the motivation elements realises: realisation by another motivation element does not count."@en ;
+    arch:answers                  "One row per requirement or constraint without a realising design element."@en ;
+    arch:doesNotProve             "That the requirement is unmet; only that the model does not show what meets it."@en ;
+    arch:questionStage            arch:QualityStage ;
+    arch:questionAddressesConcern amvp:ArchitectureTactics, amvp:Motivation ;
+    arch:questionTargetsStakeholder amvp:RequirementsManager ;
+    arch:questionFitsViewpoint    amvp:RequirementsRealizationViewpoint ;
+    arch:resultIsFinding          true ;
+    arch:findingSeverity          sh:Warning ;
+    arch:findingFocus             "requirement" ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
+    arch:requiresMetamodel        <https://meta.linked.archi/archimate3/onto#> ;
+    arch:resultKey                "unrealisedRequirements" ;
+    arch:defaultLimit             500 ;
+    sh:parameter [ sh:path arch:model ; sh:name "model" ; sh:class arch:Model ; sh:optional true ; sh:order 1 ;
+                   sh:description "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from."@en ] ;
+    sh:prefixes                   <https://meta.linked.archi/archimate3/questions#> ;
+    sh:select """
+        SELECT DISTINCT ?requirement ?label
+        WHERE {
+          {
+            SELECT DISTINCT ?requirementType
+            WHERE {
+              { ?asked rdfs:subClassOf* am:Requirement } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:Requirement } }
+              { ?requirementType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?requirementType rdfs:subClassOf* ?asked } }
+            }
+          }
+          ?requirement rdf:type ?requirementType ;
+                       arch:inModel ?model .
+          # Realised by a design element: one whose own type is not a motivation element.
+          MINUS {
+            ?realizer am:realizes ?requirement ;
+                      rdf:type ?realizerType .
+            FILTER(?realizerType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+            MINUS { SELECT DISTINCT ?realizerType WHERE { { ?realizerType arch:isAbstractClass true }
+                                                          UNION { GRAPH ?abstractClassGraph { ?realizerType arch:isAbstractClass true } } } }
+            MINUS {
+              SELECT DISTINCT ?realizerType
+              WHERE {
+                { ?motivationType rdfs:subClassOf* am:MotivationElement }
+                UNION { GRAPH ?motivationGraph { ?motivationType rdfs:subClassOf* am:MotivationElement } }
+                { ?realizerType rdfs:subClassOf* ?motivationType }
+                UNION { GRAPH ?motivationSpecialisationGraph { ?realizerType rdfs:subClassOf* ?motivationType } }
+              }
+            }
+          }
+          OPTIONAL { ?requirement skos:prefLabel ?label . FILTER(lang(?label) = "" || langMatches(lang(?label), "en")) }
+        }
+        ORDER BY ?label
+    """ ;
+.
+
+:principles-without-requirements
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "notation/archimate/principles-without-requirements" ;
+    skos:prefLabel                "Which principles has no requirement made concrete?"@en ;
+    dcterms:description           "Principles that no requirement or constraint realises."@en ;
+    arch:answers                  "One row per principle no requirement realises."@en ;
+    arch:doesNotProve             "That the principle is ignored. It may be applied by review rather than through stated requirements."@en ;
+    arch:questionStage            arch:QualityStage ;
+    arch:questionAddressesConcern amvp:ArchitecturePolicies ;
+    arch:questionFitsViewpoint    amvp:MotivationViewpoint ;
+    arch:resultIsFinding          true ;
+    arch:findingSeverity          sh:Info ;
+    arch:findingFocus             "principle" ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
+    arch:requiresMetamodel        <https://meta.linked.archi/archimate3/onto#> ;
+    arch:resultKey                "unbackedPrinciples" ;
+    arch:defaultLimit             500 ;
+    sh:parameter [ sh:path arch:model ; sh:name "model" ; sh:class arch:Model ; sh:optional true ; sh:order 1 ;
+                   sh:description "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from."@en ] ;
+    sh:prefixes                   <https://meta.linked.archi/archimate3/questions#> ;
+    sh:select """
+        SELECT DISTINCT ?principle ?label
+        WHERE {
+          {
+            SELECT DISTINCT ?principleType
+            WHERE {
+              { ?asked rdfs:subClassOf* am:Principle } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:Principle } }
+              { ?principleType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?principleType rdfs:subClassOf* ?asked } }
+            }
+          }
+          ?principle rdf:type ?principleType ;
+                     arch:inModel ?model .
+          FILTER NOT EXISTS {
+            {
+              SELECT DISTINCT ?requirementType
+              WHERE {
+                { ?askedRequirement rdfs:subClassOf* am:Requirement } UNION { GRAPH ?requirementGraph { ?askedRequirement rdfs:subClassOf* am:Requirement } }
+                { ?requirementType rdfs:subClassOf* ?askedRequirement } UNION { GRAPH ?requirementSpecialisationGraph { ?requirementType rdfs:subClassOf* ?askedRequirement } }
+              }
+            }
+            ?requirement am:realizes ?principle ;
+                         rdf:type ?requirementType .
+          }
+          OPTIONAL { ?principle skos:prefLabel ?label . FILTER(lang(?label) = "" || langMatches(lang(?label), "en")) }
+        }
+        ORDER BY ?label
+    """ ;
+.

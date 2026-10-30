@@ -13,7 +13,7 @@ An empty result is exit 0 - a finding, not a failure.
 
 ```
 la-query
-├── catalog {list, show, dump}
+├── catalog {list, show, dump, concerns}
 ├── query {render, run, literal, batch}
 ├── lint
 ├── doctor
@@ -99,6 +99,33 @@ Registering a template does not add an `la-analyse` pattern or make the planner 
 Analyse still investigates and orchestrates; it may inspect an explicitly supplied project
 query, but only query executes it. The [downstream APM example](../downstream-apm.md) shows
 the selected-skill package and the explicit graph/profile/catalogue choices together.
+
+### Model questions
+
+The catalogue also reads the published question sets - core, ArchiMate 4.0 and ArchiMate
+3.2 - which are the source of truth for the questions they hold: la-gram and the
+deliverable generator ask the same ones. `catalog list` marks a question `Q`, and `Q+T`
+where a template has its name too; then `query run` asks the question where the dataset
+fits it and runs the template elsewhere, and the envelope's `implementation` says which
+answered.
+
+```bash
+python3 scripts/la-query catalog concerns
+python3 scripts/la-query catalog list --profile linked-archi-direct --concern Completeness
+python3 scripts/la-query query run notation/archimate/unrealised-capabilities \
+  --profile linked-archi-direct --data model.trig \
+  --data archimate3.2-onto.ttl -o steps/unrealised-capabilities.json --preview
+```
+
+A question is written for one graph - the model and its metamodel together - so it reads
+the dataset as one graph: on local data `query run` arranges that, each triple counted
+once; an endpoint takes it only when the profile declares
+`capabilities.union_default_graph`. What its query reads is gated like a template's
+`requires`. One that reads the metamodel is checked when it runs, and refused - naming the
+published Turtle to load with another `--data` - when the metamodel is not there, unless
+its template can answer instead. A project's own question set joins with
+`--catalog questions.ttl`. See the
+[template contract](https://github.com/linked-archi/linked-archi-apm/blob/main/skills/linked-archi-query/references/template-contract.md#model-questions).
 
 ## Generating SPARQL without execution
 

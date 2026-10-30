@@ -1,0 +1,509 @@
+# modelingLanguages/archimate/4.0/archimate4-viewpoints.ttl from linked-archi-meta, every statement but the 29 citing a source elsewhere.
+# Written by `make questions`; do not edit.
+
+@prefix am4vp: <https://meta.linked.archi/archimate4/viewpoints#> .
+@prefix amvp: <https://meta.linked.archi/archimate3/viewpoints#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix am: <https://meta.linked.archi/archimate3/onto#> .
+@prefix am4: <https://meta.linked.archi/archimate4/onto#> .
+@prefix archvp: <https://meta.linked.archi/core-viewpoints#> .
+@prefix bs: <https://meta.linked.archi/backstage/onto#> .
+@prefix lmm: <https://meta.linked.archi/leanix/onto#> .
+@prefix infra: <https://meta.linked.archi/bpmn/infra#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix bpmn: <https://meta.linked.archi/bpmn/onto#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix arch-tax: <https://meta.linked.archi/core-tax#> .
+@prefix archvis: <https://meta.linked.archi/core-vis#> .
+@prefix c4: <https://meta.linked.archi/c4/onto#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix arch: <https://meta.linked.archi/core#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix adms: <http://www.w3.org/ns/adms#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix schema: <https://schema.org/> .
+am4vp: a owl:Ontology ;
+	owl:imports arch: ;
+	<http://purl.org/vocab/vann/preferredNamespaceUri> "https://meta.linked.archi/archimate4/viewpoints#" ;
+	<http://purl.org/vocab/vann/preferredNamespacePrefix> "am4vp" ;
+	dct:creator "Kalin Maldzhanski" ;
+	dct:title "Linked.Archi ArchiMate 4.0 Viewpoints"@en ;
+	dct:description "The ArchiMate 4.0 example viewpoints of Appendix C as arch:Viewpoint\nindividuals. Each states the elements it admits\n(arch:includesConcept — Grouping and the two junctions in every one, as the specification allows),\nits stakeholders (arch:targetsStakeholder), the concerns it frames (arch:viewpointFramesConcern)\nand its purposes (arch:viewpointHasPurpose). The catalogue groups them twice, as SKOS: by the\nspecification's categories and by the scope its tables state (how many domains and aspects a\nviewpoint spans). The specification calls them examples, not a normative or exhaustive list;\norganizations may define their own."@en ;
+	dct:created "2026-04-19"^^xsd:date ;
+	dct:modified "2026-10-11"^^xsd:date ;
+	dct:publisher "Linked.Archi"@en ;
+	<http://purl.org/ontology/bibo/status> "draft" ;
+	owl:versionIRI <https://meta.linked.archi/archimate4/viewpoints/4.0#> ;
+	owl:versionInfo "4.0"@en .
+am4vp:ViewpointCatalog a skos:ConceptScheme ;
+	skos:prefLabel "ArchiMate 4.0 Viewpoint Catalog"@en ;
+	dct:description "The Appendix C viewpoints, grouped by the specification's categories and by the scope its tables state."@en ;
+	skos:hasTopConcept am4vp:ViewpointByCategory , am4vp:ViewpointByScope .
+am4vp:ViewpointByCategory a skos:Concept ;
+	skos:prefLabel "Viewpoint by Category"@en ;
+	skos:definition "The viewpoints in the specification's grouping (Appendix C)."@en ;
+	skos:topConceptOf am4vp:ViewpointCatalog ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:narrower am4vp:BasicViewpoints , am4vp:MotivationViewpoints , am4vp:StrategyViewpoints , am4vp:ImplementationAndMigrationViewpoints .
+am4vp:ViewpointByScope a skos:Concept ;
+	skos:prefLabel "Viewpoint by Scope"@en ;
+	skos:definition "The viewpoints by the scope their tables state: how many domains and aspects they span, or the one domain they belong to."@en ;
+	skos:topConceptOf am4vp:ViewpointCatalog ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:narrower am4vp:SingleDomainSingleAspect , am4vp:SingleDomainMultipleAspects , am4vp:MultipleDomainsSingleAspect , am4vp:MultipleDomainsMultipleAspects , am4vp:ApplicationDomainMultipleAspects , am4vp:MotivationDomainOnly , am4vp:StrategyDomainOnly , am4vp:ImplementationAndMigrationDomainOnly .
+am4vp:BasicViewpoints a skos:Concept ;
+	skos:prefLabel "Basic Viewpoints"@en ;
+	skos:definition "The basic viewpoints of the core domains, grouped by the direction they look in (Table C-1)."@en ;
+	skos:broader am4vp:ViewpointByCategory ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:narrower am4vp:CompositionViewpoints , am4vp:SupportViewpoints , am4vp:CooperationViewpoints , am4vp:RealizationViewpoints .
+am4vp:CompositionViewpoints a skos:Concept ;
+	skos:prefLabel "Composition"@en ;
+	skos:definition "Viewpoints that define the internal structure of elements."@en ;
+	skos:broader am4vp:BasicViewpoints ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:narrower am4vp:OrganizationViewpoint , am4vp:ApplicationStructureViewpoint , am4vp:InformationStructureViewpoint , am4vp:TechnologyViewpoint , am4vp:LayeredViewpoint , am4vp:PhysicalViewpoint .
+am4vp:SupportViewpoints a skos:Concept ;
+	skos:prefLabel "Support"@en ;
+	skos:definition "Viewpoints that look at elements supported by other elements."@en ;
+	skos:broader am4vp:BasicViewpoints ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:narrower am4vp:ProductViewpoint , am4vp:ApplicationUsageViewpoint , am4vp:TechnologyUsageViewpoint .
+am4vp:CooperationViewpoints a skos:Concept ;
+	skos:prefLabel "Cooperation"@en ;
+	skos:definition "Viewpoints that look at peer elements cooperating with each other, typically across aspects."@en ;
+	skos:broader am4vp:BasicViewpoints ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:narrower am4vp:ProcessCooperationViewpoint , am4vp:ApplicationCooperationViewpoint .
+am4vp:RealizationViewpoints a skos:Concept ;
+	skos:prefLabel "Realization"@en ;
+	skos:definition "Viewpoints that look at elements realizing other elements."@en ;
+	skos:broader am4vp:BasicViewpoints ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:narrower am4vp:ServiceRealizationViewpoint , am4vp:ImplementationAndDeploymentViewpoint .
+am4vp:MotivationViewpoints a skos:Concept ;
+	skos:prefLabel "Motivation Viewpoints"@en ;
+	skos:definition "Viewpoints for the motivation behind the architecture."@en ;
+	skos:broader am4vp:ViewpointByCategory ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:narrower am4vp:StakeholderViewpoint , am4vp:GoalRealizationViewpoint , am4vp:RequirementsRealizationViewpoint , am4vp:MotivationViewpoint .
+am4vp:StrategyViewpoints a skos:Concept ;
+	skos:prefLabel "Strategy Viewpoints"@en ;
+	skos:definition "Viewpoints for the strategic direction and make-up of the enterprise."@en ;
+	skos:broader am4vp:ViewpointByCategory ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:narrower am4vp:StrategyViewpoint , am4vp:CapabilityMapViewpoint , am4vp:ValueStreamViewpoint , am4vp:OutcomeRealizationViewpoint , am4vp:ResourceMapViewpoint .
+am4vp:ImplementationAndMigrationViewpoints a skos:Concept ;
+	skos:prefLabel "Implementation and Migration Viewpoints"@en ;
+	skos:definition "Viewpoints for managing architecture change: projects, migration and their relation to the architecture."@en ;
+	skos:broader am4vp:ViewpointByCategory ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:narrower am4vp:ProjectViewpoint , am4vp:MigrationViewpoint , am4vp:ImplementationAndMigrationViewpoint .
+am4vp:SingleDomainSingleAspect a skos:Concept ;
+	skos:prefLabel "Single domain, single aspect"@en ;
+	skos:broader am4vp:ViewpointByScope ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:narrower am4vp:OrganizationViewpoint .
+am4vp:SingleDomainMultipleAspects a skos:Concept ;
+	skos:prefLabel "Single domain, multiple aspects"@en ;
+	skos:broader am4vp:ViewpointByScope ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:narrower am4vp:ApplicationStructureViewpoint , am4vp:TechnologyViewpoint .
+am4vp:MultipleDomainsSingleAspect a skos:Concept ;
+	skos:prefLabel "Multiple domains, single aspect"@en ;
+	skos:broader am4vp:ViewpointByScope ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:narrower am4vp:InformationStructureViewpoint .
+am4vp:MultipleDomainsMultipleAspects a skos:Concept ;
+	skos:prefLabel "Multiple domains, multiple aspects"@en ;
+	skos:broader am4vp:ViewpointByScope ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:narrower am4vp:LayeredViewpoint , am4vp:PhysicalViewpoint , am4vp:ProductViewpoint , am4vp:ApplicationUsageViewpoint , am4vp:TechnologyUsageViewpoint , am4vp:ProcessCooperationViewpoint , am4vp:ServiceRealizationViewpoint , am4vp:ImplementationAndDeploymentViewpoint , am4vp:ImplementationAndMigrationViewpoint .
+am4vp:ApplicationDomainMultipleAspects a skos:Concept ;
+	skos:prefLabel "Application domain, multiple aspects"@en ;
+	skos:broader am4vp:ViewpointByScope ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	rdfs:seeAlso <https://meta.linked.archi/archimate4/tax#ApplicationDomain> ;
+	skos:narrower am4vp:ApplicationCooperationViewpoint .
+am4vp:MotivationDomainOnly a skos:Concept ;
+	skos:prefLabel "Motivation domain"@en ;
+	skos:broader am4vp:ViewpointByScope ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	rdfs:seeAlso <https://meta.linked.archi/archimate4/tax#MotivationDomain> ;
+	skos:narrower am4vp:StakeholderViewpoint , am4vp:GoalRealizationViewpoint , am4vp:RequirementsRealizationViewpoint , am4vp:MotivationViewpoint .
+am4vp:StrategyDomainOnly a skos:Concept ;
+	skos:prefLabel "Strategy domain"@en ;
+	skos:broader am4vp:ViewpointByScope ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	rdfs:seeAlso <https://meta.linked.archi/archimate4/tax#StrategyDomain> ;
+	skos:narrower am4vp:StrategyViewpoint , am4vp:CapabilityMapViewpoint , am4vp:ValueStreamViewpoint , am4vp:OutcomeRealizationViewpoint , am4vp:ResourceMapViewpoint .
+am4vp:ImplementationAndMigrationDomainOnly a skos:Concept ;
+	skos:prefLabel "Implementation and Migration domain"@en ;
+	skos:broader am4vp:ViewpointByScope ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	rdfs:seeAlso <https://meta.linked.archi/archimate4/tax#ImplementationAndMigrationDomain> ;
+	skos:narrower am4vp:ProjectViewpoint , am4vp:MigrationViewpoint .
+am4vp:Designing a arch:Purpose ;
+	skos:prefLabel "Designing"@en ;
+	skos:definition "Creating or refining architecture — structure, integration, deployment."@en .
+am4vp:Deciding a arch:Purpose ;
+	skos:prefLabel "Deciding"@en ;
+	skos:definition "Evaluating options and their impact, to support a decision."@en .
+am4vp:Informing a arch:Purpose ;
+	skos:prefLabel "Informing"@en ;
+	skos:definition "Communicating architecture to stakeholders — overviews, landscapes, roadmaps."@en .
+am4vp:Governing a arch:Purpose ;
+	skos:prefLabel "Governing"@en ;
+	skos:definition "Compliance checking, standards enforcement, migration tracking. Not an Appendix C purpose; deliverable templates use it."@en .
+am4vp:EnterpriseArchitect a arch:Stakeholder ;
+	skos:prefLabel "Enterprise Architect"@en .
+am4vp:ProcessArchitect a arch:Stakeholder ;
+	skos:prefLabel "Process Architect"@en .
+am4vp:DomainArchitect a arch:Stakeholder ;
+	skos:prefLabel "Domain Architect"@en .
+am4vp:ApplicationArchitect a arch:Stakeholder ;
+	skos:prefLabel "Application Architect"@en .
+am4vp:SolutionArchitect a arch:Stakeholder ;
+	skos:prefLabel "Solution Architect"@en .
+am4vp:InformationArchitect a arch:Stakeholder ;
+	skos:prefLabel "Information Architect"@en .
+am4vp:InfrastructureArchitect a arch:Stakeholder ;
+	skos:prefLabel "Infrastructure Architect"@en .
+am4vp:BusinessArchitect a arch:Stakeholder ;
+	skos:prefLabel "Business Architect"@en .
+am4vp:ICTArchitect a arch:Stakeholder ;
+	skos:prefLabel "ICT Architect"@en .
+am4vp:Manager a arch:Stakeholder ;
+	skos:prefLabel "Manager"@en .
+am4vp:OperationalManager a arch:Stakeholder ;
+	skos:prefLabel "Operational Manager"@en .
+am4vp:BusinessManager a arch:Stakeholder ;
+	skos:prefLabel "Business Manager"@en .
+am4vp:ProductManager a arch:Stakeholder ;
+	skos:prefLabel "Product Manager"@en .
+am4vp:RequirementsManager a arch:Stakeholder ;
+	skos:prefLabel "Requirements Manager"@en .
+am4vp:ProductDeveloper a arch:Stakeholder ;
+	skos:prefLabel "Product Developer"@en .
+am4vp:BusinessAnalyst a arch:Stakeholder ;
+	skos:prefLabel "Business Analyst"@en .
+am4vp:CxO a arch:Stakeholder ;
+	skos:prefLabel "CxO"@en .
+am4vp:Employee a arch:Stakeholder ;
+	skos:prefLabel "Employee"@en .
+am4vp:Shareholder a arch:Stakeholder ;
+	skos:prefLabel "Shareholder"@en .
+am4vp:Stakeholders a arch:Stakeholder ;
+	skos:prefLabel "Stakeholders"@en .
+am4vp:CompetenciesAuthorityResponsibilities a arch:Concern ;
+	skos:prefLabel "Competencies, authority and responsibilities"@en .
+am4vp:ApplicationStructure a arch:Concern ;
+	skos:prefLabel "Application structure"@en .
+am4vp:Consistency a arch:Concern ;
+	skos:prefLabel "Consistency"@en .
+am4vp:Completeness a arch:Concern ;
+	skos:prefLabel "Completeness"@en .
+am4vp:ReductionOfComplexity a arch:Concern ;
+	skos:prefLabel "Reduction of complexity"@en .
+am4vp:InformationStructure a arch:Concern ;
+	skos:prefLabel "Structure and dependencies of data and information"@en .
+am4vp:InfrastructureQuality a arch:Concern ;
+	skos:prefLabel "Stability, security, dependencies and costs of infrastructure"@en .
+am4vp:ImpactOfChange a arch:Concern ;
+	skos:prefLabel "Impact of change"@en .
+am4vp:Flexibility a arch:Concern ;
+	skos:prefLabel "Flexibility"@en .
+am4vp:PhysicalEnvironment a arch:Concern ;
+	skos:prefLabel "The physical environment and how it relates to IT infrastructure"@en .
+am4vp:ProductDevelopment a arch:Concern ;
+	skos:prefLabel "Product development"@en .
+am4vp:ProductValue a arch:Concern ;
+	skos:prefLabel "Value offered by products"@en .
+am4vp:Dependencies a arch:Concern ;
+	skos:prefLabel "Dependencies"@en .
+am4vp:Performance a arch:Concern ;
+	skos:prefLabel "Performance"@en .
+am4vp:Scalability a arch:Concern ;
+	skos:prefLabel "Scalability"@en .
+am4vp:ProcessDependencies a arch:Concern ;
+	skos:prefLabel "Dependencies between processes"@en .
+am4vp:Responsibilities a arch:Concern ;
+	skos:prefLabel "Responsibilities"@en .
+am4vp:ApplicationDependencies a arch:Concern ;
+	skos:prefLabel "Relationships and dependencies between applications"@en .
+am4vp:ServiceOrchestration a arch:Concern ;
+	skos:prefLabel "Orchestration and choreography of services"@en .
+am4vp:AddedValueOfProcesses a arch:Concern ;
+	skos:prefLabel "Added value of processes"@en .
+am4vp:ApplicationPlatforms a arch:Concern ;
+	skos:prefLabel "Structure of application platforms and the technology supporting them"@en .
+am4vp:ArchitectureMission a arch:Concern ;
+	skos:prefLabel "Architecture mission"@en .
+am4vp:ArchitectureStrategy a arch:Concern ;
+	skos:prefLabel "Architecture strategy"@en .
+am4vp:ArchitectureTactics a arch:Concern ;
+	skos:prefLabel "Architecture tactics"@en .
+am4vp:Motivation a arch:Concern ;
+	skos:prefLabel "Motivation"@en .
+am4vp:StrategyDevelopment a arch:Concern ;
+	skos:prefLabel "Strategy development"@en .
+am4vp:BusinessResults a arch:Concern ;
+	skos:prefLabel "Business-oriented results"@en .
+am4vp:ArchitectureVision a arch:Concern ;
+	skos:prefLabel "Architecture vision"@en .
+am4vp:ArchitecturePolicies a arch:Concern ;
+	skos:prefLabel "Architecture policies"@en .
+am4vp:ModelHistory a arch:Concern ;
+	skos:prefLabel "History of models"@en .
+am4vp:OrganizationViewpoint a arch:Viewpoint ;
+	skos:prefLabel "Organization Viewpoint"@en ;
+	skos:definition "The structure of an organization: its actors, roles and collaborations, where they are, and the interfaces through which they are reached."@en ;
+	arch:includesConcept am4:BusinessActor , am4:Role , am4:Collaboration , am4:Location , am4:BusinessInterface , am4:Grouping , am4:AndJunction , am4:OrJunction ;
+	arch:targetsStakeholder am4vp:EnterpriseArchitect , am4vp:ProcessArchitect , am4vp:DomainArchitect , am4vp:Manager , am4vp:Employee , am4vp:Shareholder ;
+	arch:viewpointFramesConcern am4vp:CompetenciesAuthorityResponsibilities ;
+	arch:viewpointHasPurpose am4vp:Designing , am4vp:Deciding , am4vp:Informing ;
+	arch:viewType arch:Diagram , arch:Catalog ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:broader am4vp:CompositionViewpoints , am4vp:SingleDomainSingleAspect .
+am4vp:ApplicationStructureViewpoint a arch:Viewpoint ;
+	skos:prefLabel "Application Structure Viewpoint"@en ;
+	skos:definition "The structure of an application: its components, interfaces and data, and the collaborations it takes part in."@en ;
+	arch:includesConcept am4:ApplicationComponent , am4:ApplicationInterface , am4:Collaboration , am4:DataObject , am4:Grouping , am4:AndJunction , am4:OrJunction ;
+	arch:targetsStakeholder am4vp:ApplicationArchitect , am4vp:SolutionArchitect ;
+	arch:viewpointFramesConcern am4vp:ApplicationStructure , am4vp:Consistency , am4vp:Completeness , am4vp:ReductionOfComplexity ;
+	arch:viewpointHasPurpose am4vp:Designing ;
+	arch:viewType arch:Diagram ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:broader am4vp:CompositionViewpoints , am4vp:SingleDomainMultipleAspects .
+am4vp:InformationStructureViewpoint a arch:Viewpoint ;
+	skos:prefLabel "Information Structure Viewpoint"@en ;
+	skos:definition "The structure of the information the enterprise uses: business and data objects, the artifacts that hold them and what they mean."@en ;
+	arch:includesConcept am4:BusinessObject , am4:DataObject , am4:Artifact , am4:Meaning , am4:Grouping , am4:AndJunction , am4:OrJunction ;
+	arch:targetsStakeholder am4vp:DomainArchitect , am4vp:InformationArchitect ;
+	arch:viewpointFramesConcern am4vp:InformationStructure , am4vp:Consistency , am4vp:Completeness ;
+	arch:viewpointHasPurpose am4vp:Designing ;
+	arch:viewType arch:Diagram ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:broader am4vp:CompositionViewpoints , am4vp:MultipleDomainsSingleAspect .
+am4vp:TechnologyViewpoint a arch:Viewpoint ;
+	skos:prefLabel "Technology Viewpoint"@en ;
+	skos:definition "The infrastructure and platforms beneath the information systems — nodes, devices, system software and networks — and the technology behaviour they offer."@en ;
+	arch:includesConcept am4:Location , am4:Node , am4:Collaboration , am4:Device , am4:SystemSoftware , am4:TechnologyInterface , am4:CommunicationNetwork , am4:Path , am4:Process , am4:Function , am4:Service , am4:Event , am4:Artifact , am4:Grouping , am4:AndJunction , am4:OrJunction ;
+	arch:targetsStakeholder am4vp:InfrastructureArchitect , am4vp:OperationalManager ;
+	arch:viewpointFramesConcern am4vp:InfrastructureQuality ;
+	arch:viewpointHasPurpose am4vp:Designing ;
+	arch:viewType arch:Diagram ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:broader am4vp:CompositionViewpoints , am4vp:SingleDomainMultipleAspects .
+am4vp:LayeredViewpoint a arch:Viewpoint ;
+	skos:prefLabel "Layered Viewpoint"@en ;
+	skos:definition "An overview of the architecture across its core domains: every core element, and every relationship, may appear."@en ;
+	arch:includesConcept am4:Role , am4:Collaboration , am4:Path , am4:Process , am4:Function , am4:Event , am4:Service , am4:Location , am4:BusinessActor , am4:BusinessInterface , am4:BusinessObject , am4:Product , am4:ApplicationComponent , am4:ApplicationInterface , am4:DataObject , am4:Node , am4:Device , am4:SystemSoftware , am4:TechnologyInterface , am4:CommunicationNetwork , am4:DistributionNetwork , am4:Equipment , am4:Facility , am4:Material , am4:Artifact , am4:Grouping , am4:AndJunction , am4:OrJunction ;
+	arch:targetsStakeholder am4vp:EnterpriseArchitect , am4vp:ProcessArchitect , am4vp:ApplicationArchitect , am4vp:InfrastructureArchitect , am4vp:DomainArchitect ;
+	arch:viewpointFramesConcern am4vp:Consistency , am4vp:ReductionOfComplexity , am4vp:ImpactOfChange , am4vp:Flexibility ;
+	arch:viewpointHasPurpose am4vp:Designing , am4vp:Deciding , am4vp:Informing ;
+	arch:viewType arch:Diagram ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:broader am4vp:CompositionViewpoints , am4vp:MultipleDomainsMultipleAspects .
+am4vp:PhysicalViewpoint a arch:Viewpoint ;
+	skos:prefLabel "Physical Viewpoint"@en ;
+	skos:definition "The physical environment — equipment, facilities, distribution networks and materials — and how it relates to the IT infrastructure."@en ;
+	arch:includesConcept am4:Location , am4:Node , am4:Device , am4:Equipment , am4:Facility , am4:Path , am4:CommunicationNetwork , am4:DistributionNetwork , am4:Material , am4:Grouping , am4:AndJunction , am4:OrJunction ;
+	arch:targetsStakeholder am4vp:InfrastructureArchitect , am4vp:OperationalManager ;
+	arch:viewpointFramesConcern am4vp:PhysicalEnvironment ;
+	arch:viewpointHasPurpose am4vp:Designing ;
+	arch:viewType arch:Diagram ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:broader am4vp:CompositionViewpoints , am4vp:MultipleDomainsMultipleAspects .
+am4vp:ProductViewpoint a arch:Viewpoint ;
+	skos:prefLabel "Product Viewpoint"@en ;
+	skos:definition "What a product contains: the services, behaviour, objects and value it offers, and who delivers it."@en ;
+	arch:includesConcept am4:BusinessActor , am4:Role , am4:Collaboration , am4:BusinessInterface , am4:Process , am4:Function , am4:Event , am4:Service , am4:BusinessObject , am4:Product , am4:ApplicationComponent , am4:ApplicationInterface , am4:DataObject , am4:Artifact , am4:Material , am4:Value , am4:Grouping , am4:AndJunction , am4:OrJunction ;
+	arch:targetsStakeholder am4vp:ProductDeveloper , am4vp:ProductManager , am4vp:ProcessArchitect , am4vp:DomainArchitect ;
+	arch:viewpointFramesConcern am4vp:ProductDevelopment , am4vp:ProductValue ;
+	arch:viewpointHasPurpose am4vp:Designing , am4vp:Deciding ;
+	arch:viewType arch:Diagram ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:broader am4vp:SupportViewpoints , am4vp:MultipleDomainsMultipleAspects .
+am4vp:ApplicationUsageViewpoint a arch:Viewpoint ;
+	skos:prefLabel "Application Usage Viewpoint"@en ;
+	skos:definition "How applications are used in the enterprise's processes and functions, and by its actors and roles."@en ;
+	arch:includesConcept am4:BusinessActor , am4:Role , am4:Collaboration , am4:Process , am4:Function , am4:Event , am4:BusinessObject , am4:ApplicationComponent , am4:ApplicationInterface , am4:Service , am4:DataObject , am4:Grouping , am4:AndJunction , am4:OrJunction ;
+	arch:targetsStakeholder am4vp:EnterpriseArchitect , am4vp:ProcessArchitect , am4vp:ApplicationArchitect , am4vp:OperationalManager ;
+	arch:viewpointFramesConcern am4vp:Consistency , am4vp:Completeness , am4vp:ReductionOfComplexity ;
+	arch:viewpointHasPurpose am4vp:Designing , am4vp:Deciding ;
+	arch:viewType arch:Diagram ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:broader am4vp:SupportViewpoints , am4vp:MultipleDomainsMultipleAspects .
+am4vp:TechnologyUsageViewpoint a arch:Viewpoint ;
+	skos:prefLabel "Technology Usage Viewpoint"@en ;
+	skos:definition "How applications use technology: the nodes, system software and networks that serve them."@en ;
+	arch:includesConcept am4:ApplicationComponent , am4:Service , am4:Process , am4:Function , am4:Event , am4:DataObject , am4:Node , am4:Device , am4:Collaboration , am4:SystemSoftware , am4:TechnologyInterface , am4:CommunicationNetwork , am4:Path , am4:Artifact , am4:Grouping , am4:AndJunction , am4:OrJunction ;
+	arch:targetsStakeholder am4vp:ApplicationArchitect , am4vp:InfrastructureArchitect , am4vp:OperationalManager ;
+	arch:viewpointFramesConcern am4vp:Dependencies , am4vp:Performance , am4vp:Scalability ;
+	arch:viewpointHasPurpose am4vp:Designing ;
+	arch:viewType arch:Diagram ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:broader am4vp:SupportViewpoints , am4vp:MultipleDomainsMultipleAspects .
+am4vp:ProcessCooperationViewpoint a arch:Viewpoint ;
+	skos:prefLabel "Process Cooperation Viewpoint"@en ;
+	skos:definition "How processes relate to each other and to their environment: what triggers what, what flows between them, the data they share and the services they realize."@en ;
+	arch:includesConcept am4:BusinessActor , am4:Role , am4:Collaboration , am4:Location , am4:BusinessInterface , am4:Process , am4:Function , am4:Event , am4:Service , am4:BusinessObject , am4:ApplicationComponent , am4:ApplicationInterface , am4:DataObject , am4:Grouping , am4:AndJunction , am4:OrJunction ;
+	arch:targetsStakeholder am4vp:ProcessArchitect , am4vp:DomainArchitect , am4vp:OperationalManager ;
+	arch:viewpointFramesConcern am4vp:ProcessDependencies , am4vp:Consistency , am4vp:Completeness , am4vp:Responsibilities ;
+	arch:viewpointHasPurpose am4vp:Designing , am4vp:Deciding ;
+	arch:viewType arch:Diagram ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:broader am4vp:CooperationViewpoints , am4vp:MultipleDomainsMultipleAspects .
+am4vp:ApplicationCooperationViewpoint a arch:Viewpoint ;
+	skos:prefLabel "Application Cooperation Viewpoint"@en ;
+	skos:definition "How application components cooperate: the information flowing between them, the services they offer and use, and the orchestration of services that together support a process."@en ;
+	arch:includesConcept am4:Location , am4:ApplicationComponent , am4:Collaboration , am4:ApplicationInterface , am4:Process , am4:Function , am4:Event , am4:Service , am4:DataObject , am4:Grouping , am4:AndJunction , am4:OrJunction ;
+	arch:targetsStakeholder am4vp:EnterpriseArchitect , am4vp:ProcessArchitect , am4vp:ApplicationArchitect , am4vp:DomainArchitect ;
+	arch:viewpointFramesConcern am4vp:ApplicationDependencies , am4vp:ServiceOrchestration , am4vp:Consistency , am4vp:Completeness , am4vp:ReductionOfComplexity ;
+	arch:viewpointHasPurpose am4vp:Designing ;
+	arch:viewType arch:Diagram ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:broader am4vp:CooperationViewpoints , am4vp:ApplicationDomainMultipleAspects .
+am4vp:ServiceRealizationViewpoint a arch:Viewpoint ;
+	skos:prefLabel "Service Realization Viewpoint"@en ;
+	skos:definition "How services are realized by the processes, functions and applications behind them."@en ;
+	arch:includesConcept am4:BusinessActor , am4:Role , am4:Collaboration , am4:BusinessInterface , am4:Process , am4:Function , am4:Event , am4:Service , am4:BusinessObject , am4:ApplicationComponent , am4:ApplicationInterface , am4:DataObject , am4:Grouping , am4:AndJunction , am4:OrJunction ;
+	arch:targetsStakeholder am4vp:ProcessArchitect , am4vp:DomainArchitect , am4vp:ProductManager , am4vp:OperationalManager ;
+	arch:viewpointFramesConcern am4vp:AddedValueOfProcesses , am4vp:Consistency , am4vp:Completeness , am4vp:Responsibilities ;
+	arch:viewpointHasPurpose am4vp:Designing , am4vp:Deciding ;
+	arch:viewType arch:Diagram ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:broader am4vp:RealizationViewpoints , am4vp:MultipleDomainsMultipleAspects .
+am4vp:ImplementationAndDeploymentViewpoint a arch:Viewpoint ;
+	skos:prefLabel "Implementation and Deployment Viewpoint"@en ;
+	skos:definition "How applications are mapped onto the technology that supports them: platforms, system software and artifacts."@en ;
+	arch:includesConcept am4:ApplicationComponent , am4:Collaboration , am4:ApplicationInterface , am4:Process , am4:Function , am4:Event , am4:Service , am4:DataObject , am4:SystemSoftware , am4:TechnologyInterface , am4:Path , am4:Artifact , am4:Grouping , am4:AndJunction , am4:OrJunction ;
+	arch:targetsStakeholder am4vp:ApplicationArchitect , am4vp:DomainArchitect ;
+	arch:viewpointFramesConcern am4vp:ApplicationPlatforms ;
+	arch:viewpointHasPurpose am4vp:Designing , am4vp:Deciding ;
+	arch:viewType arch:Diagram ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:broader am4vp:RealizationViewpoints , am4vp:MultipleDomainsMultipleAspects .
+am4vp:StakeholderViewpoint a arch:Viewpoint ;
+	skos:prefLabel "Stakeholder Viewpoint"@en ;
+	skos:definition "The stakeholders, their drivers, the assessments of those drivers and the goals that address them."@en ;
+	arch:includesConcept am4:Stakeholder , am4:Driver , am4:Assessment , am4:Goal , am4:Outcome , am4:Grouping , am4:AndJunction , am4:OrJunction ;
+	arch:targetsStakeholder am4vp:Stakeholders , am4vp:BusinessManager , am4vp:EnterpriseArchitect , am4vp:ICTArchitect , am4vp:BusinessAnalyst , am4vp:RequirementsManager ;
+	arch:viewpointFramesConcern am4vp:ArchitectureMission , am4vp:ArchitectureStrategy , am4vp:Motivation ;
+	arch:viewpointHasPurpose am4vp:Designing , am4vp:Deciding , am4vp:Informing ;
+	arch:viewType arch:Diagram , arch:Matrix ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:broader am4vp:MotivationViewpoints , am4vp:MotivationDomainOnly .
+am4vp:GoalRealizationViewpoint a arch:Viewpoint ;
+	skos:prefLabel "Goal Realization Viewpoint"@en ;
+	skos:definition "How high-level goals are refined into more concrete goals, outcomes and requirements, and the principles that guide them."@en ;
+	arch:includesConcept am4:Goal , am4:Principle , am4:Requirement , am4:Outcome , am4:Grouping , am4:AndJunction , am4:OrJunction ;
+	arch:targetsStakeholder am4vp:Stakeholders , am4vp:BusinessManager , am4vp:EnterpriseArchitect , am4vp:ICTArchitect , am4vp:BusinessAnalyst , am4vp:RequirementsManager ;
+	arch:viewpointFramesConcern am4vp:ArchitectureMission , am4vp:ArchitectureStrategy , am4vp:ArchitectureTactics , am4vp:Motivation ;
+	arch:viewpointHasPurpose am4vp:Designing , am4vp:Deciding ;
+	arch:viewType arch:Diagram ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:broader am4vp:MotivationViewpoints , am4vp:MotivationDomainOnly .
+am4vp:RequirementsRealizationViewpoint a arch:Viewpoint ;
+	skos:prefLabel "Requirements Realization Viewpoint"@en ;
+	skos:definition "How requirements are realized by core elements and by strategy elements."@en ;
+	arch:includesConcept am4:Goal , am4:Principle , am4:Requirement , am4:Outcome , am4:Value , am4:Meaning , am4:CourseOfAction , am4:Resource , am4:Capability , am4:ValueStream , am4:Role , am4:Collaboration , am4:Path , am4:Process , am4:Function , am4:Event , am4:Service , am4:Location , am4:BusinessActor , am4:BusinessInterface , am4:BusinessObject , am4:Product , am4:ApplicationComponent , am4:ApplicationInterface , am4:DataObject , am4:Node , am4:Device , am4:SystemSoftware , am4:TechnologyInterface , am4:CommunicationNetwork , am4:DistributionNetwork , am4:Equipment , am4:Facility , am4:Material , am4:Artifact , am4:Grouping , am4:AndJunction , am4:OrJunction ;
+	arch:targetsStakeholder am4vp:EnterpriseArchitect , am4vp:ICTArchitect , am4vp:BusinessAnalyst , am4vp:RequirementsManager ;
+	arch:viewpointFramesConcern am4vp:ArchitectureStrategy , am4vp:ArchitectureTactics , am4vp:Motivation ;
+	arch:viewpointHasPurpose am4vp:Designing , am4vp:Deciding , am4vp:Informing ;
+	arch:viewType arch:Diagram , arch:Matrix ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:broader am4vp:MotivationViewpoints , am4vp:MotivationDomainOnly .
+am4vp:MotivationViewpoint a arch:Viewpoint ;
+	skos:prefLabel "Motivation Viewpoint"@en ;
+	skos:definition "The motivation of the architecture as a whole: stakeholders, drivers, assessments, goals, principles, requirements, outcomes, values and meanings."@en ;
+	arch:includesConcept am4:Stakeholder , am4:Driver , am4:Assessment , am4:Goal , am4:Principle , am4:Requirement , am4:Outcome , am4:Value , am4:Meaning , am4:Grouping , am4:AndJunction , am4:OrJunction ;
+	arch:targetsStakeholder am4vp:EnterpriseArchitect , am4vp:ICTArchitect , am4vp:BusinessAnalyst , am4vp:RequirementsManager ;
+	arch:viewpointFramesConcern am4vp:ArchitectureStrategy , am4vp:ArchitectureTactics , am4vp:Motivation ;
+	arch:viewpointHasPurpose am4vp:Designing , am4vp:Deciding , am4vp:Informing ;
+	arch:viewType arch:Diagram ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:broader am4vp:MotivationViewpoints , am4vp:MotivationDomainOnly .
+am4vp:StrategyViewpoint a arch:Viewpoint ;
+	skos:prefLabel "Strategy Viewpoint"@en ;
+	skos:definition "A high-level strategic overview: courses of action, capabilities, value streams, resources and the outcomes they pursue."@en ;
+	arch:includesConcept am4:CourseOfAction , am4:Capability , am4:ValueStream , am4:Resource , am4:Outcome , am4:Grouping , am4:AndJunction , am4:OrJunction ;
+	arch:targetsStakeholder am4vp:CxO , am4vp:BusinessManager , am4vp:EnterpriseArchitect , am4vp:BusinessArchitect ;
+	arch:viewpointFramesConcern am4vp:StrategyDevelopment ;
+	arch:viewpointHasPurpose am4vp:Designing , am4vp:Deciding ;
+	arch:viewType arch:Diagram ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:broader am4vp:StrategyViewpoints , am4vp:StrategyDomainOnly .
+am4vp:CapabilityMapViewpoint a arch:Viewpoint ;
+	skos:prefLabel "Capability Map Viewpoint"@en ;
+	skos:definition "The enterprise's capabilities, the resources they need and the outcomes they produce."@en ;
+	arch:includesConcept am4:Outcome , am4:Capability , am4:Resource , am4:Grouping , am4:AndJunction , am4:OrJunction ;
+	arch:targetsStakeholder am4vp:BusinessManager , am4vp:EnterpriseArchitect , am4vp:BusinessArchitect ;
+	arch:viewpointFramesConcern am4vp:ArchitectureStrategy , am4vp:ArchitectureTactics , am4vp:Motivation ;
+	arch:viewpointHasPurpose am4vp:Designing , am4vp:Deciding ;
+	arch:viewType arch:Diagram , arch:Catalog ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:broader am4vp:StrategyViewpoints , am4vp:StrategyDomainOnly .
+am4vp:ValueStreamViewpoint a arch:Viewpoint ;
+	skos:prefLabel "Value Stream Viewpoint"@en ;
+	skos:definition "The value streams through which the enterprise creates value, the capabilities that support them and the stakeholders who receive it."@en ;
+	arch:includesConcept am4:ValueStream , am4:Capability , am4:Value , am4:Outcome , am4:Stakeholder , am4:Grouping , am4:AndJunction , am4:OrJunction ;
+	arch:targetsStakeholder am4vp:BusinessManager , am4vp:EnterpriseArchitect , am4vp:BusinessArchitect ;
+	arch:viewpointFramesConcern am4vp:ArchitectureStrategy , am4vp:ArchitectureTactics , am4vp:Motivation ;
+	arch:viewpointHasPurpose am4vp:Designing , am4vp:Deciding ;
+	arch:viewType arch:Diagram ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:broader am4vp:StrategyViewpoints , am4vp:StrategyDomainOnly .
+am4vp:OutcomeRealizationViewpoint a arch:Viewpoint ;
+	skos:prefLabel "Outcome Realization Viewpoint"@en ;
+	skos:definition "How business-oriented outcomes are realized by capabilities, value streams and core elements."@en ;
+	arch:includesConcept am4:Capability , am4:ValueStream , am4:Resource , am4:Outcome , am4:Value , am4:Meaning , am4:Role , am4:Collaboration , am4:Path , am4:Process , am4:Function , am4:Event , am4:Service , am4:Location , am4:BusinessActor , am4:BusinessInterface , am4:BusinessObject , am4:Product , am4:ApplicationComponent , am4:ApplicationInterface , am4:DataObject , am4:Node , am4:Device , am4:SystemSoftware , am4:TechnologyInterface , am4:CommunicationNetwork , am4:DistributionNetwork , am4:Equipment , am4:Facility , am4:Material , am4:Artifact , am4:Grouping , am4:AndJunction , am4:OrJunction ;
+	arch:targetsStakeholder am4vp:BusinessManager , am4vp:EnterpriseArchitect , am4vp:BusinessArchitect ;
+	arch:viewpointFramesConcern am4vp:BusinessResults ;
+	arch:viewpointHasPurpose am4vp:Designing , am4vp:Deciding ;
+	arch:viewType arch:Diagram ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:broader am4vp:StrategyViewpoints , am4vp:StrategyDomainOnly .
+am4vp:ResourceMapViewpoint a arch:Viewpoint ;
+	skos:prefLabel "Resource Map Viewpoint"@en ;
+	skos:definition "The resources the enterprise has, the capabilities they enable and the work packages that change them."@en ;
+	arch:includesConcept am4:Resource , am4:Capability , am4:WorkPackage , am4:Grouping , am4:AndJunction , am4:OrJunction ;
+	arch:targetsStakeholder am4vp:BusinessManager , am4vp:EnterpriseArchitect , am4vp:BusinessArchitect ;
+	arch:viewpointFramesConcern am4vp:ArchitectureStrategy , am4vp:ArchitectureTactics , am4vp:Motivation ;
+	arch:viewpointHasPurpose am4vp:Designing , am4vp:Deciding ;
+	arch:viewType arch:Diagram , arch:Catalog ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:broader am4vp:StrategyViewpoints , am4vp:StrategyDomainOnly .
+am4vp:ProjectViewpoint a arch:Viewpoint ;
+	skos:prefLabel "Project Viewpoint"@en ;
+	skos:definition "The management of architecture change: work packages, the deliverables and events they produce, who performs them and the goals they serve."@en ;
+	arch:includesConcept am4:Goal , am4:Outcome , am4:WorkPackage , am4:Event , am4:Deliverable , am4:BusinessActor , am4:Role , am4:Grouping , am4:AndJunction , am4:OrJunction ;
+	arch:targetsStakeholder am4vp:OperationalManager , am4vp:EnterpriseArchitect , am4vp:ICTArchitect , am4vp:Employee , am4vp:Shareholder ;
+	arch:viewpointFramesConcern am4vp:ArchitectureVision , am4vp:ArchitecturePolicies , am4vp:Motivation ;
+	arch:viewpointHasPurpose am4vp:Deciding , am4vp:Informing ;
+	arch:viewType arch:Diagram ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:broader am4vp:ImplementationAndMigrationViewpoints , am4vp:ImplementationAndMigrationDomainOnly .
+am4vp:MigrationViewpoint a arch:Viewpoint ;
+	skos:prefLabel "Migration Viewpoint"@en ;
+	skos:definition "The transition from an existing architecture to a target architecture, through plateaus."@en ;
+	arch:includesConcept am4:Plateau , am4:Deliverable , am4:WorkPackage , am4:Grouping , am4:AndJunction , am4:OrJunction ;
+	arch:targetsStakeholder am4vp:EnterpriseArchitect , am4vp:ProcessArchitect , am4vp:ApplicationArchitect , am4vp:InfrastructureArchitect , am4vp:DomainArchitect , am4vp:Employee , am4vp:Shareholder ;
+	arch:viewpointFramesConcern am4vp:ModelHistory ;
+	arch:viewpointHasPurpose am4vp:Designing , am4vp:Deciding , am4vp:Informing ;
+	arch:viewType arch:Diagram ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:broader am4vp:ImplementationAndMigrationViewpoints , am4vp:ImplementationAndMigrationDomainOnly .
+am4vp:ImplementationAndMigrationViewpoint a arch:Viewpoint ;
+	skos:prefLabel "Implementation and Migration Viewpoint"@en ;
+	skos:definition "How programmes and projects relate to the parts of the architecture they implement."@en ;
+	arch:includesConcept am4:Goal , am4:Requirement , am4:WorkPackage , am4:Event , am4:Deliverable , am4:Plateau , am4:BusinessActor , am4:Role , am4:Location , am4:Collaboration , am4:Path , am4:Process , am4:Function , am4:Service , am4:BusinessInterface , am4:BusinessObject , am4:Product , am4:ApplicationComponent , am4:ApplicationInterface , am4:DataObject , am4:Node , am4:Device , am4:SystemSoftware , am4:TechnologyInterface , am4:CommunicationNetwork , am4:DistributionNetwork , am4:Equipment , am4:Facility , am4:Material , am4:Artifact , am4:Grouping , am4:AndJunction , am4:OrJunction ;
+	arch:targetsStakeholder am4vp:OperationalManager , am4vp:EnterpriseArchitect , am4vp:ICTArchitect , am4vp:Employee , am4vp:Shareholder ;
+	arch:viewpointFramesConcern am4vp:ArchitectureVision , am4vp:ArchitecturePolicies , am4vp:Motivation ;
+	arch:viewpointHasPurpose am4vp:Deciding , am4vp:Informing ;
+	arch:viewType arch:Diagram ;
+	skos:inScheme am4vp:ViewpointCatalog ;
+	skos:broader am4vp:ImplementationAndMigrationViewpoints , am4vp:MultipleDomainsMultipleAspects .

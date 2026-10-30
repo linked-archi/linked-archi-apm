@@ -10,6 +10,14 @@ over exactly the defect this package corrects - a template with no ``GRAPH``
 clause returning nothing against TriG. With it off, the profile's ``named_graphs``
 setting means something and a missing scope fails loudly.
 
+A query may still ASK for one graph, by name and per query: ``default_graph="union"``.
+That is how a model question runs - written for the model and its metamodel in one
+graph, as la-gram holds them and meta checks them - and the result says it was read
+that way. It is answered from a merged copy of the store, not with
+``use_default_graph_as_union``: pyoxigraph's union keeps a triple once per graph it is
+in, so a dataset assembled from several files would count a shared triple twice. The
+copy is the RDF merge, a set, and is built once per process, on the first such query.
+
 Where the store comes from is a separate decision, and a selectable one: see
 ``store_cache``. In process terms nothing here changed - the adapter still holds a
 pyoxigraph store and still owns validation - but that store may have been parsed on
@@ -111,6 +119,7 @@ class LocalAdapter(Adapter):
         self._graph_count = len(self.graph_names)
         self.named_graphs_present = self._graph_count > 0
         self.flattened_inputs = loaded.flattened_inputs
+        self._merged = None
 
     # -- internals ----------------------------------------------------------
 
@@ -158,7 +167,22 @@ class LocalAdapter(Adapter):
             )
         return sources
 
-    def _execute_raw(self, query: str, timeout_ms: int | None = None) -> RawResult:
+    def _merged_store(self):
+        """Every triple of the dataset in one default graph, each once."""
+        if self._merged is None:
+            from pyoxigraph import DefaultGraph, Quad, Store
+
+            merged = Store()
+            merged.bulk_extend(
+                Quad(quad.subject, quad.predicate, quad.object, DefaultGraph())
+                for quad in self._store
+            )
+            self._merged = merged
+        return self._merged
+
+    def _execute_raw(
+        self, query: str, timeout_ms: int | None = None, default_graph: str | None = None
+    ) -> RawResult:
         # pyoxigraph has no query timeout, so `timeout_ms` cannot be honoured here and is
         # accepted only to keep one adapter signature. The query is a blocking call into
         # Rust: nothing inside this process can interrupt it.
@@ -171,8 +195,11 @@ class LocalAdapter(Adapter):
         #
         # Row limits are still not a work bound: ORDER BY materialises every solution
         # before LIMIT applies, so a query can cost far more than its result size.
+        if default_graph not in (None, "union"):
+            raise AdapterError(f"Unknown default graph reading {default_graph!r}")
+        store = self._merged_store() if default_graph == "union" else self._store
         try:
-            result = self._store.query(query)
+            result = store.query(query)
         except (SyntaxError, ValueError) as exc:
             raise AdapterError(f"SPARQL error: {exc}") from exc
 

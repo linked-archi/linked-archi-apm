@@ -10,6 +10,41 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 
+### Added
+- **Model questions in the catalogue.** The published question sets - core, ArchiMate 4.0
+  and ArchiMate 3.2, 55 questions - are read as catalogue entries, the source of truth for
+  what each asks: the question, what a row means, what it does not prove, the concerns,
+  stakeholders and viewpoints it serves, and whether its rows are findings. 51 join the
+  catalogue (`Q` in `catalog list`); 9 share a name with a template, which becomes the same
+  question's other implementation (`Q+T`): `query run` asks the question where the dataset
+  fits it and runs the template elsewhere, and the envelope's new `implementation`,
+  `question`, `default_graph` and `finding` fields say which answered. Four whose names a
+  template uses for a different question are held back, and listed, until the question set
+  names them apart.
+- **One-graph reading.** A question is written for the model and its metamodel in one graph,
+  so it reads the dataset as one: `la-connect` takes `default_graph: "union"` per query
+  (`default_graphs` in `execute-many`) and answers local data from the merge of every graph,
+  each triple once; an endpoint refuses it, and a profile declaring the new
+  `capabilities.union_default_graph` lets a question go to the endpoint unchanged.
+- **What a question reads, checked.** A direct triple, `rdf:reifies` or `arch:inModel` in its
+  query gates it on `direct_rel_triples`, `rdf_reifies` or `part_of_model_edge`, and the
+  refusal says what lifts it. A question reading the metamodel is checked when it runs - each
+  ontology it requires, a viewpoint catalogue, unqualified forms - and refused naming the
+  published Turtle to load beside the data, or answered by its template.
+- **Questions by concern.** `catalog concerns`; `--concern` on `catalog list` and `dump`;
+  `la-analyse plan --concern` (and `concerns` in its machine plan) plans the questions
+  informing a concern in stage order, leaving out a language the profile does not declare.
+- **A project's question set** joins with `--catalog questions.ttl`, under a project
+  namespace like a project template.
+- `make questions` refreshes the bundled sets, their index and the documents
+  `tests/test_questions.py` asks meta's examples on - every case of meta's expected answers,
+  flattened and in converter graphs.
+
+### Changed
+- **The converters now write direct relationship triples by default.** The bundled
+  `linked-archi-default` profile still describes output without them, which every fixture is;
+  its description says so, and `linked-archi-direct` describes current output.
+
 ## [0.9.1] - 2026-10-26
 
 ### Fixed

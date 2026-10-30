@@ -65,6 +65,19 @@ class Envelope:
     boolean: bool | None = None
     triples: str | None = None
     warnings: list[str] = field(default_factory=list)
+    #: ``template`` or ``question`` - which implementation of the catalogue entry ran -
+    #: or ``None`` for an ad-hoc query. An entry with both runs the model question where
+    #: the dataset fits it, so the name alone does not say which answered.
+    implementation: str | None = None
+    #: The model question's IRI, when one ran: where its concerns, stakeholders and
+    #: query are published.
+    question: str | None = None
+    #: ``"union"`` when the query read the dataset as one graph, the merge of all its
+    #: graphs - how a model question is asked; ``None`` for the default graph as stored.
+    default_graph: str | None = None
+    #: For a model question that is a finding: ``focus`` names the column each row is
+    #: about, ``severity`` is ``info``, ``warning`` or ``violation``.
+    finding: dict[str, str] | None = None
 
     @classmethod
     def build(
@@ -85,6 +98,10 @@ class Envelope:
         triples: str | None = None,
         truncated: bool = False,
         warnings: list[str] | None = None,
+        implementation: str | None = None,
+        question: str | None = None,
+        default_graph: str | None = None,
+        finding: dict[str, str] | None = None,
     ) -> "Envelope":
         return cls(
             query=query,
@@ -104,6 +121,10 @@ class Envelope:
             boolean=boolean,
             triples=triples,
             warnings=list(warnings or []),
+            implementation=implementation,
+            question=question,
+            default_graph=default_graph,
+            finding=dict(finding) if finding else None,
         )
 
     #: Version of the SERIALISED shape, not of the class. An envelope written to a file is
@@ -137,8 +158,11 @@ class Envelope:
         cost = f"{self.row_count} row(s)"
         if self.load_ms >= 250:
             cost += f" | load {self.load_ms} ms, query {self.elapsed_ms} ms"
+        asked = self.template or "ad-hoc query"
+        if self.implementation == "question":
+            asked += " (model question)"
         return (
-            f"{self.template or 'ad-hoc query'} | query {self.query_id[:12]} | "
+            f"{asked} | query {self.query_id[:12]} | "
             f"dataset {self.dataset_id} | profile {self.profile_id}"
             f" v{self.profile_version} | {self.executed_at} | {cost}"
         )

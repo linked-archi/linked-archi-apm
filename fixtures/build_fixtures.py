@@ -42,6 +42,7 @@ what it says about itself.
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -1358,6 +1359,86 @@ def write_flat(store, path: Path) -> int:
     return len(flat)
 
 
+#: meta's question examples with their expected answers, copied as they are, and the
+#: documents meta's question check loads beside them. See ``--refresh-questions``.
+QUESTION_EXAMPLES = (
+    "examples/archimate4-questions-example.ttl",
+    "examples/archimate4-questions-example.expected.tsv",
+    "examples/archimate3.2-questions-example.ttl",
+    "examples/archimate3.2-questions-example.expected.tsv",
+)
+QUESTION_DOCUMENTS = (
+    "core/core-onto.ttl",
+    "modelingLanguages/archimate/4.0/archimate4-onto.ttl",
+    "modelingLanguages/archimate/4.0/archimate4-viewpoints.ttl",
+    "modelingLanguages/archimate/3.2/archimate3.2-onto.ttl",
+    "modelingLanguages/archimate/3.2/archimate3.2-viewpoints.ttl",
+)
+#: The hosts a question fixture keeps. Everything else in those documents is a citation.
+_QUESTION_HOSTS = {"meta.linked.archi", "www.w3.org", "purl.org", "schema.org"}
+_HOST = re.compile(r"[A-Za-z][A-Za-z0-9+.-]*://([A-Za-z0-9._-]+)")
+
+
+def refresh_question_fixtures(meta_root: Path) -> int:
+    """The documents ``tests/test_questions.py`` asks meta's question examples on.
+
+    The examples and their expected answers are copied as they are. The vocabulary
+    documents keep every statement but those naming a host outside meta.linked.archi and
+    the W3C - ``dcterms:source``, ``rdfs:seeAlso``, ``prov:wasQuotedFrom`` and the other
+    citations of the specifications they transcribe. No question reads a citation, and this
+    repository names no host it does not document (``tests/test_packaging.py``).
+    """
+    from pyoxigraph import DefaultGraph, RdfFormat, Store
+
+    target = FIXTURES / "questions"
+    target.mkdir(exist_ok=True)
+    for relative in QUESTION_EXAMPLES:
+        source = meta_root / relative
+        if not source.is_file():
+            print(f"no {relative} under {meta_root}", file=sys.stderr)
+            return 2
+        shutil.copyfile(source, target / source.name)
+
+    prefixes = {
+        **DUMP_PREFIXES,
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "owl": "http://www.w3.org/2002/07/owl#",
+        "am4": "https://meta.linked.archi/archimate4/onto#",
+        "am4vp": "https://meta.linked.archi/archimate4/viewpoints#",
+        "archvp": "https://meta.linked.archi/core-viewpoints#",
+    }
+    for relative in QUESTION_DOCUMENTS:
+        source = meta_root / relative
+        if not source.is_file():
+            print(f"no {relative} under {meta_root}", file=sys.stderr)
+            return 2
+        store = Store()
+        store.load(path=str(source), format=RdfFormat.TURTLE)
+        kept = Store()
+        dropped = 0
+        for quad in store:
+            hosts = {
+                host
+                for term in (quad.subject, quad.object)
+                for host in _HOST.findall(str(getattr(term, "value", "")))
+            }
+            if hosts - _QUESTION_HOSTS:
+                dropped += 1
+                continue
+            kept.add(quad)
+        path = target / source.name
+        with path.open("wb") as handle:
+            handle.write(
+                f"# {relative} from linked-archi-meta, every statement but the {dropped} "
+                "citing a source elsewhere.\n# Written by `make questions`; do not edit.\n\n"
+                .encode("utf-8")
+            )
+            kept.dump(handle, RdfFormat.TURTLE, from_graph=DefaultGraph(), prefixes=prefixes)
+        print(f"  {path.name}: {len(kept)} statements, {dropped} citations left out")
+    return 0
+
+
 #: Where ``--refresh-forms`` looks for the ontologies: a sibling checkout by default, or
 #: wherever ``LINKED_ARCHI_META`` points.
 #:
@@ -1386,6 +1467,11 @@ def main() -> int:
             return 2
         refresh_vocabulary_axioms(META_ROOT)
         return 0
+    if "--refresh-questions" in sys.argv:
+        if not META_ROOT.is_dir():
+            print(f"no linked-archi-meta checkout at {META_ROOT}", file=sys.stderr)
+            return 2
+        return refresh_question_fixtures(META_ROOT)
     if "--refresh-shapes" in sys.argv:
         if not META_ROOT.is_dir():
             print(f"no linked-archi-meta checkout at {META_ROOT}", file=sys.stderr)

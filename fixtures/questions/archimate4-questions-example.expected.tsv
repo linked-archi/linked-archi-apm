@@ -1,0 +1,63 @@
+# What the core and ArchiMate 4.0 questions answer on archimate4-questions-example.ttl. Each case: the
+# question, its bindings (over the defaults on the * line, or -), a result column and exactly the values
+# it holds (or - for none). Every finding question has a case. The questions check of the validation pipeline
+# runs every question with all its parameters and with its required ones only, in named graphs and merged,
+# on the model as written and with its inferable core and abstract types added, and passes when all four
+# agree and every case holds.
+@prefix	ex	https://meta.linked.archi/examples/archimate4-questions/
+@prefix	archq	https://meta.linked.archi/core-questions#
+@prefix	am4q	https://meta.linked.archi/archimate4/questions#
+@prefix	am4	https://meta.linked.archi/archimate4/onto#
+@prefix	am4vp	https://meta.linked.archi/archimate4/viewpoints#
+*	focus=ex:server view=ex:orgView model=ex:model viewpoint=am4vp:OrganizationViewpoint conceptType=am4:ApplicationComponent from=ex:plateauA to=ex:plateauB
+
+# Core: findings. Bank (actor) and Bank (role) share a name across types: not duplicates.
+archq:orphans	-	element	ex:registerClaim ex:orphanService ex:crmDup ex:req2 ex:req3 ex:principle2 ex:capability2 ex:capability3
+archq:not-in-any-view	-	element	ex:handleClaim ex:registerClaim ex:claimService ex:orphanService ex:crm ex:crmDup ex:policyApp ex:newApp ex:brokerPortal ex:customerData ex:ceo ex:goal ex:req ex:req2 ex:req3 ex:principle ex:principle2 ex:capability ex:capability2 ex:capability3 ex:wp ex:deliv ex:plateauA ex:plateauB ex:bankRole
+archq:missing-definitions	-	element	ex:crm ex:crmDup ex:policyApp ex:newApp ex:brokerPortal
+archq:missing-definitions	conceptType=am4:Process	element	ex:registerClaim
+archq:duplicate-labels	-	element	ex:crm ex:crmDup
+archq:relationship-integrity	-	relationship	ex:r5
+# The node on the organisation view is out of place; the specialised node on the technology view is admitted
+# through its superclass; the legacy view's viewpoint is defined nowhere, so it is not judged but reported.
+archq:viewpoint-conformance	-	element	ex:server
+archq:viewpoint-conformance	view=ex:techView	element	-
+archq:viewpoint-conformance	view=ex:legacyView	element	-
+archq:views-with-unknown-viewpoint	-	view	ex:legacyView
+
+# Core: listings.
+archq:elements-of-type	-	element	ex:crm ex:crmDup ex:policyApp ex:newApp ex:brokerPortal
+archq:neighbours	focus=ex:crm	other	ex:server ex:policyApp ex:customerData ex:deliv ex:plateauA ex:plateauB
+archq:reaches-in-two-hops	focus=ex:clerk	dependent	ex:customer ex:claimService
+archq:views-showing	focus=ex:customer	view	ex:orgView
+archq:view-contents	-	concept	ex:customer ex:clerk ex:server
+archq:viewpoint-scope	-	element	ex:customer ex:clerk ex:bankActor ex:bankRole
+archq:viewpoint-scope	viewpoint=am4vp:TechnologyViewpoint	element	ex:server ex:cloudServer ex:handleClaim ex:registerClaim ex:claimService ex:orphanService
+archq:architecture-state	-	element	ex:newApp
+
+# ArchiMate 4.0: findings. The broker portal runs on the specialised node: technology under it. The strategic
+# capability and the regulatory requirement count as a capability and a requirement, through the model's subclasses.
+am4q:unassigned-behaviour	-	behaviour	ex:registerClaim
+am4q:unrealised-services	-	service	ex:orphanService
+am4q:applications-without-technology	-	application	ex:policyApp ex:newApp ex:crmDup
+am4q:data-never-written	-	object	ex:customerData
+am4q:unrealised-capabilities	-	capability	ex:capability2 ex:capability3
+am4q:unrealised-requirements	-	requirement	ex:req2 ex:req3
+am4q:principles-without-requirements	-	principle	ex:principle2
+
+# ArchiMate 4.0: listings. On the technology viewpoint, processes and services connected to nothing of the
+# technology domain do not belong.
+am4q:viewpoint-scope	-	element	ex:customer ex:clerk ex:bankActor ex:bankRole
+am4q:viewpoint-scope	viewpoint=am4vp:TechnologyViewpoint	element	ex:server ex:cloudServer
+am4q:elements-by-domain	-	domain	am4:StrategyElement am4:MotivationElement am4:BusinessDomainElement am4:ApplicationDomainElement am4:TechnologyDomainElement am4:ImplementationAndMigrationDomainElement am4:CommonDomainElement
+am4q:impact-of-change	-	impacted	ex:crm ex:policyApp
+am4q:plateau-difference	-	element	ex:newApp ex:policyApp
+am4q:responsibility-assignments	-	performer	ex:clerk ex:customer ex:bankActor
+am4q:application-dependencies	-	provider	ex:crm
+am4q:data-access	-	accessor	ex:crm
+am4q:capability-realisation	-	capability	ex:capability ex:capability2 ex:capability3
+am4q:capability-realisation	-	realizer	ex:handleClaim
+am4q:requirement-traceability	-	other	ex:handleClaim ex:goal ex:principle
+am4q:principle-rationale	-	other	ex:req
+am4q:work-package-deliverables	-	realized	ex:crm
+am4q:stakeholder-motivation	-	motivation	ex:goal
