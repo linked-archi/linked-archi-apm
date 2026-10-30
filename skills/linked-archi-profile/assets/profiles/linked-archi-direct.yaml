@@ -1,21 +1,14 @@
-# Converter output with --emit-direct-rel-triples.
+# Deprecated: the same as linked-archi-default.
 #
-# Demonstrates `extends`: only the differences from the base profile are stated.
-# Maps and the `roles` / `capabilities` blocks are merged key by key; scalars and
-# lists replace outright.
+# This profile described output written with --emit-direct-rel-triples. The converters now
+# write the direct triples by default, and linked-archi-default claims them, so this adds
+# nothing. It stays so that a command or a profile naming it still resolves, and will be
+# removed in a later release. Name linked-archi-default instead; linked-archi-qualified
+# describes output without the direct triples.
 extends: linked-archi-default.yaml
 
 profile: linked-archi-direct
-version: 1
+version: 2
 description: >-
-  Converter output with --emit-direct-rel-triples: the direct
-  source-predicate-target triple is present alongside the qualified resource.
-  Traversal templates become available; double-counting becomes possible.
-
-capabilities:
-  direct_rel_triples: true
-  # The same flag produces both: every converter emits the rdf:reifies bridge inside the
-  # branch that writes the direct triple, so a dataset with one has the other. Claiming it
-  # here is also what lets the direct_rel_triples probe read the bridge's triple term and
-  # answer definitively — it asserts the query engine speaks SPARQL 1.2.
-  rdf_reifies: true
+  Deprecated - the same as linked-archi-default, which now describes the direct triples
+  the converters write by default. Name linked-archi-default instead.

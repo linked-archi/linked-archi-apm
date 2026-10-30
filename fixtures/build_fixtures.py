@@ -12,12 +12,13 @@ testing 15 templates against a vocabulary that did not exist. Everything in
 
 Two fixtures cannot be extracted, because the converters do not produce them:
 
-``augmented.trig``  adds direct relationship triples, cross-source identity
-                    assertions, taxonomy classifications and a SHACL report.
-                    Direct triples are derived from the qualified relationships
-                    already present, so their shape follows the data. The rest is
-                    authored, and is what the gated templates need in order to be
-                    testable at all.
+``augmented.trig``  adds cross-source identity assertions, taxonomy
+                    classifications, concept owners and a SHACL report. Owners
+                    are promoted from Backstage ownership, so their shape follows
+                    the data; the rest is authored, and is what the gated
+                    templates need in order to be testable at all. The direct
+                    triples and their rdf:reifies bridges are not added: the
+                    converters write them by default, so ``base.trig`` has them.
 ``flat.ttl``        the same content with graph identity discarded, which is what
                     the converters' Turtle output collapses to. Exercises the
                     ``single`` layout.
@@ -187,8 +188,22 @@ def extract(paths: dict[str, Path]) -> "tuple[object, list[str]]":
         # still declares the model here.
         subjects.add(NamedNode(model_prefix))
 
+        # A direct triple goes with the relationship that reifies it: the converter writes
+        # the two together, and kept for its source element alone it would point at an
+        # element the fixture may not have, with no qualified resource to account for it.
+        reifiers: dict = {}
+        for quad in source_store.quads_for_pattern(None, NamedNode(REIFIES), None, graph):
+            term = quad.object
+            reifiers.setdefault((term.subject, term.predicate, term.object), set()).add(
+                quad.subject
+            )
+        kept_relationships = set(keep_relationships)
+
         for subject in subjects:
             for quad in source_store.quads_for_pattern(subject, None, None, graph):
+                reified_by = reifiers.get((quad.subject, quad.predicate, quad.object))
+                if reified_by is not None and not reified_by & kept_relationships:
+                    continue
                 kept.add(quad)
 
         # Provenance verbatim: it is a dozen quads per model and trimming it would
@@ -1113,102 +1128,11 @@ def _rdflib_term(term, labels: dict[str, str] | None = None):
 
 def augment(store) -> list[str]:
     """Add what the converters never emit, so the gated templates are testable."""
-    from pyoxigraph import BlankNode, Literal, NamedNode, Quad, Store, Triple
+    from pyoxigraph import Literal, NamedNode, Quad
 
     added: list[str] = []
-    rel_class = NamedNode(f"{CORE}QualifiedRelationship")
     src, tgt = NamedNode(f"{CORE}source"), NamedNode(f"{CORE}target")
     rdf_type = NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
-
-    # The ontologies' class-to-predicate mapping, extracted rather than guessed. Loaded
-    # here because BOTH the direct triples and the RDF 1.2 bridge below need it.
-    forms = load_unqualified_forms()
-
-    # -- direct relationship triples ---------------------------------------
-    # Derived from the qualified resources already present, which is exactly what
-    # --emit-direct-rel-triples does: the notation class becomes the predicate.
-    #
-    # The predicate comes from arch:unqualifiedForm, NOT from lower-casing the class
-    # name. That heuristic is what this used to do, and it invents terms: the mapping is
-    # irregular, so am:Serving became `am:serving` where the ontology says `am:serves`.
-    # A fixture carrying predicates no ontology declares is the exact failure this
-    # package exists to prevent - and it made the fixture unusable as evidence, because
-    # a probe that checks a direct edge against its DECLARED form would rightly reject
-    # most of these. A class with no declared form gets no direct triple, for the same
-    # reason it gets no bridge.
-    direct = skipped = 0
-    used_forms: dict[str, str] = {}
-    for quad in list(store.quads_for_pattern(None, rdf_type, rel_class, None)):
-        rel, graph = quad.subject, quad.graph_name
-        sources = [q.object for q in store.quads_for_pattern(rel, src, None, graph)]
-        targets = [q.object for q in store.quads_for_pattern(rel, tgt, None, graph)]
-        kinds = [
-            str(q.object.value)
-            for q in store.quads_for_pattern(rel, rdf_type, None, graph)
-            if not str(q.object.value).startswith(CORE)
-        ]
-        if not (sources and targets and kinds):
-            continue
-        predicate = forms.get(kinds[0])
-        if predicate is None:
-            skipped += 1
-            continue
-        store.add(Quad(sources[0], NamedNode(predicate), targets[0], graph))
-        used_forms[kinds[0]] = predicate
-        direct += 1
-    added.append(
-        f"{direct} direct relationship triple(s), predicate from arch:unqualifiedForm; "
-        f"{skipped} relationship(s) left direct-free (no declared form)"
-    )
-
-    # -- RDF 1.2 reification bridge -----------------------------------------
-    # `rdf:reifies <<( source predicate target )>>`, the core ontology's
-    # three-declaration pattern, and what makes the direct triple above CHECKABLE:
-    # the triple term names the predicate and both endpoints, so `verify` can tell a
-    # real direct edge from an unrelated one between the same pair. There used to be
-    # an `arch:relPredicate` declaration added here for that job; core never
-    # published that term and no converter emits it, so the bridge does the work.
-    #
-    # Every converter emits this, but only inside the branch that writes the direct
-    # triple, so a default-flag conversion has neither and its PRESENCE here is
-    # authored - like the direct triples it accompanies. The class-to-predicate
-    # mapping is extracted rather than invented: the pairs come from
-    # arch:unqualifiedForm in the ontologies themselves, via unqualified-forms.json.
-    # Guessing them would have been wrong, because the mapping is irregular
-    # (Serving -> serves, Flow -> flowsTo, Composition -> composedOf).
-    #
-    # A class with no declared unqualified form gets NO bridge. am:UsedBy and
-    # bpmn:SequenceFlow are both in that position, which is why core/reifies-audit
-    # has genuine `missing-term` rows to report rather than a planted defect.
-    bridged = unbridged = 0
-    if forms:
-        for quad in list(store.quads_for_pattern(None, rdf_type, rel_class, None)):
-            rel, graph = quad.subject, quad.graph_name
-            sources = [q.object for q in store.quads_for_pattern(rel, src, None, graph)]
-            targets = [q.object for q in store.quads_for_pattern(rel, tgt, None, graph)]
-            kinds = [
-                str(q.object.value)
-                for q in store.quads_for_pattern(rel, rdf_type, None, graph)
-                if not str(q.object.value).startswith(CORE)
-            ]
-            if not (sources and targets and kinds):
-                continue
-            predicate = forms.get(kinds[0])
-            if predicate is None:
-                unbridged += 1
-                continue
-            store.add(Quad(
-                rel, NamedNode(REIFIES),
-                Triple(sources[0], NamedNode(predicate), targets[0]),
-                graph,
-            ))
-            bridged += 1
-        added.append(
-            f"{bridged} rdf:reifies triple term(s) from arch:unqualifiedForm; "
-            f"{unbridged} relationship(s) left unbridged (no declared form)"
-        )
-    else:
-        added.append("no rdf:reifies bridge (unqualified-forms.json missing)")
 
     # -- taxonomy classification -------------------------------------------
     scheme = NamedNode("https://meta.linked.archi/core-tax")

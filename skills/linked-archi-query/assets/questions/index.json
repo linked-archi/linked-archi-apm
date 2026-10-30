@@ -110,34 +110,27 @@
  },
  "questions": [
   {
-   "answers": "One row per element without a definition.",
+   "answers": "One row per concept with either state recorded.",
    "concerns": [
-    "https://meta.linked.archi/core-viewpoints#QualityConcern"
+    "https://meta.linked.archi/core-viewpoints#EvolutionConcern",
+    "https://meta.linked.archi/core-viewpoints#GovernanceConcern"
    ],
    "dataset": "model",
    "default_limit": 500,
-   "description": "Elements, of one type or of any, with no skos:definition.",
-   "does_not_prove": "That the element is unclear to its readers. A self-explanatory name may need no definition.",
-   "finding": true,
-   "finding_focus": "element",
-   "identifier": "core/coverage-gaps",
-   "iri": "https://meta.linked.archi/core-questions#missing-definitions",
-   "label": "Which elements have no definition?",
+   "description": "Concepts with an architecture state (baseline, target, transitional) or an approval state (proposed, approved).",
+   "does_not_prove": "That a concept without a state is current. An unstated state is unknown.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "core/architecture-state",
+   "iri": "https://meta.linked.archi/core-questions#architecture-state",
+   "label": "What is baseline, target or still awaiting approval?",
    "metamodels": [],
    "parameters": [
-    {
-     "description": "An element type, such as an application component.",
-     "name": "concept type",
-     "optional": true,
-     "order": 1.0,
-     "path": "https://meta.linked.archi/core#conceptType",
-     "variable": "conceptType"
-    },
     {
      "description": "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from.",
      "name": "model",
      "optional": true,
-     "order": 2.0,
+     "order": 1.0,
      "path": "https://meta.linked.archi/core#model",
      "variable": "model"
     }
@@ -155,12 +148,12 @@
     "unqualified_forms": false,
     "viewpoints": false
    },
-   "result_key": "undefined",
+   "result_key": "states",
    "set": "https://meta.linked.archi/core-questions#",
-   "severity": "info",
-   "stage": "quality",
+   "severity": "",
+   "stage": "enrichment",
    "stakeholders": [],
-   "text": "SELECT DISTINCT ?element ?label ?type\nWHERE {\n  ?element arch:inModel ?model ;\n           rdf:type ?conceptType ;\n           rdf:type ?type .\n  FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }\n                                        UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }\n  FILTER NOT EXISTS { ?element arch:source ?anySource }\n  FILTER NOT EXISTS { ?element rdf:type ?notElement . FILTER(?notElement IN (arch:View, arch:Diagram, arch:Catalog, arch:Matrix, arch:Folder)) }\n  FILTER NOT EXISTS { ?element skos:definition ?anyDefinition }\n  OPTIONAL { ?element skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?type ?label",
+   "text": "SELECT ?element ?label ?type ?state ?approval\nWHERE {\n  ?element arch:inModel ?model ;\n           rdf:type ?type .\n  FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }\n                                        UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }\n  OPTIONAL { ?element arch:architectureState ?state }\n  OPTIONAL { ?element arch:approvalState ?approval }\n  FILTER(BOUND(?state) || BOUND(?approval))\n  OPTIONAL { ?element skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?approval ?state ?type ?label",
    "viewpoints": []
   },
   {
@@ -207,6 +200,52 @@
    "stage": "analysis",
    "stakeholders": [],
    "text": "SELECT DISTINCT ?hops ?dependent ?dependentLabel ?firstType ?via ?secondType\nWHERE {\n  {\n    ?first arch:source ?dependent ;\n           arch:target ?focus ;\n           rdf:type ?firstType .\n    BIND(1 AS ?hops)\n  }\n  UNION\n  {\n    ?first arch:source ?via ;\n           arch:target ?focus ;\n           rdf:type ?firstType .\n    ?second arch:source ?dependent ;\n            arch:target ?via ;\n            rdf:type ?secondType .\n    FILTER(?dependent != ?focus)\n    FILTER(?secondType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n    BIND(2 AS ?hops)\n  }\n  FILTER(?firstType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?firstType WHERE { { ?firstType arch:isAbstractClass true }\n                                             UNION { GRAPH ?abstractClassGraph { ?firstType arch:isAbstractClass true } } } }\n  MINUS { SELECT DISTINCT ?secondType WHERE { { ?secondType arch:isAbstractClass true }\n                                              UNION { GRAPH ?abstractClassGraph { ?secondType arch:isAbstractClass true } } } }\n  OPTIONAL { ?dependent skos:prefLabel ?dependentLabel . FILTER(lang(?dependentLabel) = \"\" || langMatches(lang(?dependentLabel), \"en\")) }\n}\nORDER BY ?hops ?dependentLabel",
+   "viewpoints": []
+  },
+  {
+   "answers": "One row per element in a collision, with how many elements share the name.",
+   "concerns": [
+    "https://meta.linked.archi/core-viewpoints#QualityConcern"
+   ],
+   "dataset": "model",
+   "default_limit": 500,
+   "description": "Elements whose name, compared without regard to case, another element of the same most specific type also has, in any loaded model.",
+   "does_not_prove": "That they are the same thing. A shared name makes two elements candidates for a person to compare, never a merge.",
+   "finding": true,
+   "finding_focus": "element",
+   "identifier": "core/duplicate-labels",
+   "iri": "https://meta.linked.archi/core-questions#duplicate-labels",
+   "label": "Which elements share a name with another of the same type?",
+   "metamodels": [],
+   "parameters": [
+    {
+     "description": "The model whose elements are reported. A modelling tool binds the open model; a deliverable, the model it is produced from.",
+     "name": "model",
+     "optional": true,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#model",
+     "variable": "model"
+    }
+   ],
+   "prefixes": {
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": true,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "collisions",
+   "set": "https://meta.linked.archi/core-questions#",
+   "severity": "warning",
+   "stage": "quality",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?element ?label ?type ?sharedBy\nWHERE {\n  {\n    SELECT ?type ?key (COUNT(DISTINCT ?candidate) AS ?sharedBy)\n    WHERE {\n      ?candidate arch:inModel ?anyModel ;\n                 rdf:type ?type ;\n                 skos:prefLabel ?candidateLabel .\n      FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n      MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }\n                                            UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }\n      FILTER NOT EXISTS { ?candidate arch:source ?anySource }\n      FILTER NOT EXISTS { ?candidate rdf:type ?notElement . FILTER(?notElement IN (arch:View, arch:Diagram, arch:Catalog, arch:Matrix, arch:Folder)) }\n      BIND(LCASE(STR(?candidateLabel)) AS ?key)\n    }\n    GROUP BY ?type ?key\n    HAVING (COUNT(DISTINCT ?candidate) > 1)\n  }\n  ?element arch:inModel ?model ;\n           rdf:type ?type ;\n           skos:prefLabel ?label .\n  FILTER(LCASE(STR(?label)) = ?key)\n}\nORDER BY ?key ?type",
    "viewpoints": []
   },
   {
@@ -306,6 +345,60 @@
    "viewpoints": []
   },
   {
+   "answers": "One row per element without a definition.",
+   "concerns": [
+    "https://meta.linked.archi/core-viewpoints#QualityConcern"
+   ],
+   "dataset": "model",
+   "default_limit": 500,
+   "description": "Elements, of one type or of any, with no skos:definition.",
+   "does_not_prove": "That the element is unclear to its readers. A self-explanatory name may need no definition.",
+   "finding": true,
+   "finding_focus": "element",
+   "identifier": "core/missing-definitions",
+   "iri": "https://meta.linked.archi/core-questions#missing-definitions",
+   "label": "Which elements have no definition?",
+   "metamodels": [],
+   "parameters": [
+    {
+     "description": "An element type, such as an application component.",
+     "name": "concept type",
+     "optional": true,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#conceptType",
+     "variable": "conceptType"
+    },
+    {
+     "description": "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from.",
+     "name": "model",
+     "optional": true,
+     "order": 2.0,
+     "path": "https://meta.linked.archi/core#model",
+     "variable": "model"
+    }
+   ],
+   "prefixes": {
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": true,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "undefined",
+   "set": "https://meta.linked.archi/core-questions#",
+   "severity": "info",
+   "stage": "quality",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?element ?label ?type\nWHERE {\n  ?element arch:inModel ?model ;\n           rdf:type ?conceptType ;\n           rdf:type ?type .\n  FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }\n                                        UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }\n  FILTER NOT EXISTS { ?element arch:source ?anySource }\n  FILTER NOT EXISTS { ?element rdf:type ?notElement . FILTER(?notElement IN (arch:View, arch:Diagram, arch:Catalog, arch:Matrix, arch:Folder)) }\n  FILTER NOT EXISTS { ?element skos:definition ?anyDefinition }\n  OPTIONAL { ?element skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?type ?label",
+   "viewpoints": []
+  },
+  {
    "answers": "One row per type: its kind (element, relationship, view) and how many of the model's concepts are of it.",
    "concerns": [],
    "dataset": "model",
@@ -314,7 +407,7 @@
    "does_not_prove": "That the model is complete. The counts describe what was modelled, not what exists in the enterprise.",
    "finding": false,
    "finding_focus": "",
-   "identifier": "core/inventory",
+   "identifier": "core/model-inventory",
    "iri": "https://meta.linked.archi/core-questions#model-inventory",
    "label": "What does the model contain?",
    "metamodels": [],
@@ -347,99 +440,6 @@
    "stage": "orientation",
    "stakeholders": [],
    "text": "SELECT ?kind ?type (COUNT(DISTINCT ?concept) AS ?count)\nWHERE {\n  ?concept arch:inModel ?model ;\n           rdf:type ?type .\n  # The most specific type: neither a core class nor an abstract one.\n  FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }\n                                        UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }\n  # A view by its own kind, not also as arch:View.\n  FILTER(?type != arch:View || NOT EXISTS { ?concept rdf:type ?viewKind . FILTER(?viewKind IN (arch:Diagram, arch:Catalog, arch:Matrix)) })\n  BIND(IF(EXISTS { ?concept arch:source ?anySource }, \"relationship\",\n       IF(EXISTS { ?concept rdf:type ?anyViewType . FILTER(?anyViewType IN (arch:View, arch:Diagram, arch:Catalog, arch:Matrix)) },\n          \"view\", \"element\")) AS ?kind)\n}\nGROUP BY ?kind ?type\nORDER BY ?kind DESC(?count) ?type",
-   "viewpoints": []
-  },
-  {
-   "answers": "One row per element in a collision, with how many elements share the name.",
-   "concerns": [
-    "https://meta.linked.archi/core-viewpoints#QualityConcern"
-   ],
-   "dataset": "model",
-   "default_limit": 500,
-   "description": "Elements whose name, compared without regard to case, another element of the same most specific type also has, in any loaded model.",
-   "does_not_prove": "That they are the same thing. A shared name makes two elements candidates for a person to compare, never a merge.",
-   "finding": true,
-   "finding_focus": "element",
-   "identifier": "core/label-collisions",
-   "iri": "https://meta.linked.archi/core-questions#duplicate-labels",
-   "label": "Which elements share a name with another of the same type?",
-   "metamodels": [],
-   "parameters": [
-    {
-     "description": "The model whose elements are reported. A modelling tool binds the open model; a deliverable, the model it is produced from.",
-     "name": "model",
-     "optional": true,
-     "order": 1.0,
-     "path": "https://meta.linked.archi/core#model",
-     "variable": "model"
-    }
-   ],
-   "prefixes": {
-    "arch": "https://meta.linked.archi/core#",
-    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-    "skos": "http://www.w3.org/2004/02/skos/core#"
-   },
-   "reads": {
-    "direct_rel_triples": false,
-    "part_of_model_edge": true,
-    "rdf_reifies": false,
-    "unqualified_forms": false,
-    "viewpoints": false
-   },
-   "result_key": "collisions",
-   "set": "https://meta.linked.archi/core-questions#",
-   "severity": "warning",
-   "stage": "quality",
-   "stakeholders": [],
-   "text": "SELECT DISTINCT ?element ?label ?type ?sharedBy\nWHERE {\n  {\n    SELECT ?type ?key (COUNT(DISTINCT ?candidate) AS ?sharedBy)\n    WHERE {\n      ?candidate arch:inModel ?anyModel ;\n                 rdf:type ?type ;\n                 skos:prefLabel ?candidateLabel .\n      FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n      MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }\n                                            UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }\n      FILTER NOT EXISTS { ?candidate arch:source ?anySource }\n      FILTER NOT EXISTS { ?candidate rdf:type ?notElement . FILTER(?notElement IN (arch:View, arch:Diagram, arch:Catalog, arch:Matrix, arch:Folder)) }\n      BIND(LCASE(STR(?candidateLabel)) AS ?key)\n    }\n    GROUP BY ?type ?key\n    HAVING (COUNT(DISTINCT ?candidate) > 1)\n  }\n  ?element arch:inModel ?model ;\n           rdf:type ?type ;\n           skos:prefLabel ?label .\n  FILTER(LCASE(STR(?label)) = ?key)\n}\nORDER BY ?key ?type",
-   "viewpoints": []
-  },
-  {
-   "answers": "One row per concept with either state recorded.",
-   "concerns": [
-    "https://meta.linked.archi/core-viewpoints#EvolutionConcern",
-    "https://meta.linked.archi/core-viewpoints#GovernanceConcern"
-   ],
-   "dataset": "model",
-   "default_limit": 500,
-   "description": "Concepts with an architecture state (baseline, target, transitional) or an approval state (proposed, approved).",
-   "does_not_prove": "That a concept without a state is current. An unstated state is unknown.",
-   "finding": false,
-   "finding_focus": "",
-   "identifier": "core/lifecycle",
-   "iri": "https://meta.linked.archi/core-questions#architecture-state",
-   "label": "What is baseline, target or still awaiting approval?",
-   "metamodels": [],
-   "parameters": [
-    {
-     "description": "The model to look in. A modelling tool binds the open model; a deliverable, the model it is produced from.",
-     "name": "model",
-     "optional": true,
-     "order": 1.0,
-     "path": "https://meta.linked.archi/core#model",
-     "variable": "model"
-    }
-   ],
-   "prefixes": {
-    "arch": "https://meta.linked.archi/core#",
-    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-    "skos": "http://www.w3.org/2004/02/skos/core#"
-   },
-   "reads": {
-    "direct_rel_triples": false,
-    "part_of_model_edge": true,
-    "rdf_reifies": false,
-    "unqualified_forms": false,
-    "viewpoints": false
-   },
-   "result_key": "states",
-   "set": "https://meta.linked.archi/core-questions#",
-   "severity": "",
-   "stage": "enrichment",
-   "stakeholders": [],
-   "text": "SELECT ?element ?label ?type ?state ?approval\nWHERE {\n  ?element arch:inModel ?model ;\n           rdf:type ?type .\n  FILTER(?type NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?type WHERE { { ?type arch:isAbstractClass true }\n                                        UNION { GRAPH ?abstractClassGraph { ?type arch:isAbstractClass true } } } }\n  OPTIONAL { ?element arch:architectureState ?state }\n  OPTIONAL { ?element arch:approvalState ?approval }\n  FILTER(BOUND(?state) || BOUND(?approval))\n  OPTIONAL { ?element skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?approval ?state ?type ?label",
    "viewpoints": []
   },
   {

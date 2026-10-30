@@ -164,42 +164,46 @@ class TestGating(unittest.TestCase):
     def setUpClass(cls):
         cls.catalog = load_catalog()
 
-    def test_refused_under_the_default_flag_profiles(self):
-        """The bridge needs --emit-direct-rel-triples, so default-flag profiles refuse these.
+    def test_refused_where_the_output_has_no_bridge(self):
+        """Without the direct triples there is no bridge, so these are refused.
 
-        Every converter emits `rdf:reifies`, but only inside the branch that writes the
-        direct triple. A profile describing a default conversion therefore has neither, and
-        the templates that read triple terms must be refused rather than returning nothing.
-        `linked-archi-direct` is the counterpart and is checked below.
+        Every converter emits `rdf:reifies` inside the branch that writes the direct
+        triple. Output written without them - by an older converter, or with
+        --no-emit-direct-rel-triples - has neither, and the templates that read triple
+        terms must be refused rather than returning nothing. The default profile is the
+        counterpart and is checked below.
         """
-        for profile_name in ("linked-archi-default", "linked-archi-merged"):
+        for profile_name in ("linked-archi-qualified",):
             profile = load_profile(profile_name)
-            self.assertIsNot(
-                profile.capability("rdf_reifies"), True,
-                f"{profile_name} describes default flags, so it must not claim rdf_reifies",
-            )
+            self.assertIs(profile.capability("rdf_reifies"), False, profile_name)
             for name in REIFIED_TEMPLATES:
                 with self.subTest(f"{profile_name}/{name}"):
                     with self.assertRaises(UnsupportedTemplate):
                         render(name, profile, self._params(name), catalog=self.catalog)
 
-    def test_allowed_where_the_flag_that_emits_the_bridge_was_passed(self):
-        """`linked-archi-direct` describes --emit-direct-rel-triples, which emits both."""
-        profile = load_profile("linked-archi-direct")
-        self.assertIs(
-            profile.capability("rdf_reifies"), True,
-            "the profile for --emit-direct-rel-triples must claim the bridge that flag emits",
-        )
-        for name in REIFIED_TEMPLATES:
-            with self.subTest(name):
-                rendered = render(
-                    name, profile, self._params(name), catalog=self.catalog
-                )
-                self.assertIn("reifies", str(rendered).lower())
+    def test_allowed_on_converter_output_at_default_flags(self):
+        """The default profile claims the bridge the converters now write by default.
+
+        `partial`, as the curated profile below: the bridge is there for each relationship
+        with a direct triple and not for one whose class publishes no unqualified form.
+        """
+        for profile_name in ("linked-archi-default", "linked-archi-merged"):
+            profile = load_profile(profile_name)
+            self.assertEqual(profile.capability("rdf_reifies"), "partial", profile_name)
+            for name in REIFIED_TEMPLATES:
+                with self.subTest(f"{profile_name}/{name}"):
+                    rendered = render(
+                        name, profile, self._params(name), catalog=self.catalog
+                    )
+                    self.assertIn("reifies", rendered.query)
+                    self.assertTrue(
+                        any("partial" in warning for warning in rendered.warnings),
+                        rendered.warnings,
+                    )
 
     def test_the_refusal_names_the_capability_and_an_alternative(self):
         """A refusal an agent can act on, not a dead end."""
-        profile = load_profile("linked-archi-default")
+        profile = load_profile("linked-archi-qualified")
         with self.assertRaises(UnsupportedTemplate) as caught:
             render("core/neighbours-reified", profile,
                    {"FOCUS_IRI": support.BACKSTAGE_COMPONENT}, catalog=self.catalog)
@@ -396,13 +400,13 @@ class TestRegressions(unittest.TestCase):
             "the extraction actually read the ontologies",
         )
 
-    def test_reifies_is_bound_but_gated_in_the_default_profile(self):
+    def test_reifies_is_bound_but_gated_where_it_is_absent(self):
         """Bound because rdf:reifies is fixed RDF vocabulary; gated because absent.
 
         These are separate statements and both matter. The role says how the bridge
         is spelled; the capability says whether this dataset has one.
         """
-        profile = load_profile("linked-archi-default")
+        profile = load_profile("linked-archi-qualified")
         self.assertTrue(profile.has_role("reifies"))
         self.assertEqual(profile.role("reifies"), REIFIES)
         self.assertIs(profile.capability("rdf_reifies"), False)

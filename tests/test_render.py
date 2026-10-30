@@ -282,7 +282,7 @@ class TestRefusals(unittest.TestCase):
 
     def test_capability_gate_refuses_with_reason_and_alternative(self):
         with self.assertRaises(UnsupportedTemplate) as caught:
-            render("core/dependents-direct", self.profile,
+            render("core/dependents-direct", load_profile("linked-archi-qualified"),
                    {"FOCUS_IRI": support.BPMN_TASK,
                     "PREDICATE_PATH": support.ARCHIMATE_FLOWS_TO},
                    catalog=self.catalog)

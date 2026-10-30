@@ -85,11 +85,13 @@
         "core/discover-relationship-types",
         "core/neighbours-qualified",
         "core/dependents-qualified",
+        "core/reified-predicates",
         "core/dependents-direct",
         "core/provenance"
       ],
       "capabilities": {
-        "direct_rel_triples": "core/dependents-direct only"
+        "direct_rel_triples": "core/dependents-direct only",
+        "rdf_reifies": "core/reified-predicates only, which names the predicates core/dependents-direct follows"
       },
       "stop_when": [
         "the relationship semantics on a path stop supporting the claim",

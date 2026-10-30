@@ -377,19 +377,10 @@ class TestGating(unittest.TestCase):
         self.assertEqual(
             refused,
             {
-                # The profile describes output without direct triples
-                # (--no-emit-direct-rel-triples, or a converter from before they were
-                # the default): zero direct triples.
-                "core/dependents-direct",
                 # Identity is authored; owl:sameAs and skos:exactMatch are both zero.
                 "core/identity-audit",
                 # No converter writes a SHACL report into the dataset.
                 "core/validation-summary",
-                # The RDF 1.2 bridge is specified in the core ontology and emitted by
-                # nothing. Also requires a SPARQL 1.2 engine.
-                "core/neighbours-reified",
-                "core/reified-predicates",
-                "core/reifies-audit",
                 # A conversion emits instances, not the ontologies and taxonomies they
                 # conform to, so there is no class hierarchy and no class-to-category
                 # link to read. Attaching published vocabulary beside the data is what
@@ -401,6 +392,28 @@ class TestGating(unittest.TestCase):
                 "core/viewpoint-detail",
             },
         )
+
+    def test_output_without_direct_triples_refuses_what_follows_them(self):
+        """The default's refusals, and the four templates that read the direct triple or
+        its rdf:reifies bridge: an older converter, or --no-emit-direct-rel-triples, wrote
+        neither."""
+        default = {
+            entry.name
+            for entry, _ in self.catalog.refused(load_profile("linked-archi-default"))
+            if entry.file
+        }
+        refused = {
+            entry.name
+            for entry, _ in self.catalog.refused(load_profile("linked-archi-qualified"))
+            if entry.file
+        }
+        self.assertEqual(refused - default, {
+            "core/dependents-direct",
+            "core/neighbours-reified",
+            "core/reified-predicates",
+            "core/reifies-audit",
+        })
+        self.assertLessEqual(default, refused)
 
     def test_curated_profile_supports_everything(self):
         """Every template; the model questions it refuses are ArchiMate 4.0's, a notation
@@ -425,7 +438,7 @@ class TestGating(unittest.TestCase):
         self.assertTrue(any("partial" in w for w in verdict.warnings))
 
     def test_unmet_requirement_explains_itself(self):
-        profile = load_profile("linked-archi-default")
+        profile = load_profile("linked-archi-qualified")
         verdict = self.catalog.get("core/dependents-direct").check(profile)
         self.assertFalse(verdict.ok)
         self.assertTrue(any("direct_rel_triples" in reason for reason in verdict.unmet))
@@ -603,8 +616,8 @@ class TestGating(unittest.TestCase):
     def test_listing_marks_refusals(self):
         profile = load_profile("linked-archi-default")
         listing = self.catalog.format_list(profile)
-        self.assertIn("x core/dependents-direct", listing)
-        self.assertIn("33 available", listing)
+        self.assertIn("x core/identity-audit", listing)
+        self.assertIn("37 available", listing)
 
 
 if __name__ == "__main__":
@@ -653,7 +666,7 @@ class TestCatalogDump(unittest.TestCase):
     def test_a_profile_adds_availability_and_the_reason_for_a_refusal(self):
         payload = self._dump("--profile", "linked-archi-default")
         self.assertEqual(payload["profile"]["id"], "linked-archi-default")
-        refused = payload["templates"]["core/dependents-direct"]
+        refused = payload["templates"]["core/identity-audit"]
         self.assertFalse(refused["available"])
         self.assertTrue(refused["unmet"], "a refusal must carry its reason")
         available = payload["templates"]["core/neighbours-qualified"]
@@ -674,7 +687,7 @@ class TestCatalogDump(unittest.TestCase):
         full = self._dump("--profile", "linked-archi-default")
         selected = self._dump(
             "--profile", "linked-archi-default",
-            "--template", "core/dependents-direct",
+            "--template", "core/identity-audit",
             "--template", "core/view-contents",
             "--template", "core/view-contents",
         )
@@ -683,9 +696,9 @@ class TestCatalogDump(unittest.TestCase):
         self.assertEqual(selected["schema_version"], full["schema_version"])
         self.assertEqual(selected["templates"], {
             name: full["templates"][name]
-            for name in ("core/dependents-direct", "core/view-contents")
+            for name in ("core/identity-audit", "core/view-contents")
         })
-        self.assertFalse(selected["templates"]["core/dependents-direct"]["available"])
+        self.assertFalse(selected["templates"]["core/identity-audit"]["available"])
         self.assertTrue(selected["templates"]["core/view-contents"]["profile_caveats"])
 
     def test_stage_and_notation_filters_intersect_and_repeated_values_form_unions(self):

@@ -485,9 +485,9 @@ def derive_profile(
         if mapping.direct_predicates:
             result.notes.append(
                 f"mapping declares {len(mapping.direct_predicates)} direct "
-                "predicate(s). These are emitted only with "
-                "--emit-direct-rel-triples, so capabilities.direct_rel_triples is "
-                "NOT set true here. Verify against the dataset, then set it."
+                "predicate(s). The converters write them unless run with "
+                "--no-emit-direct-rel-triples, and capabilities.direct_rel_triples is "
+                "true as inherited. Verify against the dataset."
             )
         if mapping.object_properties:
             result.notes.append(

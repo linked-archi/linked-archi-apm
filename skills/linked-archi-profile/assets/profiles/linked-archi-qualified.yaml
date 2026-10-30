@@ -1,0 +1,21 @@
+# Converter output without the direct relationship triples.
+#
+# What a converter wrote before direct triples became its default, or writes with
+# --no-emit-direct-rel-triples: each relationship is a qualified resource only, with
+# arch:source and arch:target, and no rdf:reifies bridge. Templates and questions that
+# follow the direct triple are refused with the reason, rather than run and return nothing.
+#
+# Reconverting is the better fix: the converters write the direct triples by default, and
+# linked-archi-default describes that output.
+extends: linked-archi-default.yaml
+
+profile: linked-archi-qualified
+version: 1
+description: >-
+  Converter output with qualified relationships only - from a converter before direct
+  triples became its default, or run with --no-emit-direct-rel-triples. Templates and
+  questions that follow the direct triple are refused; reconvert to answer them.
+
+capabilities:
+  direct_rel_triples: false
+  rdf_reifies: false

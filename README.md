@@ -30,7 +30,7 @@ questions the dataset cannot answer, instead of returning an empty result that r
 like a finding.**
 
 ```
-Template 'core/dependents-direct' cannot run against profile 'linked-archi-default':
+Template 'core/dependents-direct' cannot run against profile 'linked-archi-qualified':
   - capability 'direct_rel_triples' is False but this template needs True
 Try instead: core/dependents-qualified, core/neighbours-qualified
 This is a refusal, not an empty result: running it anyway would return no rows and
@@ -128,8 +128,9 @@ and are wrong.
 
 - **Relationships are resources, not triples.** Every relationship is an
   `arch:QualifiedRelationship` with `arch:source`/`arch:target`. The direct
-  `subject predicate object` triple is opt-in at conversion time and off by default,
-  so on an ordinary dataset it is simply not there.
+  `subject predicate object` triple is written beside it only where the notation
+  publishes the predicate, and not at all by an older converter or with
+  `--no-emit-direct-rel-triples` - so a query that follows it misses what it lacks.
 - **Everything is in named graphs.** A query without a `GRAPH` clause matches the
   default graph, which converter TriG leaves empty. Measured: the same pattern
   returns 0 rows unscoped and 13 scoped.
@@ -152,7 +153,7 @@ package checkout. The package declares no `targets:`, so APM auto-detects your r
 from the consumer and promotes each of the six skills into it:
 
 ```bash
-apm install linked-archi/linked-archi-apm#v0.9.1
+apm install linked-archi/linked-archi-apm#v0.10.0
 apm install /absolute/path/to/linked-archi-apm   # local clone
 ```
 
@@ -287,7 +288,7 @@ roles:
   owner: null                   # not represented in this dataset
 
 capabilities:
-  direct_rel_triples: false     # --emit-direct-rel-triples was not used
+  direct_rel_triples: false     # converted with --no-emit-direct-rel-triples
   views_graph: partial          # present for some models, absent for others
   rdf_reifies: false            # no RDF 1.2 bridge, and SPARQL 1.2 not assumed
 ```

@@ -325,8 +325,9 @@ This is a refusal, not an empty result: running it anyway would return no rows a
 
 | Profile | Extends | Describes |
 |---|---|---|
-| `linked-archi-default` | — | Converter output with qualified relationships only (an older converter, or `--no-emit-direct-rel-triples`): model resources in their own graph, a semantic graph per input, membership as a direct `arch:inModel` edge. |
-| `linked-archi-direct` | default | Output with `--emit-direct-rel-triples`. Traversal templates become available; double-counting becomes possible. |
+| `linked-archi-default` | — | Converter output at default flags: qualified relationships with the direct triple and its `rdf:reifies` bridge beside each, where the notation publishes the predicate; model resources in their own graph, a semantic graph per input, membership as a direct `arch:inModel` edge. |
+| `linked-archi-qualified` | default | Output without the direct triples - an older converter, or `--no-emit-direct-rel-triples`. The templates and questions that follow them are refused. |
+| `linked-archi-direct` | default | Deprecated: the same as the default, which now claims the direct triples. |
 | `linked-archi-merged` | default | Merged multi-model store with an authored reconciliation graph. |
 | `examples/curated-store` | merged | Reconciliation graph, direct triples and a loaded SHACL report. The profile `fixtures/augmented.trig` is built for. |
 | `examples/flattened-turtle` | default | `layout: single`. Graph-scoped questions answered unscoped, with a caveat. |

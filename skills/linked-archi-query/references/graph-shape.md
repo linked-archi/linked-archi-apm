@@ -30,9 +30,11 @@ the kind by taking the type that is not a core class.
 deprecated in the converters and not covered by the core shapes. A query using them
 returns nothing.
 
-**The direct triple is opt-in.** `--emit-direct-rel-triples` is off by default, so
-`?source ?predicate ?target` usually does not exist. Traversal goes through the
-qualified resource.
+**The direct triple is written by default** where the notation publishes the
+unqualified predicate, beside the qualified resource. It is absent from output of a
+converter older than that default, from a run with `--no-emit-direct-rel-triples`, and
+for a relationship whose class has no unqualified form - BPMN's flows among them - so a
+template that must cover every relationship goes through the qualified resource.
 
 Where both forms are present, use the direct form for reachability and property paths,
 and the qualified form when the relationship itself is the subject — its label, its

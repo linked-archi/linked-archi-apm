@@ -44,8 +44,8 @@ these keys:
 {
   "schema_version": 1,
   "name": "linked-archi-default",
-  "version": 1,
-  "description": "Converter output with qualified relationships only: ...",
+  "version": 3,
+  "description": "Converter output at default flags: qualified relationships with the direct ...",
   "base_iri": "https://example.org/la/",
   "source": "/abs/path/skills/linked-archi-profile/assets/profiles/linked-archi-default.yaml",
   "namespaces": {"arch": "https://meta.linked.archi/core#"},
@@ -64,8 +64,8 @@ these keys:
                   "https://meta.linked.archi/bpmn/onto#id"],
     "owner": null
   },
-  "capabilities": {"direct_rel_triples": false, "views_graph": "partial",
-                   "label_language": "en"},
+  "capabilities": {"direct_rel_triples": true, "rdf_reifies": "partial",
+                   "views_graph": "partial", "label_language": "en"},
   "notations": {"bpmn": {"label": "BPMN 2.0", "namespace": "bpmn",
                          "metamodel": "https://meta.linked.archi/bpmn/metamodel#BPMN2",
                          "native_id": "bpmn:id"}},

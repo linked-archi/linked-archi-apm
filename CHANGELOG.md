@@ -10,17 +10,25 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-30
+
+The converters now write direct relationship triples by default, and the default profile
+describes that output. A dataset converted before that default - or with
+`--no-emit-direct-rel-triples` - needs `linked-archi-qualified`, or reconverting: under the
+default profile `la-profile verify` reports it with an error on `direct_rel_triples`.
+
 ### Added
 - **Model questions in the catalogue.** The published question sets - core, ArchiMate 4.0
   and ArchiMate 3.2, 55 questions - are read as catalogue entries, the source of truth for
   what each asks: the question, what a row means, what it does not prove, the concerns,
-  stakeholders and viewpoints it serves, and whether its rows are findings. 51 join the
-  catalogue (`Q` in `catalog list`); 9 share a name with a template, which becomes the same
-  question's other implementation (`Q+T`): `query run` asks the question where the dataset
-  fits it and runs the template elsewhere, and the envelope's new `implementation`,
-  `question`, `default_graph` and `finding` fields say which answered. Four whose names a
-  template uses for a different question are held back, and listed, until the question set
-  names them apart.
+  stakeholders and viewpoints it serves, and whether its rows are findings. Each is a
+  catalogue entry (`Q` in `catalog list`); 9 share a name with a template, which becomes the
+  same question's other implementation (`Q+T`): `query run` asks the question where the
+  dataset fits it and runs the template elsewhere, and the envelope's new `implementation`,
+  `question`, `default_graph` and `finding` fields say which answered. Four core questions
+  ask something different from the templates whose names they first shared, and are named
+  apart: `core/model-inventory`, `core/missing-definitions`, `core/duplicate-labels` and
+  `core/architecture-state`.
 - **One-graph reading.** A question is written for the model and its metamodel in one graph,
   so it reads the dataset as one: `la-connect` takes `default_graph: "union"` per query
   (`default_graphs` in `execute-many`) and answers local data from the merge of every graph,
@@ -40,10 +48,39 @@ workflow publishes exactly this text, so what is written here is what a consumer
   `tests/test_questions.py` asks meta's examples on - every case of meta's expected answers,
   flattened and in converter graphs.
 
+- **`linked-archi-qualified`**, the profile for converter output without the direct
+  triples: from a converter older than that default, or run with
+  `--no-emit-direct-rel-triples`. It refuses what follows them - `core/dependents-direct` and
+  the three reified templates, and the model questions reading a direct predicate - and
+  `la-profile recommend` names it for a dataset with no direct triples.
+
 ### Changed
-- **The converters now write direct relationship triples by default.** The bundled
-  `linked-archi-default` profile still describes output without them, which every fixture is;
-  its description says so, and `linked-archi-direct` describes current output.
+- **`linked-archi-default` describes converter output at default flags** (version 3): it
+  claims `direct_rel_triples`, and `rdf_reifies` as `partial`, because the bridge is written
+  with each direct triple and a relationship whose class publishes no unqualified predicate
+  (BPMN's flows) has neither. Under it 37 of the 43 templates are available, where 33 were:
+  `core/dependents-direct`, `core/reified-predicates`, `core/neighbours-reified` and
+  `core/reifies-audit` run, the last three with a coverage caveat. `linked-archi-merged` and
+  the examples that extend the default claim the same.
+- **Fixtures re-extracted from the current converters.** `base.trig` (3471 quads) and
+  `flat.ttl` now carry the 30 direct triples and their `rdf:reifies` bridges the conversions
+  write, each kept with the relationship that reifies it; `augmented.trig` no longer adds
+  them. `converter-1.3.trig` (308 quads) is rebuilt by its recipe. Tests needing output
+  without the direct triples derive it from `base.trig`.
+- **`la-analyse` plans impact questions with `core/reified-predicates`**, and takes
+  `PREDICATE_PATH` from it: it named `core/discover-relationship-types`, which returns
+  relationship classes, and a class followed as a predicate matches nothing.
+- **Four core questions are named apart** from the templates whose names they shared
+  (above), so every question in the bundled sets is a catalogue entry.
+
+### Deprecated
+- **`linked-archi-direct`.** It described output written with `--emit-direct-rel-triples`,
+  which is now the default, so it extends the default and adds nothing. It still resolves,
+  and will be removed in a later release; name `linked-archi-default`.
+
+### Fixed
+- **`make fixtures` found no converters.** Its default path was one directory short of the
+  converters' checkout, where `build_fixtures.py` already looked.
 
 ## [0.9.1] - 2026-10-26
 
@@ -672,7 +709,8 @@ converters against the meta.linked.archi ontologies.
   for SHACL validation, and `git` for Git acquisition. Endpoint and HTTPS transport use
   the standard library. No mandatory MCP server.
 
-[Unreleased]: https://github.com/linked-archi/linked-archi-apm/compare/v0.9.1...HEAD
+[Unreleased]: https://github.com/linked-archi/linked-archi-apm/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.9.1...v0.10.0
 [0.9.1]: https://github.com/linked-archi/linked-archi-apm/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.7.0...v0.8.0

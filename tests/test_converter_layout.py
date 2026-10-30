@@ -66,8 +66,9 @@ OLDER_LAYOUT = """\
 """
 
 #: What it takes to describe that dataset: three keys.
+# Qualified, because a converter that predates graph/model predates the direct triples too.
 OLDER_PROFILE = """\
-extends: linked-archi-default.yaml
+extends: linked-archi-qualified.yaml
 profile: older-layout
 version: 1
 description: A dataset from a converter that predates graph/model.

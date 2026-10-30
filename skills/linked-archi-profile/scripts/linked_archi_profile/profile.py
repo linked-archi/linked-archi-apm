@@ -1653,8 +1653,8 @@ def _verify_capabilities(profile: Profile, adapter) -> list[Finding]:
                 "relationship, but no rdf:reifies bridge says which predicate that "
                 "relationship stands for, so a genuine unqualified form cannot be told "
                 "from an unrelated edge between the same two resources. Left as claimed - "
-                "re-convert with --emit-direct-rel-triples, or claim "
-                "capabilities.rdf_reifies if the endpoint speaks SPARQL 1.2, to settle it.",
+                "reconvert with a current converter, which writes the bridge by default, or "
+                "claim capabilities.rdf_reifies if the endpoint speaks SPARQL 1.2, to settle it.",
             ))
             continue
         if observed == "partial":
@@ -1853,13 +1853,14 @@ def _observe_dataset(adapter) -> tuple[Observation, ...]:
     if declared_any:
         observations.append(Observation(
             "direct rel triples", "present" if declared_direct else "absent",
-            "converted with --emit-direct-rel-triples" if declared_direct
-            else "qualified form only, the converter default",
+            "written beside the qualified form, the converter default" if declared_direct
+            else "qualified form only: an older converter, or --no-emit-direct-rel-triples",
         ))
     elif not candidate:
         observations.append(Observation(
             "direct rel triples", "absent",
-            "qualified form only, the converter default",
+            "qualified form only: an older converter, --no-emit-direct-rel-triples, or a "
+            "notation with no unqualified predicate",
         ))
     else:
         observations.append(Observation(
@@ -2001,16 +2002,17 @@ def recommend_profile(observations: Sequence[Observation]) -> Recommendation:
         profile = "linked-archi-merged"
     elif seen.get("direct rel triples") == "present":
         reasons.append(
-            "direct source-predicate-target triples alongside the qualified form, so the "
-            "converter ran with --emit-direct-rel-triples"
-        )
-        profile = "linked-archi-direct"
-    else:
-        reasons.append(
-            "qualified relationships only and three graphs per model: converter output at "
-            "default flags"
+            "direct source-predicate-target triples alongside the qualified form: converter "
+            "output at default flags"
         )
         profile = "linked-archi-default"
+    else:
+        reasons.append(
+            "qualified relationships only: output from a converter before direct triples "
+            "became its default, or run with --no-emit-direct-rel-triples - or of a "
+            "notation that publishes no unqualified predicate, such as BPMN"
+        )
+        profile = "linked-archi-qualified"
 
     if seen.get("graph/views") in {"0", None} and seen.get("named graphs") not in {None, "0"}:
         reasons.append(

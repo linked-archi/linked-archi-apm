@@ -1,11 +1,10 @@
 """Model questions, read from the published question sets as catalogue entries.
 
 A question set is the source of truth for what it asks (D10 of the la-queries design), and
-this skill reads it rather than keeping a copy of its own. Four things are held here:
+this skill reads it rather than keeping a copy of its own. Four things are tested here:
 
 - the bundled index says what the bundled Turtle says;
-- a question and a template of one name are one entry, except where the two ask different
-  things - those are held back, by name;
+- a question and a template of one name are one entry, the same question implemented twice;
 - a question is asked of the dataset read as ONE graph, refused where that cannot be done,
   and refused - or answered by its template - where the metamodel it reads is not loaded;
 - asked through this skill, every question answers meta's example models exactly as meta's
@@ -26,10 +25,8 @@ from linked_archi_query import load_catalog, render
 from linked_archi_query.catalog import CatalogError
 from linked_archi_query.questions import (
     BUNDLED_SETS,
-    HELD_BACK,
     INDEX_PATH,
     QUESTION_DIR,
-    build_query,
     extract,
     load_index,
     metamodel_probes,
@@ -55,7 +52,7 @@ EXAMPLES = {
 
 def _profile(directory: Path, *, named_graphs: bool, direct: bool = True) -> object:
     """A profile every bundled question fits: both ArchiMate notations, the direct triples."""
-    base = PROFILES / ("linked-archi-direct.yaml" if direct else "linked-archi-default.yaml")
+    base = PROFILES / ("linked-archi-default.yaml" if direct else "linked-archi-qualified.yaml")
     single = """
 graphs:
   layout: single
@@ -220,7 +217,7 @@ class TestTheCatalogue(unittest.TestCase):
 
     def test_questions_join_the_catalogue(self):
         entries = list(self.catalog)
-        self.assertEqual(sum(1 for e in entries if e.question), 51)
+        self.assertEqual(sum(1 for e in entries if e.question), 55)
         self.assertEqual(sum(1 for e in entries if e.file), 43)
         both = sorted(e.name for e in entries if e.file and e.question)
         self.assertEqual(both, [
@@ -230,16 +227,19 @@ class TestTheCatalogue(unittest.TestCase):
             "notation/archimate/layer-crossing",
         ])
 
-    def test_a_name_two_different_questions_share_is_held_back(self):
-        held = {name: question for name, question, _ in self.catalog.held_back}
-        self.assertEqual(set(held), set(HELD_BACK))
-        for name in held:
-            entry = self.catalog.get(name)
-            self.assertIsNone(entry.question, name)
-            self.assertTrue(entry.file, name)
-        self.assertEqual(
-            held["core/coverage-gaps"], "https://meta.linked.archi/core-questions#missing-definitions"
-        )
+    def test_a_question_and_a_template_asking_different_things_have_different_names(self):
+        # The template and the question each keep their own entry: these four once shared
+        # a name while asking different things.
+        for template, question in (
+            ("core/inventory", "core/model-inventory"),
+            ("core/coverage-gaps", "core/missing-definitions"),
+            ("core/label-collisions", "core/duplicate-labels"),
+            ("core/lifecycle", "core/architecture-state"),
+        ):
+            self.assertIsNone(self.catalog.get(template).question, template)
+            entry = self.catalog.get(question)
+            self.assertFalse(entry.file, question)
+            self.assertEqual(entry.question.identifier, question)
 
     def test_a_question_entry_is_listed_with_what_it_asks(self):
         entry = self.catalog.get("notation/archimate4/unrealised-services")
@@ -326,12 +326,13 @@ class TestWhichImplementationRuns(unittest.TestCase):
 
     def test_a_question_reading_direct_triples_is_refused_without_them(self):
         with self.assertRaises(UnsupportedTemplate) as refused:
-            render("notation/archimate/unrealised-services", self.default, {},
+            render("notation/archimate/unrealised-services",
+                   support.load_resolved_profile("linked-archi-qualified"), {},
                    catalog=self.catalog, transport="local")
         self.assertIn("'direct_rel_triples' is False", str(refused.exception))
 
     def test_an_archimate_4_question_needs_a_profile_speaking_archimate_4(self):
-        direct = support.load_resolved_profile("linked-archi-direct")
+        direct = support.load_resolved_profile("linked-archi-default")
         with self.assertRaises(UnsupportedTemplate) as refused:
             render("notation/archimate4/unrealised-services", direct, {},
                    catalog=self.catalog, transport="local")
@@ -383,22 +384,12 @@ class TestTheExamplesAnswerAsMetaChecks(unittest.TestCase):
             parameter_name(name): value for name, value in bindings.items()
             if name in {p.variable for p in question.parameters}
         }
-        if question.identifier in HELD_BACK:
-            # Not a catalogue entry while its name is held back, but still a question this
-            # skill must answer as meta does once it is named apart.
-            bound = {
-                p.variable: f"<{bindings[p.variable]}>"
-                for p in question.parameters if p.variable in bindings
-            }
-            query = build_query(question, bound, question.default_limit)
-            probes = metamodel_probes(question)
-        else:
-            rendered = render(
-                question.identifier, profile, values, catalog=self.catalog,
-                transport="local", implementation="question",
-            )
-            query, probes = rendered.query, rendered.probes
-            self.assertEqual(rendered.default_graph, "union" if union else None)
+        rendered = render(
+            question.identifier, profile, values, catalog=self.catalog,
+            transport="local", implementation="question",
+        )
+        query, probes = rendered.query, rendered.probes
+        self.assertEqual(rendered.default_graph, "union" if union else None)
         mode = "union" if union else None
         for probe in probes:
             self.assertTrue(adapter.execute(probe.query, default_graph=mode).boolean,
@@ -603,7 +594,7 @@ class TestPlanningByConcern(unittest.TestCase):
         self.assertNotIn("MODEL_IRI", orphans["parameters"])
 
     def test_a_language_the_profile_does_not_declare_is_left_out_and_said(self):
-        plan = self._plan("--concern", "Completeness", "--profile", "linked-archi-direct")
+        plan = self._plan("--concern", "Completeness", "--profile", "linked-archi-default")
         planned = {step["template"] for step in plan["steps"]}
         self.assertIn("notation/archimate/unrealised-capabilities", planned)
         self.assertFalse(any(name.startswith("notation/archimate4/") for name in planned))
@@ -616,7 +607,7 @@ class TestPlanningByConcern(unittest.TestCase):
 
         plan = self._plan(
             "--concern", "https://meta.linked.archi/archimate3/viewpoints#Completeness",
-            "--profile", "linked-archi-direct",
+            "--profile", "linked-archi-default",
         )
         self.assertFalse(any("left out" in note for note in plan["notes"]))
         self.assertIn(
@@ -627,7 +618,7 @@ class TestPlanningByConcern(unittest.TestCase):
         refused = subprocess.run(
             [sys.executable, str(support.ROOT / "skills/linked-archi-analyse/scripts/la-analyse"),
              "plan", "--concern", "https://meta.linked.archi/archimate4/viewpoints#Completeness",
-             "--profile", "linked-archi-direct"],
+             "--profile", "linked-archi-default"],
             capture_output=True, text=True, timeout=180, cwd=support.ROOT,
         )
         self.assertNotEqual(refused.returncode, 0)

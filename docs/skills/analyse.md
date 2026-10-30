@@ -185,7 +185,7 @@ templates using repeated `catalog dump --template NAME` filters. Refused candida
 
 ```
 decision-1 [REFUSED] core/dependents-direct
-   reason: capability 'direct_rel_triples' is False in profile 'linked-archi-default' but this template needs True
+   reason: capability 'direct_rel_triples' is False in profile 'linked-archi-qualified' but this template needs True
    alternatives to assess: core/dependents-qualified, core/neighbours-qualified
    Alternatives are not assumed to answer the same question.
 ```

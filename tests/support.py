@@ -123,6 +123,40 @@ def load_fixture(*paths: Path):
     return _STORES[key]
 
 
+_QUALIFIED: list = []
+
+
+def qualified_only() -> Path:
+    """``base.trig`` as the same conversions write it with --no-emit-direct-rel-triples.
+
+    The converter writes a direct triple and the ``rdf:reifies`` bridge naming it in one
+    branch, so leaving out every bridge and the triple it names is exactly what that flag
+    leaves out. Derived once per run rather than committed: it is ``base.trig`` less those
+    quads. The output a converter wrote before direct triples became its default has the
+    same shape, and ``linked-archi-qualified`` describes it.
+    """
+    if not _QUALIFIED:
+        import tempfile
+
+        from pyoxigraph import RdfFormat, Store
+
+        reifies = "http://www.w3.org/1999/02/22-rdf-syntax-ns#reifies"
+        store = Store()
+        store.bulk_load(path=str(BASE), format=RdfFormat.TRIG)
+        for quad in [q for q in store if str(q.predicate.value) == reifies]:
+            term = quad.object
+            for direct in list(store.quads_for_pattern(
+                term.subject, term.predicate, term.object, quad.graph_name
+            )):
+                store.remove(direct)
+            store.remove(quad)
+        directory = tempfile.TemporaryDirectory()
+        path = Path(directory.name) / "qualified.trig"
+        store.dump(str(path), RdfFormat.TRIG)
+        _QUALIFIED.extend([path, directory])
+    return _QUALIFIED[0]
+
+
 def load_resolved_profile(reference: str):
     """Resolve through the profile owner, then consume only the query contract."""
     from linked_archi_profile import load_profile

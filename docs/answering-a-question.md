@@ -19,19 +19,20 @@ claims against the file in front of you, nobody has.
 
 ```console
 $ python3 scripts/la-profile verify --profile linked-archi-default --data fixtures/base.trig
-local store: 1 file(s), 3333 quad(s), 17 named graph(s)
-  store: parsed into memory in 5 ms (mode memory)
-warn roles.reifies                      bound to http://www.w3.org/1999/02/22-rdf-syntax-ns#reifies but unused in this dataset
+local store: 1 file(s), 3471 quad(s), 17 named graph(s)
+  store: parsed into memory in 8 ms (mode memory)
+warn roles.subclass_of                  bound to http://www.w3.org/2000/01/rdf-schema#subClassOf but unused in this dataset
 warn roles.unqualified_form             bound to https://meta.linked.archi/core#unqualifiedForm but unused in this dataset
 warn notations.present                  declared by the profile with no model conforming to them in this dataset: plantuml. Questions about them can only ever come back empty. Recording notations.<name>.present false turns that empty answer into a refusal that says which dataset to ask instead.
-70 check(s): 0 error(s), 12 warning(s), 58 confirmed (--all to show)
+76 check(s): 0 error(s), 17 warning(s), 59 confirmed (--all to show)
 ```
 
-Zero errors, so the profile fits. One warning is worth reading rather than skipping: `roles.reifies`
-is bound but unused, which is this dataset saying it carries no RDF 1.2 reification bridge — part of
-the same picture as the refusal further down, that only the qualified relationship form is here.
+Zero errors, so the profile fits. Two of the confirmed claims (`--all` shows them) matter further
+down: `direct_rel_triples`, and `rdf_reifies` as `partial`. This dataset has the direct triples the
+converters write by default, each with its RDF 1.2 bridge, on every relationship whose class
+publishes an unqualified predicate - BPMN's sequence flows have neither.
 
-The neighbouring `roles.unqualified_form`, `roles.subclass_of` and `roles.narrower` warnings say
+The `roles.unqualified_form`, `roles.subclass_of` and `roles.narrower` warnings say
 something duller: those are schema-level predicates, and no ontology or taxonomy is attached to this
 dataset. `examples/with-vocabulary` is the profile for when they are.
 
@@ -47,17 +48,17 @@ dataset. `examples/with-vocabulary` is the profile for when they are.
 $ python3 scripts/la-query query run core/inventory-summary \
     --profile linked-archi-default --data fixtures/base.trig
 metamodel	models	graphs	concepts
-https://meta.linked.archi/archimate3/metamodel#ArchiMate3.2	1	1	38
+https://meta.linked.archi/archimate3/metamodel#ArchiMate3.2	1	1	41
 https://meta.linked.archi/leanix/metamodel#LeanIXv4	1	1	15
 https://meta.linked.archi/backstage/metamodel#BackstageCatalog	1	1	13
 https://meta.linked.archi/bpmn/metamodel#BPMN2	1	1	10
 https://meta.linked.archi/c4/metamodel#C4Model	1	1	5
 #
 # 5 row(s)
-# core/inventory-summary | query 37548aa0dea1 | dataset base.trig | profile linked-archi-default v2 | 2026-09-17T05:25:12.443019+00:00 | 5 row(s)
+# core/inventory-summary | query 07119971d2fa | dataset base.trig | profile linked-archi-default v3 | 2026-10-30T08:47:21.128577+00:00 | 5 row(s)
 ```
 
-Five notations, 81 concepts. This establishes the loaded population, not that every export
+Five notations, 84 concepts. This establishes the loaded population, not that every export
 is complete. Before an absence claim, also check scope, predicates, relationship direction
 and query truncation.
 
@@ -77,7 +78,7 @@ rank	matched	value	element	type	g_semantic
 1 exact	1 name	Order Service	https://example.org/la/backstage/commerce-catalog/element/component/default/order-service	https://meta.linked.archi/backstage/onto#Component	…/commerce-catalog/graph/semantic
 #
 # 1 row(s)
-# core/resolve-element | query dd2a68512fc7 | dataset base.trig | profile linked-archi-default v2 | 2026-09-17T05:25:32.926862+00:00 | 1 row(s)
+# core/resolve-element | query a04276f83284 | dataset base.trig | profile linked-archi-default v3 | 2026-10-30T08:47:21.564147+00:00 | 1 row(s)
 ```
 
 One exact match, on the name, in the **Backstage** graph — a `bs:Component`. That last part is the
@@ -98,21 +99,22 @@ taking the top row.
 $ python3 scripts/la-query query run core/neighbours-qualified \
     --profile linked-archi-default --data fixtures/base.trig \
     --set FOCUS_IRI="<https://example.org/la/backstage/commerce-catalog/element/component/default/order-service>"
-direction	rel	relType	other	otherLabel
+direction	relationship	relationshipType	other	otherLabel
 outgoing	…/relationship/providesAPI--component-default-order-service--api-default-orders-api	bs:APIProvision	…/element/api/default/orders-api	Orders REST API
 outgoing	…/relationship/ownedBy--component-default-order-service--group-default-team-commerce	bs:Ownership	…/element/group/default/team-commerce	Commerce Team
 outgoing	…/relationship/partOfSystem--component-default-order-service--system-default-commerce-platform	bs:SystemMembership	…/element/system/default/commerce-platform	Commerce Platform
 #
 # 3 row(s)
-# core/neighbours-qualified | query ab5908f90b11 | dataset base.trig | profile linked-archi-default v2 | 2026-09-17T05:25:33.251556+00:00 | 3 row(s)
+# core/neighbours-qualified (model question) | query 8de8cdefc60e | dataset base.trig | profile linked-archi-default v3 | 2026-10-30T08:47:22.008123+00:00 | 3 row(s)
 ```
 
 Three relationships, all outgoing: it provides the Orders REST API, it is owned by Commerce Team,
 and it belongs to the Commerce Platform system.
 
-`core/neighbours-qualified` is the default traversal template because it reads the qualified
-relationship resource, which is the form every converter emits without being asked. `?direction`
-covers both ways round in one query, so nothing is missed by only asking outgoing.
+`core/neighbours-qualified` is the default traversal because it reads the qualified relationship
+resource, which is the form every converter emits without being asked. `?direction` covers both
+ways round in one query, so nothing is missed by only asking outgoing. On local data it is asked as
+the core model question of the same name, reading the dataset as one graph; the footer says so.
 
 ## Step 4 — cite it
 
@@ -123,41 +125,43 @@ $ python3 scripts/la-query query run core/provenance \
     --profile linked-archi-default --data fixtures/base.trig \
     --set FOCUS_IRI="<https://example.org/la/backstage/commerce-catalog/element/component/default/order-service>"
 model	source	generated	startedAt	agentName	agentVersion	title	creator
-https://example.org/la/backstage/commerce-catalog	catalog-info.yaml	2026-09-08T10:18:37.984495922Z	2026-09-08T10:18:37.927286839Z	backstage2linkedarchi	1.3.0-SNAPSHOT	Commerce Platform Catalog	Commerce Team
+https://example.org/la/backstage/commerce-catalog	catalog-info.yaml	2026-10-30T09:32:11.388196+01:00	2026-10-30T09:32:11.320955+01:00	backstage2linkedarchi	1.3.0-SNAPSHOT	Commerce Platform Catalog	Commerce Team
 #
 # 1 row(s)
-# core/provenance | query 167ff1bf3a10 | dataset base.trig | profile linked-archi-default v2 | 2026-09-17T05:25:51.192108+00:00 | 1 row(s)
+# core/provenance | query 3eb6f38cd3b2 | dataset base.trig | profile linked-archi-default v3 | 2026-10-30T08:47:22.436250+00:00 | 1 row(s)
 ```
 
 The three relationships come from `catalog-info.yaml`, converted by `backstage2linkedarchi`
-1.3.0-SNAPSHOT on 2026-09-08. A reader who disputes the answer now knows which file to open.
+1.3.0-SNAPSHOT on 2026-10-30. A reader who disputes the answer now knows which file to open.
 
 Note what provenance does **not** establish: that `catalog-info.yaml` is current, correct or
 approved. A conversion timestamp is not an as-at date.
 
 ## What a refusal looks like mid-flow
 
-Suppose Step 3 had reached for transitive dependents instead:
+Suppose the same model had been converted without the direct triples - by a converter older than
+that default, or with `--no-emit-direct-rel-triples` - and Step 0 had fitted it to
+`linked-archi-qualified`. Then Step 3 reaches for transitive dependents:
 
 ```console
 $ python3 scripts/la-query query run core/dependents-direct \
-    --profile linked-archi-default --data fixtures/base.trig \
+    --profile linked-archi-qualified --data older.trig \
     --set FOCUS_IRI="<…/element/component/default/order-service>" \
-    --set PREDICATE_PATH="bs:ownedBy"
-Template 'core/dependents-direct' cannot run against profile 'linked-archi-default':
-  - capability 'direct_rel_triples' is False in profile 'linked-archi-default' but this template needs True
+    --set PREDICATE_PATH="<https://meta.linked.archi/backstage/onto#ownedBy>"
+Template 'core/dependents-direct' cannot run against profile 'linked-archi-qualified':
+  - capability 'direct_rel_triples' is False in profile 'linked-archi-qualified' but this template needs True
 Try instead: core/dependents-qualified, core/neighbours-qualified (same question, different evidence).
 This is a refusal, not an empty result: running it anyway would return no rows and read as 'nothing exists'.
 ```
 
-Exit 1, and nothing ran. The gate is the `direct_rel_triples` capability, false in this profile
-because the direct `{source} {predicate} {target}` triple is opt-in at conversion time and this
-dataset was converted without it. Step 0 is what makes that trustworthy: `verify` checked the claim
-against the data instead of taking it on trust. The template needs a form the data does not have, so
-it is refused and its alternatives are named.
+Exit 1, and nothing ran. The gate is the `direct_rel_triples` capability, false in that profile
+because the dataset has no direct `{source} {predicate} {target}` triple. Step 0 is what makes that
+trustworthy: `verify` checked the claim against the data instead of taking it on trust. The template
+needs a form the data does not have, so it is refused and its alternatives are named.
 
 The investigation loses nothing — Step 3 answered the question through the qualified form. What it
 gains is that nobody reported "nothing depends on Order Service" on the strength of an empty table.
+On `fixtures/base.trig`, under the default profile, the same template runs.
 
 ## The answer
 
@@ -166,15 +170,14 @@ gains is that nobody reported "nothing depends on Order Service" on the strength
 > Commerce Team (`bs:Ownership`), and it is part of the Commerce Platform system
 > (`bs:SystemMembership`).
 >
-> Evidence: `core/neighbours-qualified`, query `ab5908f90b11`, dataset `base.trig`, profile
-> `linked-archi-default` v2, 3 rows. Source `catalog-info.yaml`, converted by
-> `backstage2linkedarchi` 1.3.0-SNAPSHOT (`core/provenance`, query `167ff1bf3a10`).
+> Evidence: `core/neighbours-qualified`, query `8de8cdefc60e`, dataset `base.trig`, profile
+> `linked-archi-default` v3, 3 rows. Source `catalog-info.yaml`, converted by
+> `backstage2linkedarchi` 1.3.0-SNAPSHOT (`core/provenance`, query `3eb6f38cd3b2`).
 >
 > Not established: runtime dependency, criticality or failure propagation. These are design-time
-> statements from a catalogue file. Incoming dependencies at depth were not retrieved — the
-> template for that was refused because this dataset carries only the qualified relationship form.
+> statements from a catalogue file. Incoming dependencies at depth were not retrieved.
 
-Four templates, one refusal, and every clause above traceable to a query hash. The closing
+Four queries, and every clause above traceable to a query hash. The closing
 paragraph is not hedging; it is the part that keeps the answer honest when someone acts on it.
 
 ## Where to go next

@@ -223,9 +223,8 @@ How the catalogue reads one:
 
 - **Name.** `dcterms:identifier`. A question and a template of one name are one entry with
   two implementations: `query run` asks the question where the dataset fits it - read as
-  one graph, with what its query reads present - and runs the template elsewhere. A name
-  the two use for *different* questions is held back from the catalogue until the question
-  set names them apart (`catalog list` says which).
+  one graph, with what its query reads present - and runs the template elsewhere. A
+  question asking something a template does not takes a name of its own.
 - **Query.** Written for one graph, the model and its metamodel together; no placeholders,
   no `GRAPH` scoping, prefixes from the set's `sh:declare`. It is asked of the dataset read
   as one graph: local data on request (each triple once, however many graphs hold it), an

@@ -32,7 +32,6 @@ from typing import Any, Iterable, Mapping, Sequence
 
 from .contract import _is_absolute_iri
 from .questions import (
-    HELD_BACK,
     Question,
     QuestionError,
     catalogue_parameters,
@@ -421,11 +420,11 @@ QUESTION_REMEDIES: Mapping[str, str] = {
     "direct_rel_triples": (
         "The converters write the direct triples unless run with "
         "--no-emit-direct-rel-triples; data that has them is described by a profile "
-        "claiming the capability, such as linked-archi-direct."
+        "claiming the capability, such as linked-archi-default."
     ),
     "rdf_reifies": (
         "The converters write rdf:reifies with the direct triples; a profile claiming the "
-        "capability, such as linked-archi-direct, describes data that has it."
+        "capability, such as linked-archi-default, describes data that has it."
     ),
     "part_of_model_edge": (
         "Output of a converter from before arch:inModel lacks it; reconvert the model."
@@ -539,9 +538,6 @@ class Catalog:
 
         self.version = version
         self._entries: dict[str, TemplateEntry] = {}
-        #: Bundled questions kept out because a template of their name asks something else:
-        #: (identifier, question IRI, why). See ``questions.HELD_BACK``.
-        self.held_back: list[tuple[str, str, str]] = []
         for name, spec in raw.items():
             if (
                 not isinstance(name, str)
@@ -746,16 +742,12 @@ class Catalog:
         """Add model questions: beside the template of their name, or as entries of their own.
 
         A bundled question and a bundled template of one name are one question with two
-        implementations, unless :data:`questions.HELD_BACK` says the two ask different
-        things. A project's question may not take a name already in the catalogue.
+        implementations. A project's question may not take a name already in the catalogue.
         """
         added: list[TemplateEntry] = []
         for question in questions:
             name = question.identifier
             existing = self._entries.get(name)
-            if existing is not None and bundled and existing.file and name in HELD_BACK:
-                self.held_back.append((name, question.iri, HELD_BACK[name]))
-                continue
             if existing is not None:
                 if not bundled or not existing.file or existing.question is not None:
                     raise CatalogError(
@@ -910,11 +902,6 @@ class Catalog:
             lines.append(
                 line + " (Q = model question; Q+T = the question where the dataset fits it, "
                 "the template elsewhere)"
-            )
-        for name, question, reason in self.held_back:
-            lines.append(
-                f"held back: the model question {question} shares the name {name} with a "
-                f"template that asks something else - {reason}"
             )
         return "\n".join(lines).lstrip("\n")
 

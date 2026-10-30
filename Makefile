@@ -7,7 +7,7 @@ PYPATH  := PYTHONPATH=$(SCRIPTS)
 # Maintainer-only. `make fixtures` re-extracts from real converter output, which means a
 # checkout of the converters and of linked-archi-meta alongside this repo. A consumer never
 # needs it: the fixtures are committed. Override when your checkouts sit elsewhere.
-CONV    ?= ../converters/example-architecture-project
+CONV    ?= ../../converters/example-architecture-project
 # Maintainer-only too. `make questions` refreshes the bundled question sets and the
 # documents their check runs on from a linked-archi-meta checkout.
 META    ?= ../../../linked-archi-meta

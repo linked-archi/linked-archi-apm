@@ -117,7 +117,7 @@ does not generate or copy a shared payload.
 ```bash
 APM_SOURCE=/absolute/path/to/linked-archi-apm
 apm install "$APM_SOURCE"
-apm install linked-archi/linked-archi-apm#v0.9.1
+apm install linked-archi/linked-archi-apm#v0.10.0
 ```
 
 That is the whole happy path. The rest of this section is for when the default is not
@@ -310,8 +310,8 @@ apm update -g                    # user-scope dependencies
 apm update --yes                 # CI and scripts
 ```
 
-A pinned ref does not move on its own: `apm install linked-archi/linked-archi-apm#v0.9.1`
-means v0.9.1 until you change the ref in your own manifest and install again. In CI prefer
+A pinned ref does not move on its own: `apm install linked-archi/linked-archi-apm#v0.10.0`
+means v0.10.0 until you change the ref in your own manifest and install again. In CI prefer
 [`apm install --frozen`](https://microsoft.github.io/apm/reference/cli/install/), which
 deploys exactly what `apm.lock.yaml` records and fails on drift rather than quietly moving.
 `apm update` refreshes dependencies, not the APM binary — that is `apm self-update` or your
@@ -1127,24 +1127,27 @@ Repeatable, no network beyond the model API.
 1. **Orientation.** `core/inventory` and `core/models`. Establishes this is real
    data with real provenance, not a fixture.
 2. **A simple question**, one notation. Fast, proves the loop.
-3. **Show a refusal.** Run `core/dependents-direct` under the default profile and let
-   the audience read the message. This is the part worth rehearsing: it is the
-   difference between this and a text-to-SPARQL demo, and it lands better seen than
-   described.
+3. **Show a refusal.** Run `core/dependents-direct` under `linked-archi-qualified`, the
+   profile for a model converted without the direct triples, and let the audience read
+   the message. This is the part worth rehearsing: it is the difference between this and
+   a text-to-SPARQL demo, and it lands better seen than described.
    ```bash
-   la-kg query run core/dependents-direct --data fixtures/base.trig \
-     --set FOCUS_IRI=https://example.org/la/bpmn/order-fulfillment/element/Task_Ship \
-     --set PREDICATE_PATH=https://meta.linked.archi/bpmn/onto#sequenceFlow
+   la-kg query run core/dependents-direct --profile linked-archi-qualified \
+     --data fixtures/base.trig \
+     --set FOCUS_IRI=https://example.org/la/backstage/commerce-catalog/element/group/default/team-commerce \
+     --set PREDICATE_PATH=https://meta.linked.archi/backstage/onto#ownedBy
    ```
-4. **Then lift it.** The same command against `fixtures/augmented.trig` with
-   `--profile curated-store` works, because that dataset was converted with the flag.
-   Same template, different dataset, honest either way.
+4. **Then lift it.** The same command under the default profile answers - what Commerce
+   Team owns, at any depth - because the converters write the direct triples by default
+   and `fixtures/base.trig` has them. Same template, different claim about the data,
+   honest either way.
 5. **Provenance.** `core/provenance` — follow one element back to a file, a converter
    and a timestamp.
 
-Optional closer: `la-kg profile verify --profile linked-archi-direct --data
-fixtures/base.trig`, which fails with an error naming the false claim. It shows the
-package checking itself.
+Optional closer: `la-kg profile verify --profile curated-store --data
+fixtures/base.trig`, which fails with an error for each claim the dataset cannot back -
+an owner, identity assertions, a validation report. It shows the package checking
+itself.
 
 Practical notes. Pin two or three questions you have run many times and do not take
 improvised ones until the loop has worked cleanly that day. Keep a saved transcript

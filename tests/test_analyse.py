@@ -264,9 +264,9 @@ class TestPlanShape(unittest.TestCase):
 class TestProfileAwareness(unittest.TestCase):
     def test_a_refused_template_is_a_decision_without_an_executable_command(self):
         plan = _plan('what depends on "Order Service" if we retire it?',
-                     profile="linked-archi-default")
+                     profile="linked-archi-qualified")
         refused = plan.decisions
-        self.assertTrue(refused, "the default profile refuses core/dependents-direct")
+        self.assertTrue(refused, "output without direct triples refuses core/dependents-direct")
         for decision in refused:
             self.assertTrue(decision["alternatives"])
             self.assertTrue(decision["reason"])
@@ -335,7 +335,7 @@ class TestConditionalPlanning(unittest.TestCase):
         self.assertEqual(len(selected), len(set(selected)))
 
     def test_refusals_are_review_barriers_not_silent_substitutions(self):
-        plan = _plan('what depends on "Order Service"?', catalogue=self.catalogue)
+        plan = _plan('what depends on "Order Service"?', profile="linked-archi-qualified")
         decision = next(item for item in plan.decisions if item["template"] == "core/dependents-direct")
         provenance = next(step for step in plan.steps if step.template == "core/provenance")
         self.assertIn(decision["id"], provenance.review_decisions)

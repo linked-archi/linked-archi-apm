@@ -34,7 +34,7 @@ PARAMETER_SOURCES: Mapping[str, str] = {
     "SOURCE_TYPE": "a class IRI from core/inventory",
     "TARGET_TYPE": "a class IRI from core/inventory",
     "EXPECTED_PREDICATE": "a predicate from core/discover-predicates, spelling confirmed with core/element-detail",
-    "PREDICATE_PATH": "a predicate from core/discover-relationship-types",
+    "PREDICATE_PATH": "an unqualified predicate from core/reified-predicates, never a class",
     "CONCEPT_IRI": "from core/resolve-concept after reviewing its scheme and ambiguity",
     "VIEWPOINT_IRI": "from core/viewpoint-catalog after reviewing the scheme and audience",
     "FROM_IRI": "a plateau IRI from core/resolve-element",

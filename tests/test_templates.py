@@ -837,7 +837,7 @@ class TestAgainstAugmentedFixture(unittest.TestCase):
 
 
 class TestAgainstBaseFixture(unittest.TestCase):
-    """Default converter output: the gated templates must be refused, not empty."""
+    """Converter output at default flags: the gated templates must be refused, not empty."""
 
     @classmethod
     def setUpClass(cls):
@@ -850,10 +850,7 @@ class TestAgainstBaseFixture(unittest.TestCase):
         cls.adapter = support.load_fixture(BASE)
 
     GATED = {
-        "core/dependents-direct", "core/identity-audit", "core/validation-summary",
-        # The RDF 1.2 bridge. Refused here for two reasons at once: no converter
-        # emits it, and the `<<( s p o )>>` syntax is a parse error on SPARQL 1.1.
-        "core/reified-predicates", "core/neighbours-reified", "core/reifies-audit",
+        "core/identity-audit", "core/validation-summary",
         # Converter output carries instances, not the ontologies and taxonomies
         # they conform to, so there is no class hierarchy here to group by.
         "core/elements-by-category",
@@ -899,8 +896,58 @@ class TestAgainstBaseFixture(unittest.TestCase):
         self.assertEqual(empty.row_count, 0)
         self.assertGreater(found.row_count, 0)
 
-    def test_direct_triples_are_absent_from_default_output(self):
-        """The behavioural fact the qualified-first default rests on."""
+    def test_direct_triples_are_present_in_default_output(self):
+        """The behavioural fact the default profile's claim rests on."""
+        from linked_archi_query.render import render_literal
+
+        probe = render_literal(
+            "{{PREFIXES}}\nASK { {{GRAPH_OPEN:semantic}} "
+            "?r a {{ROLE:relationship_class}} ; {{ROLE:rel_source}} ?s ; "
+            "{{ROLE:rel_target}} ?t . ?s ?direct ?t . "
+            "FILTER(?direct != {{ROLE:rel_source}} && ?direct != {{ROLE:rel_target}}) "
+            "{{GRAPH_CLOSE}} }",
+            self.profile,
+        )
+        self.assertTrue(self.adapter.ask(probe.query))
+
+
+class TestAgainstOutputWithoutDirectTriples(unittest.TestCase):
+    """Written without the direct triples: what follows them is refused, not empty."""
+
+    @classmethod
+    def setUpClass(cls):
+        try:
+            import pyoxigraph  # noqa: F401
+        except ModuleNotFoundError:  # pragma: no cover
+            raise unittest.SkipTest("pyoxigraph is not installed")
+        cls.catalog = load_catalog()
+        cls.profile = load_profile("linked-archi-qualified")
+        cls.adapter = support.load_fixture(support.qualified_only())
+
+    GATED = TestAgainstBaseFixture.GATED | {
+        "core/dependents-direct",
+        # The RDF 1.2 bridge, written with the direct triple and left out with it.
+        "core/reified-predicates", "core/neighbours-reified", "core/reifies-audit",
+    }
+
+    def test_gated_templates_are_refused(self):
+        for name in sorted(self.GATED):
+            with self.subTest(name):
+                with self.assertRaises(UnsupportedTemplate):
+                    render(name, self.profile, CASES[name][0], catalog=self.catalog)
+
+    def test_everything_else_runs(self):
+        for name, (params, _) in sorted(CASES.items()):
+            if name in self.GATED:
+                continue
+            with self.subTest(name):
+                rendered = render(name, self.profile, params, catalog=self.catalog)
+                self.adapter.execute(
+                    rendered.query, template=name, profile_id=self.profile.name,
+                    profile_version=self.profile.profile_version, limit=200,
+                )
+
+    def test_there_are_no_direct_triples(self):
         from linked_archi_query.render import render_literal
 
         probe = render_literal(

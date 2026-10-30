@@ -1,6 +1,6 @@
 # linked-archi-apm: proposal, design record, and progress tracker
 
-**Status:** released, Apache-2.0, installable directly by APM (v0.9.1)
+**Status:** released, Apache-2.0, installable directly by APM (v0.10.0)
 **Last updated:** 2026-10-11
 
 One document, three jobs. It records **why** this package exists, **how** it is
@@ -93,9 +93,10 @@ runs identical patterns scoped and unscoped and asserts 0 versus non-zero.
 
 Every relationship is an `arch:QualifiedRelationship` resource with `arch:source` and
 `arch:target`, reached from its source element by a qualified predicate. The direct
-`{src} {pred} {tgt}` shortcut is opt-in: `--emit-direct-rel-triples` is **off** in every
-converter, and it also governs the `rdf:reifies` bridge. So on a default dataset, traversal
-through the direct predicate returns nothing.
+`{src} {pred} {tgt}` shortcut, with the `rdf:reifies` bridge naming it, is written by
+default only where the notation publishes the predicate, and not at all by a converter
+older than that default or run with `--no-emit-direct-rel-triples`. So traversal through
+the direct predicate misses what the qualified form still has.
 
 **How it is enforced:** `core/neighbours-qualified` and `core/dependents-qualified` are the
 default traversal route. `core/dependents-direct` exists, requires
@@ -515,7 +516,7 @@ anything about the code under test.
 | `make verify-curated` (curated profile / `augmented.trig`) | 0 errors |
 | `query batch` against separate `query run` commands | identical `rows`, `query_id`, `truncated` and `row_count`; load paid once |
 | Store modes `memory`, `cached`, `readonly`, `refresh` | same quad and named-graph counts from each; a changed input rebuilds rather than serving a stale store |
-| `la-query catalog list --profile linked-archi-default` | 43 templates, 33 available, 10 refused with reasons |
+| `la-query catalog list --profile linked-archi-default` | 43 templates, 37 available, 6 refused with reasons |
 | `la-query catalog list --profile curated-store` | 43 available, 0 refused |
 | All 43 templates against `augmented.trig` and paired vocabulary fixtures | every one returns rows |
 | Exit-code contracts | 9 of 9 |
@@ -1101,9 +1102,10 @@ exactly that case.
 Zero occurrences of `arch:relPredicate`, `arch:relSource`, `arch:relTarget`; core publishes
 none of the three. `rdf:reifies` is also zero **in this harvest**, which was taken with
 default flags: every converter emits the bridge, but only inside the branch that writes the
-direct triple, under `--emit-direct-rel-triples`. That is why `capabilities.rdf_reifies`
-defaults to false here and is true in `linked-archi-direct` — the same flag produces both,
-so the two capabilities move together.
+direct triple, which `--emit-direct-rel-triples` then governed. The converters now write
+both by default, so `linked-archi-default` claims `direct_rel_triples` and a `partial`
+`rdf_reifies`, and `linked-archi-qualified` describes output like this harvest - the same
+flag produces both, so the two capabilities move together.
 
 **A5. Native identifiers differ by notation.** `skos:notation` in ArchiMate,
 Backstage, LeanIX, PlantUML and Structurizr; **`bpmn:id` in BPMN**, where

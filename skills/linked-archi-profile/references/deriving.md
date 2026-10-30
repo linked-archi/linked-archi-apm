@@ -41,8 +41,9 @@ guessed:
 
 - **Optional roles** — ownership, lifecycle, identity. A mapping says what *may* be emitted,
   not what was.
-- **`direct_rel_triples`** — a mapping declaring direct predicates does not mean the
-  converter was run with the flag that emits them.
+- **`direct_rel_triples`** — inherited from the base profile, never set from the mapping: a
+  mapping declaring direct predicates does not mean the conversion wrote them (an older
+  converter, or `--no-emit-direct-rel-triples`, did not).
 
 Read the notes in the generated header; they name every judgement left to you. Then:
 

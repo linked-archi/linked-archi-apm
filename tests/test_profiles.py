@@ -31,6 +31,7 @@ from linked_archi_profile.profile import (
 
 BUNDLED = [
     "linked-archi-default",
+    "linked-archi-qualified",
     "linked-archi-direct",
     "linked-archi-merged",
     "cloudplatform",
@@ -70,12 +71,20 @@ class TestLoading(unittest.TestCase):
 class TestInheritance(unittest.TestCase):
     def test_child_inherits_and_overrides(self):
         base = load_profile("linked-archi-default")
-        direct = load_profile("linked-archi-direct")
-        self.assertFalse(base.capability("direct_rel_triples"))
-        self.assertTrue(direct.capability("direct_rel_triples"))
+        qualified = load_profile("linked-archi-qualified")
+        self.assertTrue(base.capability("direct_rel_triples"))
+        self.assertFalse(qualified.capability("direct_rel_triples"))
+        self.assertFalse(qualified.capability("rdf_reifies"))
         # Untouched keys carry through.
-        self.assertEqual(base.role("label"), direct.role("label"))
-        self.assertEqual(base.namespaces, direct.namespaces)
+        self.assertEqual(base.role("label"), qualified.role("label"))
+        self.assertEqual(base.namespaces, qualified.namespaces)
+
+    def test_the_deprecated_direct_profile_claims_what_the_default_does(self):
+        base = load_profile("linked-archi-default")
+        direct = load_profile("linked-archi-direct")
+        for name in ("direct_rel_triples", "rdf_reifies"):
+            self.assertEqual(direct.capability(name), base.capability(name), name)
+        self.assertIn("Deprecated", direct.description)
 
     def test_custom_profile_adds_a_role_without_restating_the_rest(self):
         custom = load_profile("cloudplatform")
@@ -581,9 +590,11 @@ class TestDriftDetection(unittest.TestCase):
             )
 
     def test_claiming_a_capability_the_dataset_lacks_is_an_error(self):
-        """The direct-triples profile against default-flag output. The whole point."""
-        profile = load_profile("linked-archi-direct")
-        findings = verify_against_dataset(profile, support.load_fixture(BASE))
+        """The default profile against output without direct triples. The whole point."""
+        profile = load_profile("linked-archi-default")
+        findings = verify_against_dataset(
+            profile, support.load_fixture(support.qualified_only())
+        )
         errors = [f for f in findings if f.severity == "error"]
         self.assertTrue(errors, "expected drift to be reported")
         self.assertTrue(
@@ -605,7 +616,7 @@ class TestDriftDetection(unittest.TestCase):
         the only value that neither promises completeness nor refuses templates the data
         can partly answer.
         """
-        profile = load_profile("linked-archi-default")
+        profile = load_profile("linked-archi-qualified")
         findings = verify_against_dataset(profile, support.load_fixture(AUGMENTED))
         relevant = [f for f in findings if f.subject == "capabilities.rdf_reifies"]
         self.assertTrue(relevant, format_findings(findings))
@@ -1060,7 +1071,7 @@ class TestEmitFix(unittest.TestCase):
 
     def test_the_generated_profile_states_what_was_observed(self):
         generated = self.emit_fix_profile(self.profile, self.findings)
-        self.assertIn("direct_rel_triples: true", generated)
+        self.assertIn("validation_in_graph: true", generated)
         self.assertIn("OBSERVED", generated, "the reader has to know these are measurements")
 
     def test_the_generated_profile_actually_fits_the_dataset(self):
@@ -1307,9 +1318,17 @@ class TestSnapshotFingerprint(unittest.TestCase):
         )
 
     def test_bundled_profiles_have_distinct_fingerprints(self):
-        """Two profiles that say different things must not share a marker."""
+        """Two profiles that say different things must not share a marker.
+
+        Except the deprecated alias, which says what the default says - so a verification
+        recorded under one vouches for the other, as it should.
+        """
+        self.assertEqual(
+            load_profile("linked-archi-direct").resolved_snapshot()["fingerprint"],
+            load_profile("linked-archi-default").resolved_snapshot()["fingerprint"],
+        )
         seen = {}
-        for name in BUNDLED:
+        for name in (name for name in BUNDLED if name != "linked-archi-direct"):
             fingerprint = load_profile(name).resolved_snapshot()["fingerprint"]
             self.assertNotIn(
                 fingerprint, seen,
@@ -1352,8 +1371,8 @@ class TestDirectRelTriplesProbeIsThreeValued(unittest.TestCase):
 %s
 }
 """
-    #: Declares which predicate the relationship stands for, as the converter does under
-    #: --emit-direct-rel-triples. A triple term, so it asserts nothing by itself.
+    #: Declares which predicate the relationship stands for, as the converter does by
+    #: default. A triple term, so it asserts nothing by itself.
     DECLARES = ("; rdf:reifies <<( <https://example.org/la/p/m/e/a> am:serves "
                 "<https://example.org/la/p/m/e/b> )>>")
     #: The genuine unqualified form.
@@ -1374,14 +1393,14 @@ class TestDirectRelTriplesProbeIsThreeValued(unittest.TestCase):
         graph = Path(self._tmp.name) / f"case-{abs(hash((declares, edge)))}.trig"
         graph.write_text(self.QUALIFIED % (declares, edge), encoding="utf-8")
         findings = verify_against_dataset(
-            load_profile("linked-archi-default"), open_adapter(data=[graph])
+            load_profile("linked-archi-qualified"), open_adapter(data=[graph])
         )
         finding = next(
             f for f in findings if f.subject == "capabilities.direct_rel_triples"
         )
         if "Left as claimed" in finding.message:
             return None
-        # The default profile claims false, so "present" means the probe said true.
+        # The profile claims false, so "present" means the probe said true.
         return "but present" in finding.message
 
     def test_the_confounder_no_longer_reads_as_present(self):
@@ -1406,8 +1425,10 @@ class TestDirectRelTriplesProbeIsThreeValued(unittest.TestCase):
     def test_the_fixtures_land_where_expected(self):
         """The committed fixtures, so the three-way logic is exercised on real data."""
         cases = {
-            "base": (BASE, "linked-archi-default", "False, confirmed"),
+            "base": (BASE, "linked-archi-default", "True, confirmed"),
             "augmented": (AUGMENTED, "curated-store", "True, confirmed"),
+            "qualified": (support.qualified_only(), "linked-archi-qualified",
+                          "False, confirmed"),
         }
         for label, (fixture, profile_name, expected) in cases.items():
             with self.subTest(fixture=label):
@@ -1423,7 +1444,8 @@ class TestDirectRelTriplesProbeIsThreeValued(unittest.TestCase):
     def test_a_claim_of_true_against_a_dataset_with_none_is_still_an_error(self):
         """The signal that must survive the change to a stricter probe."""
         findings = verify_against_dataset(
-            load_profile("linked-archi-direct"), support.load_fixture(BASE)
+            load_profile("linked-archi-default"),
+            support.load_fixture(support.qualified_only()),
         )
         errors = [f for f in findings
                   if f.severity == "error"
@@ -1510,9 +1532,17 @@ class TestObserveAndVerifyAgree(unittest.TestCase):
         self.assertEqual(self._verified_direct(AUGMENTED, "curated-store"), "present")
 
     def test_they_agree_on_the_base_fixture(self):
+        """Converter output at default flags: declared and present."""
+        self.assertEqual(self._observed_direct(BASE), "present")
+        self.assertEqual(self._verified_direct(BASE, "linked-archi-default"), "present")
+
+    def test_they_agree_on_output_without_direct_triples(self):
         """No candidate edge at all, so both should say absent."""
-        self.assertEqual(self._observed_direct(BASE), "absent")
-        self.assertEqual(self._verified_direct(BASE, "linked-archi-default"), "absent")
+        qualified = support.qualified_only()
+        self.assertEqual(self._observed_direct(qualified), "absent")
+        self.assertEqual(
+            self._verified_direct(qualified, "linked-archi-qualified"), "absent"
+        )
 
     def test_unverifiable_is_a_value_the_observation_can_report(self):
         """So `recommend` cannot claim a converter flag it has not established."""
@@ -1523,9 +1553,9 @@ class TestObserveAndVerifyAgree(unittest.TestCase):
             support_observation("direct rel triples", "unverifiable", ""),
         ]
         recommendation = recommend_profile(observations)
-        self.assertNotEqual(
-            recommendation.profile, "linked-archi-direct",
-            "an unverifiable capability must not select the profile that claims it",
+        self.assertEqual(
+            recommendation.profile, "linked-archi-qualified",
+            "an unverifiable capability must not select a profile that claims it",
         )
 
 
@@ -1578,6 +1608,7 @@ class TestRecommendAndVerifyAgree(unittest.TestCase):
             Observation("reconciliation graph", "absent", ""),
             Observation("validation graph", "absent", ""),
             Observation("membership", "arch:inModel", ""),
+            Observation("direct rel triples", "present", ""),
         ])
         self.assertEqual(recommendation.profile, "linked-archi-default")
         joined = " ".join(recommendation.reasons)

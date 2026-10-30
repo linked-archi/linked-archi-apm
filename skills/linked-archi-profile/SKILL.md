@@ -5,7 +5,7 @@ license: Apache-2.0
 compatibility: Needs Python 3.11 or newer and PyYAML. Verifying a dataset delegates transport to linked-archi-connect and read-only enforcement to linked-archi-query; local files additionally need pyoxigraph. Install those companion skills for verification. Works offline with local files.
 metadata:
   author: linked-archi
-  version: "0.9.1"
+  version: "0.10.0"
   homepage: https://meta.linked.archi
 allowed-tools: Read Bash(python3:*)
 ---
@@ -191,8 +191,9 @@ unwritable cache location does not fail verification.
 
 | Profile | For |
 |---|---|
-| `linked-archi-default` | Converter output at default flags. Start here. |
-| `linked-archi-direct` | Converter run with `--emit-direct-rel-triples`. |
+| `linked-archi-default` | Converter output at default flags, direct triples included. Start here. |
+| `linked-archi-qualified` | Output without the direct triples: an older converter, or `--no-emit-direct-rel-triples`. |
+| `linked-archi-direct` | Deprecated: the same as `linked-archi-default`. |
 | `linked-archi-merged` | A store with an authored reconciliation graph. |
 | `examples/curated-store` | Enriched store: identity, direct triples, a loaded SHACL report. |
 | `examples/flattened-turtle` | A dataset with no named graphs, as Turtle output collapses to. |

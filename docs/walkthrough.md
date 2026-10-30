@@ -48,13 +48,8 @@ question   what depends on "Payments Gateway"?
 pattern    impact-and-dependency — Impact and dependency
 read       references/patterns/impact-and-dependency.md
 ranked     impact-and-dependency(1)
-budget     12 queries; 7 step(s) planned
+budget     12 queries; 9 step(s) planned
 annotated  yes, against the profile
-
-decision-1 [REFUSED] core/dependents-direct
-   reason: capability 'direct_rel_triples' is False in profile 'linked-archi-default' but this template needs True
-   alternatives to assess: core/dependents-qualified, core/neighbours-qualified
-   Alternatives are not assumed to answer the same question.
 
 batch      steps 1, 2 [ready]
    write manifests with --batch-dir DIR before using this command
@@ -72,25 +67,25 @@ batch      steps 1, 2 [ready]
    establishes: the focus IRIs later steps take as parameters
    stop if: several candidates match and the choice changes the answer - ask instead of picking
 ...
-05 pattern      Impact and dependency: evidence from core/neighbours-qualified.
-   $ la-query query run core/neighbours-qualified --profile linked-archi-default --data fixtures/base.trig --set 'FOCUS_IRI=<FOCUS_IRI: resolved in the resolve step, from core/resolve-element>' --json -o /tmp/walk/05-neighbours-qualified.json --preview --limit 20
-   review first: steps 4
-   establishes: the pattern's own evidence
-   FOCUS_IRI: <FOCUS_IRI: resolved in the resolve step, from core/resolve-element>
-...
 06 pattern      Impact and dependency: evidence from core/dependents-qualified.
-   $ la-query query run core/dependents-qualified --profile linked-archi-default --data fixtures/base.trig --set 'FOCUS_IRI=<FOCUS_IRI: resolved in the resolve step, from core/resolve-element>' --json -o /tmp/walk/06-dependents-qualified.json --preview --limit 20
+   $ la-query query run core/dependents-qualified --profile linked-archi-default --data fixtures/base.trig --set 'FOCUS_IRI=<FOCUS_IRI: from core/resolve-element or an element IRI in earlier evidence>' --json -o /tmp/walk/06-dependents-qualified.json --preview --limit 20
    review first: steps 5
    establishes: the pattern's own evidence
-   FOCUS_IRI: <FOCUS_IRI: resolved in the resolve step, from core/resolve-element>
-...
-07 pattern      Impact and dependency: evidence from core/provenance.
-   $ la-query query run core/provenance --profile linked-archi-default --data fixtures/base.trig --set 'FOCUS_IRI=<FOCUS_IRI: resolved in the resolve step, from core/resolve-element>' --json -o /tmp/walk/07-provenance.json --preview --limit 20
-   review first: steps 6
-   decision required: decision-1
-   establishes: the pattern's own evidence
-   FOCUS_IRI: <FOCUS_IRI: resolved in the resolve step, from core/resolve-element>
+   FOCUS_IRI: <FOCUS_IRI: from core/resolve-element or an element IRI in earlier evidence>
 
+07 pattern      Impact and dependency: evidence from core/reified-predicates.  [runs with a caveat]
+   $ la-query query run core/reified-predicates --profile linked-archi-default --data fixtures/base.trig --json -o /tmp/walk/07-reified-predicates.json --preview --limit 20
+   review first: steps 6
+   establishes: the pattern's own evidence
+   caveat: capability 'rdf_reifies' is partial: present for some models and absent for others. A short result may be coverage rather than absence - check with the orientation templates.
+
+08 pattern      Impact and dependency: evidence from core/dependents-direct.
+   $ la-query query run core/dependents-direct --profile linked-archi-default --data fixtures/base.trig --set 'FOCUS_IRI=<FOCUS_IRI: from core/resolve-element or an element IRI in earlier evidence>' --set 'PREDICATE_PATH=<PREDICATE_PATH: an unqualified predicate from core/reified-predicates, never a class>' --json -o /tmp/walk/08-dependents-direct.json --preview --limit 20
+   review first: steps 7
+   establishes: the pattern's own evidence
+   FOCUS_IRI: <FOCUS_IRI: from core/resolve-element or an element IRI in earlier evidence>
+   PREDICATE_PATH: <PREDICATE_PATH: an unqualified predicate from core/reified-predicates, never a class>
+...
 stop the pattern-dependent claim when:
   - the relationship semantics on a path stop supporting the claim
   - reachability has been established but criticality has not - they are different questions
@@ -99,13 +94,29 @@ stop the pattern-dependent claim when:
 
 Three things happened here that a generated query cannot do.
 
-**A refusal arrived before query execution.** `core/dependents-direct` needs direct relationship
-triples, which the selected profile does not declare. The planner records `decision-1` separately
-from executable steps and names alternatives to assess. It does not substitute one automatically:
-step 05 shows immediate qualified neighbours, and step 06 follows incoming qualified relationships
-for at most two hops. Those bounds and relationship meanings must fit the claim being made; they do
-not establish equivalence with an arbitrary direct-predicate traversal. Review the decision before
-continuing past its boundary.
+**What the data cannot support is decided before query execution.** `core/dependents-direct`
+follows the direct triples to any depth, and this dataset has them, so it is step 08, its predicates
+taken from step 07, which names the one each relationship class stands for. A model converted
+without the direct triples - by an older converter, or with `--no-emit-direct-rel-triples` - fits
+`linked-archi-qualified`, and the same question then plans both as refusals:
+
+```
+decision-1 [REFUSED] core/reified-predicates
+   reason: capability 'rdf_reifies' is False in profile 'linked-archi-qualified' but this template needs True
+   alternatives to assess: core/discover-relationship-types
+   Alternatives are not assumed to answer the same question.
+
+decision-2 [REFUSED] core/dependents-direct
+   reason: capability 'direct_rel_triples' is False in profile 'linked-archi-qualified' but this template needs True
+   alternatives to assess: core/dependents-qualified, core/neighbours-qualified
+   Alternatives are not assumed to answer the same question.
+```
+
+The planner records decisions separately from executable steps and names alternatives to assess. It
+does not substitute one automatically: step 05 shows immediate qualified neighbours, and step 06
+follows incoming qualified relationships for at most two hops. Those bounds and relationship
+meanings must fit the claim being made; they do not establish equivalence with an arbitrary
+direct-predicate traversal. Review the decision before continuing past its boundary.
 
 **Unknown parameters are visible.** `FOCUS_IRI` is a shell-quoted placeholder naming where its value
 comes from. Typed parameter validation refuses that placeholder until it is replaced with a resolved
@@ -125,8 +136,9 @@ what the question already requests.
 ## Step 2 — execute, in order
 
 Each executed query writes an envelope. The commands and results in this section preserve the earlier
-recorded run, which included `core/define-term` after resolution. Its saved filenames are retained
-for reproducibility; they are not the current seven-step planner's numbering:
+recorded run, which included `core/define-term` after resolution and was made before the fixture
+carried direct triples, so `core/dependents-direct` was refused in it. Its saved filenames are
+retained for reproducibility; they are not the current nine-step planner's numbering:
 
 | Recorded bundle step | Saved envelope |
 |---|---|
@@ -140,8 +152,8 @@ for reproducibility; they are not the current seven-step planner's numbering:
 | 8 | `09-provenance.json` |
 
 Bundle step numbers follow the order of `--step` inputs, not the numeric prefix of a filename. The
-historical provenance filename contains a gap for a refused template; no query ran in that slot.
-When following the current seven-step plan, write findings against the envelopes actually executed:
+historical provenance filename contains a gap for the refused template; no query ran in that slot.
+When following the current nine-step plan, write findings against the envelopes actually executed:
 neighbours is step 5 and dependents is step 6 if supplied in plan order. Do not reuse the recorded
 eight-step citations unchanged.
 

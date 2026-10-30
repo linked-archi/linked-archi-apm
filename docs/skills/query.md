@@ -111,9 +111,9 @@ answered.
 
 ```bash
 python3 scripts/la-query catalog concerns
-python3 scripts/la-query catalog list --profile linked-archi-direct --concern Completeness
+python3 scripts/la-query catalog list --profile linked-archi-default --concern Completeness
 python3 scripts/la-query query run notation/archimate/unrealised-capabilities \
-  --profile linked-archi-direct --data model.trig \
+  --profile linked-archi-default --data model.trig \
   --data archimate3.2-onto.ttl -o steps/unrealised-capabilities.json --preview
 ```
 

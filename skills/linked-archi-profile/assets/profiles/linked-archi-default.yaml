@@ -14,20 +14,24 @@
 # The converter verification evidence is recorded in PROPOSAL.md (Appendix A).
 
 profile: linked-archi-default
-# 2 because this profile's meaning changed: it now describes the graph layout the
-# converters emit today, where model resources have their own graph, the semantic graph
-# is partitioned per input, and membership is a direct edge. A dataset from an older
-# converter needs `graphs.roles.model: graph/semantic`, `descendants: []` and
-# `mode: same-graph-colocation`.
+# 3 because this profile's meaning changed: the converters now write the direct triple
+# beside each qualified relationship by default, bridged to it with rdf:reifies, and this
+# profile claims both. Output without them - from an older converter, or run with
+# --no-emit-direct-rel-triples - is linked-archi-qualified.
+#
+# 2 was the graph layout: model resources in their own graph, the semantic graph
+# partitioned per input, membership as a direct edge. A dataset from a converter older
+# than that needs linked-archi-qualified with `graphs.roles.model: graph/semantic`,
+# `descendants: []` and `mode: same-graph-colocation`.
 #
 # Recorded verifications are keyed on a fingerprint of what the profile says, not on this
-# number, so anything checked against version 1 stops vouching automatically.
-version: 2
+# number, so anything checked against an earlier version stops vouching automatically.
+version: 3
 description: >-
-  Converter output with qualified relationships only - from a converter before direct
-  triples became its default, or run with --no-emit-direct-rel-triples - model
-  resources in their own graph/model, a semantic graph partitioned per input, and
-  model membership as a direct arch:inModel edge.
+  Converter output at default flags: qualified relationships with the direct
+  source-predicate-target triple beside each, bridged to it with rdf:reifies, where the
+  notation publishes the predicate; model resources in their own graph/model, a semantic
+  graph partitioned per input, and model membership as a direct arch:inModel edge.
 
 # Informational. Instance IRIs follow {base}{notation}/{modelId}/{segment}/{localId}
 # as minted by IriMinting.kt. Nothing here parses IRIs to extract meaning; the
@@ -216,9 +220,9 @@ roles:
   # This is the only way to recover the unqualified predicate (am:serves) from
   # the data: the qualified form carries the *class* (am:Serving) and nothing
   # else. Bound here because rdf:reifies is fixed RDF vocabulary rather than a
-  # Linked.Archi choice, and gated by capabilities.rdf_reifies, which is false in
-  # THIS profile because it describes default flags - every converter emits the
-  # bridge, but only under --emit-direct-rel-triples. See linked-archi-direct.yaml.
+  # Linked.Archi choice, and gated by capabilities.rdf_reifies, which is partial in
+  # THIS profile: every converter writes the bridge with each direct triple, and a
+  # relationship whose class publishes no unqualified predicate has neither.
   #
   # A triple term is NOT an asserted triple. `?s am:serves ?o` matches nothing
   # and property paths do not traverse it, so this cannot stand in for
@@ -385,23 +389,23 @@ capabilities:
   # model has more than one input, so a single-input conversion has none and the
   # `descendants` selector simply matches the one unpartitioned graph.
   partitioned_semantic_graphs: true
-  # Direct source->predicate->target triples alongside the qualified form. The
-  # converters write them by default now; this profile describes output without
-  # them (an older converter, or --no-emit-direct-rel-triples), which every
-  # committed fixture is. linked-archi-direct describes output with them.
-  direct_rel_triples: false
+  # Direct source->predicate->target triples alongside the qualified form, written
+  # by every converter at default flags. A relationship whose class publishes no
+  # unqualified predicate gets none - BPMN's flows, for one - so a BPMN-only
+  # dataset has none at all: `verify` says so, and linked-archi-qualified fits it.
+  direct_rel_triples: true
   # RDF 1.2 triple terms bridging the qualified resource to the unqualified
-  # predicate. Every converter emits it — but only alongside the direct triple,
-  # under --emit-direct-rel-triples, so it is false here for the same reason
-  # direct_rel_triples is: this profile describes default flags. Turn both on
-  # together; linked-archi-direct.yaml does.
+  # predicate, written with each direct triple. `partial`, not `true`: the bridge
+  # is there for the relationships that have a direct triple and not for the rest,
+  # which `verify` measures - so templates needing it run, with the caveat that a
+  # short answer may be coverage rather than absence.
   #
-  # Setting it true also asserts that your *engine* speaks SPARQL 1.2: the
-  # `<<( s p o )>>` pattern is a parse error on a 1.1 engine, which is why
-  # templates needing it are refused at render time rather than failing at the
-  # endpoint — and why the direct_rel_triples probe reads the bridge only when
-  # this is claimed, falling back to a three-valued answer when it is not.
-  rdf_reifies: false
+  # Claiming it also asserts that your *engine* speaks SPARQL 1.2: the
+  # `<<( s p o )>>` pattern is a parse error on a 1.1 engine. A store that loaded
+  # this output holds triple terms, so it reads RDF 1.2; if its SPARQL is still
+  # 1.1, set this false, and templates needing it are refused at render time
+  # rather than failing at the endpoint.
+  rdf_reifies: partial
   # `partial` because a views graph appears only when the source had diagrams.
   # Backstage and LeanIX output has semantic + provenance only.
   # true | false | partial

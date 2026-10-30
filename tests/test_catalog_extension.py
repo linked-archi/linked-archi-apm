@@ -183,7 +183,7 @@ class TestProjectCatalogues(unittest.TestCase):
     def test_profile_refusal_and_readonly_validation_still_precede_execution(self):
         self.write_catalog(requires={
             "roles": ["label"], "graph_roles": ["semantic"],
-            "capabilities": {"direct_rel_triples": True},
+            "capabilities": {"identity_assertions": True},
         })
         with patch.object(cli, "_execute") as execute:
             result, _, error = self.command(

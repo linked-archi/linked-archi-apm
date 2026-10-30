@@ -139,6 +139,7 @@ class TestStrictOwnership(unittest.TestCase):
         profile_files = {path.relative_to(PROFILE / "assets" / "profiles").as_posix() for path in (PROFILE / "assets" / "profiles").rglob("*.yaml")}
         self.assertEqual(profile_files, {
             "linked-archi-default.yaml", "linked-archi-direct.yaml", "linked-archi-merged.yaml",
+            "linked-archi-qualified.yaml",
             "examples/cloudplatform.yaml", "examples/curated-store.yaml",
             "examples/flattened-turtle.yaml", "examples/with-vocabulary.yaml",
         })

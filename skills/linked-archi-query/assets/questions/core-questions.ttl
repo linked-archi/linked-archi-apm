@@ -29,8 +29,9 @@
 #    asserted, inferred or absent;
 #  - the metamodel is read once per query, in a sub-select.
 #
-# dcterms:identifier names the counterpart template in the
-# linked-archi-query catalogue.
+# dcterms:identifier names the question in the linked-archi-query
+# catalogue; a template there with the same identifier asks the same
+# question.
 #################################################################
 
 <https://meta.linked.archi/core-questions#>
@@ -59,7 +60,7 @@ is. Each is executable SPARQL bound to the concerns it informs (see arch:ModelQu
 
 :model-inventory
     a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
-    dcterms:identifier            "core/inventory" ;
+    dcterms:identifier            "core/model-inventory" ;
     skos:prefLabel                "What does the model contain?"@en ;
     dcterms:description           "The model's elements, relationships and views, counted by type."@en ;
     arch:answers                  "One row per type: its kind (element, relationship, view) and how many of the model's concepts are of it."@en ;
@@ -331,7 +332,7 @@ is. Each is executable SPARQL bound to the concerns it informs (see arch:ModelQu
 
 :missing-definitions
     a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
-    dcterms:identifier            "core/coverage-gaps" ;
+    dcterms:identifier            "core/missing-definitions" ;
     skos:prefLabel                "Which elements have no definition?"@en ;
     dcterms:description           "Elements, of one type or of any, with no skos:definition."@en ;
     arch:answers                  "One row per element without a definition."@en ;
@@ -369,7 +370,7 @@ is. Each is executable SPARQL bound to the concerns it informs (see arch:ModelQu
 
 :duplicate-labels
     a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
-    dcterms:identifier            "core/label-collisions" ;
+    dcterms:identifier            "core/duplicate-labels" ;
     skos:prefLabel                "Which elements share a name with another of the same type?"@en ;
     dcterms:description           "Elements whose name, compared without regard to case, another element of the same most specific type also has, in any loaded model."@en ;
     arch:answers                  "One row per element in a collision, with how many elements share the name."@en ;
@@ -656,7 +657,7 @@ deliverable section covers.'''@en ;
 
 :architecture-state
     a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
-    dcterms:identifier            "core/lifecycle" ;
+    dcterms:identifier            "core/architecture-state" ;
     skos:prefLabel                "What is baseline, target or still awaiting approval?"@en ;
     dcterms:description           "Concepts with an architecture state (baseline, target, transitional) or an approval state (proposed, approved)."@en ;
     arch:answers                  "One row per concept with either state recorded."@en ;

@@ -17,7 +17,7 @@ Write a new template when the **question** is new, not when the vocabulary is.
 | Converter output, current layout | Nothing. Use `linked-archi-default`. |
 | Output converted before core 0.4.0, carrying `arch:partOfModel` | Override `roles.part_of_model` to `arch:partOfModel`, or re-convert — see [Membership was renamed](#membership-was-renamed-in-core-040) |
 | Output from a converter predating `graph/model` | Override three keys — `la-profile recommend --data <graph>` names them |
-| Converter run with `--emit-direct-rel-triples` | `linked-archi-direct` |
+| Output without the direct triples - an older converter, or `--no-emit-direct-rel-triples` | `linked-archi-qualified` |
 | A merged store with authored cross-source identity | `linked-archi-merged` |
 | Turtle, or any dataset with no named graphs | `examples/flattened-turtle` |
 | A custom metamodel extending ArchiMate or BPMN | [Derive a profile](#the-five-step-path) |
@@ -182,9 +182,9 @@ What comes out carries a header naming its sources and every judgement left to y
 #
 # Check these before relying on it:
 #   - manifest declares shapes: https://…/cloudplatform/shapes#
-#   - mapping declares 4 direct predicate(s). These are emitted only with
-#     --emit-direct-rel-triples, so capabilities.direct_rel_triples is NOT set
-#     true here. Verify against the dataset, then set it.
+#   - mapping declares 4 direct predicate(s). The converters write them unless
+#     run with --no-emit-direct-rel-triples, and capabilities.direct_rel_triples
+#     is true as inherited. Verify against the dataset.
 #   - optional roles (owner, element_lifecycle, same_as, exact_match) are
 #     inherited from the base profile...
 extends: linked-archi-default.yaml
@@ -195,8 +195,9 @@ Two things are deliberately **never** guessed:
 
 - **Optional roles** — ownership, lifecycle, identity. A mapping says what *may* be
   emitted, not what was.
-- **`direct_rel_triples`** — declaring direct predicates is not the same as having
-  run the converter with the flag that emits them.
+- **`direct_rel_triples`** — inherited from the base profile, never set from the mapping:
+  declaring direct predicates is not the same as the conversion having written them.
+  `verify` says which.
 
 Guessing either is how a confident empty result gets built.
 

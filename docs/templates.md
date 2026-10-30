@@ -59,8 +59,9 @@ fresh orientation; its two independent queries can share one batch.
 
 **Prefer the qualified form.** Two questions ship in variants: `core/dependents` as `-qualified` and
 `-direct`, `core/neighbours` as `-qualified` and `-reified`. Each pair asks one question against
-different evidence, and `-qualified` is the one a default converter run supports. The others need
-capabilities — `direct_rel_triples`, `rdf_reifies` — that are opt-in at conversion time.
+different evidence, and `-qualified` is the one every conversion supports. The others need
+capabilities — `direct_rel_triples`, `rdf_reifies` — that the converters meet by default where the
+notation publishes the predicate, and that output from an older converter lacks.
 
 **A refusal is an answer.** If the profile cannot support a template, `la-query` says so and
 names alternatives rather than running it. See [Evidence and refusal](concepts/evidence.md).
@@ -106,14 +107,14 @@ template; the alternative is a refusal naming what to run instead.
 $ python3 scripts/la-query query run core/inventory-summary \
     --profile linked-archi-default --data fixtures/base.trig
 metamodel	models	graphs	concepts
-https://meta.linked.archi/archimate3/metamodel#ArchiMate3.2	1	1	38
+https://meta.linked.archi/archimate3/metamodel#ArchiMate3.2	1	1	41
 https://meta.linked.archi/leanix/metamodel#LeanIXv4	1	1	15
 https://meta.linked.archi/backstage/metamodel#BackstageCatalog	1	1	13
 https://meta.linked.archi/bpmn/metamodel#BPMN2	1	1	10
 https://meta.linked.archi/c4/metamodel#C4Model	1	1	5
 #
 # 5 row(s)
-# core/inventory-summary | query 37548aa0dea1 | dataset base.trig | profile linked-archi-default v2 | 5 row(s)
+# core/inventory-summary | query 07119971d2fa | dataset base.trig | profile linked-archi-default v3 | 5 row(s)
 ```
 
 Five notations loaded, so cross-notation questions are answerable here. The footer is on every
@@ -155,7 +156,7 @@ source	sourceLabel	direction	hops	target	targetLabel	relType	relType2
 …/component/default/order-service	Order Service	source-to-mid, mid-to-target	2	…/group/default/team-commerce	Commerce Team	bs:SystemMembership	bs:Ownership
 #
 # 3 row(s)
-# core/traceability | query fc8a3f481374 | dataset base.trig | profile linked-archi-default v2 | 3 row(s)
+# core/traceability | query ab95248f637a | dataset base.trig | profile linked-archi-default v3 | 3 row(s)
 ```
 
 One direct ownership edge, and two two-hop paths reaching the same team through the API and the
@@ -164,20 +165,23 @@ than flattening them, because a one-hop ownership and a two-hop inherited one ar
 
 ### A refusal
 
+A model converted without the direct triples - by a converter older than that default, or with
+`--no-emit-direct-rel-triples` - is described by `linked-archi-qualified`:
+
 ```console
 $ python3 scripts/la-query query run core/dependents-direct \
-    --profile linked-archi-default --data fixtures/base.trig \
+    --profile linked-archi-qualified --data older.trig \
     --set FOCUS_IRI="<…/element/component/default/order-service>" \
-    --set PREDICATE_PATH="bs:ownedBy"
-Template 'core/dependents-direct' cannot run against profile 'linked-archi-default':
-  - capability 'direct_rel_triples' is False in profile 'linked-archi-default' but this template needs True
+    --set PREDICATE_PATH="<https://meta.linked.archi/backstage/onto#ownedBy>"
+Template 'core/dependents-direct' cannot run against profile 'linked-archi-qualified':
+  - capability 'direct_rel_triples' is False in profile 'linked-archi-qualified' but this template needs True
 Try instead: core/dependents-qualified, core/neighbours-qualified (same question, different evidence).
 This is a refusal, not an empty result: running it anyway would return no rows and read as 'nothing exists'.
 ```
 
-Exit 1, and it is routing rather than a crash. The direct triple is opt-in at conversion time, so
-on a default dataset this template has nothing to traverse — and an empty table would have read as
-"nothing depends on it".
+Exit 1, and it is routing rather than a crash. That dataset has no direct triple for this template
+to traverse — and an empty table would have read as "nothing depends on it". On `fixtures/base.trig`,
+under the default profile, the same template answers.
 
 ## orientation
 

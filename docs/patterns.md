@@ -165,10 +165,11 @@ resolves a concept **after** selection. A label by itself never chooses a templa
 - `core/discover-relationship-types`
 - `core/neighbours-qualified`
 - `core/dependents-qualified`
+- `core/reified-predicates` — gated on `rdf_reifies`; names the predicates `core/dependents-direct` follows
 - `core/dependents-direct` — gated on `direct_rel_triples`
 - `core/provenance`
 
-*Capability gates:* `direct_rel_triples` (core/dependents-direct only)
+*Capability gates:* `direct_rel_triples` (core/dependents-direct only), `rdf_reifies` (core/reified-predicates only)
 
 *Stop when:*
 

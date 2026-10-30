@@ -55,14 +55,20 @@ Consequences, all of which the tests encode:
 
 | File | Quads | Graphs | What it is |
 |---|---|---|---|
-| `base.trig` | 3333 | 17 | Real converter output, trimmed. The default case. |
-| `augmented.trig` | 3446 | 19 | `base` plus what converters never emit. |
-| `flat.ttl` | 3333 | 0 | `base` with graph identity discarded. |
-| `converter-1.3.trig` | 284 | 4 | Real converter output, **verbatim**. The one PARTITIONED fixture. |
+| `base.trig` | 3471 | 17 | Real converter output at default flags, trimmed. The default case. |
+| `augmented.trig` | 3524 | 19 | `base` plus what converters never emit. |
+| `flat.ttl` | 3471 | 0 | `base` with graph identity discarded. |
+| `converter-1.3.trig` | 308 | 4 | Real converter output, **verbatim**. The one PARTITIONED fixture. |
 | `vocabulary.ttl` | 843 | 0 | Published vocabulary: BPMN taxonomy, plus the core property axioms. |
 | `semantic-schemes.ttl` | 30 | 0 | Selected statements from the published ArchiMate 4 taxonomy and viewpoint catalog. |
 | `shapes.ttl` | 3744 | 0 | Published SHACL: which relationship may connect which types. |
 | `unqualified-forms.json` | 75 pairs | — | Extracted `arch:unqualifiedForm` mappings. Not RDF. |
+
+Output written without the direct triples - by a converter from before they became its
+default, or with `--no-emit-direct-rel-triples` - is not committed: `support.qualified_only()`
+derives it from `base.trig` when a test needs it, by leaving out each `rdf:reifies` bridge
+and the direct triple it names, which is exactly what that flag leaves out. The
+`linked-archi-qualified` profile describes it.
 
 Those quad counts are asserted, not annotated: `tests/test_fixtures.py` reads this table and
 fails when a fixture stops matching it. They were wrong before that existed — three of them
@@ -173,6 +179,45 @@ What the mix deliberately preserves:
 - Two `prov:generatedAtTime` values on the LeanIX model: the author-declared export
   date and the conversion run. A staleness signal, kept on purpose.
 
+### Direct triples and the RDF 1.2 bridge
+
+Written by the converters at default flags, so extracted like everything else. Each
+relationship whose class publishes an unqualified predicate has its direct triple beside
+the qualified resource, and an `rdf:reifies` bridge on that resource whose triple term
+names the predicate *and* both endpoints - 30 of the 36 relationships here. The triple term
+is what lets `verify` tell a genuine unqualified form from an unrelated edge between the
+same two resources.
+
+**A direct triple is kept with the relationship that reifies it.** Kept for its source
+element alone, it would point at an element the extract may not have, with no qualified
+resource to account for it - a pairing no conversion writes.
+
+**Six relationships have neither** - four `bpmn:SequenceFlow` and two `am:UsedBy` - because
+the BPMN ontology declares no unqualified forms and `am:UsedBy` (the ArchiMate 2 name for
+Serving) has none either. That is why `core/reifies-audit` reports six genuine
+`missing-term` rows rather than a defect planted to give the template something to find,
+and why the default profile claims `rdf_reifies: partial`. A conversion with a type mapping
+can still have BPMN direct edges - `type-mapping-bpmn-full.yml` supplies
+`sequenceFlow → bpmn:sequenceFlowTo` - and this extract, converted without one, has none.
+
+The `subject-disagrees` and `object-disagrees` branches of the audit have no rows here, by
+design: a disagreeing bridge is a corruption, and putting one in a shared fixture would
+make every other template's results suspect. Those branches are covered by a purpose-built
+store in `tests/test_reifies.py` instead.
+
+**What this fixture cannot show: that a triple term is not a triple.** `?s am:serves ?o`
+matches here because the direct triples are asserted too, so an empty result would have
+two possible causes. The claim is about RDF semantics rather than about this fixture, so it
+is asserted against a bridge-only store in `tests/test_reifies.py` - bridge present, direct
+edge absent, the one configuration that can show it. Property paths do not traverse triple
+terms there either.
+
+`unqualified-forms.json` holds the class-to-predicate pairs from `arch:unqualifiedForm` in
+the linked-archi-meta ontologies (`build_fixtures.py --refresh-forms`, 75 pairs from 109
+ontology files). The mapping is irregular - `am:Serving` → `am:serves`, `am:Flow` →
+`am:flowsTo`, `am:Composition` → `am:composedOf` - and `tests/test_reifies.py` keeps it so,
+because a lowercase-first-letter rule would invent `am:serving` and `am:flow`.
+
 ## augmented.trig
 
 `base.trig` plus four things the converters do not produce. Without them, four
@@ -182,50 +227,16 @@ nobody has run.
 
 | Added | Count | Why it cannot be extracted | Template it enables |
 |---|---|---|---|
-| Direct relationship triples | 30 | `--emit-direct-rel-triples` is off by default | `core/dependents-direct` |
-| `rdf:reifies` triple terms | 30 | Every converter emits the bridge, but only under `--emit-direct-rel-triples`, which is off by default | `core/reified-predicates`, `core/neighbours-reified`, `core/reifies-audit`, and makes `direct_rel_triples` *checkable* |
 | Taxonomy classification | 15 assertions + 4 concept quads | Converters classify nothing against a scheme | `core/classified-by` |
 | `skos:exactMatch` in a reconciliation graph | 2 | Cross-source identity is authored and human-reviewed, never derived | `core/identity-audit` |
 | `arch:conceptOwner` | 4 | Ownership arrives as a `bs:Ownership` relationship; the core predicate is never emitted | `core/coverage-gaps` against ownership |
 | `sh:ValidationReport` in its own graph | 11 | `validate` writes a document, not a graph | `core/validation-summary` |
 
-Two of these are **derived** rather than invented, so their shape follows the data
-even though their presence does not. `arch:conceptOwner` is promoted from Backstage's
+One of these is **derived** rather than invented, so its shape follows the data even
+though its presence does not. `arch:conceptOwner` is promoted from Backstage's
 `bs:Ownership` relationships, which is the enrichment a curated pipeline actually
 performs — it is what makes "who owns this" answerable without knowing which notation
 the answer came from.
-
-### Where a direct triple's predicate comes from
-
-From `arch:unqualifiedForm` in the ontologies, via `unqualified-forms.json` — the same
-extracted mapping the RDF 1.2 bridge uses. Not from lower-casing the class name.
-
-That heuristic is what this fixture used to do, and it invented terms: the mapping is
-irregular, so `am:Serving` became `am:serving` where the ontology says `am:serves`. A
-fixture asserting predicates no ontology declares is the exact failure this file's opening
-rule exists to prevent, and it had a second cost — it made the fixture useless as evidence
-for `capabilities.direct_rel_triples`, because a probe that checks a direct edge against
-its declared form would rightly have rejected almost all of them.
-
-The `rdf:reifies` bridge is added alongside, on the qualified relationship, because that is
-what the converter does: every one of the six emits it inside the same branch that writes
-the direct triple, so a dataset with one has the other. Its triple term names the predicate
-*and* both endpoints, which is what lets `verify` tell a genuine unqualified form from an
-unrelated edge between the same two resources.
-
-An earlier revision added an `arch:relPredicate` declaration for that job. Core never
-published that term — the `skos:historyNote` on `QualifiedRelationship` records the
-`rdf:Statement` design behind it being dropped — and no converter emits it any more, so the
-bridge does the work and the declaration is gone from this fixture.
-
-**A real conversion can have direct edges where this fixture has none.** The converter
-reads its predicate from the *type mapping*, and a type mapping may define predicates the
-ontology does not declare — `type-mapping-bpmn-full.yml` supplies
-`sequenceFlow → bpmn:sequenceFlowTo`, which `arch:unqualifiedForm` does not cover. So the
-6 relationships here with no declared form get no direct triple, and BPMN sequence flows
-are among them. That is a gap in this fixture, not in the converters; a fixture built from
-the type mappings instead would cover them, and is worth doing if a template ever needs a
-BPMN direct edge.
 
 The identity assertion is `skos:exactMatch` and not `owl:sameAs`, in both
 directions, in a graph of its own. That follows design decision DD-11: prefer
@@ -236,62 +247,10 @@ Use it with the `curated-store` profile at
 the profile these additions describe. All 43 templates are available under it, and none
 are refused — which is the point of the additions.
 
-### The RDF 1.2 bridge, and where it bends the extraction rule
-
-This is the one addition whose **presence** is authored, and it deserves saying
-plainly, because the rule at the top of this file exists for a reason and this is the
-exception to it.
-
-No converter emits `rdf:reifies`. The core ontology specifies the pattern — a
-qualified resource paired with a triple term naming the *unqualified* predicate —
-and the converters have not implemented it. So a fixture exercising it cannot be
-extracted from converter output. It has to be constructed.
-
-What keeps that honest is that only the *shape* is constructed; the **mapping is
-extracted**:
-
-- The class-to-predicate pairs come from `arch:unqualifiedForm` in the
-  linked-archi-meta ontologies, harvested into `unqualified-forms.json` by
-  `build_fixtures.py --refresh-forms` (75 pairs from 109 ontology files).
-- Guessing them would have been wrong. The mapping is irregular: `am:Serving` →
-  `am:serves`, `am:Flow` → `am:flowsTo`, `am:Composition` → `am:composedOf`. A
-  lowercase-first-letter rule produces `am:serving` and `am:flow`, neither of which
-  exists.
-- Endpoints come from the `arch:source` / `arch:target` already in the extract, so
-  the bridge agrees with the data it bridges.
-
-**A class with no declared `arch:unqualifiedForm` gets no bridge.** Six
-relationships are in that position — four `bpmn:SequenceFlow` and two `am:UsedBy` —
-because the BPMN ontology declares no unqualified forms and `am:UsedBy` (the
-ArchiMate 2 name for Serving) has none either. That is why `core/reifies-audit`
-reports six genuine `missing-term` rows rather than a defect planted to give the
-template something to find. The finding is true, and it is about the ontologies.
-
-The `subject-disagrees` and `object-disagrees` branches have no rows here, by
-design: a disagreeing bridge is a corruption, and putting one in a shared fixture
-would make every other template's results suspect. Those branches are covered by a
-purpose-built store in `tests/test_reifies.py` instead.
-
-Two things this fixture therefore does **not** prove, and no test should claim:
-
-1. **That any real dataset carries the bridge.** `capabilities.rdf_reifies` is false
-   in every converter profile, and the templates are refused there.
-2. **That a triple term behaves like a triple.** It does not — but this fixture can no
-   longer be the evidence, and that is worth stating precisely because it used to be.
-   `?s am:serves ?o` now matches here, because the fixture also carries *asserted* direct
-   triples using the same declared predicates. Once a predicate is asserted, "a triple term
-   is not an asserted triple" cannot be demonstrated with it: an empty result would have
-   two possible causes.
-
-   The claim is about RDF semantics rather than about this fixture, so it is asserted
-   against a purpose-built bridge-only store in `tests/test_reifies.py` — bridge present,
-   direct edge absent, which is the one configuration that can show it. Property paths do
-   not traverse triple terms there either.
-
 ## converter-1.3.trig
 
 Real converter output, **committed verbatim**: no trimming, no selection, no
-additions. 284 quads is small enough to read whole, so there was nothing to gain by
+additions. 308 quads is small enough to read whole, so there was nothing to gain by
 cutting it and a provenance claim to lose.
 
 Four named graphs, and the layout is the whole point:
@@ -336,7 +295,7 @@ python3 fixtures/build_fixtures.py --rebuild-13 /tmp/converter-1.3.trig
 ```
 
 The recipe is executable rather than prose, and it has been round-tripped: emitting
-the inputs and re-converting reproduces this fixture's 284 quads and identical graph
+the inputs and re-converting reproduces this fixture's 308 quads and identical graph
 set.
 
 `make fixtures` does **not** rebuild it. Producing it needs the converter jars and a

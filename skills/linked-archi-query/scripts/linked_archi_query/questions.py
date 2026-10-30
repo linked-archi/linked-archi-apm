@@ -60,29 +60,6 @@ PARAMETER_NAMES: Mapping[str, str] = {
     "to": "TO_IRI",
 }
 
-#: Identifiers a bundled question shares with a template that asks something else. One
-#: identifier is one question with two implementations only where the two ask the same thing;
-#: these four do not, so they stay out of the catalogue until the question set names them
-#: apart. Listed, and tested, so they cannot be forgotten.
-HELD_BACK: Mapping[str, str] = {
-    "core/inventory": (
-        "the template reports the dataset's graphs, types and counts; the question counts "
-        "one model's concepts by kind"
-    ),
-    "core/coverage-gaps": (
-        "the template finds elements of a type without a predicate you name; the question "
-        "finds elements without a definition"
-    ),
-    "core/label-collisions": (
-        "the template pairs a name across models as identity candidates; the question finds "
-        "a name repeated within one type"
-    ),
-    "core/lifecycle": (
-        "the template reads notation lifecycle fields (Backstage, LeanIX); the question reads "
-        "arch:architectureState and arch:approvalState"
-    ),
-}
-
 #: Investigation stages, as the catalogue spells them, by the core concept.
 _STAGES = {
     f"{ARCH}OrientationStage": "orientation",
