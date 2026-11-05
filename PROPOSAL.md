@@ -1074,6 +1074,29 @@ request only: a refusal names an alternative, and the default listing keeps show
 The grouped listing also stops repeating each entry's stage beside its stage heading. No
 catalogue content, gate or machine contract changes.
 
+**D33. An entrypoint carries rules and commands; its reasons live one link away.** Each
+`SKILL.md` an agent opens stays in every later turn's input, and the D27 trials found the
+two investigation entrypoints a substantial context source. The six entrypoints were 73.6 KB
+together, and an investigation that also set up its dataset opened four of them.
+
+Rationale now moves to references verbatim: dataset discovery, directory resolution and the
+completeness warning to `connect/references/discovery.md`; what a profile claims and every
+`verify` finding to `profile/references/verify.md`; HTTPS checks, content negotiation, Git
+fetch, cache and manifest to `source/references/acquisition.md`; model questions to
+`query/references/model-questions.md`. The identical twelve-line discovery heredoc and its
+surrounding paragraphs in connect, profile and source become one bounded command and the
+`doctor` pointer. Every rule, command, refusal, prohibition and safety condition stays in its
+entrypoint, including "never search the filesystem", which the suite checks. Analyse now says
+its plan's commands are complete, so an investigation needs `linked-archi-query` installed but
+its `SKILL.md` only for an ad-hoc query, an interpreted refusal or a failing command; the name
+resolution rules it repeated from query shrink to the routing an analyst needs. Frontmatter
+descriptions, which a client loads in every session, shrink from 3.3 KB to 2.5 KB with their
+trigger words kept.
+
+The entrypoints total 56 KB (connect 14.5 to 7.8 KB, profile 15.2 to 8.9 KB, source 11.7 to
+8.8 KB, query 11.6 to 10.7 KB). These are file sizes, not measured tokens; whether agents still
+open the query entrypoint during an investigation is for the paired trials to show.
+
 ### Requests deliberately not adopted as stated
 
 Carried here from the agent-usability plan when that plan was retired, because each of these
