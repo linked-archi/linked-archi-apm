@@ -77,12 +77,10 @@ catalogue-wide work. Keep availability, caveats and “does not prove” with ea
 
 ## Model questions
 
-Entries marked `Q` in `catalog list` are published model questions (what is asked, what a row
-means, what it does not prove, the concerns it informs); `Q+T` also has a template of that
-name, and the envelope's `implementation` says which answered. Select by concern with
-`catalog concerns`, then `catalog list|dump --concern NAME`. A question reads the dataset as
-one graph and may need the metamodel loaded; how that is gated and refused:
-[references/model-questions.md](references/model-questions.md).
+`Q` in `catalog list` marks a published model question, `Q+T` one that also has a template;
+the envelope's `implementation` says which answered. Select by concern: `catalog concerns`,
+then `--concern NAME` on `list` or `dump`. On an endpoint, when one is refused, or to add a
+project's own set: [references/model-questions.md](references/model-questions.md).
 
 ## Render only
 

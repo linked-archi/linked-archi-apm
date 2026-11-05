@@ -1091,8 +1091,9 @@ before. So `verify.md` and `acquisition.md` keep only what an agent acts on - ea
 its action, each refusal with its remedy - and do not repeat what `SKILL.md` says. The history
 behind them (why negotiation asks for Turtle first, why `recommend` exists, why claims decay)
 moves to the docs site, which is not part of an installed skill. Opened together, profile is
-11.9 KB (was 15.2), source 11.2 KB (was 11.7) and connect 14.3 KB (was 14.5); query reaches
-12.2 KB (was 11.6) only when a model question needs its reference. Moving the text broke two
+11.9 KB (was 15.2), source 11.2 KB (was 11.7), query 11.5 KB (was 11.6) and connect 14.3 KB
+(was 14.5); query's reference says only how a model question runs and why one is refused, and
+no longer repeats the entrypoint's summary of it. Moving the text broke two
 relative links, which nothing checked; a packaging test now resolves every link inside
 `references/`. The identical twelve-line discovery heredoc and its
 surrounding paragraphs in connect, profile and source become one bounded command and the
@@ -1105,7 +1106,7 @@ descriptions, which a client loads in every session, shrink from 3.3 KB to 2.5 K
 trigger words kept.
 
 The entrypoints total 56 KB (connect 14.5 to 7.8 KB, profile 15.2 to 8.9 KB, source 11.7 to
-8.8 KB, query 11.6 to 10.7 KB). These are file sizes, not measured tokens; whether agents still
+8.8 KB, query 11.6 to 10.6 KB). These are file sizes, not measured tokens; whether agents still
 open the query entrypoint during an investigation is for the paired trials to show.
 
 ### Requests deliberately not adopted as stated
