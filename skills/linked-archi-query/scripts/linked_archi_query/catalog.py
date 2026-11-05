@@ -406,11 +406,18 @@ class TemplateEntry:
 
         return Verdict(ok=not unmet, unmet=tuple(unmet), warnings=tuple(warnings))
 
-    def summary_line(self) -> str:
-        tag = f"[{self.notation}]" if self.notation else ""
+    def summary_line(self, width: int = 38, stage: bool = True) -> str:
+        """One line: name, stage, notation tag, kind and purpose.
+
+        ``stage=False`` leaves the stage out for a listing that already groups by it, and
+        ``width`` pads names to the longest one shown rather than to the longest one possible.
+        """
+        tag = f"[{self.notation}] " if self.notation else ""
         # Q: a model question only; Q+T: a question with a template for other layouts.
         kind = {("question",): "Q ", ("question", "template"): "Q+T "}.get(self.implementations, "")
-        return f"{self.name:38} {self.stage:12} {tag:12} {kind}{self.purpose}"
+        if stage:
+            return f"{self.name:{width}} {self.stage:12} {tag.strip():12} {kind}{self.purpose}"
+        return f"{self.name:{width}} {tag}{kind}{self.purpose}"
 
 
 #: What lifts a model question's capability refusal. A question has no template to name as
@@ -864,6 +871,7 @@ class Catalog:
 
     def format_list(self, profile: ResolvedProfile | None = None) -> str:
         lines: list[str] = []
+        width = max((len(entry.name) for entry in self), default=0)
         for stage in STAGES:
             entries = self.by_stage(stage)
             if not entries:
@@ -876,7 +884,7 @@ class Catalog:
                     mark = "  " if verdict.ok else "x " if verdict.unmet else "! "
                     if verdict.ok and verdict.warnings:
                         mark = "! "
-                lines.append(f"{mark}{entry.summary_line()}")
+                lines.append(f"{mark}{entry.summary_line(width, stage=False)}".rstrip())
         # Templates and questions are counted apart, each by its own verdict, so a figure
         # quoted for the templates stays true as question sets grow.
         templates = [entry for entry in self if entry.file]

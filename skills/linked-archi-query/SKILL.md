@@ -56,10 +56,11 @@ python3 scripts/la-query catalog dump --profile linked-archi-default \
   --template core/neighbours-qualified --template core/provenance
 ```
 
-For an unknown candidate, use `catalog list --profile P --why` first. For a shortlist,
-use repeated `--template`, or filter `dump` by `--stage` / `--notation`. Values within
-one filter kind are alternatives; different filter kinds intersect. Do not load the full
-catalogue or read `.rq` files for routine use. Unfiltered dump remains for explicit
+For an unknown candidate, list only what could fit: `catalog list --profile P --match
+TEXT` (name or purpose), `--stage`, `--notation` or `--available`, adding `--why` to
+explain the refusals shown. For a shortlist, use repeated `--template`, or filter `dump`
+the same way. Values within one filter kind are alternatives; different filter kinds
+intersect. Do not load the full catalogue or read `.rq` files for routine use. Unfiltered dump remains for explicit
 catalogue-wide work. Keep availability, caveats and “does not prove” with each candidate.
 
 | Need | Candidate |

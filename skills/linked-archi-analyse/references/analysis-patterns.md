@@ -50,8 +50,9 @@ numbering continuing across patterns. Take parameters from
 `la-query catalog show <template> --profile "$PROFILE"`, never from the `.rq` file.
 
 A template this dataset cannot support is **refused with a reason and an alternative**, so a
-pattern naming six templates does not require all six to be available. Check with
-`la-query catalog list --profile "$PROFILE" --why` before deciding a pattern is unavailable.
+pattern naming six templates does not require all six to be available. Check the ones it names
+with `la-query catalog dump --profile "$PROFILE" --template NAME ...`, or a narrowed
+`catalog list --profile "$PROFILE" --why --match TEXT`, before deciding a pattern is unavailable.
 
 ## The same table, as data
 

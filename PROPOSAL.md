@@ -1062,6 +1062,18 @@ suite checks. An unwritten manifest is not offered as a command. The JSON plan, 
 prints about 3.1 KB rather than 5.0 KB of the previous text form; output bytes are not model
 tokens, and no agent-level saving is claimed until it is measured.
 
+**D32. A shortlist costs a shortlist.** The query entrypoint sent an agent looking for an
+unknown candidate to `catalog list --profile P --why`: every entry in every stage plus every
+refusal, about 21 KB, most of it irrelevant to the candidate sought. `dump` could already be
+narrowed by stage and notation; `list` could not. `list` now takes `--stage` and `--notation`
+with `dump`'s rules (one shared filter), `--match` over name and purpose, and `--available`,
+and `--why` explains only the refusals shown. The narrowed listing states how many of the
+catalogue's entries matched, so a short list is not mistaken for a short catalogue, and an
+unknown notation is an error rather than an empty list. `--available` hides refusals by
+request only: a refusal names an alternative, and the default listing keeps showing them.
+The grouped listing also stops repeating each entry's stage beside its stage heading. No
+catalogue content, gate or machine contract changes.
+
 ### Requests deliberately not adopted as stated
 
 Carried here from the agent-usability plan when that plan was retired, because each of these
