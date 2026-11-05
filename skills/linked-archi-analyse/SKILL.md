@@ -93,7 +93,9 @@ throughout the investigation, and store artifacts in the project, not the skill 
    query as a **candidate** before inventing a broad exploratory join. Validate its scope
    and run it only through `linked-archi-query`; query text is not itself result evidence.
 
-   Honour dependency and review barriers. Batch only independent, fully bound steps
+   Honour dependency and review barriers. Work **round by round**: steps sharing a
+   `round` are independent, so run them in one turn - the round's batch, or its commands
+   together - then review them before the next round. Batch only fully bound steps
    whose prerequisites have been reviewed. Inspect `decisions` before continuing:
    refused candidates have no executable command and are not silently replaced.
    An alternative may answer a weaker question; acknowledge that semantic difference.

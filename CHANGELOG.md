@@ -10,6 +10,19 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 
+### Changed
+- **Plans wait only for the evidence a step needs.** A pattern step used to depend on the
+  step listed before it; it now depends on orientation, on the steps that supply its
+  placeholders, and on review order its pattern declares (`after` in `patterns.json`).
+  Each step carries the earliest `round` it can run in, plans report `planned_rounds`, and
+  batches group a round's bound steps even across stages (`resolve+pattern`). The impact
+  plan falls from 8 review rounds to 6, views from 7 to 4, and the "Quality" concern plan
+  from 9 to 3. `depends_on` lists only the nearest prerequisites. Unannotated
+  plans, placeholders with no planned source and `core/provenance` keep waiting for every
+  earlier step. The lifecycle pattern lists `core/identity-audit` before
+  `core/label-collisions`, and the sweep waits for the audit. Measured agent token or
+  latency effects are not yet established (PROPOSAL D30).
+
 ## [0.10.0] - 2026-10-30
 
 The converters now write direct relationship triples by default, and the default profile

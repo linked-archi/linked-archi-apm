@@ -28,13 +28,19 @@ parameters and bounds, then delegate lint and execution to query. Its presence i
 that it answers the question, and it never becomes evidence until executed against the
 settled dataset and profile.
 
-Plans include `batches` for independent, fully bound same-stage candidates with known
-availability and an explicit dataset/endpoint; `--batch-dir DIR` also writes those manifests.
-Over-budget candidates are excluded. Neither plans nor manifest
-creation executes queries. Start with the orientation batch, inspect it, then resolve
-names. Do not execute later batches until their dependencies and decisions are reviewed.
-No placeholder/refused/unknown-availability step should enter a batch. Pattern stages
-keep their review barriers even when their parameters are already known.
+Work the plan **by round**. Every step carries the earliest `round` it can run in: steps in
+one round do not depend on each other, so run them together - one batch, or several commands
+in one turn - then review them before the next round. A step waits only for orientation, for
+the steps that supply its placeholders, and for order its pattern declares; `core/provenance`
+waits for everything before it. Do not run a step before its round because its parameters
+look known: a later round exists because a judgement on earlier evidence decides it.
+
+Plans include `batches` for fully bound candidates sharing a round, with known availability
+and an explicit dataset/endpoint; `--batch-dir DIR` also writes those manifests. Over-budget
+candidates are excluded. Neither plans nor manifest creation executes queries. Start with the
+orientation batch, inspect it, then run round 2 - name resolution plus any discovery that
+needs no resolved name. Do not execute later batches until their dependencies and decisions
+are reviewed. No placeholder/refused/unknown-availability step should enter a batch.
 
 Use the same explicit profile and target on every query command. Query-level `--set LIMIT`
 bounds results, while `--limit` only bounds display. For evidence with a compact preview:

@@ -1006,6 +1006,44 @@ judges conformance. Analyse routes these question intents and reviews ambiguity;
 query remains the only executor. Catalog shortlist and detail facets avoid a
 multi-valued cross-product that would waste rows and model tokens.
 
+**D30. A step waits for what it needs, not for whatever was listed before it.** D23 kept
+"sequential pattern review barriers" so that batching could not erase a judgement that
+determines the next query. The planner implemented that as a chain: every pattern step
+depended on the one before it, whether or not it needed that step's evidence. An agent that
+follows a plan pays one model turn per review round, and every turn re-sends the whole
+context, so a parameterless discovery query queued behind unrelated steps costs a turn and
+buys nothing. In the D27 trials input tokens, not query execution, dominated cost.
+
+Prerequisites are now derived. A pattern step waits for orientation, for the earlier steps
+that supply its placeholders (`PARAMETER_PRODUCERS`, the same knowledge as the placeholder
+text), and for any order its pattern declares in `assets/patterns.json` as `after`. `after`
+records the judgements no parameter shows, each stated in the pattern's own file: neighbours
+before dependents before transitive paths, an identity audit before a label sweep, a resolved
+model before its notation template, a confirmed population and predicate spelling before a
+coverage gap, a discovered decision predicate before element detail. Anything that cannot be
+attributed keeps the old barrier: a placeholder with no known or planned source, and
+`core/provenance`, whose focus is whatever the answer rests on, wait for every earlier step;
+an unannotated plan, which has no parameter names, keeps the chain. Each step carries its
+earliest `round`; `depends_on` drops prerequisites already implied by another. Batches group
+by round and may span stages, so one load serves name resolution and the discovery that
+needs no resolved name.
+
+On the bundled profiles the twelve patterns need 0-3 fewer rounds each (impact 8 to 6, views
+7 to 4; lifecycle and model quality 7 to 4 under `examples/curated-store`; traceability and
+both taxonomy patterns are unchanged), and concern plans gain most - the published
+questions informing one concern take no evidence from one another, so "Quality" falls from
+9 rounds to 3. Lifecycle now lists `core/identity-audit` before `core/label-collisions`, so
+the audit can hold the sweep back. Steps, parameters, refusals, stop conditions and the
+budget are unchanged; no new step becomes executable early, because a step whose inputs come
+from evidence is still unbound until that evidence is reviewed.
+
+These are deterministic plan properties, **not** a measured agent saving. Whether agents run
+a round in one turn, and what that does to input tokens and wall time, needs the paired
+trials in `INVESTIGATION-PERFORMANCE-PLAN.md`. Rejected: running every fully bound pattern step
+in round 2 regardless of method order (it would run a label sweep the audit makes
+unnecessary, and a C4 template before knowing the model is C4), and inferring order from
+catalogue stages (stage is a coarse category, not a dependency).
+
 ### Requests deliberately not adopted as stated
 
 Carried here from the agent-usability plan when that plan was retired, because each of these

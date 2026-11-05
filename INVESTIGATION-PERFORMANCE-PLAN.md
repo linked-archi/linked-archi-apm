@@ -348,6 +348,11 @@ envelopes and source-grounded contracts.
   the unverified latency objective.
 - [x] Run one bounded-lookup and one profile-refusal agent smoke trial against the same
   frozen snapshot and independently check their saved evidence before release preparation.
+- [ ] Forward-test D30 (derived step prerequisites and review rounds) in five alternating
+  pairs on the frozen snapshot. The cross-notation plan falls from 4 to 3 rounds under the
+  default profile, so its expected effect there is small; the impact, views, lifecycle and
+  concern plans change more and need their own scenarios before any token claim. Report
+  rounds actually used per trial beside input tokens and wall time.
 
 ## Completion criteria
 

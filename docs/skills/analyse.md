@@ -118,7 +118,7 @@ two stages — is planned once and cited twice.
 ### Commands carry evidence and dependencies
 
 ```
-03 resolve      Turn "Order Service" into an IRI.
+03 resolve      [round 2] Turn "Order Service" into an IRI.
    $ la-query query run core/resolve-element --profile linked-archi-default --data graph.trig --set 'TERM=Order Service' --json -o steps/03-resolve-element.json --preview --limit 20
    review first: steps 1, 2
    establishes: the focus IRIs later steps take as parameters
@@ -144,7 +144,22 @@ default beats a guess.
 
 Commands containing placeholders are plans, not executable queries yet. Resolve the values,
 check profile availability, and review `depends_on` results and `review_decisions` first.
-Pattern steps keep their evidence order: neighbours precede deeper dependency paths.
+
+### Rounds: what can run together
+
+A step depends on what it actually needs: orientation, the steps that supply its
+placeholders, and any order its pattern declares (`after` in `assets/patterns.json`, for
+example neighbours before deeper dependency paths, or an identity audit before a label
+sweep). `core/provenance` closes the evidence, so it waits for every step before it. Each
+step's `round` is the earliest review round it can run in, and steps sharing a round never
+depend on one another. `depends_on` lists only the nearest prerequisites; reviewing those
+implies reviewing what they waited for.
+
+For `what depends on "Order Service"?` that is six rounds rather than eight: name resolution,
+`core/discover-relationship-types` and `core/reified-predicates` all need only orientation,
+so they share round 2. Concern plans gain most, because the published questions informing
+one concern take no evidence from one another. Without catalogue metadata the planner cannot
+tell which steps are independent, and keeps every pattern step behind the one before it.
 
 The JSON `status` describes planning readiness: `ready`, `awaiting-evidence`,
 `awaiting-parameters`, `review-required`, or `unknown`. A `ready` step has known profile
@@ -154,16 +169,17 @@ describe the configured profile; they are not verification against the data.
 
 ### Batch independent steps
 
-`batches` groups at least two available steps with the same stage and dependencies. Every
-entry has bound parameters and an individual envelope output path. An explicit `--data` or
+`batches` groups at least two available steps that share a round. A round's batch may span
+stages - `resolve+pattern` - because steps in one round are independent. Every entry has
+bound parameters and an individual envelope output path. An explicit `--data` or
 `--endpoint` is required; unresolved, unknown, refused, decision-blocked and over-budget
 steps never enter a manifest. A batch replaces its individual commands; do not execute both.
 
-The two orientation queries are one ready batch. Multiple quoted names, or an explicitly
-requested definition alongside resolution, can form a later resolution batch marked
-`awaiting-evidence`. Review orientation and its stop conditions before running that batch.
-Pattern steps retain separate review boundaries instead of guessing that their evidence is
-independent.
+The two orientation queries are one ready batch. Name resolution, together with any
+discovery query that needs no resolved name, forms the round-2 batch marked
+`awaiting-evidence`. Review orientation and its stop conditions before running it. A step
+that takes a reviewed value - a resolved IRI, a chosen predicate - is never batched; bind it
+from the evidence, then run it in its round.
 
 With `--batch-dir batches`, the CLI writes these manifests without touching the dataset:
 

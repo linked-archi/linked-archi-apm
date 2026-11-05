@@ -56,7 +56,8 @@ pattern naming six templates does not require all six to be available. Check wit
 ## The same table, as data
 
 [`assets/patterns.json`](../assets/patterns.json) holds this routing table machine-readably —
-triggers, file, templates, gating capabilities and stop conditions per pattern. It is the
+triggers, file, templates, gating capabilities, stop conditions and `after`, the review order
+no parameter expresses (neighbours before deeper paths, an identity audit before a label sweep). It is the
 authoritative version for routing, and the suite checks this index against it: every pattern
 has a file that exists and appears above, and every template named is one the query catalogue
 actually ships. A routing table pointing at a template nobody installed is worse than no
