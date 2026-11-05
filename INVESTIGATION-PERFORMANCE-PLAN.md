@@ -353,6 +353,8 @@ envelopes and source-grounded contracts.
   default profile, so its expected effect there is small; the impact, views, lifecycle and
   concern plans change more and need their own scenarios before any token claim. Report
   rounds actually used per trial beside input tokens and wall time.
+- [ ] Forward-test D31 (compact text plan via `plan -o plan.json --preview`) separately from
+  D30, recording whether agents still open `plan.json` and the agent-visible plan bytes.
 
 ## Completion criteria
 

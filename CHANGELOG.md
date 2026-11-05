@@ -10,7 +10,19 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 
+### Added
+- **`la-analyse plan --preview`**: with `-o FILE`, saves the full plan and prints the compact
+  text plan in the same call, as `la-query query run -o FILE --preview` does for results. The
+  analyse entrypoint now plans with `--json -o plan.json --preview` and reads the printed plan
+  rather than the JSON file.
+
 ### Changed
+- **The text plan states each fact once.** It is grouped by review round; a batch written
+  with `--batch-dir` replaces its steps' commands; commands carry `<NAME>` placeholders whose
+  sources are listed once under `placeholders`; a line shared by several steps is printed
+  once with their numbers; the uninformative "the pattern's own evidence" is gone. The impact
+  plan prints about 3.1 KB instead of 5.0 KB, against 11.5 KB for its JSON. The JSON plan and
+  every command in it are unchanged (PROPOSAL D31).
 - **Plans wait only for the evidence a step needs.** A pattern step used to depend on the
   step listed before it; it now depends on orientation, on the steps that supply its
   placeholders, and on review order its pattern declares (`after` in `patterns.json`).

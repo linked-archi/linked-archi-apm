@@ -48,7 +48,8 @@ sequenceDiagram
 
 ```bash
 python3 scripts/la-analyse plan --question 'what depends on "Order Service"?' \
-    --profile linked-archi-default --data graph.trig --batch-dir batches
+    --profile linked-archi-default --data graph.trig --batch-dir batches \
+    --json -o plan.json --preview
 ```
 
 | Flag | Default | Purpose |
@@ -64,6 +65,14 @@ python3 scripts/la-analyse plan --question 'what depends on "Order Service"?' \
 | `--definitions` | off | Add definition evidence even when the question does not explicitly ask for it. |
 | `--batch-dir DIR` | — | Write manifests for independent concrete steps; execute nothing. |
 | `--json` | off | Emit the plan as JSON. |
+| `-o FILE` | stdout | Write the plan to this file instead. |
+| `--preview` | off | With `-o`, also print the compact text plan: one call saves the full JSON and shows what to run. |
+
+The text plan is the form meant for reading, and the one an agent should put in its context:
+one block per review round, a written batch in place of its steps' commands, each
+placeholder's source stated once under `placeholders`, and a line shared by several steps
+printed once with their numbers. The JSON form carries every field on every step and is for
+programs; it is two to three times larger.
 
 ### Step order is doctrine
 
@@ -118,11 +127,19 @@ two stages — is planned once and cited twice.
 ### Commands carry evidence and dependencies
 
 ```
-03 resolve      [round 2] Turn "Order Service" into an IRI.
-   $ la-query query run core/resolve-element --profile linked-archi-default --data graph.trig --set 'TERM=Order Service' --json -o steps/03-resolve-element.json --preview --limit 20
-   review first: steps 1, 2
-   establishes: the focus IRIs later steps take as parameters
-   stop if: several candidates match and the choice changes the answer - ask instead of picking
+round 2  review round 1 first
+   $ la-query query batch batches/03-resolve+pattern.json --profile linked-archi-default --data graph.trig --preview --limit 20
+     runs steps 3, 4, 7; do not also run their commands
+   03 core/resolve-element  Turn "Order Service" into an IRI.
+      establishes: the focus IRIs later steps take as parameters
+      stop if: several candidates match and the choice changes the answer - ask instead of picking
+   04 core/discover-relationship-types
+   07 core/reified-predicates  [caveat]
+      caveat: capability 'rdf_reifies' is partial: present for some models and absent for others. ...
+
+round 3  review round 2 first
+   05 core/neighbours-qualified
+      $ la-query query run core/neighbours-qualified --profile linked-archi-default --data graph.trig --set 'FOCUS_IRI=<FOCUS_IRI>' --json -o steps/05-neighbours-qualified.json --preview --limit 20
 ```
 
 Every executed step saves the full JSON envelope from step 01 onward, because the envelope
@@ -132,11 +149,13 @@ the saved rows or the query's limit. Legacy companion commands keep `--json -o` 
 preview flags.
 
 Parameters that cannot be known at planning time appear as visible placeholders naming their source,
-rather than as invented values:
+rather than as invented values. The text plan states each source once; the JSON carries it inside
+every command (`FOCUS_IRI=<FOCUS_IRI: from core/resolve-element ...>`):
 
 ```
-   FOCUS_IRI: <FOCUS_IRI: resolved in the resolve step, from core/resolve-element>
-   PREDICATE_PATH: <PREDICATE_PATH: a predicate from core/discover-relationship-types>
+placeholders - bind each from reviewed evidence, never invent one:
+   <FOCUS_IRI>      from core/resolve-element or an element IRI in earlier evidence
+   <PREDICATE_PATH> an unqualified predicate from core/reified-predicates, never a class
 ```
 
 `LIMIT` is skipped, and so is any parameter with a documented catalogue default — a documented

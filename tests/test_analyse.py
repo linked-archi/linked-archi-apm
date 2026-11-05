@@ -439,6 +439,107 @@ class TestPlanBatches(unittest.TestCase):
                              ["core/inventory-summary", "core/models"])
 
 
+class TestCompactText(unittest.TestCase):
+    """The text plan is what enters a model's context, and so every later turn.
+
+    It has to say what the JSON says about running the plan - every command, placeholder,
+    caveat, decision and stop condition - while stating each thing once.
+    """
+
+    QUESTION = 'what depends on "Order Service" if we retire it?'
+
+    @classmethod
+    def setUpClass(cls):
+        cls.catalogue = _catalogue()
+
+    def _plan(self, batch_dir=None):
+        patterns = load_patterns()
+        pattern, ranked = resolve_mode(None, self.QUESTION, patterns)
+        return build_plan(self.QUESTION, pattern=pattern, ranked=ranked, catalogue=self.catalogue,
+                          profile="linked-archi-default", data=["graph.trig"],
+                          batch_dir=batch_dir, preview=True)
+
+    def test_steps_are_grouped_by_round(self):
+        plan = self._plan("plans")
+        text = plan.to_text()
+        for round_number in range(1, plan.rounds + 1):
+            self.assertIn(f"\nround {round_number}", text)
+        self.assertIn("round 3  review round 2 first", text)
+        self.assertNotIn("review first:", text, "the round heading says it once")
+
+    def test_a_placeholder_source_is_stated_once(self):
+        plan = self._plan("plans")
+        text = plan.to_text()
+        source = "from core/resolve-element or an element IRI in earlier evidence"
+        self.assertEqual(text.count(source), 1)
+        self.assertIn("'FOCUS_IRI=<FOCUS_IRI>'", text)
+        self.assertIn("placeholders - bind each from reviewed evidence", text)
+        # The JSON contract keeps the descriptive placeholder in every command.
+        focus = [step for step in plan.as_dict()["steps"] if "FOCUS_IRI" in step["parameters"]]
+        self.assertTrue(focus)
+        for step in focus:
+            self.assertIn(f"FOCUS_IRI=<FOCUS_IRI: {source}>", step["command"])
+
+    def test_a_written_batch_replaces_its_steps_commands(self):
+        text = self._plan("plans").to_text()
+        self.assertIn("la-query query batch plans/01-orient.json", text)
+        self.assertIn("la-query query batch plans/03-resolve+pattern.json", text)
+        self.assertNotIn("query run core/inventory-summary", text)
+        self.assertNotIn("query run core/discover-relationship-types", text)
+        self.assertIn("query run core/neighbours-qualified", text)
+
+    def test_unwritten_batches_keep_runnable_step_commands(self):
+        text = self._plan().to_text()
+        self.assertNotIn("query batch", text, "a manifest nobody wrote cannot be run")
+        self.assertIn("query run core/inventory-summary", text)
+        self.assertIn("re-plan with --batch-dir DIR", text)
+
+    def test_shared_detail_is_printed_once_with_its_steps(self):
+        text = self._plan("plans").to_text()
+        stop = "only one notation loaded and the question needs two"
+        self.assertEqual(text.count(stop), 1)
+        self.assertIn(f"stop if (steps 1, 2): {stop}", text)
+        self.assertNotIn("the pattern's own evidence", text)
+
+    def test_nothing_that_governs_execution_is_dropped(self):
+        plan = self._plan("plans")
+        text = plan.to_text()
+        for step in plan.steps:
+            with self.subTest(step.number):
+                self.assertIn(f"{step.number:02d} {step.template}", text)
+                for caveat in step.caveats:
+                    self.assertIn(caveat, text)
+                if step.stop_when:
+                    self.assertIn(step.stop_when, text)
+        for condition in plan.pattern_stop_when:
+            self.assertIn(condition, text)
+
+    def test_the_text_is_smaller_than_the_json_it_summarises(self):
+        plan = self._plan("plans")
+        self.assertLess(len(plan.to_text()), len(json.dumps(plan.as_dict(), indent=2)) / 2)
+
+    def test_preview_saves_the_plan_and_prints_it_in_one_call(self):
+        script = ROOT / "skills/linked-archi-analyse/scripts/la-analyse"
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "plan.json"
+            done = subprocess.run(
+                [sys.executable, str(script), "plan", "--question", self.QUESTION,
+                 "--profile", "linked-archi-default", "--data", "graph.trig",
+                 "--json", "-o", str(target), "--preview"],
+                capture_output=True, text=True, timeout=120, cwd=ROOT,
+            )
+            self.assertEqual(done.returncode, 0, done.stderr)
+            self.assertEqual(json.loads(target.read_text())["pattern"], "impact-and-dependency")
+            self.assertIn("round 1", done.stdout)
+            self.assertIn("placeholders - bind each", done.stdout)
+            refused = subprocess.run(
+                [sys.executable, str(script), "plan", "--question", self.QUESTION, "--preview"],
+                capture_output=True, text=True, timeout=120, cwd=ROOT,
+            )
+            self.assertEqual(refused.returncode, 1)
+            self.assertIn("--preview needs -o", refused.stderr)
+
+
 class TestReviewRounds(unittest.TestCase):
     """A step waits for the evidence it needs, not for whichever step was listed before it.
 

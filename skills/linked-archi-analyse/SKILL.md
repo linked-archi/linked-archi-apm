@@ -52,8 +52,11 @@ throughout the investigation, and store artifacts in the project, not the skill 
    ```bash
    la-analyse plan --question 'what depends on "Order Service" if we retire it?' \
      --profile linked-archi-default --data graph.trig --budget 12 \
-     --steps-dir steps --batch-dir plans --json -o plan.json
+     --steps-dir steps --batch-dir plans --json -o plan.json --preview
    ```
+
+   `--preview` prints the compact plan - one block per review round - while `-o` keeps
+   the full JSON; read the printed plan, not `plan.json`.
 
    `--mode` overrides routing; `--list-patterns` lists choices. `--concern NAME`
    (repeatable) plans instead the model questions published as informing a stakeholder

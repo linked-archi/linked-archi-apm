@@ -1044,6 +1044,24 @@ in round 2 regardless of method order (it would run a label sweep the audit make
 unnecessary, and a C4 template before knowing the model is C4), and inferring order from
 catalogue stages (stage is a coarse category, not a dependency).
 
+**D31. The text plan is for the model; the JSON plan is for programs.** The analyse
+entrypoint recommended `--json -o plan.json`, which printed nothing, so an agent then read the
+JSON: every field of every step, a descriptive placeholder repeated inside each command and
+again beside it, identical orientation text twice, and a per-step command for steps a batch
+replaces. That file is 10-12 KB for an impact question, and whatever an agent reads stays in
+every later turn's input.
+
+`plan -o FILE --preview` now saves the JSON and prints the text form, as `la-query query run
+-o FILE --preview` does. The text groups steps by round (D30), shows a written batch instead of
+its steps' commands, writes `<NAME>` in commands and lists each placeholder's source once,
+prints a line shared by several steps once with their numbers, and drops the generic
+"establishes" line. Nothing that governs execution is removed: every step, command not covered
+by a batch, caveat, refusal decision, stop condition and placeholder source remains, which the
+suite checks. An unwritten manifest is not offered as a command. The JSON plan, its commands and
+`_machine plan` are unchanged; the shorter placeholder exists only in text. The impact plan
+prints about 3.1 KB rather than 5.0 KB of the previous text form; output bytes are not model
+tokens, and no agent-level saving is claimed until it is measured.
+
 ### Requests deliberately not adopted as stated
 
 Carried here from the agent-usability plan when that plan was retired, because each of these
