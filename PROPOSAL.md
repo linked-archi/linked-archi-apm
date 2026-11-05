@@ -1006,6 +1006,109 @@ judges conformance. Analyse routes these question intents and reviews ambiguity;
 query remains the only executor. Catalog shortlist and detail facets avoid a
 multi-valued cross-product that would waste rows and model tokens.
 
+**D30. A step waits for what it needs, not for whatever was listed before it.** D23 kept
+"sequential pattern review barriers" so that batching could not erase a judgement that
+determines the next query. The planner implemented that as a chain: every pattern step
+depended on the one before it, whether or not it needed that step's evidence. An agent that
+follows a plan pays one model turn per review round, and every turn re-sends the whole
+context, so a parameterless discovery query queued behind unrelated steps costs a turn and
+buys nothing. In the D27 trials input tokens, not query execution, dominated cost.
+
+Prerequisites are now derived. A pattern step waits for orientation, for the earlier steps
+that supply its placeholders (`PARAMETER_PRODUCERS`, the same knowledge as the placeholder
+text), and for any order its pattern declares in `assets/patterns.json` as `after`. `after`
+records the judgements no parameter shows, each stated in the pattern's own file: neighbours
+before dependents before transitive paths, an identity audit before a label sweep, a resolved
+model before its notation template, a confirmed population and predicate spelling before a
+coverage gap, a discovered decision predicate before element detail. Anything that cannot be
+attributed keeps the old barrier: a placeholder with no known or planned source, and
+`core/provenance`, whose focus is whatever the answer rests on, wait for every earlier step;
+an unannotated plan, which has no parameter names, keeps the chain. Each step carries its
+earliest `round`; `depends_on` drops prerequisites already implied by another. Batches group
+by round and may span stages, so one load serves name resolution and the discovery that
+needs no resolved name.
+
+On the bundled profiles the twelve patterns need 0-3 fewer rounds each (impact 8 to 6, views
+7 to 4; lifecycle and model quality 7 to 4 under `examples/curated-store`; traceability and
+both taxonomy patterns are unchanged), and concern plans gain most - the published
+questions informing one concern take no evidence from one another, so "Quality" falls from
+9 rounds to 3. Lifecycle now lists `core/identity-audit` before `core/label-collisions`, so
+the audit can hold the sweep back. Steps, parameters, refusals, stop conditions and the
+budget are unchanged; no new step becomes executable early, because a step whose inputs come
+from evidence is still unbound until that evidence is reviewed.
+
+These are deterministic plan properties, **not** a measured agent saving. Whether agents run
+a round in one turn, and what that does to input tokens and wall time, needs the paired
+trials in `INVESTIGATION-PERFORMANCE-PLAN.md`. Rejected: running every fully bound pattern step
+in round 2 regardless of method order (it would run a label sweep the audit makes
+unnecessary, and a C4 template before knowing the model is C4), and inferring order from
+catalogue stages (stage is a coarse category, not a dependency).
+
+**D31. The text plan is for the model; the JSON plan is for programs.** The analyse
+entrypoint recommended `--json -o plan.json`, which printed nothing, so an agent then read the
+JSON: every field of every step, a descriptive placeholder repeated inside each command and
+again beside it, identical orientation text twice, and a per-step command for steps a batch
+replaces. That file is 10-12 KB for an impact question, and whatever an agent reads stays in
+every later turn's input.
+
+`plan -o FILE --preview` now saves the JSON and prints the text form, as `la-query query run
+-o FILE --preview` does. The text groups steps by round (D30), shows a written batch instead of
+its steps' commands, writes `<NAME>` in commands and lists each placeholder's source once,
+prints a line shared by several steps once with their numbers, and drops the generic
+"establishes" line. Nothing that governs execution is removed: every step, command not covered
+by a batch, caveat, refusal decision, stop condition and placeholder source remains, which the
+suite checks. An unwritten manifest is not offered as a command. The JSON plan, its commands and
+`_machine plan` are unchanged; the shorter placeholder exists only in text. The impact plan
+prints about 3.1 KB rather than 5.0 KB of the previous text form; output bytes are not model
+tokens, and no agent-level saving is claimed until it is measured.
+
+**D32. A shortlist costs a shortlist.** The query entrypoint sent an agent looking for an
+unknown candidate to `catalog list --profile P --why`: every entry in every stage plus every
+refusal, about 21 KB, most of it irrelevant to the candidate sought. `dump` could already be
+narrowed by stage and notation; `list` could not. `list` now takes `--stage` and `--notation`
+with `dump`'s rules (one shared filter), `--match` over name and purpose, and `--available`,
+and `--why` explains only the refusals shown. The narrowed listing states how many of the
+catalogue's entries matched, so a short list is not mistaken for a short catalogue, and an
+unknown notation is an error rather than an empty list. `--available` hides refusals by
+request only: a refusal names an alternative, and the default listing keeps showing them.
+The grouped listing also stops repeating each entry's stage beside its stage heading. No
+catalogue content, gate or machine contract changes.
+
+**D33. An entrypoint carries rules and commands; its reasons live one link away.** Each
+`SKILL.md` an agent opens stays in every later turn's input, and the D27 trials found the
+two investigation entrypoints a substantial context source. The six entrypoints were 73.6 KB
+together, and an investigation that also set up its dataset opened four of them.
+
+Detail moves out of the entrypoints into references: dataset discovery, directory resolution
+and the completeness warning to `connect/references/discovery.md`; what to do about each
+`verify` finding to `profile/references/verify.md`; what to do when a fetch is refused,
+negotiated wrongly or misses the offline cache, and what a manifest records, to
+`source/references/acquisition.md`; model questions to `query/references/model-questions.md`.
+
+A reference only saves anything if the entrypoint plus the reference, when both are opened,
+stays smaller than the old entrypoint; otherwise an agent that needs the detail pays more than
+before. So `verify.md` and `acquisition.md` keep only what an agent acts on - each finding with
+its action, each refusal with its remedy - and do not repeat what `SKILL.md` says. The history
+behind them (why negotiation asks for Turtle first, why `recommend` exists, why claims decay)
+moves to the docs site, which is not part of an installed skill. Opened together, profile is
+11.9 KB (was 15.2), source 11.2 KB (was 11.7), query 11.5 KB (was 11.6) and connect 14.3 KB
+(was 14.5); query's reference says only how a model question runs and why one is refused, and
+no longer repeats the entrypoint's summary of it. Moving the text broke two
+relative links, which nothing checked; a packaging test now resolves every link inside
+`references/`. The identical twelve-line discovery heredoc and its
+surrounding paragraphs in connect, profile and source become one bounded command and the
+`doctor` pointer. Every rule, command, refusal, prohibition and safety condition stays in its
+entrypoint, including "never search the filesystem", which the suite checks. Analyse now says
+its plan's commands are complete, so an investigation needs `linked-archi-query` installed but
+its `SKILL.md` only for an ad-hoc query, an interpreted refusal or a failing command; the name
+resolution rules it repeated from query shrink to the routing an analyst needs. Frontmatter
+descriptions, which a client loads in every session, shrink from 3.3 KB to 2.5 KB with their
+trigger words kept.
+
+The entrypoints total 56 KB (connect 14.5 to 7.8 KB, profile 15.2 to 8.9 KB, source 11.7 to
+8.8 KB, query 11.6 to 10.6 KB). These are file sizes, not measured tokens; whether agents still
+open the query entrypoint during an investigation is for the paired trials to show.
+
 ### Requests deliberately not adopted as stated
 
 Carried here from the agent-usability plan when that plan was retired, because each of these

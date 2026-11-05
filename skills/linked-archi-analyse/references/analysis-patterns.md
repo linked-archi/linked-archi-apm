@@ -50,13 +50,15 @@ numbering continuing across patterns. Take parameters from
 `la-query catalog show <template> --profile "$PROFILE"`, never from the `.rq` file.
 
 A template this dataset cannot support is **refused with a reason and an alternative**, so a
-pattern naming six templates does not require all six to be available. Check with
-`la-query catalog list --profile "$PROFILE" --why` before deciding a pattern is unavailable.
+pattern naming six templates does not require all six to be available. Check the ones it names
+with `la-query catalog dump --profile "$PROFILE" --template NAME ...`, or a narrowed
+`catalog list --profile "$PROFILE" --why --match TEXT`, before deciding a pattern is unavailable.
 
 ## The same table, as data
 
 [`assets/patterns.json`](../assets/patterns.json) holds this routing table machine-readably —
-triggers, file, templates, gating capabilities and stop conditions per pattern. It is the
+triggers, file, templates, gating capabilities, stop conditions and `after`, the review order
+no parameter expresses (neighbours before deeper paths, an identity audit before a label sweep). It is the
 authoritative version for routing, and the suite checks this index against it: every pattern
 has a file that exists and appears above, and every template named is one the query catalogue
 actually ships. A routing table pointing at a template nobody installed is worse than no

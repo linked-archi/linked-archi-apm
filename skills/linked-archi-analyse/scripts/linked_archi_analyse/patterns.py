@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -36,6 +36,40 @@ class Pattern:
     stop_when: tuple[str, ...]
     notation_mentions: tuple[str, ...]
     resolution: str = "element"
+    #: Method order that no parameter expresses: ``{template: (earlier templates...)}`` means
+    #: "review those results before running this one", because a judgement on them decides
+    #: whether or how it runs. Inputs taken from earlier evidence are derived by the planner
+    #: and need no entry here.
+    after: Mapping[str, tuple[str, ...]] = field(default_factory=dict)
+
+
+def _after(name: str, spec: Mapping[str, Any], templates: tuple[str, ...]) -> dict[str, tuple[str, ...]]:
+    """Validate a pattern's declared review order against its own template list.
+
+    A key must be one of the pattern's templates. A value is either a template listed before
+    that key or one the planner always places before pattern evidence (orientation and
+    resolution), so a review barrier can never point at a later step.
+    """
+    raw = spec.get("after", {})
+    if not isinstance(raw, Mapping):
+        raise AnalyseError(f"pattern {name!r}: after must be an object")
+    after: dict[str, tuple[str, ...]] = {}
+    for template, earlier in raw.items():
+        if template not in templates:
+            raise AnalyseError(
+                f"pattern {name!r}: after names {template!r}, which the pattern does not run"
+            )
+        if not isinstance(earlier, list) or not earlier:
+            raise AnalyseError(f"pattern {name!r}: after[{template!r}] must be a non-empty list")
+        later = templates[templates.index(template):]
+        for prerequisite in earlier:
+            if prerequisite in later:
+                raise AnalyseError(
+                    f"pattern {name!r}: {template!r} cannot wait for {prerequisite!r}, which is "
+                    "not listed before it"
+                )
+        after[template] = tuple(str(prerequisite) for prerequisite in earlier)
+    return after
 
 
 def load_patterns(path: Path | None = None) -> dict[str, Pattern]:
@@ -66,16 +100,18 @@ def load_patterns(path: Path | None = None) -> dict[str, Pattern]:
         resolution = spec.get("resolution", "element")
         if resolution not in ("element", "concept", "vocabulary", "viewpoint"):
             raise AnalyseError(f"pattern {name!r} has unknown resolution {resolution!r}")
+        templates = tuple(str(t) for t in spec["templates"])
         patterns[name] = Pattern(
             name=name,
             title=str(spec["title"]),
             file=str(spec["file"]),
             triggers=tuple(str(t) for t in spec["triggers"]),
-            templates=tuple(str(t) for t in spec["templates"]),
+            templates=templates,
             capabilities=dict(spec["capabilities"]),
             stop_when=tuple(str(s) for s in spec["stop_when"]),
             notation_mentions=tuple(str(n).lower() for n in spec.get("notation_mentions", [])),
             resolution=resolution,
+            after=_after(name, spec, templates),
         )
     return patterns
 

@@ -79,6 +79,7 @@ array; `decisions` and `batches` are described separately below:
   "ranked": [{"pattern": "impact-and-dependency", "score": 2, "matched": ["retire", "depends on"]}],
   "budget": 12,
   "planned_steps": 7,
+  "planned_rounds": 5,
   "annotated": true,
   "profile": "linked-archi-default",
   "data": ["dist/merged.trig"],
@@ -101,6 +102,7 @@ array; `decisions` and `batches` are described separately below:
       "over_budget": false,
       "note": "",
       "depends_on": [],
+      "round": 1,
       "review_decisions": [],
       "unresolved_parameters": [],
       "status": "ready",
@@ -128,9 +130,19 @@ What a caller may rely on:
   value comes from — "resolved in the resolve step, from core/resolve-element". Nothing is
   invented, which is the whole reason the resolve step exists. `unresolved_parameters`
   contains the names of these parameters.
-- **`depends_on`** lists preceding step numbers whose evidence must be reviewed first.
-  Resolution depends on orientation; pattern steps retain their ordered review boundaries.
-  It does not assert that those steps have run or returned sufficient evidence.
+- **`depends_on`** lists preceding step numbers whose evidence must be reviewed first,
+  without repeating what those steps already wait for: reviewing step 5 implies reviewing
+  whatever step 5 itself depends on. Resolution depends on orientation. A pattern step
+  depends on orientation, on the steps that supply its placeholders, and on any order the
+  pattern declares in `assets/patterns.json` (`after`). A placeholder whose source is unknown
+  or not planned, and `core/provenance`, which closes the evidence, depend on every earlier
+  step. Without catalogue metadata (`annotated: false`) every pattern step depends on the one
+  before it. It does not assert that those steps have run or returned sufficient evidence.
+- **`round`** is the earliest review round a step can run in: `1 + max(round of depends_on)`,
+  so orientation is round 1. Steps sharing a round never depend on one another and can run
+  in the same turn once every earlier round is reviewed. `planned_rounds` is the plan's
+  largest round. A round is ordering, not permission: placeholders, decisions and stop
+  conditions still apply.
 - **`review_decisions`** lists earlier refusal decision IDs to resolve before proceeding.
   Reporting a limitation or stopping may be the right resolution; choosing an alternative
   is not assumed to answer the original question.
@@ -187,14 +199,16 @@ path is not equivalent to unbounded direct reachability; the planner makes no su
 
 ### Batch manifests
 
-`batches` is an array of groups with at least two independent concrete steps, sharing a
-stage and the same dependencies. It is empty unless an explicit `data` or `endpoint` target
-is supplied. Unknown profile availability, unresolved parameters, refusal review and
+`batches` is an array of groups with at least two concrete steps sharing a `round`, so none
+depends on another. A group can span stages; its `stage` joins them in step order, as in
+`resolve+pattern`, and its `depends_on` is the reduced union of its steps'. It is empty unless
+an explicit `data` or `endpoint` target is supplied. Unknown profile availability, unresolved parameters, refusal review and
 over-budget status exclude a step. A ready orientation group looks like:
 
 ```json
 {
   "stage": "orient",
+  "round": 1,
   "steps": [1, 2],
   "depends_on": [],
   "status": "ready",
@@ -214,10 +228,12 @@ over-budget status exclude a step. A ready orientation group looks like:
 envelope for `bundle`; preview limits only presentation. Without `batch_dir`, paths default
 to `steps_dir/batches/NN-STAGE.json`. Save the manifest before invoking its command.
 
-A later independent resolution batch has `status: "awaiting-evidence"` and its orientation
-step numbers in `depends_on`. Review those results and stop conditions first. Execute a
-batch **instead of** its constituent commands, not in addition to them. Pattern evidence
-remains sequential, preserving checks such as direct neighbours before deeper paths.
+A later batch - name resolution together with any discovery query that needs no resolved
+name - has `status: "awaiting-evidence"` and its orientation step numbers in `depends_on`.
+Review those results and stop conditions first. Execute a batch **instead of** its
+constituent commands, not in addition to them. Evidence that takes a reviewed value stays
+behind the step that supplies it, and declared method order stays sequential, preserving
+checks such as direct neighbours before deeper paths.
 
 ### Metadata retrieval
 

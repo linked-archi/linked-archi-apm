@@ -815,6 +815,39 @@ class TestNoEmptyDirectoriesShip(unittest.TestCase):
                 )
 
 
+class TestReferenceLinksResolve(unittest.TestCase):
+    """A reference's relative links resolve from the reference itself.
+
+    `validate_skills.py` checks the links in each SKILL.md body. Text moved from an entrypoint
+    into `references/` keeps entrypoint-relative paths - `references/x.md` from inside
+    `references/` - and nothing caught them, so an agent following one found nothing there.
+    """
+
+    _LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
+
+    def test_every_relative_link_in_a_reference_resolves(self):
+        broken = []
+        for doc in sorted(SKILLS.glob("*/references/**/*.md")):
+            fenced = False
+            for number, line in enumerate(doc.read_text("utf-8").splitlines(), 1):
+                if line.lstrip().startswith("```"):
+                    fenced = not fenced
+                    continue
+                if fenced:
+                    continue
+                for target in self._LINK.findall(line):
+                    if re.match(r"^[a-z][a-z0-9+.-]*:", target) or target.startswith("#"):
+                        continue  # a URL or an anchor on the same page
+                    if not (doc.parent / target.split("#", 1)[0]).exists():
+                        broken.append(f"{doc.relative_to(ROOT).as_posix()}:{number}: {target}")
+        self.assertEqual(broken, [], "links that resolve to nothing: " + "; ".join(broken))
+
+    def test_the_check_sees_the_links_it_guards(self):
+        """Guard against passing because the pattern matched nothing."""
+        verify = (PROFILE / "references" / "verify.md").read_text("utf-8")
+        self.assertIn("profile-reference.md#descendants", self._LINK.findall(verify)[0])
+
+
 class TestAllowedToolsMatchThePolicy(unittest.TestCase):
     """Frontmatter must not permit what the prose forbids.
 

@@ -33,6 +33,13 @@ de-duplicates queries, makes definitions conditional, records refused candidates
 and preserves review barriers before dependent work. Stop when the evidence is sufficient;
 do not execute every candidate to complete a checklist. Query remains the execution owner.
 
+A candidate waits for the review of what it needs - orientation, the step that supplies a
+placeholder, and any order the pattern declares as `after` in `patterns.json` - and nothing
+else, so independent evidence shares a review round. The declared orders are the judgements
+no parameter shows: direct neighbours before deeper paths, an identity audit before a label
+sweep, a resolved model before its notation template, a confirmed population and predicate
+spelling before a coverage gap.
+
 !!! note "`capabilities` here is advisory"
     The authoritative gate is the query catalogue's own `requires`, checked at render time. The
     pattern lists capabilities so a planner can say "this dataset cannot answer that" before running
@@ -187,8 +194,8 @@ resolves a concept **after** selection. A label by itself never chooses a templa
 
 - `core/lifecycle` — gated on `element_lifecycle`
 - `core/define-term`
-- `core/label-collisions`
 - `core/identity-audit` — gated on `identity_assertions`
+- `core/label-collisions`
 - `notation/leanix/factsheets`
 
 *Capability gates:* `element_lifecycle` (core/lifecycle only); `identity_assertions` (core/identity-audit only)

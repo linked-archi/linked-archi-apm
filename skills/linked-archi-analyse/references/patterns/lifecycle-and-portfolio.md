@@ -12,9 +12,10 @@ may be one system in two models, two systems, or one system and a report about i
 `core/define-term` makes the collision visible — its `candidates` column counts the distinct
 resources a term matched, and each row carries that resource's own definition, type and
 owning model, which is usually enough to see whether they are the same thing.
-`core/label-collisions` sweeps for the same thing across a whole dataset, and returns
-candidates rather than assertions. `core/identity-audit` settles it where the dataset has a
-reconciliation step; where it does not, say the question is not answerable yet.
+`core/identity-audit` settles it where the dataset has a reconciliation step; where it does
+not, say the question is not answerable yet. Review it before `core/label-collisions`, which
+sweeps for the same thing across a whole dataset and returns candidates rather than assertions:
+it is worth its query only where the audit leaves identity open.
 
 ## Stop when
 

@@ -189,6 +189,8 @@ def cmd_plan(args: argparse.Namespace) -> int:
             if entry["notation_mentions"]:
                 print(f"{'':24} fallback: two of {', '.join(entry['notation_mentions'])}")
         return OK
+    if args.preview and not args.output:
+        raise AnalyseError("--preview needs -o FILE: it shows the plan that -o saves")
     question, pattern, ranked, notes = _pattern_for(args.question, args.mode, args.concern, args.profile)
     catalogue, preview = _catalogue(args.profile, required_templates(question, pattern, args.definitions))
     plan = build_plan(
@@ -218,6 +220,8 @@ def cmd_plan(args: argparse.Namespace) -> int:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(text if text.endswith("\n") else text + "\n", encoding="utf-8")
         print(f"Wrote {target} ({len(plan.steps)} step(s))", file=sys.stderr)
+        if args.preview:
+            print(plan.to_text(), end="")
     else:
         print(text, end="" if text.endswith("\n") else "\n")
     return OK
@@ -437,7 +441,8 @@ Examples:
   la-analyse plan --list-patterns
   la-analyse plan --question 'what depends on "Order Service"?' \\
       --profile linked-archi-default --data graph.trig
-  la-analyse plan --question '...' --mode impact-and-dependency --budget 8 --json -o plan.json
+  la-analyse plan --question '...' --mode impact-and-dependency --budget 8 \\
+      --batch-dir plans --json -o plan.json --preview
   la-analyse bundle --step steps/01-inventory-summary.json --step steps/02-models.json \\
       --findings findings.json -o investigations/errata.json
   la-analyse render --bundle investigations/errata.json -o investigations/errata.md
@@ -524,6 +529,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     plan.add_argument("--json", action="store_true", help="emit the plan as JSON")
     plan.add_argument("-o", "--output", metavar="FILE", help="write to this file instead of stdout")
+    plan.add_argument(
+        "--preview", action="store_true",
+        help=(
+            "with -o, also print the compact text plan to stdout: one call saves the full plan "
+            "and shows what to run, round by round"
+        ),
+    )
     plan.set_defaults(func=cmd_plan)
 
     bundle = commands.add_parser(

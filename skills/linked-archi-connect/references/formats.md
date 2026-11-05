@@ -34,6 +34,11 @@ Flattening throws all three away. It is recoverable — a `single`-layout profil
 flattened data correctly and says so with a caveat — but the separation cannot be rebuilt
 from the flattened file.
 
+The profile has to match the layout either way. A dataset with no named graphs under a
+graph-scoping profile makes every scoped query return nothing; a dataset with named graphs
+under a single-layout profile mixes semantic, view, and provenance facts. `la-profile verify`
+exits `1` on that disagreement.
+
 ## When a load reports fewer quads than expected
 
 Almost always a partial export rather than a small enterprise. Confirm which models are

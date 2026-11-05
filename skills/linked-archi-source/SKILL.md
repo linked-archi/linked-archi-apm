@@ -1,6 +1,6 @@
 ---
 name: linked-archi-source
-description: Acquire an RDF architecture graph from an HTTPS document or a pinned Git repository revision, then verify and materialize it as immutable local input for linked-archi-connect. Also prepares a two-phase handoff that verifies RDF an agent fetched through its own read-only GitLab MCP. Use when the graph is remote or private, when reproducible source provenance matters, or when an agent must fetch committed RDF without cloning a working tree. Never executes SPARQL or repository code.
+description: Fetch an RDF architecture graph from an HTTPS document, a pinned Git revision, or - in a two-phase handoff - an agent's own read-only GitLab MCP, then verify it and cache it as immutable local input for linked-archi-connect. Use when the graph is remote or private, when reproducible source provenance matters, or when committed RDF must be fetched without cloning a working tree. Never executes SPARQL or repository code.
 license: Apache-2.0
 compatibility: Needs Python 3.11 or newer and pyoxigraph for RDF verification. Git sources also need git. HTTPS uses the standard library. GitLab MCP is optional and agent-mediated; no MCP server is installed or invoked by the Python runtime.
 metadata:
@@ -14,40 +14,29 @@ allowed-tools: Read Bash(python3:*) Bash(git:*)
 
 ## Invocation and companions
 
-Owner command: `la-source`. Acquisition needs no companion; `linked-archi-connect` is optional, for attaching what it materializes.
+Owner command: `la-source`. Acquisition needs no companion; `linked-archi-connect` is
+optional, for attaching what it materializes.
 
-Resolve it once, with **one** call. `python3` is the only command these instructions need, which is also all this skill's `allowed-tools` grants:
+Installing a skill does not put its command on `PATH`. Examples are skill-relative
+(`python3 scripts/la-source`); substitute the path the harness gave you, or
+`$LINKED_ARCHI_SKILLS_DIR/linked-archi-source` (authoritative when set), or the install
+root (`~/.kiro/skills`, `~/.claude/skills`). The repository `la-kg source` dispatcher is
+only a clone convenience.
+
+If the path is unknown, one bounded call lists every installed owner:
 
 ```bash
-python3 - <<'PY'
-import os, pathlib, shutil
-print("on PATH:", shutil.which("la-source") or "no")
-root = pathlib.Path(os.environ.get("LINKED_ARCHI_SKILLS_DIR") or "~/.kiro/skills").expanduser()
-print("install root:", root, "(exists)" if root.is_dir() else "(not there)")
-for owner in sorted(root.glob("linked-archi-*/scripts/la-*")):
-    print(" ", owner)
-PY
+python3 -c 'import glob, os; root = os.path.expanduser(os.environ.get("LINKED_ARCHI_SKILLS_DIR") or "~/.kiro/skills"); print("root: " + root, *sorted(glob.glob(root + "/linked-archi-*/scripts/la-*")), sep="\n")'
 ```
-
-Installed skills usually sit together under `~/.kiro/skills` or `~/.claude/skills`, often
-as symlinks into a checkout. Every owner here resolves its siblings the same way:
-`$LINKED_ARCHI_SKILLS_DIR` when set — authoritative, never falling back — then the sibling
-directory beside the running skill, then `PATH`.
 
 **Never search the filesystem for skills, scripts, templates or profiles, and never search
 from `/` or `$HOME`.** If anything is unresolved, run `la-source doctor`: it prints this
 skill's root, its resolved command, its dependencies and every companion it can reach. If a
 companion is genuinely missing, report it by name and stop.
 
-
-Run examples from the directory containing this `SKILL.md`. Installation does not add
-`la-source` to `PATH`, so use the skill-relative command shown here. The repository
-`la-kg source` dispatcher is only a clone convenience.
-
-This skill owns remote identity resolution, credentials, byte and time limits,
-checksums, RDF parsing, immutable caching and acquisition provenance. It produces
-verified **local files**. It never loads a graph, executes SPARQL, runs repository
-code, or selects a profile:
+This skill owns remote identity, credentials, byte and time limits, checksums, RDF parsing,
+immutable caching and acquisition provenance. It produces verified **local files**; it never
+loads a graph, executes SPARQL, runs repository code, or selects a profile:
 
 ```text
 URL / Git / GitLab MCP
@@ -58,8 +47,8 @@ URL / Git / GitLab MCP
         -> linked-archi-query
 ```
 
-A static RDF URL is not a SPARQL endpoint. Download the former here; pass only an
-actual query endpoint to `linked-archi-connect --endpoint`.
+A static RDF URL is not a SPARQL endpoint. Download the former here; pass only an actual
+query endpoint to `linked-archi-connect --endpoint`.
 
 ## Choose the source deliberately
 
@@ -69,8 +58,8 @@ actual query endpoint to `linked-archi-connect --endpoint`.
 | Git repository | One or more committed RDF files are authoritative | remote plus full commit plus paths |
 | GitLab MCP | A private GitLab project is already available through an approved agent MCP | project plus ref plus path plus independently trusted SHA-256 |
 
-Do not silently choose among candidate files, branches, repositories or MCP servers.
-Ask when the user has not identified the authoritative source.
+Do not silently choose among candidate files, branches, repositories or MCP servers. Ask
+when the user has not identified the authoritative source.
 
 ## HTTPS RDF document
 
@@ -82,15 +71,15 @@ python3 scripts/la-source url \
   --token-env LINKED_ARCHI_SOURCE_TOKEN
 ```
 
-The token value is read from the environment and is never written to the manifest.
-A credentialled request may redirect only within the same host. The fetch otherwise
-requires HTTPS, validates each redirect, rejects non-public addresses by default,
-requests an uncompressed response, enforces `--timeout-ms` and `--max-bytes`, parses
-the selected RDF format, checks the digest, and atomically promotes it into the
-content-addressed cache.
+The token is read from the environment and never written to the manifest. HTTPS only;
+redirects are validated, non-public addresses refused by default, `--timeout-ms` and
+`--max-bytes` enforced, and the bytes parsed and digest-checked before they reach the cache.
+Never put credentials in URL userinfo (refused) or a query string (kept out of the record,
+but left in shell history).
 
-The URL suffix selects the format. An extensionless URL is content-negotiated instead,
-and you can still pin the serialisation:
+The URL suffix selects the format. An extensionless URL is content-negotiated, Turtle
+first; `--format` pins the serialisation **and** the `Accept` header, and nothing else is
+accepted in its place. A `200` carrying `text/html` is refused:
 
 ```bash
 python3 scripts/la-source url https://meta.linked.archi/archimate3/shapes   # negotiated
@@ -98,34 +87,13 @@ python3 scripts/la-source url https://models.example.org/export \
   --format trig --sha256 68b8...
 ```
 
-**Negotiation asks for Turtle first, one type at a time.** A published namespace IRI is
-where a single broad `Accept` header goes wrong. Some publishers answer **404, not 406**,
-for a serialisation they do not hold, so a broader request fails where a narrower one
-succeeds — on `meta.linked.archi`, the full RDF list returns 404 for ten of twelve assets
-including every shape set and taxonomy, while `text/turtle` alone returns all twelve. Others
-ignore `q` weights entirely and answer with whatever they prefer. So the first attempt names
-one type, and only the fallback lists everything.
-
-Two consequences worth knowing:
-
-- **`--format` is a request, not just an interpretation.** It now sets the `Accept` header,
-  and no other serialisation is accepted in its place — answering a Turtle request with
-  JSON-LD and parsing it as Turtle produces "syntax error at line 1" rather than "this
-  publisher does not offer Turtle".
-- **A URL with an RDF extension is asked for once, broadly.** `/dataset.trig` already says
-  what it is, and must not be requested as Turtle: a quad dataset offered as both would come
-  back flattened, losing graph identity.
-
-A `200` carrying `text/html` is refused rather than parsed, and the refusal names the
-`Accept` that produced it.
-
-Do not put credentials in URL userinfo or a query string. Userinfo is refused; query
-strings are omitted from recorded identities but still appear in shell history.
+When a fetch is refused or negotiation returns the wrong serialisation:
+[references/acquisition.md](references/acquisition.md).
 
 ## Git repository
 
-Name exact RDF files; this skill does not search a remote repository and does not run
-a converter there.
+Name exact RDF files; this skill does not search a remote repository and does not run a
+converter there.
 
 ```bash
 python3 scripts/la-source git \
@@ -137,24 +105,18 @@ python3 scripts/la-source git \
   --sha256 dist/bpmn.trig=3ab1...
 ```
 
-A branch or tag is accepted interactively, resolved to a full commit, and reported as
-a reproducibility warning. Pin the returned commit in project configuration or CI.
-SSH remotes require `--allow-ssh`; HTTPS is the default. Self-hosted private network
-hosts additionally require explicit `--allowed-host HOST` and
-`--allow-private-network` decisions.
-
-The implementation creates a temporary bare repository and fetches one revision. It
-never checks out a worktree. Local/file/ext/git protocols, hooks, recursive submodules,
-LFS smudge filters, symlinks, submodule entries and LFS pointer files are refused.
-Only explicitly selected regular blobs are parsed and promoted to the cache.
+A branch or tag is accepted interactively, resolved to a full commit, and reported as a
+reproducibility warning: pin the returned commit in project configuration or CI. SSH
+remotes need `--allow-ssh`; self-hosted private hosts need explicit `--allowed-host HOST`
+and `--allow-private-network`. Only explicitly selected regular blobs are fetched - never a
+worktree, hook, submodule, symlink or LFS pointer. Detail:
+[references/acquisition.md](references/acquisition.md).
 
 ## GitLab MCP
 
-For a private project already reachable through an approved agent MCP integration, when this
-runtime has no credential of its own.
-
-It is a **two-phase handoff**, because the Python runtime has no access to an IDE agent's MCP
-context and will not pretend otherwise:
+For a private project already reachable through an approved agent MCP integration, when
+this runtime has no credential of its own. It is a **two-phase handoff**, because the
+Python runtime has no access to an agent's MCP context:
 
 ```bash
 # 1. Ask for the steps. This calls nothing.
@@ -183,8 +145,8 @@ does and does not protect: [references/gitlab-mcp.md](references/gitlab-mcp.md).
 
 ## Use the result
 
-A successful command prints one or more absolute `data` paths and the source manifest.
-Pass those paths unchanged to connect:
+A successful command prints one or more absolute `data` paths and the source manifest. Pass
+those paths unchanged to connect:
 
 ```bash
 python3 ../linked-archi-connect/scripts/la-connect connect \
@@ -195,43 +157,18 @@ python3 ../linked-archi-profile/scripts/la-profile verify \
   --data ~/.cache/linked-archi/sources/sha256/abc.../abc....trig
 ```
 
-For automation, add `--json` or use the machine contract described in
-[references/source-contract.md](references/source-contract.md). `la-source _machine` is
-machine-facing, not private: the underscore means "not for a human to type", and the
-contract is documented and versioned like every other owner's. Its `target` object is
-exactly connect's existing `schema_version=1` target. Source metadata stays in the
-source-owned manifest and cannot bypass query-owned read-only lint.
+The manifest records acquisition provenance - resolved identity, full commit, paths, each
+artifact's format, size, SHA-256 and quad count. The RDF's own provenance graph records
+model conversion. Keep both: one cannot substitute for the other.
 
-## Cache and offline reuse
+`--offline` performs no HTTP, Git or MCP operation and returns only an exact verified cache
+hit (Git and MCP need a full commit). The cache defaults to `~/.cache/linked-archi/sources`;
+override it with `LINKED_ARCHI_SOURCE_CACHE` or `--cache-dir`.
 
-The default cache is `~/.cache/linked-archi/sources`; override it with
-`LINKED_ARCHI_SOURCE_CACHE` or `--cache-dir`.
-
-```bash
-python3 scripts/la-source url https://models.example.org/architecture.trig \
-  --sha256 68b8... --offline
-
-python3 scripts/la-source git https://git.example.org/models.git \
-  --ref FULL_COMMIT --path dist/architecture.trig --offline
-```
-
-Offline mode performs no HTTP, Git or MCP operation and returns only an exact verified
-cache hit. Offline Git and GitLab MCP requests require a full commit. Cache files are
-named by SHA-256 and re-hashed before reuse; partial downloads and failed validations
-never become targets.
-
-## Read the manifest
-
-Every ready result points to a JSON manifest containing:
-
-- requested and resolved source identities, with URL credentials/query removed;
-- the full resolved Git commit where applicable;
-- selected repository paths and MCP server identity where applicable;
-- each artifact's format, byte size, SHA-256, parsed quad count and immutable path;
-- acquisition time and warnings about mutable or unpinned inputs.
-
-A manifest records acquisition provenance. The RDF's own provenance graph records
-model conversion provenance. Keep both: one cannot substitute for the other.
+For automation, add `--json` or use `la-source _machine`, which is machine-facing, not
+private: [references/source-contract.md](references/source-contract.md). Its `target` object
+is exactly connect's `schema_version=1` target, and source metadata cannot bypass
+query-owned read-only lint.
 
 ## Refuse these situations
 
