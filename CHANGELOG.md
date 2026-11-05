@@ -30,11 +30,14 @@ workflow publishes exactly this text, so what is written here is what a consumer
   every command in it are unchanged (PROPOSAL D31).
 - `catalog list` no longer repeats each entry's stage beside the stage heading it is listed
   under, and pads names to the longest one shown.
-- **Smaller entrypoints.** The six `SKILL.md` files fall from 73.6 KB to 56.4 KB: rationale
-  moves verbatim to new references (`connect/references/discovery.md`,
+- **Smaller entrypoints.** The six `SKILL.md` files fall from 73.6 KB to 56.4 KB: detail
+  moves to new references (`connect/references/discovery.md`,
   `profile/references/verify.md`, `source/references/acquisition.md`,
-  `query/references/model-questions.md`), and the repeated discovery heredoc becomes one
-  bounded command. Rules, commands, refusals and safety conditions stay in each entrypoint.
+  `query/references/model-questions.md`), maintainer history to the docs site, and the
+  repeated discovery heredoc becomes one bounded command. Rules, commands, refusals and
+  safety conditions stay in each entrypoint. Opened together with its entrypoint, every
+  reference except query's model-questions still totals less than the old entrypoint.
+  Relative links inside skill references are now checked.
   Analyse states that its plan's commands are complete, so an investigation opens the query
   entrypoint only for ad-hoc queries, refusals or failures. Frontmatter descriptions shrink
   from 3.3 KB to 2.5 KB (PROPOSAL D33).

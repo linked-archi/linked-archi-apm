@@ -87,7 +87,7 @@ python3 scripts/la-source url https://models.example.org/export \
   --format trig --sha256 68b8...
 ```
 
-Why negotiation works this way, and the HTTPS checks in full:
+When a fetch is refused or negotiation returns the wrong serialisation:
 [references/acquisition.md](references/acquisition.md).
 
 ## Git repository

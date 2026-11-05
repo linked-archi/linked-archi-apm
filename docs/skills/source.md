@@ -69,6 +69,16 @@ that media type is requested and there is no fallback. With an RDF extension in 
 weighted `Accept` is used. Otherwise it tries `text/turtle` first, then the weighted list —
 turtle 1.0, trig 0.9, n-quads 0.8, n-triples 0.8, rdf+xml 0.7, ld+json 0.7, n3 0.5.
 
+Why a sequence: a published namespace IRI is where a single broad `Accept` goes wrong. Some
+publishers answer **404, not 406**, for a serialisation they do not hold, so a broad request fails
+where a narrow one succeeds — on `meta.linked.archi`, the full RDF list returns 404 for ten of twelve
+assets, including every shape set and taxonomy, while `text/turtle` alone returns all twelve. Others
+ignore `q` weights entirely and answer with whatever they prefer. So the first attempt names one type.
+`--format` is a request as well as an interpretation: accepting another serialisation in its place
+and parsing it as the one requested would turn "this publisher does not offer Turtle" into "syntax
+error at line 1". A path with an RDF extension already says what it is and is never asked for as
+Turtle: a quad dataset offered both ways would come back flattened, losing graph identity.
+
 Redirects are capped at 5. A credentialled request that redirects to a different origin is refused
 outright. Compressed responses are refused. An HTML, plain-text or JSON response is caught as
 documentation rather than parsed as RDF, and retried with the next negotiation header if one

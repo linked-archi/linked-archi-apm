@@ -102,7 +102,7 @@ exists only on this machine. Say so if you answer from either.
 **This skill never fetches over the network except when querying an explicitly named SPARQL
 endpoint.** A graph that is not on disk yet belongs to `linked-archi-source`, which verifies
 it and hands back a target this skill accepts unchanged — see
-[references/source-routing.md](references/source-routing.md).
+[source-routing.md](source-routing.md).
 
 Neither skill silently chooses a candidate. Local discovery therefore follows these rules:
 

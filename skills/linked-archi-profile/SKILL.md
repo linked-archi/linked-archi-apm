@@ -41,8 +41,8 @@ A profile records what one dataset calls things, so no template guesses: `roles`
 term is called here), `graphs` (the named-graph layout), `capabilities` (what the dataset
 *contains*, not what the vocabulary permits) and `navigation` (how "belongs to that model"
 is expressed). A template that needs something absent is **refused with a reason** instead
-of returning an empty result that reads as "none exist". What each claim means and why:
-[references/verify.md](references/verify.md).
+of returning an empty result that reads as "none exist". Every field:
+[references/profile-reference.md](references/profile-reference.md).
 
 ## Do this first
 
@@ -74,8 +74,8 @@ the profile; it exits `1` on any error, so it can gate a pipeline.
 
 A missing graph role is reported as **absent** or **present but partitioned**; they need
 opposite fixes. Record `present: false` for a declared notation the dataset does not hold,
-so its templates are refused with a reason instead of returning empty tables. What each
-finding means and what to do: [references/verify.md](references/verify.md).
+so its templates are refused with a reason instead of returning empty tables. What to do
+about each finding: [references/verify.md](references/verify.md).
 
 When a capability claim is contradicted, the report ends with the command that fixes it:
 

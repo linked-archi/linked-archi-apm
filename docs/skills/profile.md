@@ -43,6 +43,9 @@ python3 scripts/la-profile verify --profile linked-archi-default --data graph.tr
 | `--all` | Include passing checks, which are hidden by default. |
 | `--emit-fix` | Write a child profile to stdout, the report to stderr. |
 
+A profile is a set of claims, and claims decay: an ontology version moves, a converter flag
+changes, a model stops being exported. `verify` is how they are re-checked.
+
 Findings look like this — `FAIL` for error, `warn` for warning, `ok` for info:
 
 ```
@@ -99,7 +102,9 @@ python3 scripts/la-profile recommend --data graph.trig
 ```
 
 Measures the dataset's shape through the published vocabulary as a lens, then names one of the
-bundled profiles with reasons and caveats. It **never applies anything**.
+bundled profiles with reasons and caveats. It **never applies anything**. It exists because the
+alternative - trying profiles and keeping whichever warns least - rewards the most permissive
+profile rather than the one that fits.
 
 Observations include the named-graph count, which graph roles are populated, whether direct
 relationship triples and the reification bridge are present, whether identity assertions and a SHACL

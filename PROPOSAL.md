@@ -1079,11 +1079,22 @@ catalogue content, gate or machine contract changes.
 two investigation entrypoints a substantial context source. The six entrypoints were 73.6 KB
 together, and an investigation that also set up its dataset opened four of them.
 
-Rationale now moves to references verbatim: dataset discovery, directory resolution and the
-completeness warning to `connect/references/discovery.md`; what a profile claims and every
-`verify` finding to `profile/references/verify.md`; HTTPS checks, content negotiation, Git
-fetch, cache and manifest to `source/references/acquisition.md`; model questions to
-`query/references/model-questions.md`. The identical twelve-line discovery heredoc and its
+Detail moves out of the entrypoints into references: dataset discovery, directory resolution
+and the completeness warning to `connect/references/discovery.md`; what to do about each
+`verify` finding to `profile/references/verify.md`; what to do when a fetch is refused,
+negotiated wrongly or misses the offline cache, and what a manifest records, to
+`source/references/acquisition.md`; model questions to `query/references/model-questions.md`.
+
+A reference only saves anything if the entrypoint plus the reference, when both are opened,
+stays smaller than the old entrypoint; otherwise an agent that needs the detail pays more than
+before. So `verify.md` and `acquisition.md` keep only what an agent acts on - each finding with
+its action, each refusal with its remedy - and do not repeat what `SKILL.md` says. The history
+behind them (why negotiation asks for Turtle first, why `recommend` exists, why claims decay)
+moves to the docs site, which is not part of an installed skill. Opened together, profile is
+11.9 KB (was 15.2), source 11.2 KB (was 11.7) and connect 14.3 KB (was 14.5); query reaches
+12.2 KB (was 11.6) only when a model question needs its reference. Moving the text broke two
+relative links, which nothing checked; a packaging test now resolves every link inside
+`references/`. The identical twelve-line discovery heredoc and its
 surrounding paragraphs in connect, profile and source become one bounded command and the
 `doctor` pointer. Every rule, command, refusal, prohibition and safety condition stays in its
 entrypoint, including "never search the filesystem", which the suite checks. Analyse now says
