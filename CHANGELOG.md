@@ -10,6 +10,13 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 
+### Changed
+
+- The converter-output fixtures (`base.trig`, `augmented.trig`, `flat.ttl`) are re-extracted from the
+  ArchiMate converter's current output: a style's colours are CSS colours (`#rrggbb`, `#rrggbbaa` when not
+  opaque) where they were `rgba(r,g,b,a)` with the exchange format's alpha, and a node's line width is written
+  (`arch-vis:lineWidth`) — 31 quads more in each. The other conversions they are taken from are unchanged.
+
 ## [0.10.0] - 2026-10-30
 
 The converters now write direct relationship triples by default, and the default profile
