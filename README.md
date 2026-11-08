@@ -192,7 +192,9 @@ cp -r skills/* ~/.kiro/skills/       # Kiro
 
 ```bash
 git clone https://github.com/linked-archi/linked-archi-apm && cd linked-archi-apm
-pip install PyYAML pyoxigraph
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r tests/requirements.txt
 make check                                # validates skills and runs the test suite
 make install-local                        # symlink into ~/.kiro/skills
 make link-cli BIN_DIR=/opt/homebrew/bin   # optional la-kg dispatcher

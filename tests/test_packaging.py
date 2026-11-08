@@ -646,7 +646,7 @@ class TestDoctorCommands(unittest.TestCase):
         for skill, executable in self.OWNERS:
             with self.subTest(skill):
                 done = _run(SKILLS / skill / "scripts" / executable, "doctor", cwd=ROOT)
-                self.assertEqual(done.returncode, 0, done.stderr)
+                self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
                 self.assertIn(skill, done.stdout)
                 self.assertIn("owner root:", done.stdout)
                 self.assertIn("command:", done.stdout)
@@ -1217,7 +1217,7 @@ class TestDocumentedCountsMatchReality(unittest.TestCase):
         now checked, and a new one cannot quietly opt out of that by being called a plan.
         """
         for doc in sorted(ROOT.rglob("*.md")):
-            if any(part in doc.parts for part in (".git", "dist", "node_modules", ".linked-archi-cache")):
+            if any(part in doc.parts for part in (".git", "dist", "node_modules", ".linked-archi-cache", ".venv", "venv")):
                 continue
             yield doc
 

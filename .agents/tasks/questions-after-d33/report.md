@@ -114,3 +114,28 @@ all six skills as part of `make check`.
 - The package is prepared locally; no commit, staging, tag, push, installation or release
   publication was performed. Concurrent source/modeler edits were preserved. Review the
   APM working-tree diff and `CHANGELOG.md:13` before the user's normal release process.
+
+## Release-check follow-up — missing dependencies
+
+After the user committed the alignment as `72f2845`, their release check reported ten
+failures and 29 skips. The documented contributor installation supplied only PyYAML and
+pyoxigraph. Repeating that installation in a fresh project `.venv` reproduced all ten
+failures: query path checking lacked rdflib, and the validate doctor lacked pyshacl.
+The earlier successful run used a Python environment with those packages already installed.
+Reproduction output is in `/tmp/apm-release-missing-deps.log`.
+
+`tests/requirements.txt:1` now lists the complete test dependencies, including jsonschema
+for the two investigation-trace schema tests. Contributor setup and CI use that same file
+(`CONTRIBUTING.md:8`, `.github/workflows/ci.yml:35`). The new preflight checks imports in
+the selected interpreter and prints its exact installation command before test discovery
+(`tests/check_dependencies.py:11`, `Makefile:89`). Its regression tests cover both a
+complete environment and missing site-packages (`tests/test_dependencies.py:12`).
+The doctor test also includes stdout in failures, where its missing-package details appear
+(`tests/test_packaging.py:649`). Package-document checks exclude virtual environments.
+
+The fresh `.venv` has the test and documentation requirements installed. The final run
+passed **1021 tests in 105.308 seconds, with zero skips**. Strict documentation and both
+profile checks passed, with zero profile errors. Logs: `/tmp/apm-release-fixed-check.log`,
+`/tmp/apm-release-fixed-verify.log`, and `/tmp/apm-release-final-check.log` for the final
+run with all dependencies. These follow-up changes remain uncommitted; the user's next
+release check needs the activated `.venv` and a clean tree after committing the fixes.

@@ -1,0 +1,8 @@
+# Full test suite, including query parsing and SHACL validation.
+# Optional runtime features are required when checking a release.
+PyYAML
+pyoxigraph
+rdflib
+pyshacl
+# Development-only validation of the investigation trace schema.
+jsonschema

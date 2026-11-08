@@ -6,11 +6,18 @@ Issues and merge requests are welcome at
 ## Before you start
 
 ```bash
-pip install PyYAML pyoxigraph
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r tests/requirements.txt -r docs/requirements.txt
 make check          # skill validation, then the full test suite
+make docs           # strict documentation build
 ```
 
 `make check` is what CI runs. It must pass before and after your change.
+The full suite needs `rdflib` for query parsing and `pyshacl` for validation, even
+when you use only the query features yourself. `make test-deps` checks the Python
+selected by `PY` (default `python3`) and prints an installation command for that
+interpreter if anything is missing. Activate the same environment for release checks.
 
 ## Benchmarking query workflows
 

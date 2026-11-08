@@ -14,6 +14,9 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ### Fixed
 
+- Contributor setup and CI share the full test dependencies, including `rdflib` and
+  `pyshacl`. Test targets check the selected interpreter before running the suite and
+  report the matching installation command if a dependency is missing.
 - Refresh the published question sets and expected-answer fixtures to current meta:
   59 questions, including the four potential-derivation questions. Asserted traversals
   no longer read proposals as relationships, and integrity audits exclude unasserted,

@@ -16,12 +16,13 @@ SKILLS_DIR ?= $(HOME)/.kiro/skills
 BIN_DIR ?= $(HOME)/.local/bin
 BENCH_ARGS ?= --output out/query-benchmark.json
 
-.PHONY: help check test test-quiet catalog profile verify verify-curated fixtures questions \
+.PHONY: help check test-deps test test-quiet catalog profile verify verify-curated fixtures questions \
         skills install-local uninstall-local link-cli unlink-cli dist version bump \
         release-notes release-check clean docs docs-serve benchmark
 
 help:
 	@echo "check          validate skills and run the tests"
+	@echo "test-deps      check the selected Python has all test dependencies"
 	@echo "test           run the test suite (verbose)"
 	@echo "test-quiet     run the test suite (summary only)"
 	@echo "benchmark      measure query workflows on the test fixture (override BENCH_ARGS)"
@@ -46,7 +47,7 @@ help:
 	@echo "               (converter-1.3.trig is a separate step: it needs the"
 	@echo "                converter jars - see fixtures/PROVENANCE.md)"
 
-check: skills test
+check: test-deps skills test
 
 benchmark:
 	$(PY) tests/benchmark_queries.py $(BENCH_ARGS)
@@ -85,10 +86,13 @@ link-cli:
 unlink-cli:
 	@rm -f "$(BIN_DIR)/la-kg" && echo "  removed $(BIN_DIR)/la-kg"
 
-test:
+test-deps:
+	$(PY) tests/check_dependencies.py
+
+test: test-deps
 	$(PYPATH) $(PY) -m unittest discover -s tests -t . -v
 
-test-quiet:
+test-quiet: test-deps
 	$(PYPATH) $(PY) -m unittest discover -s tests -t .
 
 skills:
