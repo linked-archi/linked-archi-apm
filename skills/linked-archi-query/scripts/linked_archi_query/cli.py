@@ -746,11 +746,46 @@ def cmd_catalog_concerns(args: argparse.Namespace) -> int:
     return OK
 
 
+def _narrow(catalog, *, names: Sequence[str] = (), stages: Sequence[str] = (),
+            notations: Sequence[str] = (), matches: Sequence[str] = ()) -> int:
+    """Keep only the entries every given filter kind accepts; return how many there were.
+
+    Values within one kind are alternatives and different kinds must all match - the same
+    rule `catalog dump` documents, so a filter means one thing on both commands.
+    """
+    total = len(catalog._entries)
+    wanted = {catalog.get(name).name for name in names}
+    unknown = set(notations).difference(entry.notation for entry in catalog)
+    if unknown:
+        raise CatalogError("Unknown notation: " + ", ".join(sorted(unknown)))
+    texts = [text.lower() for text in matches]
+    catalog._entries = {
+        name: entry for name, entry in catalog._entries.items()
+        if (not wanted or entry.name in wanted)
+        and (not stages or entry.stage in stages)
+        and (not notations or entry.notation in notations)
+        and (not texts or any(text in f"{entry.name} {entry.purpose}".lower() for text in texts))
+    }
+    return total
+
+
 def cmd_catalog_list(args: argparse.Namespace) -> int:
     catalog = _selected_catalog(args)
     problems = catalog.validate_files()
     profile = _profile(args.profile) if args.profile else None
+    if args.available and profile is None:
+        raise CatalogError("--available needs --profile: availability is a profile's verdict")
+    total = _narrow(catalog, stages=args.stage, notations=args.notation, matches=args.match)
+    if args.available:
+        catalog._entries = {name: entry for name, entry in catalog._entries.items()
+                            if entry.check(profile).ok}
+    filtered = len(catalog._entries) != total
+    if filtered and not catalog._entries:
+        print(f"no catalogue entry matches these filters (0 of {total})")
+        return OK
     print(catalog.format_list(profile))
+    if filtered:
+        print(f"{len(catalog._entries)} of {total} catalogue entries match these filters")
     if profile and args.why:
         refused = catalog.refused(profile)
         if refused:
@@ -879,24 +914,13 @@ def cmd_catalog_dump(args: argparse.Namespace) -> int:
     template and binding its parameters should not be an N-call negotiation.
     """
     catalog = _selected_catalog(args)
-    names = {catalog.get(name).name for name in args.template}
-    stages = set(args.stage)
-    notations = set(args.notation)
-    unknown_notations = notations.difference(entry.notation for entry in catalog)
-    if unknown_notations:
-        raise CatalogError("Unknown notation: " + ", ".join(sorted(unknown_notations)))
+    _narrow(catalog, names=args.template, stages=args.stage, notations=args.notation)
     profile = _profile(args.profile) if args.profile else None
     labels = load_index().labels
     payload: dict[str, Any] = {"schema_version": 1, "templates": {}}
     if profile is not None:
         payload["profile"] = {"id": profile.name, "version": profile.profile_version}
     for entry in catalog:
-        if names and entry.name not in names:
-            continue
-        if stages and entry.stage not in stages:
-            continue
-        if notations and entry.notation not in notations:
-            continue
         item: dict[str, Any] = {
             "stage": entry.stage,
             "notation": entry.notation,
@@ -1512,7 +1536,23 @@ def build_parser() -> argparse.ArgumentParser:
     )
     listing.add_argument(
         "--why", action="store_true",
-        help="explain every refusal and name an alternative template",
+        help="explain every refusal shown and name an alternative template",
+    )
+    listing.add_argument(
+        "--stage", action="append", default=[], choices=STAGES,
+        help="list only these catalogue stages (repeatable)",
+    )
+    listing.add_argument(
+        "--notation", action="append", default=[], metavar="NAME",
+        help="list only these catalogue notations, e.g. bpmn (repeatable)",
+    )
+    listing.add_argument(
+        "--match", action="append", default=[], metavar="TEXT",
+        help="list only entries whose name or purpose contains TEXT, ignoring case (repeatable)",
+    )
+    listing.add_argument(
+        "--available", action="store_true",
+        help="list only what --profile can run",
     )
     _catalog_arg(listing)
     _concern_arg(listing)

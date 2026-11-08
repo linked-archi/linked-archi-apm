@@ -1,6 +1,6 @@
 ---
 name: linked-archi-validate
-description: Run SHACL validation over an RDF architecture graph in-process, or summarise a SHACL report that already exists, and read the verdict honestly with target-class coverage beside it. Use only when explicitly asked to validate, to check conformance against shapes, to review violations, or when pointed at an existing report file such as graph-shacl-report.ttl. Needs no converter, Java runtime or network access. Do not run it as a background check on other work, and do not use it for general model-quality questions that no SHACL shape covers.
+description: Run SHACL validation over an RDF architecture graph in-process, or summarise an existing SHACL report, and report the verdict with its target-class coverage. Use only when asked to validate, check conformance against shapes, review violations, or read a report such as graph-shacl-report.ttl. Not a background check on other work, and not for model-quality questions that no SHACL shape covers.
 license: Apache-2.0
 compatibility: Needs Python 3.11 or newer and pyshacl, which installs rdflib. SHACL runs in-process, so no converter, Java runtime or network access is required. Shape documents are published separately and never bundled here, so pass local shape files or acquire them once with linked-archi-source. Reading a report already loaded into a dataset needs linked-archi-query instead.
 metadata:

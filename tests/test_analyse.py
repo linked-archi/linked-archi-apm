@@ -371,10 +371,12 @@ class TestPlanBatches(unittest.TestCase):
 
     def test_independent_name_resolution_batches_wait_for_orientation_review(self):
         plan = _plan('what depends on "Orders" and "Payments"?', catalogue=self.catalogue)
-        resolution = next(batch for batch in plan.batches() if batch["stage"] == "resolve")
+        resolution = next(batch for batch in plan.batches() if batch["stage"].startswith("resolve"))
         self.assertEqual(resolution["status"], "awaiting-evidence")
         self.assertEqual(resolution["depends_on"], [1, 2])
-        self.assertEqual([entry["set"]["TERM"] for entry in resolution["manifest"]["queries"]],
+        self.assertEqual(resolution["round"], 2)
+        self.assertEqual([entry["set"]["TERM"] for entry in resolution["manifest"]["queries"]
+                          if "TERM" in entry["set"]],
                          ["Orders", "Payments"])
 
     def test_unresolved_and_refused_queries_never_enter_a_batch(self):
@@ -435,6 +437,297 @@ class TestPlanBatches(unittest.TestCase):
             self.assertEqual(len(bundle["steps"]), 2)
             self.assertEqual([step["template"] for step in bundle["steps"]],
                              ["core/inventory-summary", "core/models"])
+
+
+class TestCompactText(unittest.TestCase):
+    """The text plan is what enters a model's context, and so every later turn.
+
+    It has to say what the JSON says about running the plan - every command, placeholder,
+    caveat, decision and stop condition - while stating each thing once.
+    """
+
+    QUESTION = 'what depends on "Order Service" if we retire it?'
+
+    @classmethod
+    def setUpClass(cls):
+        cls.catalogue = _catalogue()
+
+    def _plan(self, batch_dir=None):
+        patterns = load_patterns()
+        pattern, ranked = resolve_mode(None, self.QUESTION, patterns)
+        return build_plan(self.QUESTION, pattern=pattern, ranked=ranked, catalogue=self.catalogue,
+                          profile="linked-archi-default", data=["graph.trig"],
+                          batch_dir=batch_dir, preview=True)
+
+    def test_steps_are_grouped_by_round(self):
+        plan = self._plan("plans")
+        text = plan.to_text()
+        for round_number in range(1, plan.rounds + 1):
+            self.assertIn(f"\nround {round_number}", text)
+        self.assertIn("round 3  review round 2 first", text)
+        self.assertNotIn("review first:", text, "the round heading says it once")
+
+    def test_a_placeholder_source_is_stated_once(self):
+        plan = self._plan("plans")
+        text = plan.to_text()
+        source = "from core/resolve-element or an element IRI in earlier evidence"
+        self.assertEqual(text.count(source), 1)
+        self.assertIn("'FOCUS_IRI=<FOCUS_IRI>'", text)
+        self.assertIn("placeholders - bind each from reviewed evidence", text)
+        # The JSON contract keeps the descriptive placeholder in every command.
+        focus = [step for step in plan.as_dict()["steps"] if "FOCUS_IRI" in step["parameters"]]
+        self.assertTrue(focus)
+        for step in focus:
+            self.assertIn(f"FOCUS_IRI=<FOCUS_IRI: {source}>", step["command"])
+
+    def test_a_written_batch_replaces_its_steps_commands(self):
+        text = self._plan("plans").to_text()
+        self.assertIn("la-query query batch plans/01-orient.json", text)
+        self.assertIn("la-query query batch plans/03-resolve+pattern.json", text)
+        self.assertNotIn("query run core/inventory-summary", text)
+        self.assertNotIn("query run core/discover-relationship-types", text)
+        self.assertIn("query run core/neighbours-qualified", text)
+
+    def test_unwritten_batches_keep_runnable_step_commands(self):
+        text = self._plan().to_text()
+        self.assertNotIn("query batch", text, "a manifest nobody wrote cannot be run")
+        self.assertIn("query run core/inventory-summary", text)
+        self.assertIn("re-plan with --batch-dir DIR", text)
+
+    def test_shared_detail_is_printed_once_with_its_steps(self):
+        text = self._plan("plans").to_text()
+        stop = "only one notation loaded and the question needs two"
+        self.assertEqual(text.count(stop), 1)
+        self.assertIn(f"stop if (steps 1, 2): {stop}", text)
+        self.assertNotIn("the pattern's own evidence", text)
+
+    def test_nothing_that_governs_execution_is_dropped(self):
+        plan = self._plan("plans")
+        text = plan.to_text()
+        for step in plan.steps:
+            with self.subTest(step.number):
+                self.assertIn(f"{step.number:02d} {step.template}", text)
+                for caveat in step.caveats:
+                    self.assertIn(caveat, text)
+                if step.stop_when:
+                    self.assertIn(step.stop_when, text)
+        for condition in plan.pattern_stop_when:
+            self.assertIn(condition, text)
+
+    def test_the_text_is_smaller_than_the_json_it_summarises(self):
+        plan = self._plan("plans")
+        self.assertLess(len(plan.to_text()), len(json.dumps(plan.as_dict(), indent=2)) / 2)
+
+    def test_preview_saves_the_plan_and_prints_it_in_one_call(self):
+        script = ROOT / "skills/linked-archi-analyse/scripts/la-analyse"
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "plan.json"
+            done = subprocess.run(
+                [sys.executable, str(script), "plan", "--question", self.QUESTION,
+                 "--profile", "linked-archi-default", "--data", "graph.trig",
+                 "--json", "-o", str(target), "--preview"],
+                capture_output=True, text=True, timeout=120, cwd=ROOT,
+            )
+            self.assertEqual(done.returncode, 0, done.stderr)
+            self.assertEqual(json.loads(target.read_text())["pattern"], "impact-and-dependency")
+            self.assertIn("round 1", done.stdout)
+            self.assertIn("placeholders - bind each", done.stdout)
+            refused = subprocess.run(
+                [sys.executable, str(script), "plan", "--question", self.QUESTION, "--preview"],
+                capture_output=True, text=True, timeout=120, cwd=ROOT,
+            )
+            self.assertEqual(refused.returncode, 1)
+            self.assertIn("--preview needs -o", refused.stderr)
+
+
+class TestReviewRounds(unittest.TestCase):
+    """A step waits for the evidence it needs, not for whichever step was listed before it.
+
+    Every round is a review an agent has to perform before continuing, so a plan that queues
+    independent evidence behind unrelated steps costs a model turn per step for nothing. What
+    must not change is the other direction: a placeholder never runs before the step that
+    supplies it, and a declared method order is never skipped.
+    """
+
+    QUESTIONS = (
+        ('what depends on "Order Service" if we retire it?', None),
+        ('which capability does "Order Service" realise?', "traceability"),
+        ("which applications have no owner recorded?", "coverage-and-gaps"),
+        ('which principle governs "Order Service"?', "governance-and-decisions"),
+        ("which applications in the portfolio are duplicates?", "lifecycle-and-portfolio"),
+        ('How is "General CRM System" represented across ArchiMate and LeanIX?', "cross-notation"),
+        ('which diagram shows "Order Service"?', "views-and-documentation"),
+        ('what is in "Claims Process"?', "model-contents"),
+        ("can we trust these models?", "model-quality"),
+        ('Which types are grouped by domain under "Strategy Domain"?', "notation-taxonomy"),
+        ('Which elements are classified under "Arch component"?', "taxonomy-classification"),
+        ("Which viewpoint suits a capability map?", "viewpoint-selection"),
+    )
+
+    @classmethod
+    def setUpClass(cls):
+        cls.catalogues = {profile: _catalogue(profile)
+                          for profile in ("linked-archi-default", "examples/curated-store")}
+
+    def _plans(self):
+        for profile, catalogue in self.catalogues.items():
+            for question, mode in self.QUESTIONS:
+                yield f"{profile}:{mode or 'impact'}", _plan(
+                    question, mode=mode, profile=profile, catalogue=catalogue)
+
+    @staticmethod
+    def _by(plan, template):
+        return next(step for step in plan.steps if step.template == template)
+
+    def test_rounds_are_consistent_with_dependencies_in_every_pattern(self):
+        for label, plan in self._plans():
+            numbers = {step.number: step for step in plan.steps}
+            with self.subTest(label):
+                for step in plan.steps:
+                    self.assertTrue(all(number < step.number for number in step.depends_on),
+                                    f"step {step.number} waits for a later step")
+                    self.assertEqual(step.round, 1 + max(
+                        (numbers[number].round for number in step.depends_on), default=0))
+                    if step.stage == "orient":
+                        self.assertEqual(step.round, 1)
+                    else:
+                        self.assertGreater(step.round, 1, "orientation is always reviewed first")
+                self.assertEqual(plan.rounds, max(step.round for step in plan.steps))
+                self.assertEqual(plan.as_dict()["planned_rounds"], plan.rounds)
+
+    def test_a_placeholder_never_runs_before_the_step_that_supplies_it(self):
+        from linked_archi_analyse.plan import PARAMETER_PRODUCERS
+        for label, plan in self._plans():
+            for step in plan.steps:
+                earlier = plan.steps[:step.number - 1]
+                for name in step.unresolved_parameters:
+                    producers = [other for other in earlier
+                                 if other.template in PARAMETER_PRODUCERS.get(name, ())]
+                    with self.subTest(f"{label}:{step.template}:{name}"):
+                        for producer in producers:
+                            self.assertLess(producer.round, step.round)
+
+    def test_batches_hold_only_independent_steps_of_one_round(self):
+        for label, plan in self._plans():
+            numbers = {step.number: step for step in plan.steps}
+            for batch in plan.batches():
+                members = [numbers[number] for number in batch["steps"]]
+                with self.subTest(f"{label}:{batch['steps']}"):
+                    self.assertEqual({member.round for member in members}, {batch["round"]})
+                    for member in members:
+                        self.assertFalse(set(member.depends_on) & set(batch["steps"]))
+                        self.assertTrue(all(numbers[number].round < batch["round"]
+                                            for number in member.depends_on))
+
+    def test_independent_evidence_shares_the_resolution_round(self):
+        plan = _plan('what depends on "Order Service" if we retire it?',
+                     catalogue=self.catalogues["linked-archi-default"])
+        resolve = self._by(plan, "core/resolve-element")
+        discovery = [self._by(plan, "core/discover-relationship-types"),
+                     self._by(plan, "core/reified-predicates")]
+        self.assertTrue(all(step.round == resolve.round == 2 for step in discovery))
+        batch = next(batch for batch in plan.batches() if batch["round"] == 2)
+        self.assertEqual(batch["steps"], sorted([resolve.number] + [s.number for s in discovery]))
+        self.assertEqual(batch["stage"], "resolve+pattern")
+        self.assertEqual(batch["depends_on"], [1, 2])
+        self.assertEqual(plan.rounds, 6)
+
+    def test_declared_order_and_supplied_inputs_still_hold(self):
+        plan = _plan('what depends on "Order Service" if we retire it?',
+                     catalogue=self.catalogues["linked-archi-default"])
+        resolve = self._by(plan, "core/resolve-element")
+        discovery = self._by(plan, "core/discover-relationship-types")
+        neighbours = self._by(plan, "core/neighbours-qualified")
+        dependents = self._by(plan, "core/dependents-qualified")
+        predicates = self._by(plan, "core/reified-predicates")
+        direct = self._by(plan, "core/dependents-direct")
+        self.assertEqual(neighbours.depends_on, [resolve.number, discovery.number])
+        self.assertEqual(dependents.depends_on, [neighbours.number])
+        self.assertEqual(direct.depends_on, [dependents.number, predicates.number])
+        self.assertGreater(direct.round, dependents.round)
+
+    def test_identity_audit_is_reviewed_before_label_candidates(self):
+        for mode, question in (
+            ("cross-notation", 'How is "General CRM System" represented across ArchiMate and LeanIX?'),
+            ("lifecycle-and-portfolio", "which applications in the portfolio are duplicates?"),
+        ):
+            with self.subTest(mode):
+                plan = _plan(question, mode=mode, profile="examples/curated-store",
+                             catalogue=self.catalogues["examples/curated-store"])
+                audit = self._by(plan, "core/identity-audit")
+                collisions = self._by(plan, "core/label-collisions")
+                self.assertIn(audit.number, collisions.depends_on)
+                self.assertGreater(collisions.round, audit.round)
+                self.assertNotIn(collisions.number,
+                                 [n for batch in plan.batches() if audit.number in batch["steps"]
+                                  for n in batch["steps"]])
+
+    def test_a_refused_audit_still_holds_its_candidates_for_review(self):
+        plan = _plan('How is "General CRM System" represented across ArchiMate and LeanIX?',
+                     mode="cross-notation", catalogue=self.catalogues["linked-archi-default"])
+        self.assertEqual([d["template"] for d in plan.decisions], ["core/identity-audit"])
+        collisions = self._by(plan, "core/label-collisions")
+        self.assertEqual(collisions.status, "review-required")
+        self.assertFalse(any(collisions.number in batch["steps"] for batch in plan.batches()))
+
+    def test_evidence_closing_steps_wait_for_everything_before_them(self):
+        for label, plan in self._plans():
+            ancestors = {}
+            for step in plan.steps:
+                ancestors[step.number] = set(step.depends_on).union(
+                    *(ancestors[number] for number in step.depends_on))
+                if step.template == "core/provenance":
+                    with self.subTest(label):
+                        self.assertEqual(ancestors[step.number], set(range(1, step.number)))
+
+    def test_a_notation_template_waits_for_the_model_it_describes(self):
+        plan = _plan('what is in "Claims Process"?', mode="model-contents",
+                     catalogue=self.catalogues["linked-archi-default"])
+        model = self._by(plan, "core/resolve-model")
+        for template in ("notation/bpmn/process-components", "notation/c4/containers"):
+            with self.subTest(template):
+                self.assertIn(model.number, self._by(plan, template).depends_on)
+
+    def test_views_wait_for_the_views_they_take(self):
+        plan = _plan('which diagram shows "Order Service"?', mode="views-and-documentation",
+                     catalogue=self.catalogues["linked-archi-default"])
+        views = self._by(plan, "core/views")
+        resolve = self._by(plan, "core/resolve-element")
+        self.assertEqual(self._by(plan, "core/view-contents").depends_on, [views.number])
+        self.assertEqual(self._by(plan, "core/view-diff").depends_on, [views.number])
+        self.assertEqual(self._by(plan, "core/view-usage").depends_on, [resolve.number])
+        self.assertEqual(plan.rounds, 4)
+
+    def test_an_unannotated_plan_keeps_every_pattern_step_in_sequence(self):
+        """Without parameter names nothing can be shown independent, so nothing is."""
+        plan = _plan('what depends on "Order Service" if we retire it?', catalogue=None)
+        pattern = [step for step in plan.steps if step.stage in ("pattern", "quality")]
+        for previous, step in zip(pattern, pattern[1:]):
+            self.assertEqual(step.depends_on, [previous.number])
+        self.assertEqual(plan.rounds, len(plan.steps) - 1)
+
+    def test_independent_model_questions_share_one_round(self):
+        """A concern's published questions take no evidence from one another."""
+        from linked_archi_analyse.plan import concern_pattern
+
+        catalogue = self.catalogues["linked-archi-default"]
+
+        def unbound(spec):
+            return any(name != "LIMIT" and "default" not in parameter
+                       and not parameter.get("optional")
+                       for name, parameter in (spec.get("parameters") or {}).items())
+
+        names = sorted(name for name, spec in catalogue["templates"].items()
+                       if spec.get("question") and spec.get("available") and not unbound(spec))[:4]
+        self.assertEqual(len(names), 4)
+        pattern = concern_pattern(["test"], {name: catalogue["templates"][name] for name in names})
+        plan = build_plan("concern", pattern=pattern, ranked=[], catalogue=catalogue,
+                          profile="linked-archi-default", data=["graph.trig"])
+        questions = [step for step in plan.steps if step.template in names]
+        self.assertEqual(len(questions), 4)
+        self.assertEqual({step.round for step in questions}, {2})
+        self.assertEqual(next(batch for batch in plan.batches() if batch["round"] == 2)["steps"],
+                         [step.number for step in questions])
 
 
 class TestSelectiveCatalogue(unittest.TestCase):

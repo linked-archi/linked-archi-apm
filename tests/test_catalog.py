@@ -730,3 +730,85 @@ class TestCatalogDump(unittest.TestCase):
                 self.assertEqual(done.returncode, 2, done.stderr)
                 self.assertEqual(done.stdout, "")
                 self.assertIn(value, done.stderr)
+
+
+class TestCatalogListFilters(unittest.TestCase):
+    """`catalog list` narrows the way `dump` does, so a shortlist costs a shortlist.
+
+    The unfiltered listing is the whole catalogue - questions and templates, every stage -
+    and with `--why` it is the longest output the CLI produces. Choosing a candidate needs
+    the few lines that match, not all of them in a model's context.
+    """
+
+    def _list(self, *args: str):
+        import subprocess
+        import sys
+
+        return subprocess.run(
+            [sys.executable,
+             str(support.ROOT / "skills" / "linked-archi-query" / "scripts" / "la-query"),
+             "catalog", "list", *args],
+            capture_output=True, text=True, cwd=support.ROOT,
+        )
+
+    def _names(self, output: str) -> list[str]:
+        return [line[2:].split()[0] for line in output.splitlines()
+                if line[:2] in ("  ", "x ", "! ") and line[2:3] not in (" ", "-", "")
+                and "/" in line[2:].split()[0]]
+
+    def test_match_ignores_case_and_reads_name_and_purpose(self):
+        done = self._list("--profile", "linked-archi-default", "--match", "RESOLVE")
+        self.assertEqual(done.returncode, 0, done.stderr)
+        names = self._names(done.stdout)
+        self.assertIn("core/resolve-element", names)
+        self.assertIn("core/resolve-model", names)
+        self.assertNotIn("core/models", names)
+        total = len(load_catalog()._entries)
+        self.assertIn(f"{len(names)} of {total} catalogue entries match these filters",
+                      done.stdout)
+
+    def test_filter_kinds_intersect_and_values_are_alternatives(self):
+        both = self._names(self._list("--stage", "resolution", "--stage", "orientation").stdout)
+        resolution = self._names(self._list("--stage", "resolution").stdout)
+        orientation = self._names(self._list("--stage", "orientation").stdout)
+        self.assertEqual(sorted(both), sorted(resolution + orientation))
+        narrowed = self._names(self._list("--stage", "resolution", "--match", "model").stdout)
+        self.assertTrue(narrowed)
+        self.assertTrue(set(narrowed) < set(resolution))
+
+    def test_why_explains_only_the_refusals_shown(self):
+        everything = self._list("--profile", "linked-archi-default", "--why").stdout
+        bpmn = self._list("--profile", "linked-archi-default", "--why",
+                          "--notation", "bpmn").stdout
+        self.assertLess(len(bpmn), len(everything) / 10)
+        self.assertNotIn("core/identity-audit", bpmn)
+        self.assertIn("core/identity-audit", everything)
+
+    def test_available_lists_only_what_the_profile_can_run(self):
+        profile = load_profile("linked-archi-default")
+        catalog = load_catalog()
+        done = self._list("--profile", "linked-archi-default", "--available")
+        names = self._names(done.stdout)
+        self.assertTrue(names)
+        for name in names:
+            self.assertTrue(catalog.get(name).check(profile).ok, name)
+        self.assertNotIn("x ", "".join(line[:2] for line in done.stdout.splitlines()))
+        refused = self._list("--available")
+        self.assertEqual(refused.returncode, 2)
+        self.assertIn("--available needs --profile", refused.stderr)
+
+    def test_an_unknown_notation_is_an_error_not_an_empty_list(self):
+        done = self._list("--notation", "not-a-notation")
+        self.assertEqual(done.returncode, 2)
+        self.assertIn("Unknown notation", done.stderr)
+
+    def test_nothing_matching_says_so(self):
+        done = self._list("--match", "no entry is called this")
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertIn("no catalogue entry matches these filters", done.stdout)
+
+    def test_the_grouped_listing_does_not_repeat_its_stage(self):
+        done = self._list()
+        lines = [line for line in done.stdout.splitlines() if "core/resolve-element" in line]
+        self.assertEqual(len(lines), 1)
+        self.assertNotIn(" resolution ", lines[0])

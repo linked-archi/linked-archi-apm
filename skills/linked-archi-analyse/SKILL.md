@@ -1,6 +1,6 @@
 ---
 name: linked-archi-analyse
-description: Investigate architecture questions and orchestrate multi-query work over a Linked.Archi knowledge graph. Owns question framing, pattern selection, dependencies, query budgets, evidence judgement and the final traceable answer. Use for impact, dependency, traceability, coverage, portfolio, governance, decision or model-completeness questions requiring several queries and interpretation. Delegates read-only execution to linked-archi-query and bundles its saved envelopes, separating graph facts, derivations, document statements, inference and unknowns. Use linked-archi-query for render-only or one bounded lookup, and linked-archi-validate for SHACL conformance. Not for mutation or answers available in a single supplied document.
+description: Investigate architecture questions over a Linked.Archi knowledge graph that need several queries and judgement - impact, dependency, traceability, coverage, portfolio, governance, decisions or model completeness. Plans the queries, has linked-archi-query execute them, and bundles the evidence into a traceable answer separating graph facts, inference and unknowns. Use linked-archi-query for render-only SPARQL or one bounded lookup, and linked-archi-validate for SHACL conformance. Never mutates.
 license: Apache-2.0
 compatibility: Needs Python 3.11 or newer and no third-party package. Owns planning and bundling only; every query is executed by linked-archi-query, which uses linked-archi-profile and linked-archi-connect, so install those three alongside it. linked-archi-validate is needed for SHACL conformance and linked-archi-source for remote artifacts. Planning and bundling work with query absent, unannotated and reduced.
 metadata:
@@ -35,6 +35,10 @@ then `PATH`. Check only known install roots if needed. Never search the filesyst
 recursively for tooling, especially from `/` or `$HOME`. `la-analyse doctor` identifies missing owners.
 Planning without query is possible but unannotated; it is not authority to execute.
 
+**The plan's commands are complete.** Running them needs `linked-archi-query` installed,
+not its `SKILL.md` read: load that entrypoint only for an ad-hoc or adapted query, a
+refusal you must interpret, or a command that fails.
+
 Settle dataset and profile with their owners before gathering evidence. Never guess a
 dataset or use package fixtures as the user's architecture. Keep one dataset/profile
 throughout the investigation, and store artifacts in the project, not the skill directory.
@@ -52,8 +56,11 @@ throughout the investigation, and store artifacts in the project, not the skill 
    ```bash
    la-analyse plan --question 'what depends on "Order Service" if we retire it?' \
      --profile linked-archi-default --data graph.trig --budget 12 \
-     --steps-dir steps --batch-dir plans --json -o plan.json
+     --steps-dir steps --batch-dir plans --json -o plan.json --preview
    ```
+
+   `--preview` prints the compact plan - one block per review round - while `-o` keeps
+   the full JSON; read the printed plan, not `plan.json`.
 
    `--mode` overrides routing; `--list-patterns` lists choices. `--concern NAME`
    (repeatable) plans instead the model questions published as informing a stakeholder
@@ -68,22 +75,14 @@ throughout the investigation, and store artifacts in the project, not the skill 
    profile with `linked-archi-profile` if not settled; re-verify after data refresh.
    A verification marker or equal filenames do not prove the dataset is unchanged.
 
-3. **Resolve inputs.** Resolve named architecture elements with `core/resolve-element`
-   before binding IRIs, even when called records in a model. Use `core/resolve-model`
-   for a model container/title or after a zero concept match suggests a model name;
-   its title hit is not an element match. Ask when ambiguity changes the answer.
-   Definitions are conditional, not an automatic second lookup for every name:
-   use `core/define-term` for meaning/ambiguity, a definition question, or when the
-   selected pattern calls for it. `--definitions` explicitly requests this extra step.
-   For a classification question, `taxonomy-classification` instead uses
-   `core/resolve-concept`: review the matching SKOS concepts and schemes before binding
-   `CONCEPT_IRI` to `core/classified-by`. A concept label alone does not select the
-   pattern, and neither a matching label nor the first-ranked row establishes identity.
-   For a notation's type taxonomy, resolve its published concept with
-   `core/resolve-vocabulary-concept` and use `core/elements-by-category` only when
-   the matching vocabulary is attached. For viewpoint choice, inspect
-   `core/viewpoint-catalog` and `core/viewpoint-detail`; `core/views` reports actual
-   diagrams, while SHACL validation judges conformance.
+3. **Resolve inputs.** The plan picks the resolver for its pattern. Resolve named
+   architecture elements with `core/resolve-element` before binding IRIs, even when
+   called records in a model; `core/resolve-model` is for a model container or title,
+   and its title hit is not an element match. A SKOS concept (`core/resolve-concept`,
+   `core/resolve-vocabulary-concept`) or viewpoint (`core/viewpoint-catalog`) is bound
+   only after reviewing its scheme; neither a matching label nor the first-ranked row
+   establishes identity. Ask when ambiguity changes the answer. Definitions are
+   conditional: `core/define-term` for meaning or ambiguity, or with `--definitions`.
 
 4. **Choose evidence and orchestrate execution.** The planner retrieves only candidate
    template metadata. For changes, use `catalog show NAME` or filtered `catalog dump
@@ -93,7 +92,9 @@ throughout the investigation, and store artifacts in the project, not the skill 
    query as a **candidate** before inventing a broad exploratory join. Validate its scope
    and run it only through `linked-archi-query`; query text is not itself result evidence.
 
-   Honour dependency and review barriers. Batch only independent, fully bound steps
+   Honour dependency and review barriers. Work **round by round**: steps sharing a
+   `round` are independent, so run them in one turn - the round's batch, or its commands
+   together - then review them before the next round. Batch only fully bound steps
    whose prerequisites have been reviewed. Inspect `decisions` before continuing:
    refused candidates have no executable command and are not silently replaced.
    An alternative may answer a weaker question; acknowledge that semantic difference.

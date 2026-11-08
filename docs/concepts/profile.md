@@ -377,4 +377,5 @@ a human to decide.
     fingerprint covers `base_iri`, `namespaces`, `roles`, `graphs`, `capabilities`, `notations`,
     `taxonomies` and `navigation`, so editing any of them invalidates the marker automatically.
     Until a marker exists, every query result carries a caveat saying the profile was never
-    verified against this dataset.
+    verified against this dataset. The marker is advice, never a gate: nothing is refused for its
+    absence, and a location that cannot be written does not fail verification.

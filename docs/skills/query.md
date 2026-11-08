@@ -24,6 +24,7 @@ la-query
 
 ```bash
 python3 scripts/la-query catalog list --profile linked-archi-default --why
+python3 scripts/la-query catalog list --profile linked-archi-default --match resolve --why
 python3 scripts/la-query catalog show core/traceability --profile linked-archi-default
 python3 scripts/la-query catalog dump --profile linked-archi-default \
   --template core/neighbours-qualified --template core/dependents-qualified
@@ -31,7 +32,15 @@ python3 scripts/la-query catalog dump --profile linked-archi-default --stage ana
 ```
 
 In `catalog list`, `x` marks a template this profile refuses, `!` one that runs with a caveat, and
-blank means available. `--why` explains every refusal and names an alternative.
+blank means available. `--why` explains every refusal shown and names an alternative.
+
+The full listing is every entry in every stage, and with `--why` it is the longest output the CLI
+produces - about 20 KB under the default profile. Narrow it the way `dump` narrows:
+`--match TEXT` keeps entries whose name or purpose contains the text (ignoring case), `--stage`
+and `--notation` select by catalogue facet, and `--available` keeps only what `--profile` can
+run. Values within one filter kind are alternatives; different kinds must all match. A narrowed
+listing ends with how many of the catalogue's entries matched, so a short list is never mistaken
+for a small catalogue.
 
 `catalog show` is the authoritative parameter list — read it instead of the `.rq` file, because it
 carries the typing, what the template does not prove, and its alternatives. Fields printed: `name`,

@@ -17,6 +17,49 @@ workflow publishes exactly this text, so what is written here is what a consumer
   opaque) where they were `rgba(r,g,b,a)` with the exchange format's alpha, and a node's line width is written
   (`arch-vis:lineWidth`) — 31 quads more in each. The other conversions they are taken from are unchanged.
 
+### Added
+- **`la-query catalog list` filters.** `--match TEXT` (name or purpose, any case), `--stage`,
+  `--notation` and `--available` (what `--profile` can run) narrow the listing with the same
+  rules as `catalog dump`; `--why` explains only the refusals shown. A narrowed listing ends
+  with how many of the catalogue's entries matched. Finding a resolver takes about 0.7 KB
+  rather than the 21 KB of `list --why`, which the query entrypoint used to recommend.
+- **`la-analyse plan --preview`**: with `-o FILE`, saves the full plan and prints the compact
+  text plan in the same call, as `la-query query run -o FILE --preview` does for results. The
+  analyse entrypoint now plans with `--json -o plan.json --preview` and reads the printed plan
+  rather than the JSON file.
+
+### Changed
+- **The text plan states each fact once.** It is grouped by review round; a batch written
+  with `--batch-dir` replaces its steps' commands; commands carry `<NAME>` placeholders whose
+  sources are listed once under `placeholders`; a line shared by several steps is printed
+  once with their numbers; the uninformative "the pattern's own evidence" is gone. The impact
+  plan prints about 3.1 KB instead of 5.0 KB, against 11.5 KB for its JSON. The JSON plan and
+  every command in it are unchanged (PROPOSAL D31).
+- `catalog list` no longer repeats each entry's stage beside the stage heading it is listed
+  under, and pads names to the longest one shown.
+- **Smaller entrypoints.** The six `SKILL.md` files fall from 73.6 KB to 56.2 KB: detail
+  moves to new references (`connect/references/discovery.md`,
+  `profile/references/verify.md`, `source/references/acquisition.md`,
+  `query/references/model-questions.md`), maintainer history to the docs site, and the
+  repeated discovery heredoc becomes one bounded command. Rules, commands, refusals and
+  safety conditions stay in each entrypoint. Opened together with its entrypoint, every new
+  reference still totals less than the old entrypoint.
+  Relative links inside skill references are now checked.
+  Analyse states that its plan's commands are complete, so an investigation opens the query
+  entrypoint only for ad-hoc queries, refusals or failures. Frontmatter descriptions shrink
+  from 3.3 KB to 2.5 KB (PROPOSAL D33).
+- **Plans wait only for the evidence a step needs.** A pattern step used to depend on the
+  step listed before it; it now depends on orientation, on the steps that supply its
+  placeholders, and on review order its pattern declares (`after` in `patterns.json`).
+  Each step carries the earliest `round` it can run in, plans report `planned_rounds`, and
+  batches group a round's bound steps even across stages (`resolve+pattern`). The impact
+  plan falls from 8 review rounds to 6, views from 7 to 4, and the "Quality" concern plan
+  from 9 to 3. `depends_on` lists only the nearest prerequisites. Unannotated
+  plans, placeholders with no planned source and `core/provenance` keep waiting for every
+  earlier step. The lifecycle pattern lists `core/identity-audit` before
+  `core/label-collisions`, and the sweep waits for the audit. Measured agent token or
+  latency effects are not yet established (PROPOSAL D30).
+
 ## [0.10.0] - 2026-10-30
 
 The converters now write direct relationship triples by default, and the default profile

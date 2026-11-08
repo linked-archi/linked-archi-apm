@@ -37,7 +37,8 @@ flowchart TB
 ```bash
 python3 scripts/la-analyse plan \
     --question 'what depends on "Payments Gateway"?' \
-    --profile linked-archi-default --data fixtures/base.trig --steps-dir /tmp/walk
+    --profile linked-archi-default --data fixtures/base.trig --steps-dir /tmp/walk \
+    --batch-dir /tmp/walk/batches
 ```
 
 The name is quoted, deliberately. Quoted spans are what the planner turns into resolve steps;
@@ -48,44 +49,47 @@ question   what depends on "Payments Gateway"?
 pattern    impact-and-dependency — Impact and dependency
 read       references/patterns/impact-and-dependency.md
 ranked     impact-and-dependency(1)
-budget     12 queries; 9 step(s) planned
+budget     12 queries; 9 step(s) in 6 review round(s)
 annotated  yes, against the profile
 
-batch      steps 1, 2 [ready]
-   write manifests with --batch-dir DIR before using this command
+round 1
    $ la-query query batch /tmp/walk/batches/01-orient.json --profile linked-archi-default --data fixtures/base.trig --preview --limit 20
-   Run each batch instead of its individual commands; review results before continuing.
+     runs steps 1, 2; do not also run their commands
+   01 core/inventory-summary  Which notations loaded, and how much of each.
+   02 core/models  Which models contributed, and when each was converted.
+      establishes (steps 1, 2): what is actually loaded, so an empty later result can be told from a partial export
+      stop if (steps 1, 2): only one notation loaded and the question needs two
 
-01 orient       Which notations loaded, and how much of each.
-   $ la-query query run core/inventory-summary --profile linked-archi-default --data fixtures/base.trig --json -o /tmp/walk/01-inventory-summary.json --preview --limit 20
-   establishes: what is actually loaded, so an empty later result can be told from a partial export
-   stop if: only one notation loaded and the question needs two
-...
-03 resolve      Turn "Payments Gateway" into an IRI.
-   $ la-query query run core/resolve-element --profile linked-archi-default --data fixtures/base.trig --set 'TERM=Payments Gateway' --json -o /tmp/walk/03-resolve-element.json --preview --limit 20
-   review first: steps 1, 2
-   establishes: the focus IRIs later steps take as parameters
-   stop if: several candidates match and the choice changes the answer - ask instead of picking
-...
-06 pattern      Impact and dependency: evidence from core/dependents-qualified.
-   $ la-query query run core/dependents-qualified --profile linked-archi-default --data fixtures/base.trig --set 'FOCUS_IRI=<FOCUS_IRI: from core/resolve-element or an element IRI in earlier evidence>' --json -o /tmp/walk/06-dependents-qualified.json --preview --limit 20
-   review first: steps 5
-   establishes: the pattern's own evidence
-   FOCUS_IRI: <FOCUS_IRI: from core/resolve-element or an element IRI in earlier evidence>
+round 2  review round 1 first
+   $ la-query query batch /tmp/walk/batches/03-resolve+pattern.json --profile linked-archi-default --data fixtures/base.trig --preview --limit 20
+     runs steps 3, 4, 7; do not also run their commands
+   03 core/resolve-element  Turn "Payments Gateway" into an IRI.
+      establishes: the focus IRIs later steps take as parameters
+      stop if: several candidates match and the choice changes the answer - ask instead of picking
+   04 core/discover-relationship-types
+   07 core/reified-predicates  [caveat]
+      caveat: capability 'rdf_reifies' is partial: present for some models and absent for others. A short result may be coverage rather than absence - check with the orientation templates.
 
-07 pattern      Impact and dependency: evidence from core/reified-predicates.  [runs with a caveat]
-   $ la-query query run core/reified-predicates --profile linked-archi-default --data fixtures/base.trig --json -o /tmp/walk/07-reified-predicates.json --preview --limit 20
-   review first: steps 6
-   establishes: the pattern's own evidence
-   caveat: capability 'rdf_reifies' is partial: present for some models and absent for others. A short result may be coverage rather than absence - check with the orientation templates.
+round 3  review round 2 first
+   05 core/neighbours-qualified
+      $ la-query query run core/neighbours-qualified --profile linked-archi-default --data fixtures/base.trig --set 'FOCUS_IRI=<FOCUS_IRI>' --json -o /tmp/walk/05-neighbours-qualified.json --preview --limit 20
 
-08 pattern      Impact and dependency: evidence from core/dependents-direct.
-   $ la-query query run core/dependents-direct --profile linked-archi-default --data fixtures/base.trig --set 'FOCUS_IRI=<FOCUS_IRI: from core/resolve-element or an element IRI in earlier evidence>' --set 'PREDICATE_PATH=<PREDICATE_PATH: an unqualified predicate from core/reified-predicates, never a class>' --json -o /tmp/walk/08-dependents-direct.json --preview --limit 20
-   review first: steps 7
-   establishes: the pattern's own evidence
-   FOCUS_IRI: <FOCUS_IRI: from core/resolve-element or an element IRI in earlier evidence>
-   PREDICATE_PATH: <PREDICATE_PATH: an unqualified predicate from core/reified-predicates, never a class>
-...
+round 4  review round 3 first
+   06 core/dependents-qualified
+      $ la-query query run core/dependents-qualified --profile linked-archi-default --data fixtures/base.trig --set 'FOCUS_IRI=<FOCUS_IRI>' --json -o /tmp/walk/06-dependents-qualified.json --preview --limit 20
+
+round 5  review round 4 first
+   08 core/dependents-direct
+      $ la-query query run core/dependents-direct --profile linked-archi-default --data fixtures/base.trig --set 'FOCUS_IRI=<FOCUS_IRI>' --set 'PREDICATE_PATH=<PREDICATE_PATH>' --json -o /tmp/walk/08-dependents-direct.json --preview --limit 20
+
+round 6  review round 5 first
+   09 core/provenance
+      $ la-query query run core/provenance --profile linked-archi-default --data fixtures/base.trig --set 'FOCUS_IRI=<FOCUS_IRI>' --json -o /tmp/walk/09-provenance.json --preview --limit 20
+
+placeholders - bind each from reviewed evidence, never invent one:
+   <FOCUS_IRI>      from core/resolve-element or an element IRI in earlier evidence
+   <PREDICATE_PATH> an unqualified predicate from core/reified-predicates, never a class
+
 stop the pattern-dependent claim when:
   - the relationship semantics on a path stop supporting the claim
   - reachability has been established but criticality has not - they are different questions
@@ -118,17 +122,21 @@ follows incoming qualified relationships for at most two hops. Those bounds and 
 meanings must fit the claim being made; they do not establish equivalence with an arbitrary
 direct-predicate traversal. Review the decision before continuing past its boundary.
 
-**Unknown parameters are visible.** `FOCUS_IRI` is a shell-quoted placeholder naming where its value
-comes from. Typed parameter validation refuses that placeholder until it is replaced with a resolved
-IRI. Evidence-review dependencies remain visible even when a command's parameters are concrete.
+**Unknown parameters are visible.** `<FOCUS_IRI>` is a shell-quoted placeholder, and the
+`placeholders` list names where its value comes from. Typed parameter validation refuses that
+placeholder until it is replaced with a resolved IRI. Evidence-review dependencies remain visible
+as rounds even when a command's parameters are concrete.
 
 **The stopping conditions came with the method.** "Reachability has been established but criticality
 has not" is the mistake this pattern exists to prevent, and it is attached to the plan rather than
 left to the analyst's memory.
 
-The ready orientation queries can share one load. Add `--batch-dir /tmp/walk/batches` to the plan
-command to write their manifest, then run the batch instead of those two individual commands. Review
-both results before resolving names. Planning itself executes no queries. Generated commands use
+The ready orientation queries share one load: `--batch-dir` wrote the manifests, and each batch
+runs instead of its steps' commands, which is why rounds 1 and 2 show none. Review both
+orientation results before round 2, which resolves the name together with the two discovery
+queries that need no resolved name. Steps 05 to 09 each wait for a reviewed value or a declared
+order, which is why the plan takes six review rounds rather than the eight a strictly sequential
+plan needs. Planning itself executes no queries. Generated commands use
 `--preview --limit 20` to display bounded evidence while saving complete envelopes; that display cap
 does not change query limits or costs. Add `--definitions` only when definitions are needed beyond
 what the question already requests.

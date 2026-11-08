@@ -42,6 +42,35 @@ PARAMETER_SOURCES: Mapping[str, str] = {
     "TERM": "a name from the question",
 }
 
+#: Which earlier steps' evidence supplies a placeholder: the same knowledge as
+#: PARAMETER_SOURCES, as template names a dependency can point at. An empty tuple means the
+#: value comes from the question or the user, not from evidence. A parameter missing here, or
+#: one whose producers this plan does not run, keeps a review of every earlier step, because
+#: an unknown source is no reason to run sooner.
+PARAMETER_PRODUCERS: Mapping[str, tuple[str, ...]] = {
+    "FOCUS_IRI": ("core/resolve-element",),
+    "MODEL_IRI": ("core/resolve-model", "core/models"),
+    "PROCESS_IRI": ("core/resolve-element", "notation/bpmn/process-components"),
+    "VIEW_IRI": ("core/views",),
+    "VIEW_A_IRI": ("core/views",),
+    "VIEW_B_IRI": ("core/views",),
+    "TYPE_IRI": ("core/inventory",),
+    "RESOURCE_TYPE": ("core/inventory",),
+    "SOURCE_TYPE": ("core/inventory",),
+    "TARGET_TYPE": ("core/inventory",),
+    "EXPECTED_PREDICATE": ("core/discover-predicates", "core/element-detail"),
+    "PREDICATE_PATH": ("core/reified-predicates",),
+    "CONCEPT_IRI": ("core/resolve-concept",),
+    "VIEWPOINT_IRI": ("core/viewpoint-catalog",),
+    "FROM_IRI": ("core/resolve-element",),
+    "TO_IRI": ("core/resolve-element",),
+    "TERM": (),
+}
+
+#: Templates that close the evidence rather than feed it: their focus is whatever the answer
+#: turns out to rest on, which is known only once everything before them has been reviewed.
+_CLOSING_TEMPLATES = frozenset({"core/provenance"})
+
 #: The query owner's stages, in the order an investigation moves through them. Restated
 #: rather than imported: this owner reaches the query owner only over its commands.
 STAGE_ORDER = (
@@ -132,6 +161,9 @@ class Step:
     note: str = ""
     depends_on: list[int] = field(default_factory=list)
     review_decisions: list[str] = field(default_factory=list)
+    #: The earliest review round this step can run in: 1 needs no earlier evidence, and each
+    #: later round needs the rounds before it reviewed. Steps sharing a round are independent.
+    round: int = 1
 
     @property
     def unresolved_parameters(self) -> list[str]:
@@ -153,11 +185,14 @@ class Step:
         return f"{steps_dir}/{self.number:02d}-{slug}.json"
 
     def command(self, *, profile: str | None, data: Sequence[str], endpoint: str | None,
-                steps_dir: str, preview: bool = False) -> str:
+                steps_dir: str, preview: bool = False, short_placeholders: bool = False) -> str:
         """The exact command to run, with the output path already chosen.
 
         Every step writes an envelope from the first step onward, because the envelope IS the
         evidence and a terminal scroll cannot be turned back into one.
+
+        ``short_placeholders`` writes ``<NAME>`` for an unbound value, for text that states
+        each placeholder's source once rather than inside every command that needs it.
         """
         parts = ["la-query", "query", "run", self.template]
         if profile:
@@ -166,8 +201,9 @@ class Step:
             parts += ["--data", path]
         if endpoint:
             parts += ["--endpoint", endpoint]
+        unresolved = set(self.unresolved_parameters) if short_placeholders else set()
         for name, value in self.parameters.items():
-            parts += ["--set", f"{name}={value}"]
+            parts += ["--set", f"{name}=<{name}>" if name in unresolved else f"{name}={value}"]
         parts += ["--json", "-o", self.output_path(steps_dir)]
         if preview:
             parts += ["--preview", "--limit", "20"]
@@ -188,6 +224,7 @@ class Step:
             "over_budget": self.over_budget,
             "note": self.note,
             "depends_on": list(self.depends_on),
+            "round": self.round,
             "review_decisions": list(self.review_decisions),
             "unresolved_parameters": self.unresolved_parameters,
             "status": self.status,
@@ -238,6 +275,7 @@ class Plan:
             "ranked": list(self.ranked),
             "budget": self.budget,
             "planned_steps": len(self.steps),
+            "planned_rounds": self.rounds,
             "annotated": self.annotated,
             "profile": self.profile,
             "data": list(self.data),
@@ -250,20 +288,33 @@ class Plan:
             "steps": [step.as_dict(**self._context()) for step in self.steps],
         }
 
+    @property
+    def rounds(self) -> int:
+        """How many review rounds the planned steps need, at the least."""
+        return max((step.round for step in self.steps), default=0)
+
     def batches(self) -> list[dict[str, Any]]:
-        """Group concrete independent commands; evidence review remains a boundary."""
+        """Group concrete commands that run in the same review round; review is the boundary.
+
+        Steps sharing a round never depend on one another, so one load can serve all of them.
+        A round's batch may span stages - a resolve step and a discovery query that needs no
+        resolved name are equally ready once orientation is reviewed.
+        """
         if not self.data and not self.endpoint:
             return []
-        groups: dict[tuple[str, tuple[int, ...]], list[Step]] = {}
+        groups: dict[int, list[Step]] = {}
         for step in self.steps:
             if (step.availability not in ("available", "caveat")
                     or step.unresolved_parameters or step.review_decisions or step.over_budget):
                 continue
-            groups.setdefault((step.stage, tuple(step.depends_on)), []).append(step)
+            groups.setdefault(step.round, []).append(step)
+        ancestors = _ancestors(self.steps)
         batches = []
-        for (stage, depends_on), steps in groups.items():
+        for round_number, steps in sorted(groups.items()):
             if len(steps) < 2:
                 continue
+            stage = "+".join(dict.fromkeys(step.stage for step in steps))
+            depends_on = _reduced({n for step in steps for n in step.depends_on}, ancestors)
             manifest_path = f"{self.batch_dir or self.steps_dir + '/batches'}/{steps[0].number:02d}-{stage}.json"
             command = ["la-query", "query", "batch", manifest_path]
             if self.profile:
@@ -276,8 +327,9 @@ class Plan:
                 command += ["--preview", "--limit", "20"]
             batches.append({
                 "stage": stage,
+                "round": round_number,
                 "steps": [step.number for step in steps],
-                "depends_on": list(depends_on),
+                "depends_on": depends_on,
                 "status": "awaiting-evidence" if depends_on else "ready",
                 "manifest_path": manifest_path,
                 "manifest": {
@@ -294,6 +346,13 @@ class Plan:
         return batches
 
     def to_text(self) -> str:
+        """The plan as an agent reads it: one block per review round, each fact stated once.
+
+        The JSON form carries every field on every step; this form is what goes into a model's
+        context, and so into every later turn. A round lists what can run together, a written
+        batch replaces its steps' commands, a placeholder's source is stated once rather than
+        inside each command, and text shared by several steps is printed once with their numbers.
+        """
         lines: list[str] = [f"question   {self.question}"]
         if self.pattern:
             lines.append(f"pattern    {self.pattern} — {self.pattern_title}")
@@ -308,7 +367,7 @@ class Plan:
             lines.append(f"ranked     {ranked}")
         lines.append(
             f"budget     {self.budget} quer{'y' if self.budget == 1 else 'ies'}; "
-            f"{len(self.steps)} step(s) planned"
+            f"{len(self.steps)} step(s) in {self.rounds} review round(s)"
         )
         lines.append(
             "annotated  yes, against the profile"
@@ -317,6 +376,12 @@ class Plan:
         )
         for note in self.notes:
             lines.append(f"note       {note}")
+        batches = {batch["round"]: batch for batch in self.batches()}
+        if batches and not self.batch_dir:
+            lines.append(
+                f"batches    round(s) {', '.join(map(str, batches))} can each run as one batch: "
+                "re-plan with --batch-dir DIR to write the manifests"
+            )
         lines.append("")
         for decision in self.decisions:
             lines.append(f"{decision['id']} [REFUSED] {decision['template']}")
@@ -324,39 +389,55 @@ class Plan:
             lines.append(f"   alternatives to assess: {', '.join(decision['alternatives'])}")
             lines.append("   Alternatives are not assumed to answer the same question.")
             lines.append("")
-        for batch in self.batches():
-            lines.append(f"batch      steps {', '.join(map(str, batch['steps']))} [{batch['status']}]")
-            if batch["depends_on"]:
-                lines.append(f"   review first: steps {', '.join(map(str, batch['depends_on']))}")
-            if not self.batch_dir:
-                lines.append("   write manifests with --batch-dir DIR before using this command")
-            lines.append(f"   $ {batch['command']}")
-        if self.batches():
-            lines.append("   Run each batch instead of its individual commands; review results before continuing.")
-            lines.append("")
+
+        context = dict(self._context(), short_placeholders=True)
+        generic_purpose = f"{self.pattern_title}: evidence from "
+        rounds: dict[int, list[Step]] = {}
         for step in self.steps:
-            flag = "  [OVER BUDGET]" if step.over_budget else ""
-            mark = {"available": "", "refused": "  [REFUSED by this profile]",
-                    "caveat": "  [runs with a caveat]"}.get(step.availability, "")
-            lines.append(f"{step.number:02d} {step.stage:12} {step.purpose}{mark}{flag}")
-            lines.append(f"   $ {step.command(**self._context())}")
-            if step.depends_on:
-                lines.append(f"   review first: steps {', '.join(map(str, step.depends_on))}")
-            if step.review_decisions:
-                lines.append(f"   decision required: {', '.join(step.review_decisions)}")
-            if step.establishes:
-                lines.append(f"   establishes: {step.establishes}")
-            for name, value in step.parameters.items():
-                if value.startswith("<"):
-                    lines.append(f"   {name}: {value}")
-            for caveat in step.caveats:
-                lines.append(f"   caveat: {caveat}")
-            if step.alternatives and step.availability == "refused":
-                lines.append(f"   instead: {', '.join(step.alternatives)}")
-            if step.note:
-                lines.append(f"   note: {step.note}")
-            if step.stop_when:
-                lines.append(f"   stop if: {step.stop_when}")
+            rounds.setdefault(step.round, []).append(step)
+        for round_number, steps in sorted(rounds.items()):
+            lines.append(f"round {round_number}" + (
+                f"  review round {round_number - 1} first" if round_number > 1 else ""))
+            batch = batches.get(round_number) if self.batch_dir else None
+            if batch:
+                lines.append(f"   $ {batch['command']}")
+                lines.append(f"     runs steps {', '.join(map(str, batch['steps']))}; "
+                             "do not also run their commands")
+            shared = _shared_lines(steps)
+            for step in steps:
+                flag = "  [OVER BUDGET]" if step.over_budget else ""
+                mark = {"refused": "  [REFUSED by this profile]",
+                        "caveat": "  [caveat]"}.get(step.availability, "")
+                purpose = "" if step.purpose == f"{generic_purpose}{step.template}." else (
+                    f"  {step.purpose}")
+                lines.append(f"   {step.number:02d} {step.template}{purpose}{mark}{flag}")
+                if not (batch and step.number in batch["steps"]):
+                    lines.append(f"      $ {step.command(**context)}")
+                if step.review_decisions:
+                    lines.append(f"      decision required: {', '.join(step.review_decisions)}")
+                for label, text in (("establishes", step.establishes),
+                                    *(("caveat", caveat) for caveat in step.caveats),
+                                    ("note", step.note), ("stop if", step.stop_when)):
+                    if not text or text == "the pattern's own evidence":
+                        continue
+                    owners = shared[(label, text)]
+                    if step.number != owners[-1]:
+                        continue  # printed once, under the last step it applies to
+                    suffix = (f" (steps {', '.join(map(str, owners))})"
+                              if len(owners) > 1 else "")
+                    lines.append(f"      {label}{suffix}: {text}")
+                if step.alternatives and step.availability == "refused":
+                    lines.append(f"      instead: {', '.join(step.alternatives)}")
+            lines.append("")
+
+        placeholders = _placeholder_sources(self.steps)
+        if placeholders:
+            lines.append("placeholders - bind each from reviewed evidence, never invent one:")
+            width = max(len(name) for name, _source, _numbers in placeholders) + 2
+            for name, source, numbers in placeholders:
+                where = (f" (steps {', '.join(map(str, numbers))})"
+                         if sum(1 for other, _s, _n in placeholders if other == name) > 1 else "")
+                lines.append(f"   {'<' + name + '>':{width}} {source}{where}")
             lines.append("")
         if self.pattern_stop_when:
             lines.append("stop the pattern-dependent claim when:")
@@ -364,6 +445,116 @@ class Plan:
                 lines.append(f"  - {condition}")
             lines.append("")
         return "\n".join(lines).rstrip() + "\n"
+
+
+def _shared_lines(steps: Sequence[Step]) -> dict[tuple[str, str], list[int]]:
+    """Which steps of one round carry each detail line, so it can be printed once."""
+    owners: dict[tuple[str, str], list[int]] = {}
+    for step in steps:
+        details = [("establishes", step.establishes), ("note", step.note),
+                   ("stop if", step.stop_when)]
+        details += [("caveat", caveat) for caveat in step.caveats]
+        for label, text in details:
+            if text:
+                owners.setdefault((label, text), []).append(step.number)
+    return owners
+
+
+def _placeholder_sources(steps: Sequence[Step]) -> list[tuple[str, str, list[int]]]:
+    """Each distinct placeholder once: its name, where its value comes from, and its steps."""
+    found: dict[tuple[str, str], list[int]] = {}
+    for step in steps:
+        for name in step.unresolved_parameters:
+            value = step.parameters[name]
+            prefix = f"<{name}: "
+            source = value[len(prefix):-1] if value.startswith(prefix) else value[1:-1]
+            found.setdefault((name, source), []).append(step.number)
+    return [(name, source, numbers) for (name, source), numbers in found.items()]
+
+
+def _ancestors(steps: Sequence[Step]) -> dict[int, set[int]]:
+    """Every step each step transitively waits for. Dependencies always point backwards."""
+    ancestors: dict[int, set[int]] = {}
+    for step in steps:
+        closure = set(step.depends_on)
+        for number in step.depends_on:
+            closure |= ancestors.get(number, set())
+        ancestors[step.number] = closure
+    return ancestors
+
+
+def _reduced(numbers: set[int], ancestors: Mapping[int, set[int]]) -> list[int]:
+    """Drop a prerequisite that another prerequisite already waits for.
+
+    Reviewing step 5, which itself waited for steps 1 to 3, has already required them; listing
+    them again says nothing more and costs a reader the same words on every step.
+    """
+    return sorted(
+        number for number in numbers
+        if not any(number in ancestors.get(other, set()) for other in numbers if other != number)
+    )
+
+
+def _prerequisites(step: Step, earlier: Sequence[Step], orientation: set[int],
+                   after: Mapping[str, tuple[str, ...]]) -> set[int]:
+    """The earlier steps ``step`` needs reviewed: its inputs, then its pattern's own order.
+
+    A placeholder waits for the steps that supply it. A step with no evidence-bound input
+    waits only for orientation, so independent evidence shares a round instead of queueing
+    behind unrelated steps. Anything this cannot attribute - a parameter with no known source,
+    a source this plan does not run, or a template that closes the evidence - keeps a review of
+    every earlier step, which is what every pattern step used to have.
+    """
+    everything = {other.number for other in earlier}
+    if step.template in _CLOSING_TEMPLATES:
+        return everything
+    required = set(orientation)
+    for name in step.unresolved_parameters:
+        producers = PARAMETER_PRODUCERS.get(name)
+        if producers is None:
+            return everything
+        if not producers:
+            continue  # from the question, not from evidence
+        found = {other.number for other in earlier if other.template in producers}
+        if not found:
+            return everything
+        required |= found
+    for template in after.get(step.template, ()):
+        required |= {other.number for other in earlier if other.template == template}
+    return required
+
+
+def _order(steps: list[Step], *, after: Mapping[str, tuple[str, ...]], derived: bool) -> None:
+    """Set each step's review prerequisites, and the earliest round it can run in.
+
+    ``derived`` is False when no catalogue metadata named the parameters. The planner then
+    cannot tell a step that needs earlier evidence from one that does not, so every pattern
+    step keeps a review of the one before it, as plans always did.
+    """
+    orientation = {step.number for step in steps if step.stage == "orient"}
+    resolution = {step.number for step in steps if step.stage == "resolve"}
+    ancestors: dict[int, set[int]] = {}
+    rounds: dict[int, int] = {}
+    previous_pattern: int | None = None
+    for index, step in enumerate(steps):
+        if step.stage == "orient":
+            required: set[int] = set()
+        elif step.stage == "resolve":
+            required = set(orientation)
+        elif not derived:
+            required = ({previous_pattern} if previous_pattern is not None
+                        else orientation | resolution)
+        else:
+            required = _prerequisites(step, steps[:index], orientation, after)
+        if step.stage in ("pattern", "quality"):
+            previous_pattern = step.number
+        closure = set(required)
+        for number in required:
+            closure |= ancestors[number]
+        ancestors[step.number] = closure
+        step.depends_on = _reduced(required, ancestors)
+        step.round = 1 + max((rounds[number] for number in required), default=0)
+        rounds[step.number] = step.round
 
 
 def _parameters_for(
@@ -596,15 +787,7 @@ def build_plan(
         "an element the conclusion depends on has no provenance - say so in the answer",
     )
 
-    orientation = [step.number for step in steps if step.stage == "orient"]
-    resolution = [step.number for step in steps if step.stage == "resolve"]
-    previous_pattern: int | None = None
-    for step in steps:
-        if step.stage == "resolve":
-            step.depends_on = list(orientation)
-        elif step.stage in ("pattern", "quality"):
-            step.depends_on = [previous_pattern] if previous_pattern is not None else orientation + resolution
-            previous_pattern = step.number
+    _order(steps, after=pattern.after if pattern else {}, derived=annotated)
 
     if number > budget:
         notes.append(

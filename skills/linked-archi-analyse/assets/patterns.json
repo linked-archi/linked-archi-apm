@@ -13,7 +13,13 @@
     "",
     "`capabilities` lists what the pattern's templates need, so a planner can say 'this",
     "dataset cannot answer that' before running anything. It is advisory here: the",
-    "authoritative gate is the query catalogue's own `requires`, checked at render time."
+    "authoritative gate is the query catalogue's own `requires`, checked at render time.",
+    "",
+    "`after` is the method order no parameter expresses: a template waits for the review of",
+    "the templates listed against it, because a judgement on their results decides whether",
+    "or how it runs. Inputs taken from earlier evidence need no entry - the planner derives",
+    "those - and a step with neither waits only for orientation, sharing a round with other",
+    "independent evidence. Every entry names templates listed before it."
   ],
   "patterns": {
     "notation-taxonomy": {
@@ -22,6 +28,7 @@
       "resolution": "vocabulary",
       "triggers": ["notation taxonomy", "type taxonomy", "grouped by domain", "grouped by aspect", "element by domain", "element by aspect", "type category"],
       "templates": ["core/elements-by-category", "core/provenance"],
+      "after": {"core/elements-by-category": ["core/resolve-vocabulary-concept"]},
       "capabilities": {},
       "stop_when": [
         "the notation's matching vocabulary is not attached - do not treat zero categories as zero elements",
@@ -89,6 +96,11 @@
         "core/dependents-direct",
         "core/provenance"
       ],
+      "after": {
+        "core/neighbours-qualified": ["core/discover-relationship-types"],
+        "core/dependents-qualified": ["core/neighbours-qualified"],
+        "core/dependents-direct": ["core/dependents-qualified"]
+      },
       "capabilities": {
         "direct_rel_triples": "core/dependents-direct only",
         "rdf_reifies": "core/reified-predicates only, which names the predicates core/dependents-direct follows"
@@ -147,6 +159,10 @@
         "core/coverage-gaps",
         "core/orphans"
       ],
+      "after": {
+        "core/element-detail": ["core/elements-by-type"],
+        "core/coverage-gaps": ["core/elements-by-type", "core/element-detail"]
+      },
       "capabilities": {},
       "stop_when": [
         "the population is empty, which produces zero gaps and looks like perfect coverage",
@@ -173,6 +189,7 @@
         "core/classified-by",
         "core/provenance"
       ],
+      "after": {"core/element-detail": ["core/discover-predicates"]},
       "capabilities": {},
       "stop_when": [
         "no predicate in this dataset carries decisions or policies at all",
@@ -196,10 +213,11 @@
       "templates": [
         "core/lifecycle",
         "core/define-term",
-        "core/label-collisions",
         "core/identity-audit",
+        "core/label-collisions",
         "notation/leanix/factsheets"
       ],
+      "after": {"core/label-collisions": ["core/identity-audit"]},
       "capabilities": {
         "element_lifecycle": "core/lifecycle only",
         "identity_assertions": "core/identity-audit only"
@@ -235,6 +253,7 @@
         "core/label-collisions",
         "core/inventory-summary"
       ],
+      "after": {"core/label-collisions": ["core/identity-audit"]},
       "capabilities": {
         "identity_assertions": "core/identity-audit only"
       },
@@ -290,6 +309,11 @@
         "notation/bpmn/process-flow",
         "notation/c4/containers"
       ],
+      "after": {
+        "notation/bpmn/process-components": ["core/resolve-model"],
+        "notation/bpmn/process-flow": ["core/resolve-model"],
+        "notation/c4/containers": ["core/resolve-model"]
+      },
       "capabilities": {},
       "stop_when": [
         "the model is drawn at a level of detail that hides what was asked about",

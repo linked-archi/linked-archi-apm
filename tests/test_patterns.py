@@ -44,7 +44,8 @@ class TestRoutingTableShape(unittest.TestCase):
         for name, pattern in _patterns().items():
             with self.subTest(name):
                 required = {"title", "file", "triggers", "templates", "capabilities", "stop_when"}
-                self.assertEqual(set(pattern) - {"notation_mentions", "resolution"}, required)
+                self.assertEqual(set(pattern) - {"notation_mentions", "resolution", "after"},
+                                 required)
                 if "resolution" in pattern:
                     self.assertIn(pattern["resolution"],
                                   {"element", "concept", "vocabulary", "viewpoint"})
@@ -56,6 +57,49 @@ class TestRoutingTableShape(unittest.TestCase):
                 self.assertTrue(pattern["templates"], "a pattern that runs nothing")
                 self.assertTrue(pattern["stop_when"], "a pattern that never finishes")
                 self.assertIsInstance(pattern["capabilities"], dict)
+
+    def test_declared_review_order_points_backwards_at_templates_a_plan_runs(self):
+        """`after` holds a template back for a judgement; it cannot wait for a later step.
+
+        A value is either listed before its key or is a template the planner places before
+        any pattern evidence - orientation or this pattern's resolution step.
+        """
+        before_pattern = {
+            "element": "core/resolve-element", "concept": "core/resolve-concept",
+            "vocabulary": "core/resolve-vocabulary-concept", "viewpoint": "core/viewpoint-catalog",
+        }
+        for name, pattern in _patterns().items():
+            templates = pattern["templates"]
+            planned_first = {"core/inventory-summary", "core/models", "core/define-term",
+                             before_pattern[pattern.get("resolution", "element")]}
+            for template, earlier in pattern.get("after", {}).items():
+                with self.subTest(f"{name}:{template}"):
+                    self.assertIn(template, templates)
+                    self.assertTrue(earlier)
+                    for prerequisite in earlier:
+                        listed_before = (prerequisite in templates
+                                         and templates.index(prerequisite) < templates.index(template))
+                        self.assertTrue(listed_before or prerequisite in planned_first,
+                                        f"{template} waits for {prerequisite}, which runs later")
+
+    def test_a_backwards_review_order_is_refused_when_loaded(self):
+        import tempfile
+        from pathlib import Path
+
+        from linked_archi_analyse.patterns import AnalyseError, load_patterns
+
+        document = json.loads(PATTERNS_JSON.read_text(encoding="utf-8"))
+        impact = document["patterns"]["impact-and-dependency"]
+        for after in ({"core/neighbours-qualified": ["core/dependents-qualified"]},
+                      {"core/not-run-here": ["core/resolve-element"]},
+                      {"core/dependents-qualified": []}):
+            with self.subTest(after):
+                impact["after"] = after
+                with tempfile.TemporaryDirectory() as directory:
+                    path = Path(directory) / "patterns.json"
+                    path.write_text(json.dumps(document), encoding="utf-8")
+                    with self.assertRaises(AnalyseError):
+                        load_patterns(path)
 
     def test_pattern_names_are_usable_as_identifiers(self):
         for name in _patterns():

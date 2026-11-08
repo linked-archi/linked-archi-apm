@@ -1,6 +1,6 @@
 ---
 name: linked-archi-query
-description: Render, inspect and execute read-only SPARQL over Linked.Archi RDF using tested, profile-resolved templates. Use for generating a query without executing it, one bounded architecture lookup, resolving a name, inspecting a template, or executing steps delegated by linked-archi-analyse. Supports ArchiMate, BPMN, C4 or Structurizr, Backstage and LeanIX. Returns attributable evidence and refuses unsupported templates. Multi-query investigation, question framing, orchestration and interpretation belong to linked-archi-analyse, not this skill.
+description: Render, inspect and execute read-only SPARQL over Linked.Archi RDF (ArchiMate, BPMN, C4 or Structurizr, Backstage, LeanIX) from tested, profile-resolved templates. Use to generate a query without running it, for one bounded lookup or name resolution, to inspect a template, or to execute steps planned by linked-archi-analyse. Returns attributable evidence and refuses unsupported templates. Investigations needing several queries and interpretation belong to linked-archi-analyse.
 license: Apache-2.0
 compatibility: Needs Python 3.11 or newer and PyYAML. Rendering delegates profile resolution to linked-archi-profile; execution also delegates transport to linked-archi-connect and needs pyoxigraph for local RDF. Endpoint transport uses the standard library. Read-only throughout.
 metadata:
@@ -31,19 +31,18 @@ substitute its resolved absolute path when working in the user's project.
 Rendering needs `linked-archi-profile`; execution also needs `linked-archi-connect`.
 Catalogue browsing without a profile and read-only lint work alone.
 
-Use the installed skill path already supplied by the harness. If it is unknown, inspect
-`$LINKED_ARCHI_SKILLS_DIR` or the documented install root (`~/.kiro/skills` or
-`~/.claude/skills`) and `PATH` in one bounded call. Companion resolution is the explicit
-environment root (authoritative), then siblings, then `PATH`. Never search the filesystem
-recursively for tooling, especially from `/` or `$HOME`. Run `la-query doctor` if resolution fails;
-report the missing companion and stop rather than substituting another RDF tool.
-Write artifacts in the user's project, never in an installed skill directory.
+Use the installed skill path the harness supplied; otherwise `$LINKED_ARCHI_SKILLS_DIR`
+(authoritative) or the install root (`~/.kiro/skills`, `~/.claude/skills`), in one bounded
+call. Companions resolve from the environment root, then siblings, then `PATH`.
+Never search the filesystem recursively for tooling, especially from `/` or `$HOME`. Run
+`la-query doctor` if resolution fails; report the missing companion and stop rather than
+substituting another RDF tool. Write artifacts in the user's project, never in an installed
+skill directory.
 
-Use a project-owned catalogue only when its path is explicitly supplied. Pass repeatable
-`--catalog PATH` on each `catalog list/show/dump` and `query render/run/batch` call;
-do not discover catalogues or edit installed templates. This adds project-owned names
-without overriding bundled ones. It does not extend `linked-archi-analyse` planning
-patterns automatically; analyst-led steps must select those templates explicitly.
+Use a project-owned catalogue only when its path is explicitly supplied, with repeatable
+`--catalog PATH` on each `catalog` and `query` call; never discover catalogues or edit
+installed templates. It adds names without overriding bundled ones, and analyse planning
+does not pick them up by itself.
 
 ## Get only the metadata needed
 
@@ -56,10 +55,11 @@ python3 scripts/la-query catalog dump --profile linked-archi-default \
   --template core/neighbours-qualified --template core/provenance
 ```
 
-For an unknown candidate, use `catalog list --profile P --why` first. For a shortlist,
-use repeated `--template`, or filter `dump` by `--stage` / `--notation`. Values within
-one filter kind are alternatives; different filter kinds intersect. Do not load the full
-catalogue or read `.rq` files for routine use. Unfiltered dump remains for explicit
+For an unknown candidate, list only what could fit: `catalog list --profile P --match
+TEXT` (name or purpose), `--stage`, `--notation` or `--available`, adding `--why` to
+explain the refusals shown. For a shortlist, use repeated `--template`, or filter `dump`
+the same way. Values within one filter kind are alternatives; different filter kinds
+intersect. Do not load the full catalogue or read `.rq` files for routine use. Unfiltered dump remains for explicit
 catalogue-wide work. Keep availability, caveats and “does not prove” with each candidate.
 
 | Need | Candidate |
@@ -77,22 +77,10 @@ catalogue-wide work. Keep availability, caveats and “does not prove” with ea
 
 ## Model questions
 
-Entries marked `Q` in `catalog list` are model questions from the published question sets
-(core, ArchiMate 4.0, ArchiMate 3.2): what is asked, what a row means, what it does not
-prove, and the stakeholder concerns it informs. `Q+T` also has a template of that name:
-`query run` asks the question where the dataset fits it and runs the template elsewhere,
-and the envelope's `implementation` says which answered.
-
-- A question reads the dataset as **one graph**. `query run` arranges that on local data;
-  an endpoint takes it only when the profile declares `capabilities.union_default_graph`.
-  `query render` gives the template where one fits a profile with named graphs.
-- What its query reads is gated like a template's `requires` (direct triples,
-  `rdf:reifies`, `arch:inModel`). One reading the metamodel is checked when it runs, and
-  refused - naming the published Turtle to pass with another `--data` - when that is
-  not loaded, unless its template can answer instead.
-- Select by concern: `catalog concerns`, then `catalog list|dump --concern NAME`. A
-  project's own question set joins with `--catalog questions.ttl` (needs pyoxigraph),
-  under a project namespace like a project template.
+`Q` in `catalog list` marks a published model question, `Q+T` one that also has a template;
+the envelope's `implementation` says which answered. Select by concern: `catalog concerns`,
+then `--concern NAME` on `list` or `dump`. On an endpoint, when one is refused, or to add a
+project's own set: [references/model-questions.md](references/model-questions.md).
 
 ## Render only
 
