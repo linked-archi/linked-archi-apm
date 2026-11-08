@@ -9,12 +9,12 @@ questions and 44 templates. Version and release details are in `apm.yml:20` and
 The user authorised proceeding with the proposed alignment. Under that authorisation,
 Codex retained the existing qualified template names for compatibility and aligned the
 layer-crossing template with the published question. These implementation decisions are
-recorded in `PROPOSAL.md:1570` and `CHANGELOG.md:13`.
+recorded in `PROPOSAL.md:1563` and `CHANGELOG.md:13`.
 
 - `core/neighbours` and `core/dependents` now ask meta's asserted-triple questions. The
   separate `*-qualified` templates retain their resource-level meanings and explain that
   loaded proposals can appear. The transitive `core/dependents-direct` remains separate
-  from the two-hop question. See `PROPOSAL.md:1570` and `docs/templates.md:59`.
+  from the two-hop question. See `PROPOSAL.md:1563` and `docs/templates.md:59`.
 - The impact pattern selects the asserted questions and requires an explicit review of
   qualified alternatives when the required data is unavailable. See
   `skills/linked-archi-analyse/assets/patterns.json:102` and
@@ -107,13 +107,13 @@ all six skills as part of `make check`.
 ## Boundaries and handoff
 
 - Label expressions and pictures remain presentation data: APM does not evaluate or
-  render them. See `PROPOSAL.md:1580` and the context-name template's limitations.
+  render them. See `PROPOSAL.md:1573` and the context-name template's limitations.
 - Live endpoint behaviour and large-model performance were not separately benchmarked;
   validation covers the local engine, existing transport tests, published example cases
   and regenerated converter fixtures (`tests/test_questions.py:365`).
-- The package is prepared locally; no commit, staging, tag, push, installation or release
-  publication was performed. Concurrent source/modeler edits were preserved. Review the
-  APM working-tree diff and `CHANGELOG.md:13` before the user's normal release process.
+- At the initial handoff, the package was prepared locally; this agent performed no
+  commit, staging, tag, push, skill installation or release publication. Concurrent
+  source/modeler edits were preserved. The user's later commits are recorded below.
 
 ## Release-check follow-up — missing dependencies
 
@@ -137,5 +137,6 @@ The fresh `.venv` has the test and documentation requirements installed. The fin
 passed **1021 tests in 105.308 seconds, with zero skips**. Strict documentation and both
 profile checks passed, with zero profile errors. Logs: `/tmp/apm-release-fixed-check.log`,
 `/tmp/apm-release-fixed-verify.log`, and `/tmp/apm-release-final-check.log` for the final
-run with all dependencies. These follow-up changes remain uncommitted; the user's next
-release check needs the activated `.venv` and a clean tree after committing the fixes.
+run with all dependencies. The user subsequently committed these fixes as `2a49030`
+and the release instructions as `189c9c4`. The implementation work recorded here is
+complete; future release checks use the activated `.venv` and a clean working tree.

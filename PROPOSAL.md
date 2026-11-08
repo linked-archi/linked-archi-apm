@@ -1,7 +1,7 @@
 # linked-archi-apm: proposal, design record, and progress tracker
 
 **Status:** released, Apache-2.0, installable directly by APM (v0.11.0)
-**Last updated:** 2026-10-11
+**Last updated:** 2026-11-08
 
 One document, three jobs. It records **why** this package exists, **how** it is
 designed and what evidence each decision rests on, and **where the work stands**.
@@ -89,22 +89,25 @@ IRIs, and flattened Turtle.
 **Regression test:** `tests/test_templates.py::test_the_graph_scoping_defect_is_measurable`
 runs identical patterns scoped and unscoped and asserts 0 versus non-zero.
 
-### F3. The qualified form is the only relationship form by default
+### F3. Direct assertions and qualified resources answer different questions
 
 Every relationship is an `arch:QualifiedRelationship` resource with `arch:source` and
 `arch:target`, reached from its source element by a qualified predicate. The direct
 `{src} {pred} {tgt}` shortcut, with the `rdf:reifies` bridge naming it, is written by
 default only where the notation publishes the predicate, and not at all by a converter
-older than that default or run with `--no-emit-direct-rel-triples`. So traversal through
-the direct predicate misses what the qualified form still has.
+older than that default or run with `--no-emit-direct-rel-triples`. A potential derivation
+describes a relationship resource without asserting its triple or qualified source link.
+Inspecting that resource and traversing asserted relationships therefore have different meanings.
 
-**How it is enforced:** `core/neighbours-qualified` and `core/dependents-qualified` are the
-default traversal route. `core/dependents-direct` exists, requires
-`capabilities.direct_rel_triples`, and is **refused** under the default profile with an
-explanation and a named alternative.
+**How it is enforced:** `core/neighbours` and `core/dependents` traverse direct assertions
+and require the metamodel. The default profile describes current converter output and
+allows direct-triple queries. `linked-archi-qualified` describes older or explicitly
+qualified-only output and refuses those queries with a remedy. The `*-qualified`
+templates remain separate resource-level readings, with proposal caveats; see D34.
 
-**Regression test:** `test_direct_triples_are_absent_from_default_output` asserts absence
-with an `ASK` against the base fixture, so the default cannot be quietly inverted.
+**Regression tests:** `tests/test_alignment.py::TestRelationshipRequirements` checks
+the direct-triple requirements and qualified alternatives;
+`tests/test_reifies.py::TestGating` checks bridge availability at current default flags.
 
 ### F4. There is no validation graph
 
@@ -263,35 +266,32 @@ match the queries, so a template suite passing against one proves the author was
 self-consistent and nothing about the graph — which is exactly how a wrong vocabulary
 survives a green build.
 
-Four fixtures: `base.trig` (1282 quads, 17 graphs, default converter flags),
-`augmented.trig` (1425 quads, 19 graphs, plus what converters never emit),
-`flat.ttl` (1282 triples, no graph identity — what Turtle output collapses to, and
+Four converter-data fixtures: `base.trig` (3507 quads, 17 graphs, default converter flags),
+`augmented.trig` (3564 quads, 19 graphs, plus enrichment and one deliberate bridge defect),
+`flat.ttl` (3507 triples, no graph identity — what Turtle output collapses to, and
 the shape in which a scoped query silently returns nothing), and
-`converter-1.3.trig` (284 quads, 4 graphs, real output committed verbatim).
+`converter-1.3.trig` (308 quads, 4 graphs, real output committed verbatim).
 
 The last one is a second graph *layout*, not a newer version of the first: model
-resources in their own `graph/model`, membership as a direct `arch:partOfModel` edge,
+resources in their own `graph/model`, membership as a direct `arch:inModel` edge,
 and a semantic graph partitioned per input as `graph/semantic/{repo}/{path}`. Both
 layouts are stamped with the same converter version, which is why fixtures here are
 identified by shape and `tests/test_fixtures.py` asserts the shape of each one.
 Extraction proves a fixture was true of *some* build; only an assertion pins which.
 
 Every selection rule in `fixtures/build_fixtures.py` exists because a template
-    returned zero rows without it. All 44 templates return rows against
-`augmented.trig` paired with the published vocabulary fixtures: a template returning nothing is one the suite cannot distinguish
-from a broken one. Details in [fixtures/PROVENANCE.md](fixtures/PROVENANCE.md).
+returned zero rows without it. All 44 templates return rows against `augmented.trig`
+paired with the published vocabulary fixtures: a template returning nothing is one the
+suite cannot distinguish from a broken one. Details in
+[fixtures/PROVENANCE.md](fixtures/PROVENANCE.md).
 
-One addition bends this rule and is worth naming here rather than only in the
-appendix. The RDF 1.2 bridge (`rdf:reifies`) is specified by the core ontology and
-emitted by every converter **only under `--emit-direct-rel-triples`**, which is off by
-default — so its presence in a default-profile export is authored, not harvested. An
-earlier revision of this section claimed no converter emitted it at all; that was
-wrong. ArchiMate and LeanIX have emitted it from the start, and BPMN, PlantUML,
-Structurizr and Backstage emit it as of the converter change that removed the
-unpublished `arch:relPredicate`. The flag, not the converter, is what decides whether
-a given `.trig` carries the bridge.
+The RDF 1.2 bridge (`rdf:reifies`) is specified by the core ontology and extracted
+from real converter output. Current converters write direct triples and their bridges
+by default wherever the relationship class publishes an unqualified predicate; current
+BPMN connectors are included. `--no-emit-direct-rel-triples` suppresses both. Earlier
+descriptions of the bridge as opt-in or authored enrichment no longer describe these fixtures.
 
-What keeps the addition honest is that the **mapping is extracted**: the
+The **mapping is extracted** too: the
 class-to-predicate pairs come from `arch:unqualifiedForm` in the ontologies
 themselves, harvested into `fixtures/unqualified-forms.json`. `arch:unqualifiedForm`
 is schema-level by declaration — core says to use it on schema definitions only, never
@@ -299,9 +299,9 @@ on instance data — so harvesting it from the ontology rather than expecting it
 converter output is correct, not a workaround. That distinction matters because the
 mapping is irregular — `am:Serving` → `am:serves`, `am:Flow` → `am:flowsTo` — so the
 obvious lowercase-first rule would have invented predicates that do not exist. Classes
-whose ontology declares no unqualified form get no bridge, which is why
-`core/reifies-audit` reports six genuine `missing-term` rows rather than a planted
-defect.
+whose ontology declares no unqualified form get no bridge, so missing-term findings need
+vocabulary context. The augmented fixture deliberately removes one C4 bridge to retain
+a real integrity defect; unasserted, unlinked proposals are excluded from the audit.
 
 ---
 
@@ -317,7 +317,7 @@ defect.
 | 4 | Query-owned catalog, render, validate, envelope | Done | behavior tests |
 | 5 | Connect-owned raw local and endpoint adapters | Done | executed against real output |
 | 6 | Distinct CLIs, profile derivation, JSON contracts | Done | subprocess contract tests |
-| 7 | Template library and catalogue (28) | Done | 15 tests, all execute |
+| 7 | Template library and catalogue (44) | Done | `tests/test_templates.py`, every template executes |
 | 8 | Fixtures in three modes | Done | `fixtures/PROVENANCE.md` |
 | 9 | Six SKILL.md files and 9 references | Done | `make skills` |
 | 10 | Test suite and skill validator | Done | test suite passes |
@@ -328,6 +328,9 @@ defect.
 | 15 | RDF 1.2 `rdf:reifies` as a gated capability | Done | 14 tests, 3 templates |
 | 16 | Verified HTTPS, Git and optional GitLab MCP source acquisition | Done | source smoke checks and strict contracts |
 | 17 | Load cost made visible (`load_ms`), selectable store modes, and `query batch` | Done | 45 tests, `references/store-modes.md` |
+| 18 | Meta/converter alignment: asserted traversals, derivations, layer crossings and audience names | Done | D34; `tests/test_alignment.py`; 59 bundled questions checked against upstream examples |
+| 19 | Complete test dependencies and an early interpreter check | Done | `tests/requirements.txt`, `tests/check_dependencies.py`, `tests/test_dependencies.py` |
+| 20 | Release instructions, annotated tags and optional local archive build | Done | [CONTRIBUTING.md](CONTRIBUTING.md#releasing), `make release-check` guidance |
 
 Items 14–16 came from review after item 13 had passed. They are worth recording as
 evidence about the process rather than only the product: item 14 was a real defect
@@ -349,7 +352,7 @@ Each fact in §2 is pinned by a test that fails if it stops being true.
 |---|---|
 | F1 the vocabulary is published, guesses are wrong | `test_no_template_carries_its_own_prefixes` |
 | F2 graph scoping is a profile decision | `test_the_graph_scoping_defect_is_measurable` |
-| F3 the qualified form is the only default form | `test_direct_triples_are_absent_from_default_output` |
+| F3 asserted traversals and qualified-resource readings are distinct | `tests/test_alignment.py::TestRelationshipRequirements`, `tests/test_reifies.py::TestGating` |
 | F4 there is no validation graph | `test_default_profile_refuses_exactly_the_unsupported_templates` |
 
 ### Defects found and fixed during construction
@@ -405,22 +408,24 @@ verification plus query execution from copied sibling skills.
   `.apm/skills/<name>/` for marketplace publishers because that is the only layout both
   commands source from identically. Direct installs and Git-ref installs work as-is; revisit
   the layout before publishing to a marketplace or a REST registry.
-- **The local adapter has no query timeout.** pyoxigraph does not offer one; row
-  limits are the only bound. Relevant before pointing it at a very large store.
+- **pyoxigraph has no native query timeout.** The query owner bounds local execution
+  in a child process with a deadline and memory watchdog, covered by
+  `tests/test_local_bounds.py`. A `LIMIT` alone is not a work bound; costly query
+  structures remain an open performance finding in B5.10.
 - **Fixtures are not byte-stable.** Blank nodes regenerate per conversion. Assert on
   shape and counts.
-- **`notation/archimate/layer-crossing` infers layer from class names.** The
-  ArchiMate ontology expresses layer through the class hierarchy, and this query
-  deliberately does not require reasoning. A specialisation named outside the
-  convention shows an unbound layer rather than being dropped.
+- **Layer crossing needs the matching ontology.** Both implementations of
+  `notation/archimate/layer-crossing` follow asserted direct triples and classify
+  endpoints through the ontology's class hierarchy. The template requires attached
+  vocabulary; the model question checks its metamodel. See D34 and B5.11.
 - **`linked-archi-mcp` is not integrated.** The server sitting alongside this package is
   built on a vocabulary that no longer matches: `store.ts` declares
   `https://meta.linked.archi/archimate#` and its `get-relationships` tool uses the withdrawn
   `arch:relSource`. It needs the same profile treatment before it could be wired in as an
   optional adapter. See D17 for why that is not planned.
-- **`rdf:reifies` needs a SPARQL 1.2 engine, and the converters emit it only under a
-  flag.** Every converter emits the bridge, but inside the branch that writes the direct
-  triple, so `--emit-direct-rel-triples` produces both or neither. Three templates use it
+- **`rdf:reifies` needs a SPARQL 1.2 engine.** Current converters write the bridge
+  alongside direct triples by default; `--no-emit-direct-rel-triples` suppresses both.
+  Three templates use it
   and are refused unless the profile sets `capabilities.rdf_reifies`. That flag carries two
   claims at once — the dataset has the bridge, *and* the engine parses `<<( s p o )>>` —
   because on a SPARQL 1.1 endpoint the syntax is a parse error rather than an empty result.
@@ -432,7 +437,7 @@ verification plus query execution from copied sibling skills.
   only, and `core/dependents-direct` still requires `direct_rel_triples`. Measured,
   and asserted in `tests/test_reifies.py`.
 - **`arch:unqualifiedForm` is read from a committed extract, not live.**
-  `fixtures/unqualified-forms.json` holds 75 pairs harvested from the ontologies;
+  `fixtures/unqualified-forms.json` holds 96 pairs harvested from the ontologies;
   refresh it with `build_fixtures.py --refresh-forms` when the ontologies change.
   Nothing detects staleness automatically.
 
@@ -497,27 +502,26 @@ third validator, and would have let a new notation template opt out of its own g
 
 ## 9. Verification
 
-`make check` runs what CI runs: the skill validator, then the suite.
+`make check` runs what CI runs: a dependency preflight, the skill validator, then the suite.
+Install `tests/requirements.txt` into the selected Python environment first. It includes
+the local RDF engine, query parser, SHACL validator and development-only schema validator.
+Missing packages stop the Make test targets before discovery with an installation command
+for that interpreter, rather than producing misleading skips and unrelated test failures.
+The setup is documented in [CONTRIBUTING.md](CONTRIBUTING.md#before-you-start).
 
-The counts below assume the optional dependencies CI installs — `pyoxigraph` for local
-execution and `pyshacl` for validation. Install them before reading any run of this suite,
-because an interpreter without them does not simply run less: it reports **166 skips and 8
-hard failures**, and the skipped paths are exactly the ones that touch a real store. Most
-tests degrade to a skip on purpose, so a contributor missing one dependency can still trust
-the rest, but the `doctor` tests assert a clean exit and the fixture-loading `setUpClass`
-hooks cannot skip, so those fail outright. Neither the skips nor those 8 failures indicate
-anything about the code under test.
+The latest complete runtime check for 0.11.0, on 2026-11-08, produced the results below.
+Counts and fixture shapes from earlier audits in the appendices remain historical evidence.
 
 | Check | Result |
 |---|---|
 | `make skills` | 6 skills valid, 0 problems |
-| `make test` | 937 tests, 0 failures, 0 skipped outside the sandbox (the memory watchdog needs child RSS visibility) |
+| `make check` | 1021 tests, 0 failures, 0 skipped in the fresh project virtual environment; 6 skills valid |
 | `make verify` (default profile / `base.trig`) | 0 errors |
 | `make verify-curated` (curated profile / `augmented.trig`) | 0 errors |
 | `query batch` against separate `query run` commands | identical `rows`, `query_id`, `truncated` and `row_count`; load paid once |
 | Store modes `memory`, `cached`, `readonly`, `refresh` | same quad and named-graph counts from each; a changed input rebuilds rather than serving a stale store |
 | `la-query catalog list --profile linked-archi-default` | 44 templates plus bundled model questions; availability and refusal reasons are profile-specific |
-| `la-query catalog list --profile curated-store` | 43 available, 0 refused |
+| `la-query catalog list --profile curated-store` | All 44 templates available; bundled question requirements are checked separately |
 | All 44 templates against `augmented.trig` and paired vocabulary fixtures | every one returns rows |
 | Exit-code contracts | 9 of 9 |
 | Owner skills copied alone to temp directories | independent commands run with `PYTHONPATH` scrubbed; combined siblings execute |
@@ -791,9 +795,9 @@ notation template cannot opt out of its own gate.
 `TRISTATE` and the "partial warns rather than refuses" gate were already in place; what was
 missing was verification that could ever *recommend* `partial`. The probe asked "does this
 dataset have the bridge", answered yes, and told the operator to claim `true` - which
-overstates every dataset where the bridge is notation-specific. That is the normal case, not
-an edge case: each converter emits it only under its own flag, so an aggregate store is
-routinely bridged in part.
+overstates every dataset where coverage differs. Current converters emit bridges by default
+where a published direct predicate exists, but older output, disabled direct triples and
+relationship classes without a mapping can still leave an aggregate store partly bridged.
 
 Implemented for `rdf_reifies` as two static ASKs - one for presence, one for a qualified
 relationship lacking a bridge - because the probe batch is planned against a stub and must
@@ -1152,8 +1156,10 @@ graph.
 
 ## Appendix A: verification evidence
 
-Every vocabulary and behaviour claim in this package was checked against real
-converter output rather than read from documentation. Sources:
+The measurements below record the original converter snapshot. They retain the output
+shapes and defaults observed at that time; current fixtures and defaults are described in
+§7 and F3. These historical measurements are not a fresh run of the 0.11.0 converters.
+Sources:
 `tools/converters/example-architecture-project/out/{bpmn,structurizr,backstage,leanix,plantuml}.trig`
 and `tools/converters/linked-archi-converters/playground/out/archisurance.trig`
 (9,214 quads, 18 named graphs across the six files). Those `out/` directories are
@@ -1171,12 +1177,13 @@ scoped via {{GRAPH_OPEN:semantic}}:  13 rows
 which is the default. Regression test:
 `test_templates.py::test_the_graph_scoping_defect_is_measurable`.
 
-**A2. Direct relationship triples are absent by default.** Zero direct
+**A2. Direct relationship triples were absent at the original default flags.** Zero direct
 `source predicate target` triples in every default-flag output file.
 `arch:QualifiedRelationship` count equals `arch:source` count in all six
 (archisurance 178/178, backstage 8/8, bpmn 4/4, leanix 7/7, plantuml 6/6,
-structurizr 1/1). Regression test:
-`test_direct_triples_are_absent_from_default_output`.
+structurizr 1/1). The then-current regression test was
+`test_direct_triples_are_absent_from_default_output`. Current defaults and their
+replacement regression coverage are recorded in F3.
 
 **A3. Named graph layout.** `{base}{notation}/{modelId}/graph/{semantic,views,provenance}`.
 ArchiMate's notation slug is `model`, not `archimate` — `--path-model` defaults to
@@ -1331,10 +1338,14 @@ Recorded so they are not re-litigated. Each looked like a defect and is not.
   writes unconditionally, outside the `emitDirectRelTriples` branch. No capability gate is
   owed.
 
-### B5: open findings, in priority order
+### B5: findings and resolution status
 
-Not fixed. Each is a package-level defect with a named mechanism, and the first four
-change what the package promises, so each needs a decision-log entry when taken.
+Reconciled with 0.11.0 on 2026-11-08. The original findings and their resolutions are
+retained below. Open work remains in item 4 (verification fit), item 7 (converter-backed
+fixtures reproducing multiplicity), item 10 (query cost), and item 11 (`core/view-diff`
+placement identity). The separate [performance plan](INVESTIGATION-PERFORMANCE-PLAN.md)
+retains the unverified latency objective and D30–D33 agent trials. Completed deterministic
+checks do not close those measurement tasks.
 
 1. ~~**The `notation` field is declared but never enforced.**~~ **Done**, as **D20**. Gated
    on a new `notation_namespace` rather than the label, because a profile's slug for a
@@ -1358,17 +1369,18 @@ change what the package promises, so each needs a decision-log entry when taken.
    name the role. No bundled profile changed behaviour, because all the roles involved
    are bound in every one.
 
-   Worth noting what the fix did **not** do: `core/coverage-gaps`, `core/elements-by-type`,
-   `core/lifecycle`, `core/orphans` and `core/views` now honestly declare `part_of`,
-   which makes item 5 below visible in the catalogue rather than resolved.
-4. **Verification proves occurrence, not fit.** Partly closed by **D21** for capability
-   coverage, and by B1's fixture-wide metamodel test. The rest stands: roles are probed by
-   occurrence anywhere,
-   a fallback role passes when any alternative occurs, and a graph role passes when a
-   suffix matches a non-empty graph. Nothing probes notation identifiers, scheme
-   resolvability, base-IRI fit, or whether the configured membership mode returns
-   anything — the four checks that would have caught B1. A warning-only run still leaves a
-   marker that reads as semantic verification.
+   Declaring the missing roles exposed the membership defect in item 5; that subsequent
+   fix is recorded separately below.
+4. **Verification fit remains partly open.** **D21** measures bridge coverage and B1's
+   regression checks every fixture metamodel binding. Verification also checks notation
+   presence, declared metamodel assets and attached vocabulary coverage. Those implemented
+   checks close part of the original finding.
+
+   The remaining gap is semantic fit within those probes: a role can occur anywhere, a
+   fallback role can pass when any alternative occurs, and a matching non-empty graph does
+   not prove its selected contents satisfy every consuming query. Native-id fit, scheme
+   resolvability, base-IRI fit and the results of configured membership navigation still
+   need stronger checks. Presence and pairing checks alone do not establish that fit.
 5. ~~**Model membership is bypassed where it is meant.**~~ **Done.** All five templates
    now resolve `?model` through `{{MEMBERSHIP}}` and declare `requires.membership`. The
    hardcoded `dct:isPartOf` hop was the folder edge, which **A7** records as reaching the
@@ -1414,12 +1426,14 @@ change what the package promises, so each needs a decision-log entry when taken.
    one is correctness under partitioning rather than a measured change, and its test says
    so: an invariant guard that fails the moment a fixture does split them.
 
-   **`core/reifies-audit` is deliberately left alone**, correcting the grouping above.
-   Its `rdf:reifies` bridge is part of the relationship resource's own description, so
-   "in this graph" and "wherever this relationship is described" are the same place. Its
-   purpose — comparing the two halves of one resource against each other — is
-   resource-local by nature, and widening the scope would add cost for no semantics. Its
-   `?relType` column does still multiply rows; that belongs to item 7.
+   **`core/reifies-audit` followed in 0.11.0 (D34).** Endpoint/bridge comparisons remain
+   local to the resource description. The assertion checks now span independent semantic
+   scopes: a qualified source link or the asserted direct triple can be in a sibling
+   partition. An unlinked, unasserted proposition is excluded; an asserted relationship
+   missing its direct triple is a finding. The regression in
+   `tests/test_alignment.py::test_unlinked_proposal_is_not_a_template_integrity_violation`
+   exercises those states across two partitions. Relationship types are aggregated, as
+   recorded in item 7.
 7. **Row multiplicity from optional projections.** Done for `core/orphans` (1,530 rows for
    1,009 distinct elements on a large export) and for `core/models` (263 rows for 55
    models). The second mattered most: an orientation template whose job is telling a reader
@@ -1440,11 +1454,12 @@ change what the package promises, so each needs a decision-log entry when taken.
    collapse direction, because a reciprocal pair and a one-sided assertion are different
    findings and the one-sided case is the one worth chasing.
 
-   The fixtures still cannot catch this class directly: none holds a multi-typed orphan or
-   relationship, a multi-phase fact sheet, or a cross-graph duplicate assertion, so these
-   tests pin the one-row-per-subject contract without reproducing the inflation and say so.
-   Extracting a fixture with those shapes is the remaining work, and per `CONTRIBUTING.md`
-   it needs a converter run rather than an edit.
+   **Converter-backed reproduction remains open.** Tests pin the one-row-per-subject
+   contract, but the converter extracts still need cases reproducing the original
+   inflation: additional element/relationship types, multiple fact-sheet phases and
+   cross-graph duplicate identity assertions. The 0.11.0 refresh supplies current output
+   and an integrity defect; it does not establish coverage of those multiplicity cases.
+   Per `CONTRIBUTING.md`, extending those extracts needs a converter run.
 8. ~~**`core/discover-predicates` can describe a tuple that never existed**~~ **Done.** Two
    independent `SAMPLE`s pick independently, so the object kind and the example object
    could come from different solutions - real values describing a pair that never occurred,
@@ -1458,12 +1473,14 @@ change what the package promises, so each needs a decision-log entry when taken.
    it as an empty answer. Both the template header and the parameter description now point
    at `core/reified-predicates`, whose triple terms name the predicate each relationship
    stands for - the same bridge that gates the template.
-10. **Cost.** Several templates sort or cross-join globally before `LIMIT`; at scale
-    `core/define-term`, `core/dependents-qualified` and `core/traceability` exceeded a
-    3-minute wall clock or a 3.6 GB ceiling on an aggregate export. Correctness came first
+10. **Cost remains open.** Several templates sort or cross-join globally before `LIMIT`.
+    In the recorded audit, `core/define-term`, `core/dependents-qualified` and
+    `core/traceability` exceeded a 3-minute wall clock or a 3.6 GB ceiling on an aggregate
+    export. Correctness came first
     here (B3 adds branches); the structural work needs a large synthetic fixture and a
-    time budget in CI, neither of which exists yet.
-11. **Smaller, verified.** Four of five done.
+    time budget in CI, neither of which exists yet. The 0.11.0 alignment did not repeat
+    that large-model benchmark, so its successful fixture checks establish no scale gain.
+11. **Smaller findings: resolved items and the open view-diff redesign.**
 
     - ~~`core/views` documents unbound node counts where `COUNT` returns `0`~~ — done
       alongside item 5, since it was the same file.
@@ -1508,50 +1525,26 @@ change what the package promises, so each needs a decision-log entry when taken.
       reported as absent. On the committed pairing it correctly names four uncovered
       notations and not the one that is covered.
 
-      **`notation/archimate/layer-crossing` — solved on paper, blocked on a fixture.**
-      Written, run, and then reverted rather than shipped. Recorded here in full because the
-      analysis is the expensive part and it is finished.
+      **`notation/archimate/layer-crossing` — done in 0.11.0 (D34).** The old
+      class-name heuristic misclassified a `BusinessRole → Value` association as
+      `Business → Strategy`. A taxonomy-based replacement was investigated at the time,
+      but was not shipped with that audit's fixture.
 
-      It derives the layer of an element from its class, which no dataset states — a
-      conversion emits instances. So it matches class-name strings instead: twelve nested
-      conditions per endpoint on prefixes like `Business` and `Node`, with a fall-through
-      that uses the class name itself as the layer. **Measured on `augmented.trig`, the one
-      row it returns is fabricated**: it reports `Business → Strategy` for a
-      `BusinessRole → Value` association, because the name starts with `Value` and the
-      heuristic was aiming at `ValueStream`. The published taxonomy puts `am:Value` under
-      the Motivation *aspect*, not the Strategy layer. So the template's only output on the
-      committed fixture is wrong, and it is wrong in the direction that looks plausible.
+      The shipped implementation now matches the published model question: it follows
+      asserted direct triples, classifies endpoint types through the attached ontology's
+      `rdfs:subClassOf*` hierarchy, and counts distinct source-target pairs by relationship
+      type and layer pair. It includes the question's `MotivationElement` grouping and
+      excludes potential derivations that assert no triple. The earlier proposed
+      `layer_grouping` role and taxonomy query were not the implementation adopted.
 
-      The taxonomy answers it exactly, and the query is verified against the real file:
-
-      ```sparql
-      ?layerConcept skos:broader amtax:ElementByLayer ;
-                    skos:narrower ?type ; skos:prefLabel ?layer .
-      ```
-
-      48 class-to-layer assignments in ArchiMate 3.2, no string matching. The
-      `ElementByLayer` parent is load-bearing: the same taxonomy groups the same classes a
-      second, orthogonal way — by aspect, under `ElementByAspect`, using `skos:narrower`
-      identically — so "any concept naming a class" would report an aspect as a layer. And
-      the parent belongs in a **role** (`layer_grouping`) rather than in the template, since
-      the concept is versioned with its vocabulary: an ArchiMate 4 dataset rebinds the role
-      and the query is unchanged, which is what finally removes the 3-versus-4 assumption.
-
-      What stops it shipping is the fixture, and the repo's own rule is why. The committed
-      ArchiMate slice is **business-layer only** — 7 types, 14 elements, every relationship
-      inside the Business layer apart from that one association to a Motivation-aspect
-      element. So the *correct* query returns zero rows, and
-      `fixtures/PROVENANCE.md` states the standard for exactly this case: a fixture on
-      which a template returns nothing is a fixture gap rather than a floor to lower,
-      because the suite cannot tell empty-by-design from broken. Shipping it would trade a
-      measured false positive for an untestable template.
-
-      Two things are needed, neither of which is an edit: ArchiMate output containing a
-      genuine cross-layer relationship, extracted via `make fixtures` from the playground
-      conversion (it needs the converter jars); and a decision about
-      `core/elements-by-category` once ArchiMate vocabulary is attached, since it would then
-      group the same element by layer *and* by aspect and multiply its rows — which is item
-      7's problem arriving from a new direction.
+      The fixture blocker is resolved for the shipped implementation. Converter
+      fixtures were regenerated, and `tests/test_templates.py` requires nonempty
+      layer-crossing results against the augmented fixture with the published ArchiMate
+      ontology attached. `tests/test_alignment.py::test_layer_crossing_template_and_question_count_the_same_asserted_pairs`
+      also checks that both implementations return the same nonempty result set on the
+      published question example. The required ontology attachment is covered by the
+      vocabulary gate. This change did not add the separately proposed ArchiMate taxonomy
+      grouping to `core/elements-by-category`.
 
 ### B6: method and limits
 
