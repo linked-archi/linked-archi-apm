@@ -27,7 +27,7 @@ help:
 	@echo "test-quiet     run the test suite (summary only)"
 	@echo "benchmark      measure query workflows on the test fixture (override BENCH_ARGS)"
 	@echo "skills         validate SKILL.md frontmatter"
-	@echo "dist           archive the committed package directly"
+	@echo "dist           build a local archive (CI also builds it for releases)"
 	@echo "version        print the manifest version"
 	@echo "bump           set the version everywhere it is repeated (TO=X.Y.Z)"
 	@echo "release-notes  print the CHANGELOG section for that version"
@@ -211,10 +211,14 @@ release-check: check
 	@echo "  version: $(VERSION)"
 	@$(MAKE) --no-print-directory release-notes >/dev/null
 	@echo "  release notes: $$($(MAKE) --no-print-directory release-notes | wc -l | tr -d ' ') lines from CHANGELOG.md"
-	@printf 'Ready:\n'
-	@printf '  make dist\n'
+	@printf 'Preflight passed. On main, push the release commit and wait for CI:\n'
+	@printf '  make docs\n'
+	@printf '  git push origin main\n'
+	@printf '\nAfter CI passes, tag the checked commit:\n'
 	@printf '  git tag -a v$(VERSION) -m "v$(VERSION)"\n'
 	@printf '  git push origin v$(VERSION)\n'
+	@printf '\nOptional local archive: make dist. CI builds the release archive automatically.\n'
+	@printf 'Full procedure: CONTRIBUTING.md, Releasing.\n'
 	@printf '\nThe tag must be annotated: APM refuses a lightweight tag when it refreshes a\n'
 	@printf 'full-SHA revision pin, so a lightweight v$(VERSION) installs but never offers itself\n'
 	@printf 'as an upgrade. Pushing it runs CI and publishes the GitHub release.\n'

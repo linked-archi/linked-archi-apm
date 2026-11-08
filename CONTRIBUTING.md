@@ -19,6 +19,80 @@ when you use only the query features yourself. `make test-deps` checks the Pytho
 selected by `PY` (default `python3`) and prints an installation command for that
 interpreter if anything is missing. Activate the same environment for release checks.
 
+## Releasing
+
+Run the following from the repository root. The release version comes from `apm.yml`.
+When preparing a new version, use `make bump TO=X.Y.Z` to update its copies together,
+then add the matching dated section and comparison link to `CHANGELOG.md`. Review and
+commit those changes with the implementation, and merge them into `main` before publishing.
+
+The two Make targets serve different purposes:
+
+| Command | Purpose |
+|---|---|
+| `make release-check` | Required preflight: checks test dependencies, validates skills, runs the suite, requires a clean working tree, and checks the release notes for the manifest version. |
+| `make dist` | Optional local archive build: reruns the checks and creates `dist/linked-archi-apm-X.Y.Z.tar.gz`. It does not check for a clean tree or release notes, and does not publish anything. CI builds this archive for the release. |
+
+Use `release-check` before tagging; `dist` does not replace it.
+
+### Concise example: v0.11.0
+
+From the repository root, on `main`, after committing all release changes:
+
+```bash
+source .venv/bin/activate
+make release-check
+make docs
+git push origin main
+
+# Wait for CI to pass, then:
+git tag -a v0.11.0 -m "v0.11.0"
+git push origin v0.11.0
+```
+
+Stop if a command fails, and wait for CI before running the tag commands.
+For another release, replace `0.11.0` with the version in `apm.yml`.
+`make dist` is optional: CI builds the archive and publishes the release after the tag push.
+
+### Check and publish the release commit
+
+With the intended release commit checked out on `main` and all changes committed:
+
+```bash
+source .venv/bin/activate
+make version
+make release-notes
+make release-check
+make docs
+git push origin main
+```
+
+If the environment is not ready, follow [Before you start](#before-you-start).
+Stop if any check fails. `make docs` is separate because `release-check` does not build
+the documentation. A push to `main` runs CI and publishes the documentation site.
+Wait for that commit's GitHub Actions checks to pass before tagging it.
+
+For an archive to inspect locally, also run `make dist` after the preflight. This is
+optional; the tag workflow builds its own archive from the tagged commit.
+
+### Tag and publish the release
+
+Tag the same commit whose checks passed, using an **annotated** tag:
+
+```bash
+release_version="$(make -s version)"
+git tag -a "v${release_version}" -m "v${release_version}"
+git push origin "v${release_version}"
+```
+
+The tag must match the manifest version. Annotation matters: APM's revision refresh
+does not offer a lightweight tag as an upgrade.
+
+The tag push starts the release workflow. After the test and package jobs pass, it
+creates the GitHub release using the matching changelog section and attaches the tarball.
+Confirm the workflow succeeds and the release contains `linked-archi-apm-X.Y.Z.tar.gz`.
+The workflow is defined in [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+
 ## Benchmarking query workflows
 
 For the next, agent-visible multi-step investigation benchmark and its correctness gates,

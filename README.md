@@ -320,7 +320,7 @@ to end, with a worked custom metamodel.
 | [USAGE.md](USAGE.md) | Installing, acquiring or connecting a graph, querying, working in an IDE, running a demo |
 | [ADAPTING.md](ADAPTING.md) | Custom ontologies, taxonomies, and non-Linked.Archi graphs |
 | [PROPOSAL.md](PROPOSAL.md) | Design record, decision log, and the verification evidence |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | The rules the test suite enforces, and why each exists |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Contributor setup, test-suite rules, and the [release process](CONTRIBUTING.md#releasing) |
 | [SECURITY.md](SECURITY.md) | Reporting, and what the package does with your data |
 | [fixtures/PROVENANCE.md](fixtures/PROVENANCE.md) | Where the fixtures come from and how to regenerate them |
 | [skills/linked-archi-query/assets/templates/custom/README.md](skills/linked-archi-query/assets/templates/custom/README.md) | Writing a template |
