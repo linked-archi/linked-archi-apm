@@ -5,6 +5,8 @@
 @prefix arch:  <https://meta.linked.archi/core#> .
 @prefix am4:   <https://meta.linked.archi/archimate4/onto#> .
 @prefix am4vp: <https://meta.linked.archi/archimate4/viewpoints#> .
+@prefix prov:  <http://www.w3.org/ns/prov#> .
+@prefix am4deriv: <https://meta.linked.archi/archimate4/derivation#> .
 @prefix :      <https://meta.linked.archi/examples/archimate4-questions/> .
 
 #################################################################
@@ -137,3 +139,43 @@
 :r20 a am4:Assignment ; arch:inModel :model ; arch:source :bankActor ; arch:target :bankRole ;
     rdf:reifies <<( :bankActor am4:assignedTo :bankRole )>> .
 :bankActor am4:assignedTo :bankRole .
+
+# ── Derivations beside the model ────────────────────────────────
+# Two of the potential derivations the ArchiMate 4.0 rules derive from this
+# model (archimate4-derivation-rules.ttl), as they write them: in a file, beside the model
+# (DD-28). Neither is confirmed: no direct triple, no qualified predicate
+# leading to it. The questions that follow direct triples do not see them.
+
+<urn:linked-archi:derivation-92970a85b88f8ef62ad655067dc606239928d406>
+    a                            am4:Serving ;
+    arch:source                  :claimService ;
+    arch:target                  :clerk ;
+    rdf:reifies                  <<( :claimService am4:serves :clerk )>> ;
+    am4deriv:derivationCertainty am4deriv:Potential ;
+    prov:wasDerivedFrom          :r2 , :r4 ;
+    prov:wasGeneratedBy          <urn:linked-archi:derivation-activity-92970a85b88f8ef62ad655067dc606239928d406> .
+
+<urn:linked-archi:derivation-activity-92970a85b88f8ef62ad655067dc606239928d406>
+    a                            prov:Activity ;
+    prov:qualifiedAssociation    <urn:linked-archi:derivation-activity-92970a85b88f8ef62ad655067dc606239928d406-association> .
+
+<urn:linked-archi:derivation-activity-92970a85b88f8ef62ad655067dc606239928d406-association>
+    a                            prov:Association ;
+    prov:hadPlan                 am4deriv:PDR5 .
+
+<urn:linked-archi:derivation-490d00c2d771b627ced94a20f2c491008b873441>
+    a                            am4:Serving ;
+    arch:source                  :server ;
+    arch:target                  :policyApp ;
+    rdf:reifies                  <<( :server am4:serves :policyApp )>> ;
+    am4deriv:derivationCertainty am4deriv:Potential ;
+    prov:wasDerivedFrom          :r5 , :r6 ;
+    prov:wasGeneratedBy          <urn:linked-archi:derivation-activity-490d00c2d771b627ced94a20f2c491008b873441> .
+
+<urn:linked-archi:derivation-activity-490d00c2d771b627ced94a20f2c491008b873441>
+    a                            prov:Activity ;
+    prov:qualifiedAssociation    <urn:linked-archi:derivation-activity-490d00c2d771b627ced94a20f2c491008b873441-association> .
+
+<urn:linked-archi:derivation-activity-490d00c2d771b627ced94a20f2c491008b873441-association>
+    a                            prov:Association ;
+    prov:hadPlan                 am4deriv:PDR7 .

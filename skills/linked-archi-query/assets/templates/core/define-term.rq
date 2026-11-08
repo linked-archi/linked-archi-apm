@@ -32,6 +32,9 @@
 # filtered out of ?type and ?relType. They are true of everything and would crowd out
 # the notation type, which is the one that says what the thing is.
 #
+# Qualified resources may include unconfirmed proposals when derivations are
+# loaded into the selected graphs. Endpoints alone do not assert a relationship.
+#
 # Parameters: TERM, LIMIT
 {{PREFIXES}}
 SELECT ?candidates ?resource ?label ?definition ?type ?model ?source ?direction ?relType ?relatedLabel

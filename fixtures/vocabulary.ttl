@@ -54,8 +54,7 @@ arch:templateTargetsPurpose skos:prefLabel "templateTargetsPurpose"@en ;
 	<http://www.w3.org/2000/01/rdf-schema#domain> arch:DeliverableTemplate .
 arch:templateResource skos:prefLabel "templateResource"@en ;
 	a <http://www.w3.org/2002/07/owl#DatatypeProperty> ;
-	<http://www.w3.org/2000/01/rdf-schema#range> xsd:anyURI ;
-	<http://www.w3.org/2000/01/rdf-schema#domain> arch:PresentationFormat .
+	<http://www.w3.org/2000/01/rdf-schema#range> xsd:anyURI .
 arch:templateRequiresViewpoint skos:prefLabel "templateRequiresViewpoint"@en ;
 	a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
 	<http://www.w3.org/2000/01/rdf-schema#range> arch:Viewpoint ;
@@ -155,8 +154,7 @@ arch:presentationContextScheme skos:prefLabel "presentationContextScheme"@en ;
 arch:prefVisNotation skos:prefLabel "preferred Visual Notation"@en ;
 	a <http://www.w3.org/2002/07/owl#ObjectProperty> , <http://www.w3.org/2002/07/owl#FunctionalProperty> ;
 	<http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://schema.org/image> ;
-	<http://www.w3.org/2000/01/rdf-schema#range> <http://schema.org/ImageObject> ;
-	<http://www.w3.org/2000/01/rdf-schema#domain> skos:Concept .
+	<http://www.w3.org/2000/01/rdf-schema#range> <http://schema.org/ImageObject> .
 arch:partOfModel skos:prefLabel "partOfModel"@en ;
 	a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
 	<http://www.w3.org/2000/01/rdf-schema#subPropertyOf> arch:inModel ;
@@ -323,8 +321,7 @@ arch:approvalState skos:prefLabel "approval state"@en ;
 arch:altVisNotation skos:prefLabel "alternative Visual Notation"@en ;
 	a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
 	<http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://schema.org/image> ;
-	<http://www.w3.org/2000/01/rdf-schema#range> <http://schema.org/ImageObject> ;
-	<http://www.w3.org/2000/01/rdf-schema#domain> skos:Concept .
+	<http://www.w3.org/2000/01/rdf-schema#range> <http://schema.org/ImageObject> .
 arch:Viewpoint skos:prefLabel "Viewpoint" ;
 	a <http://www.w3.org/2002/07/owl#Class> .
 arch:View skos:prefLabel "View" ;
@@ -594,9 +591,7 @@ bpmn:SubProcess <http://www.w3.org/2000/01/rdf-schema#subClassOf> bpmn:FlowEleme
 bpmn:Process <http://www.w3.org/2000/01/rdf-schema#subClassOf> arch:Element , bpmn:CallableElement , bpmn:FlowElementsContainer ;
 	skos:prefLabel "Process"@en ;
 	a <http://www.w3.org/2002/07/owl#Class> .
-arch: dct:title "Core Linked.Archi Ontology"@en ;
-	<http://www.w3.org/2002/07/owl#versionInfo> "0.4.0"@en ;
-	dct:modified "2026-09-07"^^xsd:date .
+arch: dct:title "Core Linked.Archi Ontology"@en .
 bpmn: a <http://www.w3.org/2002/07/owl#Ontology> .
 arch: <http://www.w3.org/2002/07/owl#versionIRI> arch: .
 bpmn: dct:title "Linked.Archi BPMN 2.0.2 Ontology"@en ;
@@ -814,3 +809,124 @@ lmm:Objective <http://www.w3.org/2000/01/rdf-schema#subClassOf> lmm:FactSheet ;
 	a <http://www.w3.org/2002/07/owl#Class> .
 lmm:FactSheet <http://www.w3.org/2000/01/rdf-schema#subClassOf> arch:Element ;
 	a <http://www.w3.org/2002/07/owl#Class> .
+arch:DatasetScope a <http://www.w3.org/2002/07/owl#Class> ;
+	skos:prefLabel "DatasetScope"@en .
+arch:ModelQuestion <http://www.w3.org/2000/01/rdf-schema#subClassOf> sh:SPARQLExecutable ;
+	a <http://www.w3.org/2002/07/owl#Class> ;
+	skos:prefLabel "ModelQuestion"@en .
+arch:QuestionSet a <http://www.w3.org/2002/07/owl#Class> ;
+	skos:prefLabel "QuestionSet"@en .
+arch:answers <http://www.w3.org/2000/01/rdf-schema#domain> arch:ModelQuestion ;
+	<http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ;
+	a <http://www.w3.org/2002/07/owl#DatatypeProperty> ;
+	skos:prefLabel "answers"@en .
+arch:defaultLimit <http://www.w3.org/2000/01/rdf-schema#domain> arch:ModelQuestion ;
+	<http://www.w3.org/2000/01/rdf-schema#range> xsd:integer ;
+	a <http://www.w3.org/2002/07/owl#DatatypeProperty> ;
+	skos:prefLabel "defaultLimit"@en .
+arch:doesNotProve <http://www.w3.org/2000/01/rdf-schema#domain> arch:ModelQuestion ;
+	<http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ;
+	a <http://www.w3.org/2002/07/owl#DatatypeProperty> ;
+	skos:prefLabel "doesNotProve"@en .
+arch:findingFocus <http://www.w3.org/2000/01/rdf-schema#domain> arch:ModelQuestion ;
+	<http://www.w3.org/2000/01/rdf-schema#range> xsd:string ;
+	a <http://www.w3.org/2002/07/owl#DatatypeProperty> ;
+	skos:prefLabel "findingFocus"@en .
+arch:findingSeverity <http://www.w3.org/2000/01/rdf-schema#domain> arch:ModelQuestion ;
+	<http://www.w3.org/2000/01/rdf-schema#range> sh:Severity ;
+	a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+	skos:prefLabel "findingSeverity"@en .
+arch:hasQuestionSet <http://www.w3.org/2000/01/rdf-schema#domain> arch:Metamodel ;
+	<http://www.w3.org/2000/01/rdf-schema#range> arch:QuestionSet ;
+	a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+	skos:prefLabel "hasQuestionSet"@en .
+arch:inPresentationContext <http://www.w3.org/2000/01/rdf-schema#range> skos:Concept ;
+	a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+	skos:prefLabel "inPresentationContext"@en .
+arch:questionAddressesConcern <http://www.w3.org/2000/01/rdf-schema#domain> arch:ModelQuestion ;
+	<http://www.w3.org/2000/01/rdf-schema#range> arch:Consideration ;
+	a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+	skos:prefLabel "questionAddressesConcern"@en .
+arch:questionFitsViewpoint <http://www.w3.org/2000/01/rdf-schema#domain> arch:ModelQuestion ;
+	<http://www.w3.org/2000/01/rdf-schema#range> arch:Viewpoint ;
+	a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+	skos:prefLabel "questionFitsViewpoint"@en .
+arch:questionHasPurpose <http://www.w3.org/2000/01/rdf-schema#domain> arch:ModelQuestion ;
+	<http://www.w3.org/2000/01/rdf-schema#range> arch:Purpose ;
+	a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+	skos:prefLabel "questionHasPurpose"@en .
+arch:questionStage <http://www.w3.org/2000/01/rdf-schema#domain> arch:ModelQuestion ;
+	<http://www.w3.org/2000/01/rdf-schema#range> skos:Concept ;
+	a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+	skos:prefLabel "questionStage"@en .
+arch:questionTargetsStakeholder <http://www.w3.org/2000/01/rdf-schema#domain> arch:ModelQuestion ;
+	<http://www.w3.org/2000/01/rdf-schema#range> arch:Stakeholder ;
+	a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+	skos:prefLabel "questionTargetsStakeholder"@en .
+arch:requiresDataset <http://www.w3.org/2000/01/rdf-schema#domain> arch:ModelQuestion ;
+	<http://www.w3.org/2000/01/rdf-schema#range> arch:DatasetScope ;
+	a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+	skos:prefLabel "requiresDataset"@en .
+arch:requiresMetamodel <http://www.w3.org/2000/01/rdf-schema#domain> arch:ModelQuestion ;
+	<http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2002/07/owl#Ontology> ;
+	a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+	skos:prefLabel "requiresMetamodel"@en .
+arch:resultIsFinding <http://www.w3.org/2000/01/rdf-schema#domain> arch:ModelQuestion ;
+	<http://www.w3.org/2000/01/rdf-schema#range> xsd:boolean ;
+	a <http://www.w3.org/2002/07/owl#DatatypeProperty> ;
+	skos:prefLabel "resultIsFinding"@en .
+arch:resultKey <http://www.w3.org/2000/01/rdf-schema#domain> arch:ModelQuestion ;
+	<http://www.w3.org/2000/01/rdf-schema#range> xsd:string ;
+	a <http://www.w3.org/2002/07/owl#DatatypeProperty> ;
+	skos:prefLabel "resultKey"@en .
+arch:sectionAddressesConcern <http://www.w3.org/2000/01/rdf-schema#domain> arch:TemplateSection ;
+	<http://www.w3.org/2000/01/rdf-schema#range> arch:Consideration ;
+	a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+	skos:prefLabel "sectionAddressesConcern"@en .
+arch:sectionAsks <http://www.w3.org/2000/01/rdf-schema#domain> arch:TemplateSection ;
+	<http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/1999/02/22-rdf-syntax-ns#List> ;
+	a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+	skos:prefLabel "sectionAsks"@en .
+arch:sectionTargetsStakeholder <http://www.w3.org/2000/01/rdf-schema#domain> arch:TemplateSection ;
+	<http://www.w3.org/2000/01/rdf-schema#range> arch:Stakeholder ;
+	a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+	skos:prefLabel "sectionTargetsStakeholder"@en .
+arch:templateParameter <http://www.w3.org/2000/01/rdf-schema#domain> arch:DeliverableTemplate ;
+	<http://www.w3.org/2000/01/rdf-schema#range> sh:Parameter ;
+	<http://www.w3.org/2000/01/rdf-schema#subPropertyOf> sh:parameter ;
+	a <http://www.w3.org/2002/07/owl#ObjectProperty> ;
+	skos:prefLabel "templateParameter"@en .
+c4:ExternalSoftwareSystem <http://www.w3.org/2000/01/rdf-schema#subClassOf> c4:SoftwareSystem ;
+	a <http://www.w3.org/2002/07/owl#Class> .
+c4:ExternalPerson <http://www.w3.org/2000/01/rdf-schema#subClassOf> c4:Person ;
+	a <http://www.w3.org/2002/07/owl#Class> .
+c4:ClientSideWebApp <http://www.w3.org/2000/01/rdf-schema#subClassOf> c4:Container ;
+	a <http://www.w3.org/2002/07/owl#Class> .
+c4:MobileApp <http://www.w3.org/2000/01/rdf-schema#subClassOf> c4:Container ;
+	a <http://www.w3.org/2002/07/owl#Class> .
+c4:Database <http://www.w3.org/2000/01/rdf-schema#subClassOf> c4:Container ;
+	a <http://www.w3.org/2002/07/owl#Class> .
+<https://meta.linked.archi/c4/structurizr#InfrastructureNode> <http://www.w3.org/2000/01/rdf-schema#subClassOf> arch:Element .
+am:DirectedAssociation arch:unqualifiedForm am:associatedWith .
+am:ReadAccess arch:unqualifiedForm am:accesses .
+am:ReadWriteAccess arch:unqualifiedForm am:accesses .
+am:WriteAccess arch:unqualifiedForm am:accesses .
+<https://meta.linked.archi/archimate4/onto#DirectedAssociation> arch:unqualifiedForm <https://meta.linked.archi/archimate4/onto#associatedWith> .
+<https://meta.linked.archi/archimate4/onto#ReadAccess> arch:unqualifiedForm <https://meta.linked.archi/archimate4/onto#accesses> .
+<https://meta.linked.archi/archimate4/onto#ReadWriteAccess> arch:unqualifiedForm <https://meta.linked.archi/archimate4/onto#accesses> .
+<https://meta.linked.archi/archimate4/onto#WriteAccess> arch:unqualifiedForm <https://meta.linked.archi/archimate4/onto#accesses> .
+<https://meta.linked.archi/basic#Aggregation> arch:unqualifiedForm <https://meta.linked.archi/basic#aggregation> .
+<https://meta.linked.archi/basic#Association> arch:unqualifiedForm <https://meta.linked.archi/basic#association> .
+<https://meta.linked.archi/basic#Connection> arch:unqualifiedForm <https://meta.linked.archi/basic#connection> .
+bpmn:Association arch:unqualifiedForm bpmn:association .
+bpmn:ConversationLink arch:unqualifiedForm bpmn:conversationLink .
+bpmn:DataAssociation arch:unqualifiedForm bpmn:dataAssociation .
+bpmn:DataInputAssociation arch:unqualifiedForm bpmn:dataAssociation .
+bpmn:DataOutputAssociation arch:unqualifiedForm bpmn:dataAssociation .
+bpmn:MessageFlow arch:unqualifiedForm bpmn:messageFlow .
+bpmn:SequenceFlow arch:unqualifiedForm bpmn:sequenceFlow .
+<https://meta.linked.archi/uml/onto#ControlFlow> arch:unqualifiedForm <https://meta.linked.archi/uml/onto#controlFlowsTo> .
+<https://meta.linked.archi/uml/onto#InformationFlow> arch:unqualifiedForm <https://meta.linked.archi/uml/onto#informationFlowsTo> .
+<https://meta.linked.archi/uml/onto#ObjectFlow> arch:unqualifiedForm <https://meta.linked.archi/uml/onto#objectFlowsTo> .
+arch: dct:modified "2026-11-08"^^xsd:date ;
+	<http://www.w3.org/2002/07/owl#versionInfo> "0.5.0"@en .

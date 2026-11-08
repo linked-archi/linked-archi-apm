@@ -10,14 +10,29 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 
-### Changed
+## [0.11.0] - 2026-11-08
 
-- The converter-output fixtures (`base.trig`, `augmented.trig`, `flat.ttl`) are re-extracted from the
-  ArchiMate converter's current output: a style's colours are CSS colours (`#rrggbb`, `#rrggbbaa` when not
-  opaque) where they were `rgba(r,g,b,a)` with the exchange format's alpha, and a node's line width is written
-  (`arch-vis:lineWidth`) — 31 quads more in each. The other conversions they are taken from are unchanged.
+### Fixed
+
+- Refresh the published question sets and expected-answer fixtures to current meta:
+  59 questions, including the four potential-derivation questions. Asserted traversals
+  no longer read proposals as relationships, and integrity audits exclude unasserted,
+  unlinked propositions. Realisation and deliverable answers follow the current rules.
+- Detect direct-triple requirements for predicates read from `arch:unqualifiedForm`,
+  and refresh the BPMN/UML predicate index. Vocabulary discovery, negative integrity
+  checks and triple terms alone do not claim an asserted traversal.
+- Align the layer-crossing template with its model question: distinct asserted pairs,
+  classified by the attached ontology. It now requires direct triples and vocabulary.
+- Regenerate converter fixtures from built current JARs and committed example inputs,
+  including BPMN direct triples/source links and the partitioned Backstage fixture.
+  Refresh vocabulary and SHACL extracts; the curated fixture deliberately removes one
+  C4 bridge to exercise integrity findings.
 
 ### Added
+
+- `core/context-names` reports audience-specific names, contexts and languages alongside
+  the canonical name (core 0.5.0/SKOS-XL). Existing alias resolution continues to work.
+  Label expressions and pictures are not evaluated or rendered.
 - **`la-query catalog list` filters.** `--match TEXT` (name or purpose, any case), `--stage`,
   `--notation` and `--available` (what `--profile` can run) narrow the listing with the same
   rules as `catalog dump`; `--why` explains only the refusals shown. A narrowed listing ends
@@ -29,6 +44,15 @@ workflow publishes exactly this text, so what is written here is what a consumer
   rather than the JSON file.
 
 ### Changed
+
+- Keep `core/neighbours-qualified` and `core/dependents-qualified` as resource-level
+  readings for compatibility, with proposal caveats. The impact pattern now selects
+  `core/neighbours` and `core/dependents`; a refusal offers alternatives for review.
+- Alternative-query messages ask callers to review scope and evidence instead of claiming
+  every alternative asks the same question. Update instructions, catalogue documentation
+  and the quoted refusal in meta's APM guides.
+- ArchiMate fixture styles use CSS colours (`#rrggbb`, `#rrggbbaa` when not opaque)
+  and include node line width (`arch-vis:lineWidth`), matching current converter output.
 - **The text plan states each fact once.** It is grouped by review round; a batch written
   with `--batch-dir` replaces its steps' commands; commands carry `<NAME>` placeholders whose
   sources are listed once under `placeholders`; a line shared by several steps is printed
@@ -759,7 +783,8 @@ converters against the meta.linked.archi ontologies.
   for SHACL validation, and `git` for Git acquisition. Endpoint and HTTPS transport use
   the standard library. No mandatory MCP server.
 
-[Unreleased]: https://github.com/linked-archi/linked-archi-apm/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/linked-archi/linked-archi-apm/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.9.1...v0.10.0
 [0.9.1]: https://github.com/linked-archi/linked-archi-apm/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.8.0...v0.9.0

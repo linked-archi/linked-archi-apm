@@ -73,10 +73,12 @@ class TestPublishedConstraints(unittest.TestCase):
     def test_a_published_target_list_is_read_in_full(self):
         targets = self.constraints.targets(f"{AM}BusinessRole", f"{AM}flowsTo")
         self.assertIn(f"{AM}BusinessActor", targets)
-        self.assertEqual(len(targets), 35)
+        self.assertEqual(len(targets), 37)
+        self.assertIn(f"{AM}Junction_And", targets)
+        self.assertIn(f"{AM}Junction_Or", targets)
 
     def test_the_qualified_form_is_read_including_single_target_conjunctions(self):
-        """365, not 361.
+        """All 398 current pairs, including bare-class conjunctions.
 
         The four extra are the junction rules - Junction_And and Junction_Or to
         `arch:ModelConcept` and back - which have exactly one permitted target each and are
@@ -86,7 +88,7 @@ class TestPublishedConstraints(unittest.TestCase):
         repeated as a confirmed figure.
         """
         pairs = self.constraints.qualified[f"{AM}Aggregation"]
-        self.assertEqual(len(pairs), 365)
+        self.assertEqual(len(pairs), 398)
         junction = (f"{AM}Junction_And", f"{CORE}ModelConcept")
         self.assertIn(junction, pairs, "the bare sh:class conjunctions must be read")
 
@@ -138,7 +140,7 @@ class TestDerivedConstraints(unittest.TestCase):
         untested.
         """
         forms = read_unqualified_forms(self.sparql, f"{CORE}unqualifiedForm")
-        self.assertEqual(len(forms), 75)
+        self.assertEqual(len(forms), 96)
         self.assertEqual(forms[f"{BS}Ownership"], f"{BS}ownedBy")
 
     def test_a_direct_predicate_with_no_published_shape_is_still_constrained(self):
@@ -151,7 +153,8 @@ class TestDerivedConstraints(unittest.TestCase):
         published = self.constraints.targets(f"{AM}BusinessRole", f"{AM}aggregates")
         self.assertEqual(
             published,
-            frozenset({f"{AM}BusinessRole", f"{AM}BusinessInterface", f"{AM}Grouping"}),
+            frozenset({f"{AM}BusinessRole", f"{AM}BusinessInterface", f"{AM}Grouping",
+                       f"{AM}Junction_And", f"{AM}Junction_Or"}),
         )
 
     def test_derivation_reaches_source_classes_the_published_slice_omits(self):

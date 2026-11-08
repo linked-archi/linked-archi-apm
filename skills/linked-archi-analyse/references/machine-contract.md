@@ -310,3 +310,7 @@ query-step commands remain strings and result envelopes keep their existing cont
 Refused candidates now appear as separate decisions instead of commands that could only
 fail gating. Consumers must still resolve planning placeholders and inspect evidence and
 refusals; the plan has never represented an unattended executable workflow.
+
+The impact pattern plans `core/neighbours` and `core/dependents` on asserted direct triples.
+A refusal names qualified alternatives for review; these have different evidence semantics
+and are never substituted automatically. Derived graphs are included in local union questions.

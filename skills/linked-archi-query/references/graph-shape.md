@@ -33,8 +33,9 @@ returns nothing.
 **The direct triple is written by default** where the notation publishes the
 unqualified predicate, beside the qualified resource. It is absent from output of a
 converter older than that default, from a run with `--no-emit-direct-rel-triples`, and
-for a relationship whose class has no unqualified form - BPMN's flows among them - so a
-template that must cover every relationship goes through the qualified resource.
+for a relationship whose class has no unqualified form. Current BPMN connectors have
+published direct predicates too. Qualified resources retain identity but can also
+describe unconfirmed proposals when derivations are loaded.
 
 Where both forms are present, use the direct form for reachability and property paths,
 and the qualified form when the relationship itself is the subject — its label, its
@@ -235,3 +236,17 @@ Folder list items and view styles are blank nodes, regenerated on every conversi
 They mean nothing outside the document, so results render them as `_:id` rather than as
 a bare string that reads like data. Never treat one as an identifier, and never assert
 anything about one across runs.
+
+## Presentation names and diagram text
+
+Core 0.5.0 keeps the canonical name in `skos:prefLabel`. A name for an audience is a
+`skosxl:altLabel` resource with `skosxl:literalForm` and `arch:inPresentationContext`,
+with the same literal also recorded as plain `skos:altLabel`. Resolve through the plain
+alias, then use `core/context-names` to retain context and language.
+
+`arch-vis:LabelExpression` controls rendered text and is not a second canonical name.
+Notes (`LabelNode`) and visual groups (`ContainerNode`) have their own labels but no
+`arch-vis:archElement`; their text does not create model elements. View membership queries
+continue to follow `archElement` or `arch:inView`. A Link may end on another Link, and
+several nodes may place the same element: count concept IRIs for concepts, node IRIs for
+placements. APM queries these facts without rendering styles or label expressions.

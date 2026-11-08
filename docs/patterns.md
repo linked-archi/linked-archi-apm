@@ -170,8 +170,8 @@ resolves a concept **after** selection. A label by itself never chooses a templa
 
 - `core/resolve-element`
 - `core/discover-relationship-types`
-- `core/neighbours-qualified`
-- `core/dependents-qualified`
+- `core/neighbours`
+- `core/dependents`
 - `core/reified-predicates` — gated on `rdf_reifies`; names the predicates `core/dependents-direct` follows
 - `core/dependents-direct` — gated on `direct_rel_triples`
 - `core/provenance`

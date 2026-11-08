@@ -408,6 +408,7 @@ class TestGating(unittest.TestCase):
             if entry.file
         }
         self.assertEqual(refused - default, {
+            "notation/archimate/layer-crossing",
             "core/dependents-direct",
             "core/neighbours-reified",
             "core/reified-predicates",

@@ -26,9 +26,24 @@
       "title": "Notation type taxonomy",
       "file": "references/patterns/notation-taxonomy.md",
       "resolution": "vocabulary",
-      "triggers": ["notation taxonomy", "type taxonomy", "grouped by domain", "grouped by aspect", "element by domain", "element by aspect", "type category"],
-      "templates": ["core/elements-by-category", "core/provenance"],
-      "after": {"core/elements-by-category": ["core/resolve-vocabulary-concept"]},
+      "triggers": [
+        "notation taxonomy",
+        "type taxonomy",
+        "grouped by domain",
+        "grouped by aspect",
+        "element by domain",
+        "element by aspect",
+        "type category"
+      ],
+      "templates": [
+        "core/elements-by-category",
+        "core/provenance"
+      ],
+      "after": {
+        "core/elements-by-category": [
+          "core/resolve-vocabulary-concept"
+        ]
+      },
       "capabilities": {},
       "stop_when": [
         "the notation's matching vocabulary is not attached - do not treat zero categories as zero elements",
@@ -40,8 +55,19 @@
       "title": "Viewpoint selection",
       "file": "references/patterns/viewpoint-selection.md",
       "resolution": "viewpoint",
-      "triggers": ["which viewpoint", "what viewpoint", "choose a viewpoint", "suitable viewpoint", "viewpoint catalog", "viewpoint library", "capability map viewpoint"],
-      "templates": ["core/viewpoint-detail", "core/views"],
+      "triggers": [
+        "which viewpoint",
+        "what viewpoint",
+        "choose a viewpoint",
+        "suitable viewpoint",
+        "viewpoint catalog",
+        "viewpoint library",
+        "capability map viewpoint"
+      ],
+      "templates": [
+        "core/viewpoint-detail",
+        "core/views"
+      ],
       "capabilities": {},
       "stop_when": [
         "the matching viewpoint catalog is not attached - a missing option is not a negative finding",
@@ -90,25 +116,32 @@
       "templates": [
         "core/resolve-element",
         "core/discover-relationship-types",
-        "core/neighbours-qualified",
-        "core/dependents-qualified",
+        "core/neighbours",
+        "core/dependents",
         "core/reified-predicates",
         "core/dependents-direct",
         "core/provenance"
       ],
       "after": {
-        "core/neighbours-qualified": ["core/discover-relationship-types"],
-        "core/dependents-qualified": ["core/neighbours-qualified"],
-        "core/dependents-direct": ["core/dependents-qualified"]
+        "core/neighbours": [
+          "core/discover-relationship-types"
+        ],
+        "core/dependents": [
+          "core/neighbours"
+        ],
+        "core/dependents-direct": [
+          "core/dependents"
+        ]
       },
       "capabilities": {
-        "direct_rel_triples": "core/dependents-direct only",
+        "direct_rel_triples": "core/neighbours, core/dependents and core/dependents-direct; the first two also require the metamodel",
         "rdf_reifies": "core/reified-predicates only, which names the predicates core/dependents-direct follows"
       },
       "stop_when": [
         "the relationship semantics on a path stop supporting the claim",
         "reachability has been established but criticality has not - they are different questions",
-        "the next hop needs data the models do not carry, such as traffic or failure history"
+        "the next hop needs data the models do not carry, such as traffic or failure history",
+        "direct triples or the metamodel are unavailable - assess qualified alternatives as resource-level evidence, which can include proposals"
       ]
     },
     "traceability": {
@@ -160,8 +193,13 @@
         "core/orphans"
       ],
       "after": {
-        "core/element-detail": ["core/elements-by-type"],
-        "core/coverage-gaps": ["core/elements-by-type", "core/element-detail"]
+        "core/element-detail": [
+          "core/elements-by-type"
+        ],
+        "core/coverage-gaps": [
+          "core/elements-by-type",
+          "core/element-detail"
+        ]
       },
       "capabilities": {},
       "stop_when": [
@@ -189,7 +227,11 @@
         "core/classified-by",
         "core/provenance"
       ],
-      "after": {"core/element-detail": ["core/discover-predicates"]},
+      "after": {
+        "core/element-detail": [
+          "core/discover-predicates"
+        ]
+      },
       "capabilities": {},
       "stop_when": [
         "no predicate in this dataset carries decisions or policies at all",
@@ -217,7 +259,11 @@
         "core/label-collisions",
         "notation/leanix/factsheets"
       ],
-      "after": {"core/label-collisions": ["core/identity-audit"]},
+      "after": {
+        "core/label-collisions": [
+          "core/identity-audit"
+        ]
+      },
       "capabilities": {
         "element_lifecycle": "core/lifecycle only",
         "identity_assertions": "core/identity-audit only"
@@ -253,7 +299,11 @@
         "core/label-collisions",
         "core/inventory-summary"
       ],
-      "after": {"core/label-collisions": ["core/identity-audit"]},
+      "after": {
+        "core/label-collisions": [
+          "core/identity-audit"
+        ]
+      },
       "capabilities": {
         "identity_assertions": "core/identity-audit only"
       },
@@ -310,9 +360,15 @@
         "notation/c4/containers"
       ],
       "after": {
-        "notation/bpmn/process-components": ["core/resolve-model"],
-        "notation/bpmn/process-flow": ["core/resolve-model"],
-        "notation/c4/containers": ["core/resolve-model"]
+        "notation/bpmn/process-components": [
+          "core/resolve-model"
+        ],
+        "notation/bpmn/process-flow": [
+          "core/resolve-model"
+        ],
+        "notation/c4/containers": [
+          "core/resolve-model"
+        ]
       },
       "capabilities": {},
       "stop_when": [

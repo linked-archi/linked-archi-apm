@@ -17,8 +17,9 @@
 #
 # Questions any Linked.Archi model answers, whatever its language:
 # model data in the default graph (arch:inModel, arch:inView,
-# qualified relationships with arch:source and arch:target), the
-# metamodel in the default graph or in one named graph per document.
+# relationships as direct triples and as qualified relationships with
+# arch:source and arch:target), the metamodel in the default graph or
+# in one named graph per document.
 #
 # How they are written (see arch:ModelQuestion):
 #  - no PREFIX lines (sh:declare below) and no LIMIT (arch:defaultLimit);
@@ -27,7 +28,12 @@
 #    abstract classes are left out wherever a question reports or
 #    groups by type, so the answer is the same whether they are
 #    asserted, inferred or absent;
-#  - the metamodel is read once per query, in a sub-select.
+#  - the metamodel is read in a sub-select, once per query or per branch
+#    of a union that needs it;
+#  - relationships are followed along their direct triples, which tell a
+#    relationship predicate by the arch:unqualifiedForm a relationship
+#    type declares; a question about the relationship itself, its
+#    resource, reads the qualified relationship.
 #
 # dcterms:identifier names the question in the linked-archi-query
 # catalogue; a template there with the same identifier asks the same
@@ -171,38 +177,60 @@ is. Each is executable SPARQL bound to the concerns it informs (see arch:ModelQu
 
 :neighbours
     a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
-    dcterms:identifier            "core/neighbours-qualified" ;
+    dcterms:identifier            "core/neighbours" ;
     skos:prefLabel                "What is this element directly related to?"@en ;
-    dcterms:description           "Every relationship that starts or ends at the element, read from the qualified relationships."@en ;
+    dcterms:description           "Every relationship that starts or ends at the element, read from its direct triple: a predicate a loaded metamodel declares the unqualified form of a relationship type."@en ;
     arch:answers                  "One row per relationship: its direction seen from the element, its type and the concept at its other end."@en ;
     arch:doesNotProve             "A runtime dependency. A modelled relationship is a statement someone made, not an observed call."@en ;
     arch:questionStage            arch:AnalysisStage ;
     arch:questionAddressesConcern archvp:DependencyConcern ;
     arch:resultIsFinding          false ;
-    arch:requiresDataset          arch:ModelDataset ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
     arch:resultKey                "neighbours" ;
     arch:defaultLimit             500 ;
     sh:parameter [ sh:path arch:focus ; sh:name "focus" ; sh:nodeKind sh:IRI ; sh:optional false ; sh:order 1 ;
                    sh:description "The element the question is about. A modelling tool binds the selected element."@en ] ;
     sh:prefixes                   <https://meta.linked.archi/core-questions#> ;
     sh:select """
-        SELECT DISTINCT ?direction ?relationship ?relationshipType ?other ?otherLabel
+        SELECT DISTINCT ?direction ?relationshipType ?other ?otherLabel
         WHERE {
+          # In each direction, the triples of the relationship predicates: each predicate with the most general
+          # type it is the unqualified form of, read from the metamodel in a sub-select.
           {
-            ?relationship arch:source ?focus ;
-                          arch:target ?other .
+            {
+              SELECT DISTINCT ?predicate ?relationshipType
+              WHERE {
+                { ?relationshipType arch:unqualifiedForm ?predicate ; rdfs:subClassOf+ arch:QualifiedRelationship }
+                UNION
+                { GRAPH ?relationshipTypeGraph { ?relationshipType arch:unqualifiedForm ?predicate ; rdfs:subClassOf+ arch:QualifiedRelationship } }
+                FILTER NOT EXISTS {
+                  { ?relationshipType rdfs:subClassOf+ ?relationshipGeneral . ?relationshipGeneral arch:unqualifiedForm ?predicate }
+                  UNION
+                  { GRAPH ?relationshipGeneralGraph { ?relationshipType rdfs:subClassOf+ ?relationshipGeneral . ?relationshipGeneral arch:unqualifiedForm ?predicate } }
+                }
+              }
+            }
+            ?focus ?predicate ?other .
             BIND("outgoing" AS ?direction)
           }
           UNION
           {
-            ?relationship arch:target ?focus ;
-                          arch:source ?other .
+            {
+              SELECT DISTINCT ?predicate ?relationshipType
+              WHERE {
+                { ?relationshipType arch:unqualifiedForm ?predicate ; rdfs:subClassOf+ arch:QualifiedRelationship }
+                UNION
+                { GRAPH ?relationshipTypeGraph { ?relationshipType arch:unqualifiedForm ?predicate ; rdfs:subClassOf+ arch:QualifiedRelationship } }
+                FILTER NOT EXISTS {
+                  { ?relationshipType rdfs:subClassOf+ ?relationshipGeneral . ?relationshipGeneral arch:unqualifiedForm ?predicate }
+                  UNION
+                  { GRAPH ?relationshipGeneralGraph { ?relationshipType rdfs:subClassOf+ ?relationshipGeneral . ?relationshipGeneral arch:unqualifiedForm ?predicate } }
+                }
+              }
+            }
+            ?other ?predicate ?focus .
             BIND("incoming" AS ?direction)
           }
-          ?relationship rdf:type ?relationshipType .
-          FILTER(?relationshipType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
-          MINUS { SELECT DISTINCT ?relationshipType WHERE { { ?relationshipType arch:isAbstractClass true }
-                                                            UNION { GRAPH ?abstractClassGraph { ?relationshipType arch:isAbstractClass true } } } }
           OPTIONAL { ?other skos:prefLabel ?otherLabel . FILTER(lang(?otherLabel) = "" || langMatches(lang(?otherLabel), "en")) }
         }
         ORDER BY ?direction ?relationshipType ?otherLabel
@@ -211,15 +239,15 @@ is. Each is executable SPARQL bound to the concerns it informs (see arch:ModelQu
 
 :reaches-in-two-hops
     a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
-    dcterms:identifier            "core/dependents-qualified" ;
+    dcterms:identifier            "core/dependents" ;
     skos:prefLabel                "What reaches this element within two hops?"@en ;
-    dcterms:description           "Concepts from which a path of one or two relationships ends at the element, with the relationship types along the way."@en ;
+    dcterms:description           "Concepts from which a path of one or two relationships, read from their direct triples, ends at the element, with the relationship types along the way."@en ;
     arch:answers                  "One row per path: its length, the concept it starts from, the concept between, and the relationship types."@en ;
     arch:doesNotProve             "Impact. Reachability is not dependency: an assignment followed by an association does not make the last concept depend on the first. Read the types, and use a language's impact question where there is one."@en ;
     arch:questionStage            arch:AnalysisStage ;
     arch:questionAddressesConcern archvp:DependencyConcern ;
     arch:resultIsFinding          false ;
-    arch:requiresDataset          arch:ModelDataset ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
     arch:resultKey                "reaches" ;
     arch:defaultLimit             500 ;
     sh:parameter [ sh:path arch:focus ; sh:name "focus" ; sh:nodeKind sh:IRI ; sh:optional false ; sh:order 1 ;
@@ -228,29 +256,58 @@ is. Each is executable SPARQL bound to the concerns it informs (see arch:ModelQu
     sh:select """
         SELECT DISTINCT ?hops ?dependent ?dependentLabel ?firstType ?via ?secondType
         WHERE {
+          # Each step along the triples of the relationship predicates: each predicate with the most general type it
+          # is the unqualified form of, read from the metamodel in a sub-select.
           {
-            ?first arch:source ?dependent ;
-                   arch:target ?focus ;
-                   rdf:type ?firstType .
+            {
+              SELECT DISTINCT ?firstPredicate ?firstType
+              WHERE {
+                { ?firstType arch:unqualifiedForm ?firstPredicate ; rdfs:subClassOf+ arch:QualifiedRelationship }
+                UNION
+                { GRAPH ?firstTypeGraph { ?firstType arch:unqualifiedForm ?firstPredicate ; rdfs:subClassOf+ arch:QualifiedRelationship } }
+                FILTER NOT EXISTS {
+                  { ?firstType rdfs:subClassOf+ ?firstGeneral . ?firstGeneral arch:unqualifiedForm ?firstPredicate }
+                  UNION
+                  { GRAPH ?firstGeneralGraph { ?firstType rdfs:subClassOf+ ?firstGeneral . ?firstGeneral arch:unqualifiedForm ?firstPredicate } }
+                }
+              }
+            }
+            ?dependent ?firstPredicate ?focus .
             BIND(1 AS ?hops)
           }
           UNION
           {
-            ?first arch:source ?via ;
-                   arch:target ?focus ;
-                   rdf:type ?firstType .
-            ?second arch:source ?dependent ;
-                    arch:target ?via ;
-                    rdf:type ?secondType .
+            {
+              SELECT DISTINCT ?firstPredicate ?firstType
+              WHERE {
+                { ?firstType arch:unqualifiedForm ?firstPredicate ; rdfs:subClassOf+ arch:QualifiedRelationship }
+                UNION
+                { GRAPH ?firstTypeGraph { ?firstType arch:unqualifiedForm ?firstPredicate ; rdfs:subClassOf+ arch:QualifiedRelationship } }
+                FILTER NOT EXISTS {
+                  { ?firstType rdfs:subClassOf+ ?firstGeneral . ?firstGeneral arch:unqualifiedForm ?firstPredicate }
+                  UNION
+                  { GRAPH ?firstGeneralGraph { ?firstType rdfs:subClassOf+ ?firstGeneral . ?firstGeneral arch:unqualifiedForm ?firstPredicate } }
+                }
+              }
+            }
+            ?via ?firstPredicate ?focus .
+            {
+              SELECT DISTINCT ?secondPredicate ?secondType
+              WHERE {
+                { ?secondType arch:unqualifiedForm ?secondPredicate ; rdfs:subClassOf+ arch:QualifiedRelationship }
+                UNION
+                { GRAPH ?secondTypeGraph { ?secondType arch:unqualifiedForm ?secondPredicate ; rdfs:subClassOf+ arch:QualifiedRelationship } }
+                FILTER NOT EXISTS {
+                  { ?secondType rdfs:subClassOf+ ?secondGeneral . ?secondGeneral arch:unqualifiedForm ?secondPredicate }
+                  UNION
+                  { GRAPH ?secondGeneralGraph { ?secondType rdfs:subClassOf+ ?secondGeneral . ?secondGeneral arch:unqualifiedForm ?secondPredicate } }
+                }
+              }
+            }
+            ?dependent ?secondPredicate ?via .
             FILTER(?dependent != ?focus)
-            FILTER(?secondType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
             BIND(2 AS ?hops)
           }
-          FILTER(?firstType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
-          MINUS { SELECT DISTINCT ?firstType WHERE { { ?firstType arch:isAbstractClass true }
-                                                     UNION { GRAPH ?abstractClassGraph { ?firstType arch:isAbstractClass true } } } }
-          MINUS { SELECT DISTINCT ?secondType WHERE { { ?secondType arch:isAbstractClass true }
-                                                      UNION { GRAPH ?abstractClassGraph { ?secondType arch:isAbstractClass true } } } }
           OPTIONAL { ?dependent skos:prefLabel ?dependentLabel . FILTER(lang(?dependentLabel) = "" || langMatches(lang(?dependentLabel), "en")) }
         }
         ORDER BY ?hops ?dependentLabel
@@ -419,8 +476,9 @@ is. Each is executable SPARQL bound to the concerns it informs (see arch:ModelQu
     dcterms:identifier            "core/reifies-audit" ;
     skos:prefLabel                "Which relationships are out of step with their direct triple?"@en ;
     dcterms:description           '''Qualified relationships whose type has an unqualified form (arch:unqualifiedForm) but whose
-rdf:reifies triple term is missing or names other ends, or whose direct triple is not asserted. Needs RDF 1.2
-triple terms.'''@en ;
+rdf:reifies triple term is missing or names other ends, or whose direct triple is not asserted though a qualified
+predicate leads to them. A proposition is not in error: a resource that reifies its triple without asserting it,
+and that nothing leads to, as a potential derivation is until it is confirmed. Needs RDF 1.2 triple terms.'''@en ;
     arch:answers                  "One row per relationship in error, with what is wrong."@en ;
     arch:doesNotProve             "That a query over the direct triples is wrong everywhere: it misses or misreports exactly these relationships."@en ;
     arch:questionStage            arch:QualityStage ;
@@ -445,6 +503,12 @@ triple terms.'''@en ;
           FILTER NOT EXISTS {
             ?relationship rdf:reifies <<( ?source ?predicate ?target )>> .
             ?source ?predicate ?target .
+          }
+          # Nor a proposition: its triple not asserted, and nothing leading to it.
+          FILTER NOT EXISTS {
+            ?relationship rdf:reifies <<( ?source ?predicate ?target )>> .
+            FILTER NOT EXISTS { ?source ?predicate ?target }
+            FILTER NOT EXISTS { ?source ?leads ?relationship }
           }
           BIND(IF(NOT EXISTS { ?relationship rdf:reifies ?anyTerm }, "no rdf:reifies",
                IF(NOT EXISTS { ?source ?predicate ?target }, "direct triple not asserted",

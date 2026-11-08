@@ -31,6 +31,7 @@ from linked_archi_query.questions import (
     load_index,
     metamodel_probes,
     parameter_name,
+    reads,
 )
 from linked_archi_query.render import RenderError, UnsupportedTemplate
 
@@ -134,8 +135,10 @@ def _converter_graphs(source: Path, target: Path) -> None:
     flat.load(path=str(source), format=RdfFormat.TURTLE)
     base = "https://example.org/la/model/questions-example/graph/"
     graphed = Store()
+    derived = {q.subject for q in flat if q.predicate.value.endswith("#derivationCertainty")}
     for quad in flat:
-        graph = "model" if quad.subject.value.endswith("/model") else "semantic"
+        graph = "derived" if quad.subject in derived else (
+            "model" if quad.subject.value.endswith("/model") else "semantic")
         graphed.add(Quad(quad.subject, quad.predicate, quad.object, NamedNode(base + graph)))
     graphed.dump(str(target), format=RdfFormat.TRIG)
 
@@ -161,12 +164,12 @@ class TestTheIndexIsTheTurtle(unittest.TestCase):
             self.assertTrue(entry["iri"].startswith("https://meta.linked.archi/"), entry)
             self.assertTrue(entry["published"].endswith("/ontology.ttl"), entry)
 
-    def test_fifty_five_questions_core_archimate_4_and_3_2(self):
+    def test_fifty_nine_questions_core_archimate_4_and_3_2(self):
         identifiers = [q.identifier for q in load_index().questions]
-        self.assertEqual(len(identifiers), 55)
+        self.assertEqual(len(identifiers), 59)
         self.assertEqual(sum(i.startswith("core/") for i in identifiers), 16)
-        self.assertEqual(sum(i.startswith("notation/archimate4/") for i in identifiers), 20)
-        self.assertEqual(sum(i.startswith("notation/archimate/") for i in identifiers), 19)
+        self.assertEqual(sum(i.startswith("notation/archimate4/") for i in identifiers), 22)
+        self.assertEqual(sum(i.startswith("notation/archimate/") for i in identifiers), 21)
 
 
 class TestWhatAQuestionReads(unittest.TestCase):
@@ -181,8 +184,9 @@ class TestWhatAQuestionReads(unittest.TestCase):
         self.assertEqual(question.capabilities, {"direct_rel_triples": True, "part_of_model_edge": True})
 
     def test_a_question_on_qualified_relationships_needs_no_direct_triple(self):
-        for name in ("core/neighbours-qualified", "core/dependents-qualified",
-                     "notation/archimate/layer-crossing", "notation/archimate/data-access"):
+        for name in ("notation/archimate/data-access",
+                     "notation/archimate/potential-derivations",
+                     "notation/archimate4/potential-derivation-premises"):
             self.assertFalse(self.by_id[name].reads["direct_rel_triples"], name)
 
     def test_the_bridge_audit_needs_the_bridge(self):
@@ -217,12 +221,12 @@ class TestTheCatalogue(unittest.TestCase):
 
     def test_questions_join_the_catalogue(self):
         entries = list(self.catalog)
-        self.assertEqual(sum(1 for e in entries if e.question), 55)
-        self.assertEqual(sum(1 for e in entries if e.file), 43)
+        self.assertEqual(sum(1 for e in entries if e.question), 59)
+        self.assertEqual(sum(1 for e in entries if e.file), 44)
         both = sorted(e.name for e in entries if e.file and e.question)
         self.assertEqual(both, [
-            "core/dependents-qualified", "core/element-detail", "core/elements-by-type",
-            "core/neighbours-qualified", "core/orphans", "core/reifies-audit",
+            "core/element-detail", "core/elements-by-type",
+            "core/orphans", "core/reifies-audit",
             "core/view-contents-semantic", "core/view-usage-semantic",
             "notation/archimate/layer-crossing",
         ])
@@ -235,6 +239,8 @@ class TestTheCatalogue(unittest.TestCase):
             ("core/coverage-gaps", "core/missing-definitions"),
             ("core/label-collisions", "core/duplicate-labels"),
             ("core/lifecycle", "core/architecture-state"),
+            ("core/neighbours-qualified", "core/neighbours"),
+            ("core/dependents-qualified", "core/dependents"),
         ):
             self.assertIsNone(self.catalog.get(template).question, template)
             entry = self.catalog.get(question)

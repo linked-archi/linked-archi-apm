@@ -282,9 +282,15 @@ def _blank(match: re.Match[str]) -> str:
     return re.sub(r"[^\n]", " ", match.group(0))
 
 
+def _without_literals_and_comments(sparql: str) -> str:
+    # An IRI's fragment is not a comment; preserve IRIs for term recognition.
+    tokens = re.compile(_IRI.pattern + "|" + _MASKED.pattern)
+    return tokens.sub(lambda m: m.group(0) if m.group(0).startswith("<") else _blank(m), sparql)
+
+
 def mask(sparql: str) -> str:
     """The query with strings, IRIs and comments blanked, offsets kept."""
-    return _IRI.sub(_blank, _MASKED.sub(_blank, sparql))
+    return _IRI.sub(_blank, _without_literals_and_comments(sparql))
 
 
 def where_group_start(sparql: str) -> int:
@@ -339,7 +345,7 @@ _PREFIXED = re.compile(r"(?<![\w?$:/#])([A-Za-z][\w-]*)?:([A-Za-z0-9_][\w-]*)")
 
 def terms_read(text: str, prefixes: Mapping[str, str]) -> set[str]:
     """Every IRI the query names, prefixed names expanded."""
-    stripped = _MASKED.sub(_blank, text)
+    stripped = _without_literals_and_comments(text)
     found = {match.group(0)[1:-1] for match in _IRI.finditer(stripped)}
     for match in _PREFIXED.finditer(_IRI.sub(_blank, stripped)):
         namespace = prefixes.get(match.group(1) or "")
@@ -348,10 +354,42 @@ def terms_read(text: str, prefixes: Mapping[str, str]) -> set[str]:
     return found
 
 
+def _mapped_predicate_is_traversed(text: str, prefixes: Mapping[str, str]) -> bool:
+    """A positive triple pattern follows a predicate read from unqualifiedForm.
+
+    Vocabulary discovery alone does not need direct triples. Neither does an integrity
+    audit checking for their absence, nor a triple term describing a proposition.
+    Keep those cases distinct from neighbours/dependents' variable-predicate walks.
+    """
+    body = _without_literals_and_comments(text)
+    names = [f"<{ARCH}unqualifiedForm>"] + [
+        f"{prefix}:unqualifiedForm" for prefix, iri in prefixes.items() if iri == ARCH
+    ]
+    variables = set(re.findall(
+        r"(?<![\w:])(?:" + "|".join(re.escape(name) for name in names) + r")\s+([?$]\w+)", body
+    ))
+    if not variables:
+        return False
+    # Mask balanced negative existence groups before looking for asserted patterns.
+    masked = mask(body)
+    for match in reversed(list(re.finditer(r"\bNOT\s+EXISTS\s*\{", masked, re.I))):
+        depth = 1
+        end = match.end()
+        while end < len(masked) and depth:
+            depth += (masked[end] == "{") - (masked[end] == "}")
+            end += 1
+        body = body[:match.start()] + " " * (end - match.start()) + body[end:]
+    body = re.sub(r"<<\([\s\S]*?\)>>", " ", body)
+    term = r"(?:[?$]\w+|<[^<>\s]+>|[\w-]*:[\w-]+)"
+    return any(re.search(
+        term + r"\s+[?$]" + re.escape(variable[1:]) + r"\s+" + term, body
+    ) for variable in variables)
+
+
 def reads(text: str, prefixes: Mapping[str, str], unqualified_forms: Iterable[str]) -> dict[str, bool]:
     terms = terms_read(text, prefixes)
     return {
-        "direct_rel_triples": bool(terms & set(unqualified_forms)),
+        "direct_rel_triples": bool(terms & set(unqualified_forms)) or _mapped_predicate_is_traversed(text, prefixes),
         "rdf_reifies": f"{RDF}reifies" in terms,
         "part_of_model_edge": f"{ARCH}inModel" in terms,
         "viewpoints": bool(terms & {f"{ARCH}includesConcept", f"{ARCH}viewConformsToViewpoint"}),

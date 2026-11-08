@@ -110,7 +110,7 @@ class UnsupportedTemplate(RenderError):
             hint = (
                 "\nTry instead: "
                 + ", ".join(entry.alternatives)
-                + " (same question, different evidence)."
+                + " (review their scope and evidence)."
             )
         super().__init__(
             f"Template {entry.name!r} cannot run against profile "
@@ -135,7 +135,7 @@ class QuestionNotAsked(RenderError):
             for probe in missing
         )
         hint = (
-            "\nTry instead: " + ", ".join(alternatives) + " (same question, different evidence)."
+            "\nTry instead: " + ", ".join(alternatives) + " (review their scope and evidence)."
             if alternatives else ""
         )
         super().__init__(

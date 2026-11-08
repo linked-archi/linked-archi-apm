@@ -1,0 +1,276 @@
+@prefix rdf:      <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos:     <http://www.w3.org/2004/02/skos/core#> .
+@prefix skosxl:   <http://www.w3.org/2008/05/skos-xl#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix arch:     <https://meta.linked.archi/core#> .
+@prefix arch-vis: <https://meta.linked.archi/core-vis#> .
+@prefix am:       <https://meta.linked.archi/archimate3/onto#> .
+@prefix schema:   <http://schema.org/> .
+@prefix :         <https://meta.linked.archi/examples/labels/> .
+
+#################################################################
+# Names, labels and pictures per presentation context — every case
+#
+# Three audiences (presentation contexts) look at one small model:
+# architects, developers and executives. What an element is CALLED for an
+# audience, and its PICTURE for an audience, are data on the element (a
+# SKOS-XL name, a schema:ImageObject; core 0.5.0); how a diagram element
+# LOOKS for an audience is its style for that context (core-vis 0.7); what
+# its LABEL SAYS on a diagram is a label expression (core-vis 0.7), said
+#
+#   1. on a diagram element's own style, for one context or for all;
+#   2. on its concept's notation, for one context or for all;
+#   3. on a presentation context, for everything shown in it.
+#
+# The first that applies wins, in that order (one for the context shown before
+# one for every context at each place); with none, the label is the element's
+# name for the context shown. Each element below says what its label shows in
+# each context.
+#
+# Used as data by the core-vis validation profile: core's and core-vis's shapes
+# check every case here.
+#################################################################
+
+
+# ── The audiences ─────────────────────────────────────────────────────────
+# A metamodel names its scheme with arch:presentationContextScheme; each
+# context names the notation set it is drawn with (here, the same one: what
+# differs between audiences below is what they read, not how it looks).
+
+:ExampleContexts
+    a                  skos:ConceptScheme ;
+    skos:prefLabel     "Example presentation contexts"@en ;
+    skos:hasTopConcept :ArchitectContext, :DeveloperContext, :ExecutiveContext ;
+.
+
+:ArchitectContext
+    a                    skos:Concept ;
+    skos:topConceptOf    :ExampleContexts ;
+    skos:inScheme        :ExampleContexts ;
+    skos:prefLabel       "Architect"@en ;
+    arch:usesNotationSet :ExampleNotation ;
+.
+
+# Case 3 — a context's own label expression: everything shown to developers
+# says who made it, under its name, unless something says otherwise.
+:DeveloperContext
+    a                        skos:Concept ;
+    skos:topConceptOf        :ExampleContexts ;
+    skos:inScheme            :ExampleContexts ;
+    skos:prefLabel           "Developer"@en ;
+    arch:usesNotationSet     :ExampleNotation ;
+    arch-vis:labelExpression :ForDevelopers ;
+.
+
+:ForDevelopers
+    a                   arch-vis:LabelExpression ;
+    # The second line is left out where an element has no dcterms:creator.
+    arch-vis:expression "{name}\nby {dcterms:creator}" ;
+.
+
+:ExecutiveContext
+    a                    skos:Concept ;
+    skos:topConceptOf    :ExampleContexts ;
+    skos:inScheme        :ExampleContexts ;
+    skos:prefLabel       "Executive"@en ;
+    arch:usesNotationSet :ExampleNotation ;
+.
+
+
+# ── The notation ──────────────────────────────────────────────────────────
+
+:ExampleNotation
+    a              arch-vis:NotationSet ;
+    skos:prefLabel "Example notation"@en ;
+.
+
+# Case 2 — a concept's notation: what every application component's label says,
+# for architects (its type under its name) and for every other context (its name).
+:ApplicationComponentNotation
+    a                        arch-vis:VisualNotation ;
+    arch-vis:notationFor     am:ApplicationComponent ;
+    arch-vis:inNotationSet   :ExampleNotation ;
+    arch-vis:defaultStyle    [ a arch-vis:Style ; arch-vis:shapeType arch-vis:Rectangle ] ;
+    arch-vis:labelExpression :ComponentForArchitects, :ComponentForEveryone ;
+.
+
+:ComponentForArchitects
+    a                          arch-vis:LabelExpression ;
+    arch:inPresentationContext :ArchitectContext ;
+    # « and » are text; {{ and }} would be braces.
+    arch-vis:expression        "{name}\n«{type}»" ;
+.
+
+:ComponentForEveryone
+    a                   arch-vis:LabelExpression ;
+    arch-vis:expression "{name}" ;
+.
+
+
+# ── The model ─────────────────────────────────────────────────────────────
+
+:PaymentsModel
+    a              arch:Model ;
+    skos:prefLabel "Payments"@en ;
+.
+
+# Names per audience (SKOS-XL): its canonical name is its skos:prefLabel; for
+# developers it is "pgw-svc", for executives "Card payments". Each name is a
+# skosxl:altLabel — a skosxl:prefLabel would be a second canonical name — and
+# its literal form is also a plain skos:altLabel, for tools that read plain SKOS.
+# Pictures likewise: its own picture (arch:prefVisNotation), and one for
+# executives (arch:altVisNotation, an ImageObject with its context).
+:PaymentGateway
+    a                    am:ApplicationComponent ;
+    arch:inModel         :PaymentsModel ;
+    skos:prefLabel       "Payment gateway"@en ;
+    skosxl:altLabel      :PaymentGateway-name-developer, :PaymentGateway-name-executive ;
+    skos:altLabel        "pgw-svc"@en, "Card payments"@en ;
+    dcterms:creator      "Ana"@en ;
+    arch:prefVisNotation :PaymentGateway-picture ;
+    arch:altVisNotation  :PaymentGateway-picture-executive ;
+.
+
+:PaymentGateway-picture
+    a                 schema:ImageObject ;
+    schema:contentUrl "https://example.org/pictures/gateway.svg"^^xsd:anyURI ;
+.
+
+:PaymentGateway-picture-executive
+    a                          schema:ImageObject ;
+    schema:contentUrl          "https://example.org/pictures/card-payments.png"^^xsd:anyURI ;
+    arch:inPresentationContext :ExecutiveContext ;
+.
+
+:PaymentGateway-name-developer
+    a                          skosxl:Label ;
+    skosxl:literalForm         "pgw-svc"@en ;
+    arch:inPresentationContext :DeveloperContext ;
+.
+
+:PaymentGateway-name-executive
+    a                          skosxl:Label ;
+    skosxl:literalForm         "Card payments"@en ;
+    arch:inPresentationContext :ExecutiveContext ;
+.
+
+:Ledger
+    a              am:ApplicationComponent ;
+    arch:inModel   :PaymentsModel ;
+    skos:prefLabel "Ledger"@en ;
+.
+
+:Checkout
+    a               am:ApplicationService ;
+    arch:inModel    :PaymentsModel ;
+    skos:prefLabel  "Checkout"@en ;
+    dcterms:creator "Bo"@en ;
+.
+
+# The gateway serves checkout: {^arch:source/arch:target} on the gateway follows
+# arch:source backwards to this relationship, then arch:target on to Checkout.
+:GatewayServesCheckout
+    a              am:Serving ;
+    arch:inModel   :PaymentsModel ;
+    arch:source    :PaymentGateway ;
+    arch:target    :Checkout ;
+.
+
+
+# ── The diagram ───────────────────────────────────────────────────────────
+
+:PaymentsView
+    a                            arch:View ;
+    skos:prefLabel               "Payments"@en ;
+    arch:viewConformsToViewpoint <https://meta.linked.archi/archimate3/viewpoints#ApplicationCooperationViewpoint> ;
+.
+
+# Case 1 — a diagram element's own: the gateway's placement says, for
+# developers, its developer name, its canonical name ({skos:prefLabel}) and what
+# it serves; and for every other context, its name.
+#
+#   Architect:  "Payment gateway"             (its own for every context — before its notation's)
+#   Developer:  "pgw-svc (Payment gateway)"   (its own for developers)
+#               "serves Checkout"
+#   Executive:  "Card payments"               (its own for every context; {name} is the executive name)
+#
+# And it LOOKS its own way for executives: two styles — one for every context,
+# one for executives drawing it as its icon, so its picture for executives
+# (card-payments.png) is the figure, "Card payments" under it. For architects
+# and developers: its box, with its notation's glyph as the badge.
+:PaymentGatewayNode
+    a                    arch-vis:ArchNode ;
+    arch-vis:archElement :PaymentGateway ;
+    arch-vis:view        :PaymentsView ;
+    arch-vis:bounds-x    "40.0"^^xsd:double ;
+    arch-vis:bounds-y    "40.0"^^xsd:double ;
+    arch-vis:bounds-w    "160.0"^^xsd:double ;
+    arch-vis:bounds-h    "80.0"^^xsd:double ;
+    arch-vis:style       :PaymentGatewayNodeStyle, :PaymentGatewayNodeStyleForExecutives ;
+.
+
+:PaymentGatewayNodeStyle
+    a                        arch-vis:Style ;
+    arch-vis:labelExpression :GatewayForDevelopers, :GatewayForEveryone ;
+.
+
+# A style for one context: drawn over the style for every context, for executives only.
+:PaymentGatewayNodeStyleForExecutives
+    a                          arch-vis:Style ;
+    arch:inPresentationContext :ExecutiveContext ;
+    arch-vis:renderingMode     arch-vis:IconCentric ;
+.
+
+:GatewayForDevelopers
+    a                          arch-vis:LabelExpression ;
+    arch:inPresentationContext :DeveloperContext ;
+    arch-vis:expression        "{name} ({skos:prefLabel})\nserves {^arch:source/arch:target}" ;
+.
+
+:GatewayForEveryone
+    a                   arch-vis:LabelExpression ;
+    arch-vis:expression "{name}" ;
+.
+
+# No label expression of its own: its notation's.
+#
+#   Architect:  "Ledger" / "«Application Component»"   (its notation's, for architects)
+#   Developer:  "Ledger"                               (its notation's, for every context — before the context's)
+#   Executive:  "Ledger"                               (its notation's, for every context)
+#
+# A picture inside it for developers only — a placement's own picture (arch-vis:image), in its style for
+# developers, at the bottom right; architects and executives see none.
+:LedgerNode
+    a                    arch-vis:ArchNode ;
+    arch-vis:archElement :Ledger ;
+    arch-vis:view        :PaymentsView ;
+    arch-vis:style       :LedgerNodeStyleForDevelopers ;
+    arch-vis:bounds-x    "240.0"^^xsd:double ;
+    arch-vis:bounds-y    "40.0"^^xsd:double ;
+    arch-vis:bounds-w    "160.0"^^xsd:double ;
+    arch-vis:bounds-h    "80.0"^^xsd:double ;
+.
+
+# No label expression of its own, and its notation (an application service's)
+# says none: the context's, where the context has one.
+#
+#   Architect:  "Checkout"            (its name)
+#   Developer:  "Checkout" / "by Bo"  (the developer context's)
+#   Executive:  "Checkout"            (its name)
+:CheckoutNode
+    a                    arch-vis:ArchNode ;
+    arch-vis:archElement :Checkout ;
+    arch-vis:view        :PaymentsView ;
+    arch-vis:bounds-x    "440.0"^^xsd:double ;
+    arch-vis:bounds-y    "40.0"^^xsd:double ;
+    arch-vis:bounds-w    "160.0"^^xsd:double ;
+    arch-vis:bounds-h    "80.0"^^xsd:double ;
+.
+
+:LedgerNodeStyleForDevelopers
+    a                          arch-vis:Style ;
+    arch:inPresentationContext :DeveloperContext ;
+    arch-vis:image             "https://example.org/pictures/postgres.svg"^^xsd:anyURI ;
+    arch-vis:imagePosition     arch-vis:BottomRight ;
+.

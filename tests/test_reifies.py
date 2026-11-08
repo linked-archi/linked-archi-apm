@@ -285,6 +285,11 @@ class TestAuditFindsDisagreement(unittest.TestCase):
         relationship("wrong-subject", f"{base}WRONG", f"{base}B")
         relationship("wrong-object", f"{base}A", f"{base}WRONG")
         relationship("no-term", None, None)
+        # These are assertions: a source link leads to each qualified resource.
+        for q in list(store.quads_for_pattern(None, NamedNode(f"{CORE}source"), None, None)):
+            store.add(Quad(q.object, NamedNode(f"{AM}qualifiedFlow"), q.subject, q.graph_name))
+        store.add(Quad(NamedNode(f"{base}A"), NamedNode(f"{AM}flowsTo"),
+                       NamedNode(f"{base}B"), graph))
         return store
 
     def _findings(self):
@@ -350,7 +355,7 @@ class TestRegressions(unittest.TestCase):
             "core/reifies-audit must report every relationship lacking a triple "
             "term. A mismatch here means the FILTER is mis-scoped again.",
         )
-        self.assertGreaterEqual(len(expected), 2)
+        self.assertGreaterEqual(len(expected), 1)
 
     def test_no_template_uses_the_asserting_reifier_shorthand(self):
         """`<< s p o ~ r >>` asserts the triple. Our data does not.

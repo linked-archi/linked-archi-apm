@@ -5,7 +5,7 @@ ArchiMate, BPMN, C4/Structurizr, Backstage and LeanIX models into RDF against th
 [meta.linked.archi](https://meta.linked.archi) ontologies with the
 [Linked.Archi converters](https://gitlab.com/linked-archi/linked-archi-tools/converters/converters).
 
-**Documentation: <https://linked-archi.github.io/linked-archi-apm/>** — the skills, all 43
+**Documentation: <https://linked-archi.github.io/linked-archi-apm/>** — the skills, all 44
 templates, the analysis patterns, and a worked conversational-analysis walkthrough.
 
 To build your own package around a fixed graph and profile, start with the
@@ -31,10 +31,9 @@ like a finding.**
 
 ```
 Template 'core/dependents-direct' cannot run against profile 'linked-archi-qualified':
-  - capability 'direct_rel_triples' is False but this template needs True
-Try instead: core/dependents-qualified, core/neighbours-qualified
-This is a refusal, not an empty result: running it anyway would return no rows and
-read as 'nothing exists'.
+  - capability 'direct_rel_triples' is False in profile 'linked-archi-qualified' but this template needs True
+Try instead: core/dependents-qualified, core/neighbours-qualified (review their scope and evidence).
+This is a refusal, not an empty result: running it anyway would return no rows and read as 'nothing exists'.
 ```
 
 ## Features
@@ -66,7 +65,7 @@ taxonomy terms are all data, so a custom ontology or taxonomy needs no code chan
 reports drift between claimed and observed terms, and exits non-zero when a claim is
 false. `--all` verifies every profile so you can find which one actually fits.
 
-**Ask a question.** 43 tested templates across seven stages — orientation, resolution,
+**Ask a question.** 44 tested templates across seven stages — orientation, resolution,
 discovery, analysis, enrichment, quality and views — spanning neighbours, transitive dependents, traceability paths,
 taxonomy classification, lifecycle, ownership, coverage gaps, orphans, identity
 audit, provenance and diagram usage, plus notation-specific templates for ArchiMate,
@@ -153,7 +152,7 @@ package checkout. The package declares no `targets:`, so APM auto-detects your r
 from the consumer and promotes each of the six skills into it:
 
 ```bash
-apm install linked-archi/linked-archi-apm#v0.10.0
+apm install linked-archi/linked-archi-apm#v0.11.0
 apm install /absolute/path/to/linked-archi-apm   # local clone
 ```
 
@@ -336,8 +335,9 @@ from documentation, and each pinned by a regression test:
   wrong. Templates therefore name *roles*, never terms; the profile binds them.
 - **Graph scoping has to be a profile decision.** An unscoped pattern returns nothing against
   TriG; a hardcoded `GRAPH` clause returns nothing against flattened Turtle. Both ship.
-- **The qualified relationship form is the only form by default.** The direct
-  `{src} {pred} {tgt}` shortcut needs `--emit-direct-rel-triples`, which is off.
+- **Current converters emit qualified resources and direct triples together** where the
+  notation publishes a predicate. Older output or `--no-emit-direct-rel-triples` omits
+  the direct form; profiles distinguish those datasets.
 - **There is no validation graph.** The converters' SHACL report is a document, not data.
 
 Each is a way a plausible query returns nothing, or returns rows meaning something else.

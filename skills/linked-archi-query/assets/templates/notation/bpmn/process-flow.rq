@@ -15,6 +15,9 @@
 # why the profile binds native_id as a chain. {{PATH:native_id}} covers both, so
 # this template works unchanged in a dataset mixing BPMN with other notations.
 #
+# Qualified resources may include unconfirmed proposals when derivations are
+# loaded into the selected graphs. Endpoints alone do not assert a relationship.
+#
 # Parameters: PROCESS_IRI, LIMIT
 {{PREFIXES}}
 SELECT ?flow ?flowLabel ?source ?sourceLabel ?sourceType ?target ?targetLabel ?targetType

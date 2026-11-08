@@ -28,6 +28,17 @@
 # within each document, then their specialisations in any document —
 # so a model's own specialisation of an ArchiMate type counts where
 # that type does.
+#
+# Relationships are followed along their direct triples. A question
+# that asks what serves, realises, is assigned to or triggers what
+# follows the chains the valid derivation rules follow (DR 2 to DR 8),
+# so it answers the same with the derivations loaded, each then one
+# hop, as without them; but where that walk is too slow on a large
+# model (application dependencies, technology under applications,
+# requirement traceability, unrealised capabilities) a question
+# follows a few fixed steps, and a longer chain only once derived. One
+# that needs the relationship itself (the kind of an access) reads
+# its qualified resource.
 #################################################################
 
 <https://meta.linked.archi/archimate4/questions#>
@@ -50,7 +61,9 @@ concern the ArchiMate 4.0 viewpoints frame is not met. Each is executable SPARQL
         [ sh:prefix "rdf" ; sh:namespace "http://www.w3.org/1999/02/22-rdf-syntax-ns#"^^xsd:anyURI ],
         [ sh:prefix "rdfs" ; sh:namespace "http://www.w3.org/2000/01/rdf-schema#"^^xsd:anyURI ],
         [ sh:prefix "skos" ; sh:namespace "http://www.w3.org/2004/02/skos/core#"^^xsd:anyURI ],
-        [ sh:prefix "am4" ; sh:namespace "https://meta.linked.archi/archimate4/onto#"^^xsd:anyURI ] ;
+        [ sh:prefix "am4" ; sh:namespace "https://meta.linked.archi/archimate4/onto#"^^xsd:anyURI ],
+        [ sh:prefix "prov" ; sh:namespace "http://www.w3.org/ns/prov#"^^xsd:anyURI ],
+        [ sh:prefix "am4deriv" ; sh:namespace "https://meta.linked.archi/archimate4/derivation#"^^xsd:anyURI ] ;
 .
 
 # ── Orientation ─────────────────────────────────────────────────
@@ -103,8 +116,8 @@ concern the ArchiMate 4.0 viewpoints frame is not met. Each is executable SPARQL
     a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
     dcterms:identifier            "notation/archimate4/cross-domain-relationships" ;
     skos:prefLabel                "Which relationships cross domains, and of which kind?"@en ;
-    dcterms:description           "Relationships whose ends are in different ArchiMate 4.0 domains, counted by pair of domains and relationship type. The domains are read from the domain classes, not from type names."@en ;
-    arch:answers                  "One row per source domain, relationship type and target domain, with the number of relationships."@en ;
+    dcterms:description           "Relationships whose ends are in different ArchiMate 4.0 domains, read from their direct triples and counted by pair of domains and relationship type. The domains are read from the domain classes, not from type names."@en ;
+    arch:answers                  "One row per source domain, relationship type and target domain, with the number of pairs of elements so related."@en ;
     arch:doesNotProve             "Coupling. Relationships touching elements of the common domain are not counted: ArchiMate 4.0 assigns those no domain, so whether they cross one is undefined."@en ;
     arch:questionStage            arch:AnalysisStage ;
     arch:questionAddressesConcern am4vp:Consistency, am4vp:ImpactOfChange ;
@@ -116,14 +129,17 @@ concern the ArchiMate 4.0 viewpoints frame is not met. Each is executable SPARQL
     arch:defaultLimit             200 ;
     sh:prefixes                   <https://meta.linked.archi/archimate4/questions#> ;
     sh:select """
-        SELECT ?sourceDomain ?relationshipType ?targetDomain (COUNT(DISTINCT ?relationship) AS ?relationships)
+        SELECT ?sourceDomain ?relationshipType ?targetDomain (COUNT(DISTINCT ?pair) AS ?relationships)
         WHERE {
-          ?relationship arch:source ?source ;
-                        arch:target ?target ;
-                        rdf:type ?relationshipType .
-          FILTER(?relationshipType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
-          MINUS { SELECT DISTINCT ?relationshipType WHERE { { ?relationshipType arch:isAbstractClass true }
-                                                            UNION { GRAPH ?abstractClassGraph { ?relationshipType arch:isAbstractClass true } } } }
+          # Each relationship by its direct triple, with the type it is the unqualified form of.
+          VALUES (?predicate ?relationshipType) {
+            (am4:composedOf am4:Composition) (am4:aggregates am4:Aggregation) (am4:assignedTo am4:Assignment)
+            (am4:realizes am4:Realization) (am4:serves am4:Serving) (am4:accesses am4:Access)
+            (am4:influences am4:Influence) (am4:associatedWith am4:Association) (am4:triggers am4:Triggering)
+            (am4:flowsTo am4:Flow) (am4:specializes am4:Specialization)
+          }
+          ?source ?predicate ?target .
+          BIND(CONCAT(STR(?source), " ", STR(?target)) AS ?pair)
           ?source rdf:type ?sourceType .
           ?target rdf:type ?targetType .
           {
@@ -159,8 +175,8 @@ concern the ArchiMate 4.0 viewpoints frame is not met. Each is executable SPARQL
     a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
     dcterms:identifier            "notation/archimate4/responsibility-assignments" ;
     skos:prefLabel                "Who is responsible for what?"@en ;
-    dcterms:description           "Assignment relationships: which actor, role, collaboration, component or node performs which behaviour or plays which role."@en ;
-    arch:answers                  "One row per assignment, with both ends and their types."@en ;
+    dcterms:description           "Assignments, stated or as DR 2 derives them in line with compositions and aggregations: which actor, role, collaboration, component or node performs which behaviour or plays which role."@en ;
+    arch:answers                  "One row per performer and what it is assigned to, with both types."@en ;
     arch:doesNotProve             "Accountability in the RACI sense. An ArchiMate assignment states who performs, not who answers for the outcome."@en ;
     arch:questionStage            arch:AnalysisStage ;
     arch:questionAddressesConcern am4vp:CompetenciesAuthorityResponsibilities, am4vp:Responsibilities ;
@@ -173,18 +189,22 @@ concern the ArchiMate 4.0 viewpoints frame is not met. Each is executable SPARQL
     arch:defaultLimit             500 ;
     sh:prefixes                   <https://meta.linked.archi/archimate4/questions#> ;
     sh:select """
-        SELECT DISTINCT ?performer ?performerLabel ?performerType ?assignment ?assigned ?assignedLabel ?assignedType
+        SELECT DISTINCT ?performer ?performerLabel ?performerType ?assigned ?assignedLabel ?assignedType
         WHERE {
+          # From each assignment, back to the performer and on to what it is assigned to, in line with compositions
+          # and aggregations: DR 2 derives the weakest of the three, an assignment.
+          ?from am4:assignedTo ?to .
+          ?performer (am4:composedOf|am4:aggregates|am4:assignedTo)* ?from .
+          ?to (am4:composedOf|am4:aggregates|am4:assignedTo)* ?assigned .
+          # The performer is active structure, as the question asks: a plateau, grouping or location gathers what is
+          # assigned through what it aggregates, it does not perform.
           {
-            SELECT DISTINCT ?assignmentType
+            SELECT DISTINCT ?performerType
             WHERE {
-              { ?asked rdfs:subClassOf* am4:Assignment } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am4:Assignment } }
-              { ?assignmentType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?assignmentType rdfs:subClassOf* ?asked } }
+              { ?askedPerformer rdfs:subClassOf* am4:ActiveStructureElement } UNION { GRAPH ?performerGraph { ?askedPerformer rdfs:subClassOf* am4:ActiveStructureElement } }
+              { ?performerType rdfs:subClassOf* ?askedPerformer } UNION { GRAPH ?performerSpecialisationGraph { ?performerType rdfs:subClassOf* ?askedPerformer } }
             }
           }
-          ?assignment rdf:type ?assignmentType ;
-                      arch:source ?performer ;
-                      arch:target ?assigned .
           ?performer rdf:type ?performerType .
           ?assigned rdf:type ?assignedType .
           FILTER(?performerType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
@@ -204,8 +224,8 @@ concern the ArchiMate 4.0 viewpoints frame is not met. Each is executable SPARQL
     a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
     dcterms:identifier            "notation/archimate4/application-dependencies" ;
     skos:prefLabel                "Which applications depend on which?"@en ;
-    dcterms:description           "Application components that serve, flow to or trigger one another, directly or through a service one realises — itself or through the function assigned to it — and the other is served by."@en ;
-    arch:answers                  "One row per dependency: the provider, how it provides, the relationship or service between, and the consumer."@en ;
+    dcterms:description           "Application components that serve, flow to or trigger one another, directly or through a service one realises — itself or through the function assigned to it — and the other is served by. With the derivations loaded, a longer chain the valid rules derive counts too, as one hop."@en ;
+    arch:answers                  "One row per dependency: the provider, how it provides, the service between where there is one, and the consumer."@en ;
     arch:doesNotProve             "Runtime coupling or data volume. A modelled flow says that information moves, not how much or how often."@en ;
     arch:questionStage            arch:AnalysisStage ;
     arch:questionAddressesConcern am4vp:ApplicationDependencies, am4vp:ServiceOrchestration ;
@@ -219,14 +239,11 @@ concern the ArchiMate 4.0 viewpoints frame is not met. Each is executable SPARQL
     sh:select """
         SELECT DISTINCT ?provider ?providerLabel ?how ?via ?consumer ?consumerLabel
         WHERE {
-          # From the relationships to their ends, each branch anchored on its relationships: never every pair of
+          # From the direct triples to their ends, each branch anchored on its relationships: never every pair of
           # components. Both ends are then checked against the component types, read once each.
           {
-            VALUES ?linkType { am4:Serving am4:Flow am4:Triggering }
-            ?via rdf:type ?linkType ;
-                 arch:source ?provider ;
-                 arch:target ?consumer .
-            BIND(REPLACE(STR(?linkType), "^.*[#/]", "") AS ?how)
+            VALUES (?link ?how) { (am4:serves "Serving") (am4:flowsTo "Flow") (am4:triggers "Triggering") }
+            ?provider ?link ?consumer .
           }
           UNION
           {
@@ -340,7 +357,7 @@ concern the ArchiMate 4.0 viewpoints frame is not met. Each is executable SPARQL
     a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
     dcterms:identifier            "notation/archimate4/capability-realisation" ;
     skos:prefLabel                "What realises each capability?"@en ;
-    dcterms:description           "Capabilities with the behaviour, active structure or resources that realise them."@en ;
+    dcterms:description           "Capabilities with the behaviour, active structure or resources that realise them. A realisation counts directly or as DR 2 derives it, through structural relationships in line."@en ;
     arch:answers                  "One row per capability and what realises it; a capability nothing realises appears once, with nothing beside it."@en ;
     arch:doesNotProve             "Maturity. That a capability is realised says it is delivered somehow, not how well."@en ;
     arch:questionStage            arch:AnalysisStage ;
@@ -365,8 +382,12 @@ concern the ArchiMate 4.0 viewpoints frame is not met. Each is executable SPARQL
           }
           ?capability rdf:type ?capabilityType .
           OPTIONAL {
-            ?realizer am4:realizes ?capability ;
-                      rdf:type ?realizerType .
+            # From each realisation, back to the realizer and on to the capability through structural relationships
+            # in line: DR 2 derives the weakest, a realisation.
+            ?from am4:realizes ?to .
+            ?realizer (am4:composedOf|am4:aggregates|am4:assignedTo|am4:realizes)* ?from .
+            ?to (am4:composedOf|am4:aggregates|am4:assignedTo|am4:realizes)* ?capability .
+            ?realizer rdf:type ?realizerType .
             FILTER(?realizerType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
             MINUS { SELECT DISTINCT ?realizerType WHERE { { ?realizerType arch:isAbstractClass true }
                                                           UNION { GRAPH ?abstractClassGraph { ?realizerType arch:isAbstractClass true } } } }
@@ -431,7 +452,7 @@ concern the ArchiMate 4.0 viewpoints frame is not met. Each is executable SPARQL
     a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
     dcterms:identifier            "notation/archimate4/requirement-traceability" ;
     skos:prefLabel                "How does each requirement trace to goals and to the elements that realise it?"@en ;
-    dcterms:description           "Requirements with what realises them, below, and the goals, outcomes and principles they realise or influence, above, as a list of links."@en ;
+    dcterms:description           "Requirements with what realises them, below, and the goals, outcomes and principles they realise or influence, above, as a list of links. With the derivations loaded, a longer chain the valid rules derive counts too, as one hop."@en ;
     arch:answers                  "One row per traced link: the requirement, the direction, the predicate and the element at the other end."@en ;
     arch:doesNotProve             "Verification. A realisation relationship is a design claim; it does not show the requirement is met."@en ;
     arch:questionStage            arch:AnalysisStage ;
@@ -523,7 +544,7 @@ concern the ArchiMate 4.0 viewpoints frame is not met. Each is executable SPARQL
     a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
     dcterms:identifier            "notation/archimate4/work-package-deliverables" ;
     skos:prefLabel                "What does each work package deliver, and what does that realise?"@en ;
-    dcterms:description           "Work packages, the deliverables they realise, and the architecture elements those deliverables realise."@en ;
+    dcterms:description           "Work packages, the deliverables they realise, and the architecture elements those deliverables realise. A realisation counts directly or as DR 2 derives it, through structural relationships in line."@en ;
     arch:answers                  "One row per work package, deliverable and element realised."@en ;
     arch:doesNotProve             "Schedule or progress. ArchiMate records what a work package produces, not when."@en ;
     arch:questionStage            arch:AnalysisStage ;
@@ -553,11 +574,16 @@ concern the ArchiMate 4.0 viewpoints frame is not met. Each is executable SPARQL
               { ?deliverableType rdfs:subClassOf* ?askedDeliverable } UNION { GRAPH ?deliverableSpecialisationGraph { ?deliverableType rdfs:subClassOf* ?askedDeliverable } }
             }
           }
-          ?workPackage rdf:type ?workPackageType ;
-                       am4:realizes ?deliverable .
+          # Each realisation directly, or as DR 2 derives it through structural relationships in line.
+          ?from am4:realizes ?to .
+          ?workPackage (am4:composedOf|am4:aggregates|am4:assignedTo|am4:realizes)* ?from .
+          ?to (am4:composedOf|am4:aggregates|am4:assignedTo|am4:realizes)* ?deliverable .
+          ?workPackage rdf:type ?workPackageType .
           ?deliverable rdf:type ?deliverableType .
           OPTIONAL {
-            ?deliverable am4:realizes ?realized .
+            ?realizing am4:realizes ?realised .
+            ?deliverable (am4:composedOf|am4:aggregates|am4:assignedTo|am4:realizes)* ?realizing .
+            ?realised (am4:composedOf|am4:aggregates|am4:assignedTo|am4:realizes)* ?realized .
             ?realized rdf:type ?realizedType .
             FILTER(?realizedType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
             MINUS { SELECT DISTINCT ?realizedType WHERE { { ?realizedType arch:isAbstractClass true }
@@ -627,7 +653,7 @@ concern the ArchiMate 4.0 viewpoints frame is not met. Each is executable SPARQL
     a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
     dcterms:identifier            "notation/archimate4/unassigned-behaviour" ;
     skos:prefLabel                "Which processes and functions has nobody been assigned to?"@en ;
-    dcterms:description           "Processes and functions that no active structure element is assigned to."@en ;
+    dcterms:description           "Processes and functions that no active structure element is assigned to. An assignment counts directly or as DR 2 derives it, in line with compositions and aggregations."@en ;
     arch:answers                  "One row per process or function without a performer."@en ;
     arch:doesNotProve             "That nobody performs it. The performer may be assigned to an enclosing process, or the model may stop above that level of detail."@en ;
     arch:questionStage            arch:QualityStage ;
@@ -656,7 +682,8 @@ concern the ArchiMate 4.0 viewpoints frame is not met. Each is executable SPARQL
           }
           ?behaviour rdf:type ?behaviourType ;
                      arch:inModel ?model .
-          FILTER NOT EXISTS { ?performer am4:assignedTo ?behaviour }
+          # Directly, or as DR 2 derives it in line with compositions and aggregations.
+          FILTER NOT EXISTS { ?from am4:assignedTo ?to . ?to (am4:composedOf|am4:aggregates|am4:assignedTo)* ?behaviour }
           OPTIONAL { ?behaviour skos:prefLabel ?label . FILTER(lang(?label) = "" || langMatches(lang(?label), "en")) }
         }
         ORDER BY ?type ?label
@@ -667,7 +694,7 @@ concern the ArchiMate 4.0 viewpoints frame is not met. Each is executable SPARQL
     a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
     dcterms:identifier            "notation/archimate4/unrealised-services" ;
     skos:prefLabel                "Which services does nothing realise?"@en ;
-    dcterms:description           "Services that no behaviour or active structure element realises."@en ;
+    dcterms:description           "Services that no behaviour or active structure element realises. A realisation counts directly or as DR 2 derives it, through structural relationships in line."@en ;
     arch:answers                  "One row per service nothing realises."@en ;
     arch:doesNotProve             "That the service is not delivered: it may be bought in, or realised in a model that is not loaded."@en ;
     arch:questionStage            arch:QualityStage ;
@@ -696,7 +723,8 @@ concern the ArchiMate 4.0 viewpoints frame is not met. Each is executable SPARQL
           }
           ?service rdf:type ?serviceType ;
                    arch:inModel ?model .
-          FILTER NOT EXISTS { ?realizer am4:realizes ?service }
+          # Directly, or as DR 2 derives it through structural relationships in line.
+          FILTER NOT EXISTS { ?from am4:realizes ?to . ?to (am4:composedOf|am4:aggregates|am4:assignedTo|am4:realizes)* ?service }
           OPTIONAL { ?service skos:prefLabel ?label . FILTER(lang(?label) = "" || langMatches(lang(?label), "en")) }
         }
         ORDER BY ?label
@@ -707,7 +735,7 @@ concern the ArchiMate 4.0 viewpoints frame is not met. Each is executable SPARQL
     a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
     dcterms:identifier            "notation/archimate4/applications-without-technology" ;
     skos:prefLabel                "Which application components run on no technology?"@en ;
-    dcterms:description           "Application components that no element of the technology domain serves or realises, directly or by realising a service that serves them."@en ;
+    dcterms:description           "Application components that no element of the technology domain serves or realises, directly or by realising a service that serves them. With the derivations loaded, a longer chain the valid rules derive counts too, as one hop."@en ;
     arch:answers                  "One row per application component with no technology under it."@en ;
     arch:doesNotProve             "That it runs nowhere. Where it is hosted may be outside the model, or recorded only in a deployment model that is not loaded."@en ;
     arch:questionStage            arch:QualityStage ;
@@ -812,7 +840,7 @@ concern the ArchiMate 4.0 viewpoints frame is not met. Each is executable SPARQL
     a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
     dcterms:identifier            "notation/archimate4/unrealised-capabilities" ;
     skos:prefLabel                "Which capabilities does nothing realise?"@en ;
-    dcterms:description           "Capabilities realised neither directly nor through any capability they are composed of or aggregate."@en ;
+    dcterms:description           "Capabilities realised neither directly nor through any capability they are composed of or aggregate. With the derivations loaded, a longer chain the valid rules derive counts too, as one hop."@en ;
     arch:answers                  "One row per capability with no realisation anywhere beneath it."@en ;
     arch:doesNotProve             "That the enterprise lacks the capability; only that the model does not say what delivers it."@en ;
     arch:questionStage            arch:QualityStage ;
@@ -854,7 +882,7 @@ concern the ArchiMate 4.0 viewpoints frame is not met. Each is executable SPARQL
     a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
     dcterms:identifier            "notation/archimate4/unrealised-requirements" ;
     skos:prefLabel                "Which requirements does no architecture element realise?"@en ;
-    dcterms:description           "Requirements that no element outside the motivation domain realises: realisation by another motivation element does not count."@en ;
+    dcterms:description           "Requirements that no element outside the motivation domain realises: realisation by another motivation element does not count. A realisation counts directly or as DR 2 derives it, through structural relationships in line."@en ;
     arch:answers                  "One row per requirement without a realising design element."@en ;
     arch:doesNotProve             "That the requirement is unmet; only that the model does not show what meets it."@en ;
     arch:questionStage            arch:QualityStage ;
@@ -885,8 +913,10 @@ concern the ArchiMate 4.0 viewpoints frame is not met. Each is executable SPARQL
                        arch:inModel ?model .
           # Realised by a design element: one whose own type is outside the motivation domain.
           MINUS {
-            ?realizer am4:realizes ?requirement ;
-                      rdf:type ?realizerType .
+            ?from am4:realizes ?to .
+            ?realizer (am4:composedOf|am4:aggregates|am4:assignedTo|am4:realizes)* ?from .
+            ?to (am4:composedOf|am4:aggregates|am4:assignedTo|am4:realizes)* ?requirement .
+            ?realizer rdf:type ?realizerType .
             FILTER(?realizerType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
             MINUS { SELECT DISTINCT ?realizerType WHERE { { ?realizerType arch:isAbstractClass true }
                                                           UNION { GRAPH ?abstractClassGraph { ?realizerType arch:isAbstractClass true } } } }
@@ -910,7 +940,7 @@ concern the ArchiMate 4.0 viewpoints frame is not met. Each is executable SPARQL
     a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
     dcterms:identifier            "notation/archimate4/principles-without-requirements" ;
     skos:prefLabel                "Which principles has no requirement made concrete?"@en ;
-    dcterms:description           "Principles that no requirement realises."@en ;
+    dcterms:description           "Principles that no requirement realises. A realisation counts directly or as DR 2 derives it, through structural relationships in line."@en ;
     arch:answers                  "One row per principle no requirement realises."@en ;
     arch:doesNotProve             "That the principle is ignored. It may be applied by review rather than through stated requirements."@en ;
     arch:questionStage            arch:QualityStage ;
@@ -946,8 +976,10 @@ concern the ArchiMate 4.0 viewpoints frame is not met. Each is executable SPARQL
                 { ?requirementType rdfs:subClassOf* ?askedRequirement } UNION { GRAPH ?requirementSpecialisationGraph { ?requirementType rdfs:subClassOf* ?askedRequirement } }
               }
             }
-            ?requirement am4:realizes ?principle ;
-                         rdf:type ?requirementType .
+            ?from am4:realizes ?to .
+            ?requirement (am4:composedOf|am4:aggregates|am4:assignedTo|am4:realizes)* ?from .
+            ?to (am4:composedOf|am4:aggregates|am4:assignedTo|am4:realizes)* ?principle .
+            ?requirement rdf:type ?requirementType .
           }
           OPTIONAL { ?principle skos:prefLabel ?label . FILTER(lang(?label) = "" || langMatches(lang(?label), "en")) }
         }
@@ -1064,5 +1096,84 @@ domain-specific type the same viewpoint admits; every other element belongs when
         }
         GROUP BY ?element ?type
         ORDER BY ?type ?label
+    """ ;
+.
+
+# ── Derivations ─────────────────────────────────────────────────
+# What the derivation rules propose (archimate4-derivation-rules.ttl), read when the model's
+# derivations are loaded with it — beside it in a file, in its derived graph
+# in a store. Without them, nothing.
+
+:potential-derivations
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "notation/archimate4/potential-derivations" ;
+    skos:prefLabel                "Where could the model be more concrete?"@en ;
+    dcterms:description           "The potential derivations no modeller has confirmed: relationships the derivation rules say may hold between elements the model relates only through others, each with the rule that proposed it. Each is the model's to state, or to make more precise, where a relationship drawn to a whole is meant for one of its parts."@en ;
+    arch:answers                  "One row per potential derivation not confirmed: its source, type and target, and the rule that proposed it."@en ;
+    arch:doesNotProve             "That the relationship holds: a potential derivation may hold, depending on the model. Nothing is listed unless the model's derivations are loaded with it."@en ;
+    arch:questionStage            arch:QualityStage ;
+    arch:questionAddressesConcern am4vp:Completeness ;
+    arch:resultIsFinding          false ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
+    arch:requiresMetamodel        <https://meta.linked.archi/archimate4/onto#> ;
+    arch:resultKey                "potentialDerivations" ;
+    arch:defaultLimit             500 ;
+    sh:prefixes                   <https://meta.linked.archi/archimate4/questions#> ;
+    sh:select """
+        SELECT DISTINCT ?derivation ?source ?sourceLabel ?relationshipType ?target ?targetLabel ?rule
+        WHERE {
+          # A potential derivation not confirmed: no qualified predicate leads to it.
+          ?derivation am4deriv:derivationCertainty am4deriv:Potential ;
+                      arch:source ?source ;
+                      arch:target ?target ;
+                      rdf:type ?relationshipType .
+          FILTER NOT EXISTS { ?source ?leads ?derivation }
+          FILTER(?relationshipType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+          MINUS { SELECT DISTINCT ?relationshipType WHERE { { ?relationshipType arch:isAbstractClass true }
+                                                            UNION { GRAPH ?abstractClassGraph { ?relationshipType arch:isAbstractClass true } } } }
+          OPTIONAL { ?derivation prov:wasGeneratedBy/prov:qualifiedAssociation/prov:hadPlan ?rule }
+          OPTIONAL { ?source skos:prefLabel ?sourceLabel . FILTER(lang(?sourceLabel) = "" || langMatches(lang(?sourceLabel), "en")) }
+          OPTIONAL { ?target skos:prefLabel ?targetLabel . FILTER(lang(?targetLabel) = "" || langMatches(lang(?targetLabel), "en")) }
+        }
+        ORDER BY ?sourceLabel ?targetLabel ?relationshipType
+    """ ;
+.
+
+:potential-derivation-premises
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "notation/archimate4/potential-derivation-premises" ;
+    skos:prefLabel                "Which relationships give rise to the most potential derivations?"@en ;
+    dcterms:description           "The relationships the model states that the most potential derivations not confirmed rest on. A relationship drawn to a whole where one of its parts is meant gives rise to a proposal for each part; stating the part's own relationship makes the model more concrete."@en ;
+    arch:answers                  "One row per relationship the model states that a potential derivation rests on, with how many rest on it, the most first."@en ;
+    arch:doesNotProve             "That the relationship is wrong: one drawn to a whole may be meant so. Nothing is listed unless the model's derivations are loaded with it."@en ;
+    arch:questionStage            arch:QualityStage ;
+    arch:questionAddressesConcern am4vp:Completeness ;
+    arch:resultIsFinding          false ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
+    arch:requiresMetamodel        <https://meta.linked.archi/archimate4/onto#> ;
+    arch:resultKey                "potentialDerivationPremises" ;
+    arch:defaultLimit             200 ;
+    sh:prefixes                   <https://meta.linked.archi/archimate4/questions#> ;
+    sh:select """
+        SELECT ?relationship ?source ?sourceLabel ?relationshipType ?target ?targetLabel (COUNT(DISTINCT ?derivation) AS ?derivations)
+        WHERE {
+          # Each potential derivation not confirmed, and what it was derived from that the model states: not a
+          # derivation itself.
+          ?derivation am4deriv:derivationCertainty am4deriv:Potential ;
+                      arch:source ?proposedSource ;
+                      prov:wasDerivedFrom ?relationship .
+          FILTER NOT EXISTS { ?proposedSource ?leads ?derivation }
+          FILTER NOT EXISTS { ?relationship am4deriv:derivationCertainty ?anyCertainty }
+          ?relationship arch:source ?source ;
+                        arch:target ?target ;
+                        rdf:type ?relationshipType .
+          FILTER(?relationshipType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))
+          MINUS { SELECT DISTINCT ?relationshipType WHERE { { ?relationshipType arch:isAbstractClass true }
+                                                            UNION { GRAPH ?abstractClassGraph { ?relationshipType arch:isAbstractClass true } } } }
+          OPTIONAL { ?source skos:prefLabel ?sourceLabel . FILTER(lang(?sourceLabel) = "" || langMatches(lang(?sourceLabel), "en")) }
+          OPTIONAL { ?target skos:prefLabel ?targetLabel . FILTER(lang(?targetLabel) = "" || langMatches(lang(?targetLabel), "en")) }
+        }
+        GROUP BY ?relationship ?source ?sourceLabel ?relationshipType ?target ?targetLabel
+        ORDER BY DESC(?derivations) ?sourceLabel ?targetLabel
     """ ;
 .

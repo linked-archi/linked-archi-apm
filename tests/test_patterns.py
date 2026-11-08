@@ -90,9 +90,9 @@ class TestRoutingTableShape(unittest.TestCase):
 
         document = json.loads(PATTERNS_JSON.read_text(encoding="utf-8"))
         impact = document["patterns"]["impact-and-dependency"]
-        for after in ({"core/neighbours-qualified": ["core/dependents-qualified"]},
+        for after in ({"core/neighbours": ["core/dependents"]},
                       {"core/not-run-here": ["core/resolve-element"]},
-                      {"core/dependents-qualified": []}):
+                      {"core/dependents": []}):
             with self.subTest(after):
                 impact["after"] = after
                 with tempfile.TemporaryDirectory() as directory:

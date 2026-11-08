@@ -5,7 +5,7 @@ license: Apache-2.0
 compatibility: Needs Python 3.11 or newer and no third-party package. Owns planning and bundling only; every query is executed by linked-archi-query, which uses linked-archi-profile and linked-archi-connect, so install those three alongside it. linked-archi-validate is needed for SHACL conformance and linked-archi-source for remote artifacts. Planning and bundling work with query absent, unannotated and reduced.
 metadata:
   author: linked-archi
-  version: "0.10.0"
+  version: "0.11.0"
   homepage: https://meta.linked.archi
 allowed-tools: Read Bash(python3:*)
 ---
@@ -138,6 +138,9 @@ throughout the investigation, and store artifacts in the project, not the skill 
   design-time dependencies do not establish operational impact.
 - Keep exact query, query hash, dataset/profile identity, time, warnings and truncation
   in saved envelopes. A count at the query cap is a floor; preview omission is separate.
+- A union query includes loaded derived graphs. Direct triples include asserted valid
+  derivations; qualified resources may also include unconfirmed proposals. Report that
+  distinction and use the published potential-derivation questions when reviewing proposals.
 - Separate **graph facts**, **derived facts**, **document statements**, **inferences** and
   **unknowns**. Every claim except an unknown must cite executed evidence. Detailed
   classification: [references/evidence-model.md](references/evidence-model.md).

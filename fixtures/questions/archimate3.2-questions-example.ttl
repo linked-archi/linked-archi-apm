@@ -5,6 +5,8 @@
 @prefix arch:  <https://meta.linked.archi/core#> .
 @prefix am:    <https://meta.linked.archi/archimate3/onto#> .
 @prefix amvp:  <https://meta.linked.archi/archimate3/viewpoints#> .
+@prefix prov:  <http://www.w3.org/ns/prov#> .
+@prefix amderiv: <https://meta.linked.archi/archimate3/derivation#> .
 @prefix :      <https://meta.linked.archi/examples/archimate3.2-questions/> .
 
 #################################################################
@@ -159,3 +161,43 @@
 :r24 a am:Assignment ; arch:inModel :model ; arch:source :bankActor ; arch:target :bankRole ;
     rdf:reifies <<( :bankActor am:assignedTo :bankRole )>> .
 :bankActor am:assignedTo :bankRole .
+
+# ── Derivations beside the model ────────────────────────────────
+# Two of the potential derivations the ArchiMate 3.2 rules derive from this
+# model (archimate3.2-derivation-rules.ttl), as they write them: in a file, beside the model
+# (DD-28). Neither is confirmed: no direct triple, no qualified predicate
+# leading to it. The questions that follow direct triples do not see them.
+
+<urn:linked-archi:derivation-d451b725313ab40d31cf62e771db45735d3dd851>
+    a                            am:Serving ;
+    arch:source                  :claimService ;
+    arch:target                  :clerk ;
+    rdf:reifies                  <<( :claimService am:serves :clerk )>> ;
+    amderiv:derivationCertainty  amderiv:Potential ;
+    prov:wasDerivedFrom          :r2 , :r4 ;
+    prov:wasGeneratedBy          <urn:linked-archi:derivation-activity-d451b725313ab40d31cf62e771db45735d3dd851> .
+
+<urn:linked-archi:derivation-activity-d451b725313ab40d31cf62e771db45735d3dd851>
+    a                            prov:Activity ;
+    prov:qualifiedAssociation    <urn:linked-archi:derivation-activity-d451b725313ab40d31cf62e771db45735d3dd851-association> .
+
+<urn:linked-archi:derivation-activity-d451b725313ab40d31cf62e771db45735d3dd851-association>
+    a                            prov:Association ;
+    prov:hadPlan                 amderiv:PDR5 .
+
+<urn:linked-archi:derivation-3c1f9c7103b2dc4f0f3ca641eadf1ba22d127d24>
+    a                            am:Serving ;
+    arch:source                  :server ;
+    arch:target                  :crmFunction ;
+    rdf:reifies                  <<( :server am:serves :crmFunction )>> ;
+    amderiv:derivationCertainty  amderiv:Potential ;
+    prov:wasDerivedFrom          :r5 , :r6 ;
+    prov:wasGeneratedBy          <urn:linked-archi:derivation-activity-3c1f9c7103b2dc4f0f3ca641eadf1ba22d127d24> .
+
+<urn:linked-archi:derivation-activity-3c1f9c7103b2dc4f0f3ca641eadf1ba22d127d24>
+    a                            prov:Activity ;
+    prov:qualifiedAssociation    <urn:linked-archi:derivation-activity-3c1f9c7103b2dc4f0f3ca641eadf1ba22d127d24-association> .
+
+<urn:linked-archi:derivation-activity-3c1f9c7103b2dc4f0f3ca641eadf1ba22d127d24-association>
+    a                            prov:Association ;
+    prov:hadPlan                 amderiv:PDR5 .

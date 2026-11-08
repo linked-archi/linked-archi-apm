@@ -1,21 +1,22 @@
 # core/neighbours-qualified - What does this element relate to?
 #
 # Answers: every relationship touching the focus element, in both directions,
-# through the qualified relationship resource - the form the converters emit by
-# default, and usually the only form present.
+# through the qualified relationship resource, retaining its identity.
 #
 # Does NOT prove: runtime dependency, traffic, criticality or failure
 # propagation. A modelled relationship is a design-time statement by whoever drew
 # the model.
 #
-# This is the default traversal template. Routing traversal through a direct predicate
-# instead returns nothing on a default dataset, because direct triples are opt-in
-# (--emit-direct-rel-triples).
+# Use core/neighbours to follow asserted direct triples with the metamodel loaded.
+# This resource-level reading also works on older qualified-only output.
 #
 # The relationship's own kind is an rdf:type on the qualified resource alongside
 # the core class, so the OPTIONAL filters out the core types to leave the
 # notation type (am:Serving, bpmn:SequenceFlow, bs:Ownership). There is no
 # arch:relType predicate.
+#
+# Qualified resources may include unconfirmed proposals when derivations are
+# loaded into the selected graphs. Endpoints alone do not assert a relationship.
 #
 # Parameters: FOCUS_IRI, LIMIT
 {{PREFIXES}}

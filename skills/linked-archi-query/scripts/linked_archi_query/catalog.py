@@ -425,7 +425,7 @@ class TemplateEntry:
 #: comes to carry what it reads.
 QUESTION_REMEDIES: Mapping[str, str] = {
     "direct_rel_triples": (
-        "The converters write the direct triples unless run with "
+        "Reconvert older output to add the direct triples. Current converters write them unless run with "
         "--no-emit-direct-rel-triples; data that has them is described by a profile "
         "claiming the capability, such as linked-archi-default."
     ),
@@ -774,6 +774,10 @@ class Catalog:
                     does_not_prove=question.does_not_prove,
                     parameters=catalogue_parameters(question),
                     requires=Requirement(capabilities=question.capabilities),
+                    alternatives=({
+                        "core/neighbours": ("core/neighbours-qualified",),
+                        "core/dependents": ("core/dependents-qualified",),
+                    }.get(name, ()) if bundled else ()),
                     notation=question.notation,
                     notation_namespace=question.notation_namespace,
                     template_dir=self.template_dir,

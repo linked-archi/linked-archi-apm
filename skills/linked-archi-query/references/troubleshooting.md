@@ -29,7 +29,8 @@ query can turn it into a misleading empty result.
    IRIs from `core/inventory` and predicates from `core/discover-predicates`.
 3. **The wrong relationship form.** If you hand-wrote a `?source ?predicate ?target`
    pattern, it may not be there — an older converter, `--no-emit-direct-rel-triples` and
-   a notation with no published predicate (BPMN) all leave it out. Use
+   a relationship type with no published predicate all leave it out. Current BPMN
+   connectors publish direct predicates too. Use
    `core/neighbours-qualified`.
 4. **Two graph scopes sharing one variable.** If you hand-wrote a query scoping to two
    roles, a single `?g` requires one graph IRI to end in two suffixes at once. Use

@@ -1,6 +1,6 @@
 # linked-archi-apm: proposal, design record, and progress tracker
 
-**Status:** released, Apache-2.0, installable directly by APM (v0.10.0)
+**Status:** released, Apache-2.0, installable directly by APM (v0.11.0)
 **Last updated:** 2026-10-11
 
 One document, three jobs. It records **why** this package exists, **how** it is
@@ -73,7 +73,7 @@ The terms that exist, against the ones an author reasonably reaches for first:
 **How it is enforced:** no template names a vocabulary term at all. Templates name roles, and
 `skills/linked-archi-profile/assets/profiles/linked-archi-default.yaml` binds each role to a
 verified term. `tests/test_render.py::test_no_template_carries_its_own_prefixes` asserts it
-across all 43 templates, so a term cannot creep back into one.
+across all 44 templates, so a term cannot creep back into one.
 
 ### F2. Graph scoping has to be a profile decision, not a constant
 
@@ -277,7 +277,7 @@ identified by shape and `tests/test_fixtures.py` asserts the shape of each one.
 Extraction proves a fixture was true of *some* build; only an assertion pins which.
 
 Every selection rule in `fixtures/build_fixtures.py` exists because a template
-    returned zero rows without it. All 43 templates return rows against
+    returned zero rows without it. All 44 templates return rows against
 `augmented.trig` paired with the published vocabulary fixtures: a template returning nothing is one the suite cannot distinguish
 from a broken one. Details in [fixtures/PROVENANCE.md](fixtures/PROVENANCE.md).
 
@@ -516,9 +516,9 @@ anything about the code under test.
 | `make verify-curated` (curated profile / `augmented.trig`) | 0 errors |
 | `query batch` against separate `query run` commands | identical `rows`, `query_id`, `truncated` and `row_count`; load paid once |
 | Store modes `memory`, `cached`, `readonly`, `refresh` | same quad and named-graph counts from each; a changed input rebuilds rather than serving a stale store |
-| `la-query catalog list --profile linked-archi-default` | 43 templates, 37 available, 6 refused with reasons |
+| `la-query catalog list --profile linked-archi-default` | 44 templates plus bundled model questions; availability and refusal reasons are profile-specific |
 | `la-query catalog list --profile curated-store` | 43 available, 0 refused |
-| All 43 templates against `augmented.trig` and paired vocabulary fixtures | every one returns rows |
+| All 44 templates against `augmented.trig` and paired vocabulary fixtures | every one returns rows |
 | Exit-code contracts | 9 of 9 |
 | Owner skills copied alone to temp directories | independent commands run with `PYTHONPATH` scrubbed; combined siblings execute |
 
@@ -1565,3 +1565,18 @@ Two limits worth stating. Endpoint-coincident direct predicates without an
 predicate is the relationship's intended unqualified form. And truncated results are
 floors, never totals — a capped count says "at least", and no finding here treats one as a
 population.
+
+
+**D34. Asserted traversals and qualified-resource inspection have separate names.**
+Recorded 2026-11-08 during the user-authorised metamodel alignment. The implementation
+retains `core/neighbours-qualified` and `core/dependents-qualified` for compatibility;
+`core/neighbours` and `core/dependents` are the current published direct-triple questions.
+This applies the one-name/two-implementations rule in la-gram's query design D19: a
+resource-level reading, which can include a proposal, is a different question. The impact
+pattern selects asserted traversals; refusals offer qualified alternatives for explicit
+review, never silent substitution. `notation/archimate/layer-crossing` keeps one name:
+both implementations now count distinct asserted pairs by the ontology's layers.
+
+Audience names are an independent enrichment (`core/context-names`). Canonical labels and
+existing name resolution retain their meanings. Core-vis label expressions and pictures
+are presentation data, not additional semantic relationships or executable instructions.

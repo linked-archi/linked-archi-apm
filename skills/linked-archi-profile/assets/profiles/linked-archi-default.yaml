@@ -53,6 +53,7 @@ namespaces:
   owl: http://www.w3.org/2002/07/owl#
   xsd: http://www.w3.org/2001/XMLSchema#
   skos: http://www.w3.org/2004/02/skos/core#
+  skosxl: http://www.w3.org/2008/05/skos-xl#
   dct: http://purl.org/dc/terms/
   prov: http://www.w3.org/ns/prov#
   adms: http://www.w3.org/ns/adms#
@@ -178,6 +179,9 @@ roles:
   # --- Identity and naming -------------------------------------------------
   label: skos:prefLabel
   alt_label: skos:altLabel
+  context_name: skosxl:altLabel
+  literal_form: skosxl:literalForm
+  presentation_context: arch:inPresentationContext
   definition: skos:definition
   # Native source id. skos:notation across ArchiMate, Backstage, LeanIX,
   # PlantUML and Structurizr; BPMN carries bpmn:id instead, so both are listed
@@ -194,7 +198,7 @@ roles:
   folder_class: arch:Folder
 
   # --- Relationships -------------------------------------------------------
-  # The qualified form is the default and often the only form. Endpoints are
+  # Qualified resources accompany the direct triples by default. Endpoints are
   # arch:source/arch:target; arch:relSource/relTarget are the withdrawn
   # rdf:Statement design and are deliberately absent.
   rel_source: arch:source
@@ -311,7 +315,7 @@ roles:
   # route, and it is the one that survives a graph published with no views graph.
   # The view templates use the visual route; in_view is bound so a profile
   # describes the data accurately and so a query can reach it. See core DD-30.
-  view_node_class: [archvis:ArchNode, archvis:Node]
+  view_node_class: [archvis:ArchNode, archvis:Node, archvis:ContainerNode, archvis:LabelNode]
   view_link_class: archvis:Link
   view_ref: archvis:view
   node_element: archvis:archElement
@@ -391,8 +395,8 @@ capabilities:
   partitioned_semantic_graphs: true
   # Direct source->predicate->target triples alongside the qualified form, written
   # by every converter at default flags. A relationship whose class publishes no
-  # unqualified predicate gets none - BPMN's flows, for one - so a BPMN-only
-  # dataset has none at all: `verify` says so, and linked-archi-qualified fits it.
+  # unqualified predicate gets none. BPMN connectors now have published direct
+  # predicates too; older output without them needs linked-archi-qualified.
   direct_rel_triples: true
   # RDF 1.2 triple terms bridging the qualified resource to the unqualified
   # predicate, written with each direct triple. `partial`, not `true`: the bridge

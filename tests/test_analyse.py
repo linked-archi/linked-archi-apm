@@ -276,7 +276,9 @@ class TestProfileAwareness(unittest.TestCase):
             self.assertNotIn(decision["template"], [step.template for step in plan.steps])
         self.assertNotIn("query run core/dependents-direct", plan.to_text())
         self.assertIn("not assumed to answer the same question", plan.to_text())
-        self.assertEqual(plan.as_dict()["planned_steps"], 7)
+        self.assertEqual(plan.as_dict()["planned_steps"], 5)
+        self.assertTrue({"core/neighbours", "core/dependents"}.issubset(
+            {decision["template"] for decision in refused}))
 
     def test_the_same_plan_under_a_richer_profile_refuses_nothing(self):
         plan = _plan('what depends on "Order Service" if we retire it?',
@@ -389,8 +391,8 @@ class TestPlanBatches(unittest.TestCase):
 
     def test_pattern_dependencies_preserve_neighbours_before_deeper_paths(self):
         plan = _plan('what depends on "Order Service"?', catalogue=self.catalogue)
-        neighbours = next(step for step in plan.steps if step.template == "core/neighbours-qualified")
-        dependents = next(step for step in plan.steps if step.template == "core/dependents-qualified")
+        neighbours = next(step for step in plan.steps if step.template == "core/neighbours")
+        dependents = next(step for step in plan.steps if step.template == "core/dependents")
         self.assertEqual(dependents.depends_on, [neighbours.number])
         self.assertEqual(dependents.status, "awaiting-parameters")
 
@@ -486,7 +488,7 @@ class TestCompactText(unittest.TestCase):
         self.assertIn("la-query query batch plans/03-resolve+pattern.json", text)
         self.assertNotIn("query run core/inventory-summary", text)
         self.assertNotIn("query run core/discover-relationship-types", text)
-        self.assertIn("query run core/neighbours-qualified", text)
+        self.assertIn("query run core/neighbours", text)
 
     def test_unwritten_batches_keep_runnable_step_commands(self):
         text = self._plan().to_text()
@@ -637,8 +639,8 @@ class TestReviewRounds(unittest.TestCase):
                      catalogue=self.catalogues["linked-archi-default"])
         resolve = self._by(plan, "core/resolve-element")
         discovery = self._by(plan, "core/discover-relationship-types")
-        neighbours = self._by(plan, "core/neighbours-qualified")
-        dependents = self._by(plan, "core/dependents-qualified")
+        neighbours = self._by(plan, "core/neighbours")
+        dependents = self._by(plan, "core/dependents")
         predicates = self._by(plan, "core/reified-predicates")
         direct = self._by(plan, "core/dependents-direct")
         self.assertEqual(neighbours.depends_on, [resolve.number, discovery.number])

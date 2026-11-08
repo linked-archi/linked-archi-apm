@@ -1656,7 +1656,7 @@ def build_parser() -> argparse.ArgumentParser:
             "--format md for an aligned table, --format json for the full envelope."
         ),
     )
-    run.add_argument("template", help="template name, e.g. core/dependents-qualified")
+    run.add_argument("template", help="catalogue entry, e.g. core/dependents")
     _profile_arg(run)
     _catalog_arg(run)
     _target_args(run)

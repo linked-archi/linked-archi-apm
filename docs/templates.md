@@ -1,6 +1,6 @@
 # Template catalogue
 
-Forty-three tested templates. Each one declares what it answers, what it does **not** prove, what it
+Forty-four tested templates. Each one declares what it answers, what it does **not** prove, what it
 needs from the profile, and which templates to use instead when it is refused.
 
 `la-query catalog show <name>` is the authoritative parameter list — read it rather than the `.rq`
@@ -22,10 +22,10 @@ python3 scripts/la-query catalog dump --profile linked-archi-default \
 | [discovery](#discovery) | 3 | Find out what predicates and relationship types this dataset actually uses, before assuming one. |
 | [analysis](#analysis) | 10 | The questions people actually ask: what depends on what, what realises what, what crosses a layer. |
 | [views](#views) | 8 | Prescribed viewpoints and actual diagrams: what is offered, drawn, and different. |
-| [enrichment](#enrichment) | 3 | Attributes only some notations carry, such as lifecycle and ownership. |
+| [enrichment](#enrichment) | 4 | Attributes only some notations carry, such as lifecycle and ownership. |
 | [quality](#quality) | 8 | Whether the model can be trusted to answer at all: gaps, orphans, provenance, identity, conformance. |
 
-Thirty-seven are cross-notation. Six are notation-specific: one each for ArchiMate, C4, Backstage and LeanIX, and two for BPMN. A notation template is gated on the vocabulary IRI it is written against, never on a notation label.
+Thirty-eight are cross-notation. Six are notation-specific: one each for ArchiMate, C4, Backstage and LeanIX, and two for BPMN. A notation template is gated on the vocabulary IRI it is written against, never on a notation label.
 
 ## Which one to reach for
 
@@ -42,8 +42,8 @@ then cite its sources. Analyse owns that orchestration. Render-only work needs m
 | "which elements are classified under *Arch component*?" | `core/resolve-concept`, then `core/classified-by` | classification intent chooses the method; SKOS labels resolve concept and scheme candidates, not query intent |
 | "which types belong to *Application Domain*?" | `core/resolve-vocabulary-concept`, then `core/elements-by-category` | the notation taxonomy groups OWL types, not asserted instance classifications |
 | "which viewpoint fits a capability map?" | `core/viewpoint-catalog`, then `core/viewpoint-detail` | a published viewpoint library describes permitted classes and intended audience; `core/views` reports actual diagrams |
-| "what does X relate to?" | `core/neighbours-qualified` | the qualified form is what converters emit by default |
-| "what breaks if X changes?" | `core/dependents-qualified` | bounded to two hops, and answers reachability rather than impact |
+| "what does X relate to?" | `core/neighbours` | asserted direct triples, with the metamodel loaded |
+| "what breaks if X changes?" | `core/dependents` | bounded to two hops, and answers reachability rather than impact |
 | "what connects capabilities to applications?" | `core/traceability` | the question is about two *types*, not two named things |
 | "which predicate should I even use?" | `core/discover-relationship-types` | what was modelled, as against what the metamodel permits |
 | "who owns this?" | `notation/backstage/ownership`, `core/lifecycle` | ownership is notation-specific, so a cross-notation template would under-report |
@@ -57,11 +57,12 @@ between questions, or treat filenames or a verification marker as a revision che
 orientation when data/profile changes and before absence claims. Analyse conservatively plans
 fresh orientation; its two independent queries can share one batch.
 
-**Prefer the qualified form.** Two questions ship in variants: `core/dependents` as `-qualified` and
-`-direct`, `core/neighbours` as `-qualified` and `-reified`. Each pair asks one question against
-different evidence, and `-qualified` is the one every conversion supports. The others need
-capabilities — `direct_rel_triples`, `rdf_reifies` — that the converters meet by default where the
-notation publishes the predicate, and that output from an older converter lacks.
+**Choose the relationship reading deliberately.** `core/neighbours` and `core/dependents`
+are model questions following asserted direct triples, with the metamodel loaded; dependents
+is bounded to two hops. Their `-qualified` counterparts retain relationship resources and
+work on older qualified-only output, but can include unconfirmed proposals. `core/dependents-direct`
+follows a chosen predicate set at any depth; `core/neighbours-reified` reads triple terms,
+which describe relationships without asserting them. Never union these readings as distinct facts.
 
 **A refusal is an answer.** If the profile cannot support a template, `la-query` says so and
 names alternatives rather than running it. See [Evidence and refusal](concepts/evidence.md).
@@ -175,7 +176,7 @@ $ python3 scripts/la-query query run core/dependents-direct \
     --set PREDICATE_PATH="<https://meta.linked.archi/backstage/onto#ownedBy>"
 Template 'core/dependents-direct' cannot run against profile 'linked-archi-qualified':
   - capability 'direct_rel_triples' is False in profile 'linked-archi-qualified' but this template needs True
-Try instead: core/dependents-qualified, core/neighbours-qualified (same question, different evidence).
+Try instead: core/dependents-qualified, core/neighbours-qualified (review their scope and evidence).
 This is a refusal, not an empty result: running it anyway would return no rows and read as 'nothing exists'.
 ```
 
@@ -269,7 +270,7 @@ Explain each resource a term matches: definition, type, owning model, immediate 
 **Answers.** What this dataset says a term means, and how ambiguous the term is.
 
 !!! warning "Does not prove"
-    That a definition is true, current or agreed. It is text somebody typed in a modelling tool.
+    That a definition is true, current or agreed. It is text somebody typed in a modelling tool. Qualified resources may include unconfirmed proposals when derivations are in the selected graphs; their endpoints alone do not assert a relationship.
 
 | Parameter | Type | Default |
 |---|---|---|
@@ -416,7 +417,7 @@ Relationship types present, with counts and the endpoint types they join.
 **Answers.** Which relationship kinds this dataset actually uses.
 
 !!! warning "Does not prove"
-    What the metamodel permits. This is what was modelled.
+    What the metamodel permits. This is what was modelled. Qualified resources may include unconfirmed proposals when derivations are in the selected graphs; their endpoints alone do not assert a relationship.
 
 | Parameter | Type | Default |
 |---|---|---|
@@ -487,7 +488,7 @@ What reaches an element within two hops, via the qualified form.
 **Answers.** Bounded incoming dependency paths, with the relationship types on each.
 
 !!! warning "Does not prove"
-    Impact. Reachability in a model is not blast radius.
+    Impact. Reachability in a model is not blast radius. Qualified resources may include unconfirmed proposals when derivations are in the selected graphs; their endpoints alone do not assert a relationship.
 
 | Parameter | Type | Default |
 |---|---|---|
@@ -505,7 +506,7 @@ Direct relationships touching an element, via the qualified form.
 **Answers.** What an element relates to, in both directions, with the relationship kind.
 
 !!! warning "Does not prove"
-    Runtime dependency, criticality or failure propagation.
+    Runtime dependency, criticality or failure propagation. Qualified resources may include unconfirmed proposals when derivations are in the selected graphs; their endpoints alone do not assert a relationship.
 
 | Parameter | Type | Default |
 |---|---|---|
@@ -539,7 +540,7 @@ Paths of one or two hops between two kinds of element.
 **Answers.** Which elements of one type connect to which of another, and how.
 
 !!! warning "Does not prove"
-    That an unlisted pair is unconnected. Deeper paths are out of scope.
+    That an unlisted pair is unconnected. Deeper paths are out of scope. Qualified resources may include unconfirmed proposals when derivations are in the selected graphs; their endpoints alone do not assert a relationship.
 
 | Parameter | Type | Default |
 |---|---|---|
@@ -555,18 +556,20 @@ Paths of one or two hops between two kinds of element.
 
 *archimate only.*
 
-Relationships that cross ArchiMate layers, grouped by layer pair.
+Asserted ArchiMate source-target pairs crossing layers, grouped by type and layer pair.
 
-**Answers.** Where realisation and serving cross layers, and how often.
+**Answers.** Distinct pairs of concepts related across layers, including asserted derivations.
 
 !!! warning "Does not prove"
-    That a crossing is correct, or that a missing one is a gap. Layer is inferred from class names.
+    Correctness or completeness. Unconfirmed proposals are not assertions.
 
 | Parameter | Type | Default |
 |---|---|---|
 | `LIMIT` | integer (range 1..2000) | `200` |
 
-**Requires.** graphs `semantic`
+**Requires.** graphs `semantic`, `vocabulary`; `direct_rel_triples: true`
+
+**Instead, when refused.** `core/neighbours-qualified` (resource-level reading).
 
 ### `notation/bpmn/process-components`
 
@@ -597,7 +600,7 @@ Sequence flows of one BPMN process, as edges.
 **Answers.** Which steps follow which, with the flow element types.
 
 !!! warning "Does not prove"
-    Runtime order. Gateways branch; these are edges, not a path.
+    Runtime order. Gateways branch; these are edges, not a path. Qualified resources may include unconfirmed proposals when derivations are in the selected graphs; their endpoints alone do not assert a relationship.
 
 | Parameter | Type | Default |
 |---|---|---|
@@ -799,7 +802,7 @@ Backstage entities and the group or user that owns them.
 **Answers.** Who is recorded as owning what, with lifecycle state.
 
 !!! warning "Does not prove"
-    Accountability. spec.owner is what somebody wrote in a file.
+    Accountability. spec.owner is what somebody wrote in a file. Qualified resources may include unconfirmed proposals when derivations are in the selected graphs; their endpoints alone do not assert a relationship.
 
 | Parameter | Type | Default |
 |---|---|---|
@@ -825,6 +828,28 @@ LeanIX fact sheets with status, completion and lifecycle phase.
 | `LIMIT` | integer (range 1..2000) | `200` |
 
 **Requires.** graphs `semantic`
+
+### `core/context-names`
+
+Names assigned to an element or relationship for particular presentation contexts.
+
+**Answers.** Each audience-specific name and language alongside the canonical name.
+
+!!! warning "Does not prove"
+    Rendered diagram text or audience membership. Label expressions are not evaluated.
+
+| Parameter | Type | Default |
+|---|---|---|
+| `FOCUS_IRI` | iri | required |
+| `LIMIT` | integer (range 1..1000) | `100` |
+
+**Requires.** roles `context_name`, `literal_form`, `presentation_context`, `label`; graphs `semantic`.
+
+**Instead, when refused.** `core/element-detail`, `core/resolve-element`.
+
+Canonical names remain `skos:prefLabel`. Core 0.5.0 audience names use `skosxl:altLabel`,
+`skosxl:literalForm` and `arch:inPresentationContext`; their plain `skos:altLabel` aliases
+remain discoverable through `core/resolve-element`. Use the flattened profile for la-gram Turtle.
 
 ## quality
 
@@ -909,7 +934,7 @@ Elements taking part in no relationship.
 **Answers.** Where the model has islands, as a data-quality reading.
 
 !!! warning "Does not prove"
-    That an element is unused or safe to remove.
+    That an element is unused or safe to remove. Qualified resources may include unconfirmed proposals when derivations are in the selected graphs; their endpoints alone do not assert a relationship.
 
 | Parameter | Type | Default |
 |---|---|---|
@@ -937,12 +962,12 @@ Source file, converter, and timestamps behind an element's model.
 
 ### `core/reifies-audit`
 
-Qualified relationships whose triple term is missing or disagrees with arch:source/arch:target.
+Asserted qualified relationships whose bridge is missing, disagrees, or lacks its direct triple.
 
 **Answers.** Whether the two halves of each relationship agree with each other.
 
 !!! warning "Does not prove"
-    Correctness. A relationship wrong in both halves agrees with itself and passes.
+    Correctness. Unasserted, unlinked propositions are excluded; missing-term needs a published unqualified form before it is a defect.
 
 | Parameter | Type | Default |
 |---|---|---|

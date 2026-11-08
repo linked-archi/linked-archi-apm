@@ -57,20 +57,15 @@ CASES: dict[str, tuple[dict, int]] = {
     "core/neighbours-qualified": ({"FOCUS_IRI": BPMN_TASK}, 2),
     "core/dependents-qualified": ({"FOCUS_IRI": BPMN_TASK}, 1),
     "core/reified-predicates": ({}, 10),
-    # Deliberately NOT BPMN_TASK. The BPMN ontology declares no
-    # arch:unqualifiedForm, so BPMN relationships carry no triple term and this
-    # focus would return zero - the fixture is honest about that gap.
-    "core/neighbours-reified": ({"FOCUS_IRI": support.BACKSTAGE_COMPONENT}, 2),
-    "core/reifies-audit": ({}, 4),
+    # Current BPMN conversion carries the published sequenceFlow bridge.
+    "core/neighbours-reified": ({"FOCUS_IRI": BPMN_TASK}, 2),
+    "core/reifies-audit": ({}, 1),
+    "core/context-names": ({"FOCUS_IRI": support.C4_CONTAINER}, 1),
     # Every named graph the conversion described. 13 bundles in the fixture, one per
     # graph it wrote, so a floor of 4 is comfortably under what the data holds while
     # still failing if the bundles stop being extracted.
     "core/graph-provenance": ({}, 4),
-    # ArchiMate rather than BPMN, because the fixture's direct triples use the predicate
-    # `arch:unqualifiedForm` declares and the ontology declares none for
-    # bpmn:SequenceFlow. A real conversion CAN have BPMN direct edges - the BPMN type
-    # mapping supplies `bpmn:sequenceFlowTo` - but this fixture is built from the
-    # ontology's declarations, so it has none. See fixtures/PROVENANCE.md.
+    # An asserted ArchiMate flow path in the converter output.
     "core/dependents-direct": (
         {"FOCUS_IRI": support.ARCHIMATE_FLOW_SOURCE,
          "PREDICATE_PATH": support.ARCHIMATE_FLOWS_TO}, 1),
@@ -138,7 +133,7 @@ class TestAgainstAugmentedFixture(unittest.TestCase):
             raise unittest.SkipTest("pyoxigraph is not installed")
         cls.catalog = load_catalog()
         cls.profile = load_profile("curated-store")
-        cls.adapter = support.load_fixture(AUGMENTED, VOCABULARY, SEMANTIC_SCHEMES)
+        cls.adapter = support.load_fixture(AUGMENTED, VOCABULARY, SEMANTIC_SCHEMES, support.FIXTURES / "questions/archimate3.2-onto.ttl")
 
     def test_every_template_returns_at_least_its_floor(self):
         for name, (params, minimum) in sorted(CASES.items()):
@@ -925,7 +920,7 @@ class TestAgainstOutputWithoutDirectTriples(unittest.TestCase):
         cls.adapter = support.load_fixture(support.qualified_only())
 
     GATED = TestAgainstBaseFixture.GATED | {
-        "core/dependents-direct",
+        "core/dependents-direct", "notation/archimate/layer-crossing",
         # The RDF 1.2 bridge, written with the direct triple and left out with it.
         "core/reified-predicates", "core/neighbours-reified", "core/reifies-audit",
     }

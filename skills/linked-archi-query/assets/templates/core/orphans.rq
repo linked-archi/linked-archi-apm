@@ -45,6 +45,9 @@
 # reading this template recommends was unavailable for whichever notations do not
 # carry a one-hop folder chain to the model.
 #
+# Qualified resources may include unconfirmed proposals when derivations are
+# loaded into the selected graphs. Endpoints alone do not assert a relationship.
+#
 # Parameters: LIMIT
 {{PREFIXES}}
 SELECT ?element ?label (GROUP_CONCAT(DISTINCT STR(?type); separator=", ") AS ?types) ?model

@@ -46,11 +46,11 @@ class TestTemplateCatalogueIsDocumentedWhole(unittest.TestCase):
     def test_the_stated_count_matches(self):
         """The prose says a number. Numbers in prose are the first thing to go stale."""
         self.assertIn(
-            "Forty-three tested templates", self.page,
+            "Forty-four tested templates", self.page,
             f"the catalogue ships {len(self.templates)} templates; the page's opening sentence "
             "states a different number",
         )
-        self.assertEqual(len(self.templates), 43)
+        self.assertEqual(len(self.templates), 44)
 
     def test_the_stage_table_counts_match_the_catalogue(self):
         counts: dict[str, int] = {}

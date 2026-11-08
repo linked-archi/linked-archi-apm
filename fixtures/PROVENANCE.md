@@ -17,6 +17,21 @@ faithfully it was extracted. What closes that gap is asserting the shape:
 fixture that quietly changes layout fails a test instead of silently redefining what
 the suite is testing against.
 
+## Alignment snapshot — 2026-11-08
+
+Converter fixtures were regenerated with JDK 25 from local converter commit `2de154d`
+(`1.3.0-SNAPSHOT`), after building all five converter shadow JARs. The inputs were the
+committed example-architecture-project tree at `6a00bb43419fd7cbe15d1bc77c9b9f51e6932811`, extracted into a temporary
+workspace, and the converter checkout's committed ArchiSurance XML. This deliberately
+excludes unrelated uncommitted edits to the example project's LeanIX input. The partitioned
+Backstage fixture was rebuilt with the documented source-map recipe as well.
+
+The bundled question sets and expected answers come from the local linked-archi-meta
+checkout at `3cccb1b`; the question sets match la-gram's bundled sets at `fb60d0f`.
+The presentation fixture is `examples/labels-per-presentation.ttl`, refreshed by
+`make questions`. Counts below describe the bundled fixture shapes, not a moving
+converter version label.
+
 ## The version stamp proves nothing
 
 Every `.trig` file here is stamped:
@@ -55,14 +70,14 @@ Consequences, all of which the tests encode:
 
 | File | Quads | Graphs | What it is |
 |---|---|---|---|
-| `base.trig` | 3502 | 17 | Real converter output at default flags, trimmed. The default case. |
-| `augmented.trig` | 3555 | 19 | `base` plus what converters never emit. |
-| `flat.ttl` | 3502 | 0 | `base` with graph identity discarded. |
+| `base.trig` | 3507 | 17 | Real converter output at default flags, trimmed. The default case. |
+| `augmented.trig` | 3564 | 19 | `base` plus what converters never emit. |
+| `flat.ttl` | 3507 | 0 | `base` with graph identity discarded. |
 | `converter-1.3.trig` | 308 | 4 | Real converter output, **verbatim**. The one PARTITIONED fixture. |
-| `vocabulary.ttl` | 843 | 0 | Published vocabulary: BPMN taxonomy, plus the core property axioms. |
+| `vocabulary.ttl` | 959 | 0 | Published vocabulary: BPMN taxonomy, plus the core property axioms. |
 | `semantic-schemes.ttl` | 30 | 0 | Selected statements from the published ArchiMate 4 taxonomy and viewpoint catalog. |
-| `shapes.ttl` | 3744 | 0 | Published SHACL: which relationship may connect which types. |
-| `unqualified-forms.json` | 75 pairs | — | Extracted `arch:unqualifiedForm` mappings. Not RDF. |
+| `shapes.ttl` | 3950 | 0 | Published SHACL: which relationship may connect which types. |
+| `unqualified-forms.json` | 96 pairs | — | Extracted `arch:unqualifiedForm` mappings. Not RDF. |
 
 Output written without the direct triples - by a converter from before they became its
 default, or with `--no-emit-direct-rel-triples` - is not committed: `support.qualified_only()`
@@ -81,13 +96,14 @@ off a version stamp either, since every `.trig` here says
 `schema:softwareVersion "1.3.0-SNAPSHOT"`. See
 [The version stamp proves nothing](#the-version-stamp-proves-nothing).
 
-All 43 catalogued templates return rows against `augmented.trig` under the
+All 44 catalogued templates return rows against `augmented.trig` under the
 `curated-store` profile committed at
 `skills/linked-archi-profile/assets/profiles/examples/curated-store.yaml` — with one
 pairing: vocabulary-backed templates read published vocabulary, which no conversion
 emits, so the suite loads `vocabulary.ttl` beside the dataset exactly as an operator
 would (`la-connect` takes several files). The test also attaches
-`semantic-schemes.ttl` for the published viewpoint entries. See
+`semantic-schemes.ttl` for the published viewpoint entries and
+`questions/archimate3.2-onto.ttl` for layer membership. See
 [vocabulary.ttl](#vocabularyttl-published-not-converted) and
 [semantic-schemes.ttl](#semantic-schemesttl-published-taxonomy-and-viewpoints) below. That is
 the bar the selection rules below
@@ -184,7 +200,7 @@ What the mix deliberately preserves:
 Written by the converters at default flags, so extracted like everything else. Each
 relationship whose class publishes an unqualified predicate has its direct triple beside
 the qualified resource, and an `rdf:reifies` bridge on that resource whose triple term
-names the predicate *and* both endpoints - 30 of the 36 relationships here. The triple term
+names the predicate *and* both endpoints - 34 of the 36 relationships here. The triple term
 is what lets `verify` tell a genuine unqualified form from an unrelated edge between the
 same two resources.
 
@@ -192,13 +208,14 @@ same two resources.
 element alone, it would point at an element the extract may not have, with no qualified
 resource to account for it - a pairing no conversion writes.
 
-**Six relationships have neither** - four `bpmn:SequenceFlow` and two `am:UsedBy` - because
-the BPMN ontology declares no unqualified forms and `am:UsedBy` (the ArchiMate 2 name for
-Serving) has none either. That is why `core/reifies-audit` reports six genuine
-`missing-term` rows rather than a defect planted to give the template something to find,
-and why the default profile claims `rdf_reifies: partial`. A conversion with a type mapping
-can still have BPMN direct edges - `type-mapping-bpmn-full.yml` supplies
-`sequenceFlow → bpmn:sequenceFlowTo` - and this extract, converted without one, has none.
+Current BPMN sequence flows carry `bpmn:sequenceFlow`, the matching `rdf:reifies`
+bridge and `bpmn:qualifiedSequenceFlow`. A legacy `am:UsedBy` has no published
+unqualified form, so bridge coverage can still be partial. A missing bridge needs the
+vocabulary context before it is called a defect; the model-question audit reads that mapping.
+
+The augmented fixture deliberately removes one C4 bridge while retaining its direct triple
+and qualified source link. This is an integrity defect, not a potential derivation, and
+keeps the nonempty audit test independent of old converters omitting BPMN bridges.
 
 The `subject-disagrees` and `object-disagrees` branches of the audit have no rows here, by
 design: a disagreeing bridge is a corruption, and putting one in a shared fixture would
@@ -213,15 +230,15 @@ edge absent, the one configuration that can show it. Property paths do not trave
 terms there either.
 
 `unqualified-forms.json` holds the class-to-predicate pairs from `arch:unqualifiedForm` in
-the linked-archi-meta ontologies (`build_fixtures.py --refresh-forms`, 75 pairs from 109
+the linked-archi-meta ontologies (`build_fixtures.py --refresh-forms`, 96 pairs from 124
 ontology files). The mapping is irregular - `am:Serving` → `am:serves`, `am:Flow` →
 `am:flowsTo`, `am:Composition` → `am:composedOf` - and `tests/test_reifies.py` keeps it so,
 because a lowercase-first-letter rule would invent `am:serving` and `am:flow`.
 
 ## augmented.trig
 
-`base.trig` plus four things the converters do not produce. Without them, four
-templates could never be exercised, because they are correctly refused against real
+`base.trig` plus curated assertions, an audience name, and one deliberate integrity
+defect. These exercise templates whose enabled paths need more than raw converter
 output - and a gated template with no test for its enabled path is a template
 nobody has run.
 
@@ -231,6 +248,8 @@ nobody has run.
 | `skos:exactMatch` in a reconciliation graph | 2 | Cross-source identity is authored and human-reviewed, never derived | `core/identity-audit` |
 | `arch:conceptOwner` | 4 | Ownership arrives as a `bs:Ownership` relationship; the core predicate is never emitted | `core/coverage-gaps` against ownership |
 | `sh:ValidationReport` in its own graph | 11 | `validate` writes a document, not a graph | `core/validation-summary` |
+| SKOS-XL audience name and plain alias | 5 | Context names are authored enrichment | `core/context-names` |
+| Missing C4 bridge | 1 removed quad | Deliberate defect on an asserted relationship | `core/reifies-audit` |
 
 One of these is **derived** rather than invented, so its shape follows the data even
 though its presence does not. `arch:conceptOwner` is promoted from Backstage's
@@ -244,7 +263,7 @@ correspondence between records over a claim that two resources are one thing.
 
 Use it with the `curated-store` profile at
 `skills/linked-archi-profile/assets/profiles/examples/curated-store.yaml`, which is
-the profile these additions describe. All 43 templates are available under it, and none
+the profile these additions describe. All 44 templates are available under it, and none
 are refused — which is the point of the additions.
 
 ## converter-1.3.trig
@@ -372,7 +391,7 @@ only the selection is ours, on the same terms as every other fixture here.
   `skos:prefLabel` and `rdfs:subClassOf` chain — so a query can walk the hierarchy rather
   than trust a flat list.
 
-843 triples of Turtle in the **default graph**, and both halves of that matter. Turtle
+959 triples of Turtle in the **default graph**, and both halves of that matter. Turtle
 because that is what is published: `meta.linked.archi` serves every ontology, taxonomy and
 shape set as `text/turtle`. The default graph because that is where a Turtle file goes —
 `la-connect` loads one without naming a graph — so this is the shape an operator pairs.
@@ -385,7 +404,7 @@ published file fails is exactly the defect the top of this document describes. T
 bound to `default` now, and `test_profiles.py` asserts the pairing works in the shape a
 fetch delivers.
 
-**It also carries the whole `arch:unqualifiedForm` mapping**, all 75 pairs, because that is
+**It also carries the whole `arch:unqualifiedForm` mapping**, all 96 pairs, because that is
 the only thing constraining a direct triple outside ArchiMate. Backstage, LeanIX and C4
 publish shapes for the qualified form alone, so the rule for `bs:ownedBy` has to be derived
 — follow `arch:unqualifiedForm` from `bs:Ownership` to its predicate and reuse the qualified
@@ -530,6 +549,7 @@ directory holds what that check loads, refreshed by `make questions`:
 
 - `archimate4-questions-example.ttl`, `archimate3.2-questions-example.ttl` and their
   `.expected.tsv` files, copied as they are;
+- `labels-per-presentation.ttl`, copied verbatim to exercise audience names and aliases;
 - `core-onto.ttl` and each ArchiMate version's `-onto.ttl` and `-viewpoints.ttl`, with every
   statement but those naming a host outside meta.linked.archi and the W3C: the
   `dcterms:source`, `rdfs:seeAlso` and `prov:wasQuotedFrom` citations of the

@@ -9,6 +9,7 @@
 @prefix	amq	https://meta.linked.archi/archimate3/questions#
 @prefix	am	https://meta.linked.archi/archimate3/onto#
 @prefix	amvp	https://meta.linked.archi/archimate3/viewpoints#
+@prefix	amderiv	https://meta.linked.archi/archimate3/derivation#
 *	focus=ex:server view=ex:orgView model=ex:model viewpoint=amvp:OrganizationViewpoint conceptType=am:ApplicationComponent from=ex:plateauA to=ex:plateauB
 
 # Core: findings. Bank (actor) and Bank (role) share a name across types: not duplicates.
@@ -54,8 +55,12 @@ amq:application-dependencies	-	provider	ex:crm
 amq:application-dependencies	-	consumer	ex:policyApp
 amq:data-access	-	accessor	ex:crm ex:policyApp
 amq:capability-realisation	-	capability	ex:capability ex:capability2 ex:capability3
-amq:capability-realisation	-	realizer	ex:handleClaim
+amq:capability-realisation	-	realizer	ex:handleClaim ex:clerk ex:customer
 amq:requirement-traceability	-	other	ex:handleClaim ex:goal ex:principle
 amq:principle-rationale	-	other	ex:req
-amq:work-package-deliverables	-	realized	ex:crm
+amq:work-package-deliverables	-	realized	ex:crm ex:crmFunction ex:customerService
 amq:stakeholder-motivation	-	motivation	ex:goal
+amq:potential-derivations	-	source	ex:claimService ex:server
+amq:potential-derivations	-	target	ex:clerk ex:crmFunction
+amq:potential-derivations	-	rule	amderiv:PDR5
+amq:potential-derivation-premises	-	relationship	ex:r2 ex:r4 ex:r5 ex:r6

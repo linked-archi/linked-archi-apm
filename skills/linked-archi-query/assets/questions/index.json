@@ -161,13 +161,13 @@
    "concerns": [
     "https://meta.linked.archi/core-viewpoints#DependencyConcern"
    ],
-   "dataset": "model",
+   "dataset": "model-and-metamodel",
    "default_limit": 500,
-   "description": "Concepts from which a path of one or two relationships ends at the element, with the relationship types along the way.",
+   "description": "Concepts from which a path of one or two relationships, read from their direct triples, ends at the element, with the relationship types along the way.",
    "does_not_prove": "Impact. Reachability is not dependency: an assignment followed by an association does not make the last concept depend on the first. Read the types, and use a language's impact question where there is one.",
    "finding": false,
    "finding_focus": "",
-   "identifier": "core/dependents-qualified",
+   "identifier": "core/dependents",
    "iri": "https://meta.linked.archi/core-questions#reaches-in-two-hops",
    "label": "What reaches this element within two hops?",
    "metamodels": [],
@@ -188,10 +188,10 @@
     "skos": "http://www.w3.org/2004/02/skos/core#"
    },
    "reads": {
-    "direct_rel_triples": false,
+    "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
-    "unqualified_forms": false,
+    "unqualified_forms": true,
     "viewpoints": false
    },
    "result_key": "reaches",
@@ -199,7 +199,7 @@
    "severity": "",
    "stage": "analysis",
    "stakeholders": [],
-   "text": "SELECT DISTINCT ?hops ?dependent ?dependentLabel ?firstType ?via ?secondType\nWHERE {\n  {\n    ?first arch:source ?dependent ;\n           arch:target ?focus ;\n           rdf:type ?firstType .\n    BIND(1 AS ?hops)\n  }\n  UNION\n  {\n    ?first arch:source ?via ;\n           arch:target ?focus ;\n           rdf:type ?firstType .\n    ?second arch:source ?dependent ;\n            arch:target ?via ;\n            rdf:type ?secondType .\n    FILTER(?dependent != ?focus)\n    FILTER(?secondType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n    BIND(2 AS ?hops)\n  }\n  FILTER(?firstType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?firstType WHERE { { ?firstType arch:isAbstractClass true }\n                                             UNION { GRAPH ?abstractClassGraph { ?firstType arch:isAbstractClass true } } } }\n  MINUS { SELECT DISTINCT ?secondType WHERE { { ?secondType arch:isAbstractClass true }\n                                              UNION { GRAPH ?abstractClassGraph { ?secondType arch:isAbstractClass true } } } }\n  OPTIONAL { ?dependent skos:prefLabel ?dependentLabel . FILTER(lang(?dependentLabel) = \"\" || langMatches(lang(?dependentLabel), \"en\")) }\n}\nORDER BY ?hops ?dependentLabel",
+   "text": "SELECT DISTINCT ?hops ?dependent ?dependentLabel ?firstType ?via ?secondType\nWHERE {\n  # Each step along the triples of the relationship predicates: each predicate with the most general type it\n  # is the unqualified form of, read from the metamodel in a sub-select.\n  {\n    {\n      SELECT DISTINCT ?firstPredicate ?firstType\n      WHERE {\n        { ?firstType arch:unqualifiedForm ?firstPredicate ; rdfs:subClassOf+ arch:QualifiedRelationship }\n        UNION\n        { GRAPH ?firstTypeGraph { ?firstType arch:unqualifiedForm ?firstPredicate ; rdfs:subClassOf+ arch:QualifiedRelationship } }\n        FILTER NOT EXISTS {\n          { ?firstType rdfs:subClassOf+ ?firstGeneral . ?firstGeneral arch:unqualifiedForm ?firstPredicate }\n          UNION\n          { GRAPH ?firstGeneralGraph { ?firstType rdfs:subClassOf+ ?firstGeneral . ?firstGeneral arch:unqualifiedForm ?firstPredicate } }\n        }\n      }\n    }\n    ?dependent ?firstPredicate ?focus .\n    BIND(1 AS ?hops)\n  }\n  UNION\n  {\n    {\n      SELECT DISTINCT ?firstPredicate ?firstType\n      WHERE {\n        { ?firstType arch:unqualifiedForm ?firstPredicate ; rdfs:subClassOf+ arch:QualifiedRelationship }\n        UNION\n        { GRAPH ?firstTypeGraph { ?firstType arch:unqualifiedForm ?firstPredicate ; rdfs:subClassOf+ arch:QualifiedRelationship } }\n        FILTER NOT EXISTS {\n          { ?firstType rdfs:subClassOf+ ?firstGeneral . ?firstGeneral arch:unqualifiedForm ?firstPredicate }\n          UNION\n          { GRAPH ?firstGeneralGraph { ?firstType rdfs:subClassOf+ ?firstGeneral . ?firstGeneral arch:unqualifiedForm ?firstPredicate } }\n        }\n      }\n    }\n    ?via ?firstPredicate ?focus .\n    {\n      SELECT DISTINCT ?secondPredicate ?secondType\n      WHERE {\n        { ?secondType arch:unqualifiedForm ?secondPredicate ; rdfs:subClassOf+ arch:QualifiedRelationship }\n        UNION\n        { GRAPH ?secondTypeGraph { ?secondType arch:unqualifiedForm ?secondPredicate ; rdfs:subClassOf+ arch:QualifiedRelationship } }\n        FILTER NOT EXISTS {\n          { ?secondType rdfs:subClassOf+ ?secondGeneral . ?secondGeneral arch:unqualifiedForm ?secondPredicate }\n          UNION\n          { GRAPH ?secondGeneralGraph { ?secondType rdfs:subClassOf+ ?secondGeneral . ?secondGeneral arch:unqualifiedForm ?secondPredicate } }\n        }\n      }\n    }\n    ?dependent ?secondPredicate ?via .\n    FILTER(?dependent != ?focus)\n    BIND(2 AS ?hops)\n  }\n  OPTIONAL { ?dependent skos:prefLabel ?dependentLabel . FILTER(lang(?dependentLabel) = \"\" || langMatches(lang(?dependentLabel), \"en\")) }\n}\nORDER BY ?hops ?dependentLabel",
    "viewpoints": []
   },
   {
@@ -447,13 +447,13 @@
    "concerns": [
     "https://meta.linked.archi/core-viewpoints#DependencyConcern"
    ],
-   "dataset": "model",
+   "dataset": "model-and-metamodel",
    "default_limit": 500,
-   "description": "Every relationship that starts or ends at the element, read from the qualified relationships.",
+   "description": "Every relationship that starts or ends at the element, read from its direct triple: a predicate a loaded metamodel declares the unqualified form of a relationship type.",
    "does_not_prove": "A runtime dependency. A modelled relationship is a statement someone made, not an observed call.",
    "finding": false,
    "finding_focus": "",
-   "identifier": "core/neighbours-qualified",
+   "identifier": "core/neighbours",
    "iri": "https://meta.linked.archi/core-questions#neighbours",
    "label": "What is this element directly related to?",
    "metamodels": [],
@@ -474,10 +474,10 @@
     "skos": "http://www.w3.org/2004/02/skos/core#"
    },
    "reads": {
-    "direct_rel_triples": false,
+    "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
-    "unqualified_forms": false,
+    "unqualified_forms": true,
     "viewpoints": false
    },
    "result_key": "neighbours",
@@ -485,7 +485,7 @@
    "severity": "",
    "stage": "analysis",
    "stakeholders": [],
-   "text": "SELECT DISTINCT ?direction ?relationship ?relationshipType ?other ?otherLabel\nWHERE {\n  {\n    ?relationship arch:source ?focus ;\n                  arch:target ?other .\n    BIND(\"outgoing\" AS ?direction)\n  }\n  UNION\n  {\n    ?relationship arch:target ?focus ;\n                  arch:source ?other .\n    BIND(\"incoming\" AS ?direction)\n  }\n  ?relationship rdf:type ?relationshipType .\n  FILTER(?relationshipType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?relationshipType WHERE { { ?relationshipType arch:isAbstractClass true }\n                                                    UNION { GRAPH ?abstractClassGraph { ?relationshipType arch:isAbstractClass true } } } }\n  OPTIONAL { ?other skos:prefLabel ?otherLabel . FILTER(lang(?otherLabel) = \"\" || langMatches(lang(?otherLabel), \"en\")) }\n}\nORDER BY ?direction ?relationshipType ?otherLabel",
+   "text": "SELECT DISTINCT ?direction ?relationshipType ?other ?otherLabel\nWHERE {\n  # In each direction, the triples of the relationship predicates: each predicate with the most general\n  # type it is the unqualified form of, read from the metamodel in a sub-select.\n  {\n    {\n      SELECT DISTINCT ?predicate ?relationshipType\n      WHERE {\n        { ?relationshipType arch:unqualifiedForm ?predicate ; rdfs:subClassOf+ arch:QualifiedRelationship }\n        UNION\n        { GRAPH ?relationshipTypeGraph { ?relationshipType arch:unqualifiedForm ?predicate ; rdfs:subClassOf+ arch:QualifiedRelationship } }\n        FILTER NOT EXISTS {\n          { ?relationshipType rdfs:subClassOf+ ?relationshipGeneral . ?relationshipGeneral arch:unqualifiedForm ?predicate }\n          UNION\n          { GRAPH ?relationshipGeneralGraph { ?relationshipType rdfs:subClassOf+ ?relationshipGeneral . ?relationshipGeneral arch:unqualifiedForm ?predicate } }\n        }\n      }\n    }\n    ?focus ?predicate ?other .\n    BIND(\"outgoing\" AS ?direction)\n  }\n  UNION\n  {\n    {\n      SELECT DISTINCT ?predicate ?relationshipType\n      WHERE {\n        { ?relationshipType arch:unqualifiedForm ?predicate ; rdfs:subClassOf+ arch:QualifiedRelationship }\n        UNION\n        { GRAPH ?relationshipTypeGraph { ?relationshipType arch:unqualifiedForm ?predicate ; rdfs:subClassOf+ arch:QualifiedRelationship } }\n        FILTER NOT EXISTS {\n          { ?relationshipType rdfs:subClassOf+ ?relationshipGeneral . ?relationshipGeneral arch:unqualifiedForm ?predicate }\n          UNION\n          { GRAPH ?relationshipGeneralGraph { ?relationshipType rdfs:subClassOf+ ?relationshipGeneral . ?relationshipGeneral arch:unqualifiedForm ?predicate } }\n        }\n      }\n    }\n    ?other ?predicate ?focus .\n    BIND(\"incoming\" AS ?direction)\n  }\n  OPTIONAL { ?other skos:prefLabel ?otherLabel . FILTER(lang(?otherLabel) = \"\" || langMatches(lang(?otherLabel), \"en\")) }\n}\nORDER BY ?direction ?relationshipType ?otherLabel",
    "viewpoints": []
   },
   {
@@ -541,7 +541,7 @@
    ],
    "dataset": "model-and-metamodel",
    "default_limit": 500,
-   "description": "Qualified relationships whose type has an unqualified form (arch:unqualifiedForm) but whose\nrdf:reifies triple term is missing or names other ends, or whose direct triple is not asserted. Needs RDF 1.2\ntriple terms.",
+   "description": "Qualified relationships whose type has an unqualified form (arch:unqualifiedForm) but whose\nrdf:reifies triple term is missing or names other ends, or whose direct triple is not asserted though a qualified\npredicate leads to them. A proposition is not in error: a resource that reifies its triple without asserting it,\nand that nothing leads to, as a potential derivation is until it is confirmed. Needs RDF 1.2 triple terms.",
    "does_not_prove": "That a query over the direct triples is wrong everywhere: it misses or misreports exactly these relationships.",
    "finding": true,
    "finding_focus": "relationship",
@@ -568,7 +568,7 @@
    "severity": "violation",
    "stage": "quality",
    "stakeholders": [],
-   "text": "SELECT DISTINCT ?relationship ?type ?source ?target ?problem\nWHERE {\n  ?relationship arch:source ?source ;\n                arch:target ?target ;\n                rdf:type ?type .\n  # Only types with an unqualified form carry the direct triple.\n  { ?type arch:unqualifiedForm ?predicate }\n  UNION\n  { GRAPH ?mappingGraph { ?type arch:unqualifiedForm ?predicate } }\n  FILTER NOT EXISTS {\n    ?relationship rdf:reifies <<( ?source ?predicate ?target )>> .\n    ?source ?predicate ?target .\n  }\n  BIND(IF(NOT EXISTS { ?relationship rdf:reifies ?anyTerm }, \"no rdf:reifies\",\n       IF(NOT EXISTS { ?source ?predicate ?target }, \"direct triple not asserted\",\n          \"rdf:reifies names a different triple\")) AS ?problem)\n}\nORDER BY ?problem ?type",
+   "text": "SELECT DISTINCT ?relationship ?type ?source ?target ?problem\nWHERE {\n  ?relationship arch:source ?source ;\n                arch:target ?target ;\n                rdf:type ?type .\n  # Only types with an unqualified form carry the direct triple.\n  { ?type arch:unqualifiedForm ?predicate }\n  UNION\n  { GRAPH ?mappingGraph { ?type arch:unqualifiedForm ?predicate } }\n  FILTER NOT EXISTS {\n    ?relationship rdf:reifies <<( ?source ?predicate ?target )>> .\n    ?source ?predicate ?target .\n  }\n  # Nor a proposition: its triple not asserted, and nothing leading to it.\n  FILTER NOT EXISTS {\n    ?relationship rdf:reifies <<( ?source ?predicate ?target )>> .\n    FILTER NOT EXISTS { ?source ?predicate ?target }\n    FILTER NOT EXISTS { ?source ?leads ?relationship }\n  }\n  BIND(IF(NOT EXISTS { ?relationship rdf:reifies ?anyTerm }, \"no rdf:reifies\",\n       IF(NOT EXISTS { ?source ?predicate ?target }, \"direct triple not asserted\",\n          \"rdf:reifies names a different triple\")) AS ?problem)\n}\nORDER BY ?problem ?type",
    "viewpoints": []
   },
   {
@@ -843,14 +843,14 @@
    "viewpoints": []
   },
   {
-   "answers": "One row per dependency: the provider, how it provides, the relationship or service between, and the consumer.",
+   "answers": "One row per dependency: the provider, how it provides, the service between where there is one, and the consumer.",
    "concerns": [
     "https://meta.linked.archi/archimate3/viewpoints#ApplicationDependencies",
     "https://meta.linked.archi/archimate3/viewpoints#ServiceOrchestration"
    ],
    "dataset": "model-and-metamodel",
    "default_limit": 500,
-   "description": "Application components that serve, flow to or trigger one another, directly or through an application service one realises — itself or through the function assigned to it — and the other is served by.",
+   "description": "Application components that serve, flow to or trigger one another, directly or through an application service one realises — itself or through the function assigned to it — and the other is served by. With the derivations loaded, a longer chain the valid rules derive counts too, as one hop.",
    "does_not_prove": "Runtime coupling or data volume. A modelled flow says that information moves, not how much or how often.",
    "finding": false,
    "finding_focus": "",
@@ -863,7 +863,9 @@
    "parameters": [],
    "prefixes": {
     "am": "https://meta.linked.archi/archimate3/onto#",
+    "amderiv": "https://meta.linked.archi/archimate3/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -880,7 +882,7 @@
    "severity": "",
    "stage": "analysis",
    "stakeholders": [],
-   "text": "SELECT DISTINCT ?provider ?providerLabel ?how ?via ?consumer ?consumerLabel\nWHERE {\n  # From the relationships to their ends, each branch anchored on its relationships: never every pair of\n  # components. Both ends are then checked against the component types, read once each.\n  {\n    VALUES ?linkType { am:Serving am:Flow am:Triggering }\n    ?via rdf:type ?linkType ;\n         arch:source ?provider ;\n         arch:target ?consumer .\n    BIND(REPLACE(STR(?linkType), \"^.*[#/]\", \"\") AS ?how)\n  }\n  UNION\n  {\n    {\n      SELECT DISTINCT ?serviceType\n      WHERE {\n        { ?askedService rdfs:subClassOf* am:ApplicationService } UNION { GRAPH ?serviceOntologyGraph { ?askedService rdfs:subClassOf* am:ApplicationService } }\n        { ?serviceType rdfs:subClassOf* ?askedService } UNION { GRAPH ?serviceSpecialisationGraph { ?serviceType rdfs:subClassOf* ?askedService } }\n      }\n    }\n    ?via rdf:type ?serviceType ;\n         am:serves ?consumer .\n    ?provider am:realizes|(am:assignedTo/am:realizes) ?via .\n    BIND(\"realises a service serving\" AS ?how)\n  }\n  ?provider rdf:type ?providerType .\n  ?consumer rdf:type ?consumerType .\n  {\n    SELECT DISTINCT ?providerType\n    WHERE {\n      { ?askedProvider rdfs:subClassOf* am:ApplicationComponent } UNION { GRAPH ?providerGraph { ?askedProvider rdfs:subClassOf* am:ApplicationComponent } }\n      { ?providerType rdfs:subClassOf* ?askedProvider } UNION { GRAPH ?providerSpecialisationGraph { ?providerType rdfs:subClassOf* ?askedProvider } }\n    }\n  }\n  {\n    SELECT DISTINCT ?consumerType\n    WHERE {\n      { ?askedConsumer rdfs:subClassOf* am:ApplicationComponent } UNION { GRAPH ?consumerGraph { ?askedConsumer rdfs:subClassOf* am:ApplicationComponent } }\n      { ?consumerType rdfs:subClassOf* ?askedConsumer } UNION { GRAPH ?consumerSpecialisationGraph { ?consumerType rdfs:subClassOf* ?askedConsumer } }\n    }\n  }\n  FILTER(?provider != ?consumer)\n  OPTIONAL { ?provider skos:prefLabel ?providerLabel . FILTER(lang(?providerLabel) = \"\" || langMatches(lang(?providerLabel), \"en\")) }\n  OPTIONAL { ?consumer skos:prefLabel ?consumerLabel . FILTER(lang(?consumerLabel) = \"\" || langMatches(lang(?consumerLabel), \"en\")) }\n}\nORDER BY ?providerLabel ?consumerLabel",
+   "text": "SELECT DISTINCT ?provider ?providerLabel ?how ?via ?consumer ?consumerLabel\nWHERE {\n  # From the direct triples to their ends, each branch anchored on its relationships: never every pair of\n  # components. Both ends are then checked against the component types, read once each.\n  {\n    VALUES (?link ?how) { (am:serves \"Serving\") (am:flowsTo \"Flow\") (am:triggers \"Triggering\") }\n    ?provider ?link ?consumer .\n  }\n  UNION\n  {\n    {\n      SELECT DISTINCT ?serviceType\n      WHERE {\n        { ?askedService rdfs:subClassOf* am:ApplicationService } UNION { GRAPH ?serviceOntologyGraph { ?askedService rdfs:subClassOf* am:ApplicationService } }\n        { ?serviceType rdfs:subClassOf* ?askedService } UNION { GRAPH ?serviceSpecialisationGraph { ?serviceType rdfs:subClassOf* ?askedService } }\n      }\n    }\n    ?via rdf:type ?serviceType ;\n         am:serves ?consumer .\n    ?provider am:realizes|(am:assignedTo/am:realizes) ?via .\n    BIND(\"realises a service serving\" AS ?how)\n  }\n  ?provider rdf:type ?providerType .\n  ?consumer rdf:type ?consumerType .\n  {\n    SELECT DISTINCT ?providerType\n    WHERE {\n      { ?askedProvider rdfs:subClassOf* am:ApplicationComponent } UNION { GRAPH ?providerGraph { ?askedProvider rdfs:subClassOf* am:ApplicationComponent } }\n      { ?providerType rdfs:subClassOf* ?askedProvider } UNION { GRAPH ?providerSpecialisationGraph { ?providerType rdfs:subClassOf* ?askedProvider } }\n    }\n  }\n  {\n    SELECT DISTINCT ?consumerType\n    WHERE {\n      { ?askedConsumer rdfs:subClassOf* am:ApplicationComponent } UNION { GRAPH ?consumerGraph { ?askedConsumer rdfs:subClassOf* am:ApplicationComponent } }\n      { ?consumerType rdfs:subClassOf* ?askedConsumer } UNION { GRAPH ?consumerSpecialisationGraph { ?consumerType rdfs:subClassOf* ?askedConsumer } }\n    }\n  }\n  FILTER(?provider != ?consumer)\n  OPTIONAL { ?provider skos:prefLabel ?providerLabel . FILTER(lang(?providerLabel) = \"\" || langMatches(lang(?providerLabel), \"en\")) }\n  OPTIONAL { ?consumer skos:prefLabel ?consumerLabel . FILTER(lang(?consumerLabel) = \"\" || langMatches(lang(?consumerLabel), \"en\")) }\n}\nORDER BY ?providerLabel ?consumerLabel",
    "viewpoints": [
     "https://meta.linked.archi/archimate3/viewpoints#ApplicationCooperationViewpoint",
     "https://meta.linked.archi/archimate3/viewpoints#ApplicationUsageViewpoint"
@@ -894,7 +896,7 @@
    ],
    "dataset": "model-and-metamodel",
    "default_limit": 500,
-   "description": "Application components that no element of the technology layer serves or realises, directly or by realising a service that serves them. Equipment and facilities are nodes, so they count as technology.",
+   "description": "Application components that no element of the technology layer serves or realises, directly or by realising a service that serves them. Equipment and facilities are nodes, so they count as technology. With the derivations loaded, a longer chain the valid rules derive counts too, as one hop.",
    "does_not_prove": "That it runs nowhere. Where it is hosted may be outside the model, or recorded only in a deployment model that is not loaded.",
    "finding": true,
    "finding_focus": "application",
@@ -916,7 +918,9 @@
    ],
    "prefixes": {
     "am": "https://meta.linked.archi/archimate3/onto#",
+    "amderiv": "https://meta.linked.archi/archimate3/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -950,7 +954,7 @@
    ],
    "dataset": "model-and-metamodel",
    "default_limit": 500,
-   "description": "Capabilities with the behaviour, active structure or resources that realise them.",
+   "description": "Capabilities with the behaviour, active structure or resources that realise them. A realisation counts directly or as DR 2 derives it, through structural relationships in line.",
    "does_not_prove": "Maturity. That a capability is realised says it is delivered somehow, not how well.",
    "finding": false,
    "finding_focus": "",
@@ -963,7 +967,9 @@
    "parameters": [],
    "prefixes": {
     "am": "https://meta.linked.archi/archimate3/onto#",
+    "amderiv": "https://meta.linked.archi/archimate3/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -983,7 +989,7 @@
     "https://meta.linked.archi/archimate3/viewpoints#BusinessArchitect",
     "https://meta.linked.archi/archimate3/viewpoints#CxO"
    ],
-   "text": "SELECT DISTINCT ?capability ?capabilityLabel ?realizer ?realizerLabel ?realizerType\nWHERE {\n  {\n    SELECT DISTINCT ?capabilityType\n    WHERE {\n      { ?asked rdfs:subClassOf* am:Capability } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:Capability } }\n      { ?capabilityType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?capabilityType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?capability rdf:type ?capabilityType .\n  OPTIONAL {\n    ?realizer am:realizes ?capability ;\n              rdf:type ?realizerType .\n    FILTER(?realizerType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n    MINUS { SELECT DISTINCT ?realizerType WHERE { { ?realizerType arch:isAbstractClass true }\n                                                  UNION { GRAPH ?abstractClassGraph { ?realizerType arch:isAbstractClass true } } } }\n    OPTIONAL { ?realizer skos:prefLabel ?realizerLabel . FILTER(lang(?realizerLabel) = \"\" || langMatches(lang(?realizerLabel), \"en\")) }\n  }\n  OPTIONAL { ?capability skos:prefLabel ?capabilityLabel . FILTER(lang(?capabilityLabel) = \"\" || langMatches(lang(?capabilityLabel), \"en\")) }\n}\nORDER BY ?capabilityLabel ?realizerLabel",
+   "text": "SELECT DISTINCT ?capability ?capabilityLabel ?realizer ?realizerLabel ?realizerType\nWHERE {\n  {\n    SELECT DISTINCT ?capabilityType\n    WHERE {\n      { ?asked rdfs:subClassOf* am:Capability } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:Capability } }\n      { ?capabilityType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?capabilityType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?capability rdf:type ?capabilityType .\n  OPTIONAL {\n    # From each realisation, back to the realizer and on to the capability through structural relationships\n    # in line: DR 2 derives the weakest, a realisation.\n    ?from am:realizes ?to .\n    ?realizer (am:composedOf|am:aggregates|am:assignedTo|am:realizes)* ?from .\n    ?to (am:composedOf|am:aggregates|am:assignedTo|am:realizes)* ?capability .\n    ?realizer rdf:type ?realizerType .\n    FILTER(?realizerType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n    MINUS { SELECT DISTINCT ?realizerType WHERE { { ?realizerType arch:isAbstractClass true }\n                                                  UNION { GRAPH ?abstractClassGraph { ?realizerType arch:isAbstractClass true } } } }\n    OPTIONAL { ?realizer skos:prefLabel ?realizerLabel . FILTER(lang(?realizerLabel) = \"\" || langMatches(lang(?realizerLabel), \"en\")) }\n  }\n  OPTIONAL { ?capability skos:prefLabel ?capabilityLabel . FILTER(lang(?capabilityLabel) = \"\" || langMatches(lang(?capabilityLabel), \"en\")) }\n}\nORDER BY ?capabilityLabel ?realizerLabel",
    "viewpoints": [
     "https://meta.linked.archi/archimate3/viewpoints#CapabilityMapViewpoint",
     "https://meta.linked.archi/archimate3/viewpoints#StrategyViewpoint"
@@ -1010,7 +1016,9 @@
    "parameters": [],
    "prefixes": {
     "am": "https://meta.linked.archi/archimate3/onto#",
+    "amderiv": "https://meta.linked.archi/archimate3/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -1056,7 +1064,9 @@
    "parameters": [],
    "prefixes": {
     "am": "https://meta.linked.archi/archimate3/onto#",
+    "amderiv": "https://meta.linked.archi/archimate3/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -1108,7 +1118,9 @@
    ],
    "prefixes": {
     "am": "https://meta.linked.archi/archimate3/onto#",
+    "amderiv": "https://meta.linked.archi/archimate3/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -1160,7 +1172,9 @@
    ],
    "prefixes": {
     "am": "https://meta.linked.archi/archimate3/onto#",
+    "amderiv": "https://meta.linked.archi/archimate3/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -1189,14 +1203,14 @@
    ]
   },
   {
-   "answers": "One row per source layer, relationship type and target layer, with the number of relationships.",
+   "answers": "One row per source layer, relationship type and target layer, with the number of pairs of elements so related.",
    "concerns": [
     "https://meta.linked.archi/archimate3/viewpoints#Consistency",
     "https://meta.linked.archi/archimate3/viewpoints#ImpactOfChange"
    ],
    "dataset": "model-and-metamodel",
    "default_limit": 200,
-   "description": "Relationships whose ends are in different ArchiMate 3.2 layers, counted by pair of layers and relationship type. The layers are read from the layer classes, not from type names.",
+   "description": "Relationships whose ends are in different ArchiMate 3.2 layers, read from their direct triples and counted by pair of layers and relationship type. The layers are read from the layer classes, not from type names.",
    "does_not_prove": "Coupling. A relationship to an element of no layer (location, grouping, junction) is not counted, and one between equipment and a node crosses from the physical to the technology layer though both are nodes.",
    "finding": false,
    "finding_focus": "",
@@ -1209,13 +1223,15 @@
    "parameters": [],
    "prefixes": {
     "am": "https://meta.linked.archi/archimate3/onto#",
+    "amderiv": "https://meta.linked.archi/archimate3/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
    },
    "reads": {
-    "direct_rel_triples": false,
+    "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
     "unqualified_forms": false,
@@ -1226,7 +1242,7 @@
    "severity": "",
    "stage": "analysis",
    "stakeholders": [],
-   "text": "SELECT ?sourceLayer ?relationshipType ?targetLayer (COUNT(DISTINCT ?relationship) AS ?relationships)\nWHERE {\n  ?relationship arch:source ?source ;\n                arch:target ?target ;\n                rdf:type ?relationshipType .\n  FILTER(?relationshipType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?relationshipType WHERE { { ?relationshipType arch:isAbstractClass true }\n                                                    UNION { GRAPH ?abstractClassGraph { ?relationshipType arch:isAbstractClass true } } } }\n  ?source rdf:type ?sourceType .\n  ?target rdf:type ?targetType .\n  {\n    SELECT DISTINCT ?sourceLayer ?sourceType\n    WHERE {\n      VALUES ?sourceLayer {\n        am:StrategyLayerElement am:MotivationElement am:BusinessLayerElement am:ApplicationLayerElement\n        am:TechnologyLayerElement am:PhysicalLayerElement am:ImplementationAndMigrationLayerElement\n      }\n      { ?sourceLayerType rdfs:subClassOf* ?sourceLayer } UNION { GRAPH ?sourceOntologyGraph { ?sourceLayerType rdfs:subClassOf* ?sourceLayer } }\n      { ?sourceType rdfs:subClassOf* ?sourceLayerType } UNION { GRAPH ?sourceSpecialisationGraph { ?sourceType rdfs:subClassOf* ?sourceLayerType } }\n    }\n  }\n  {\n    SELECT DISTINCT ?targetLayer ?targetType\n    WHERE {\n      VALUES ?targetLayer {\n        am:StrategyLayerElement am:MotivationElement am:BusinessLayerElement am:ApplicationLayerElement\n        am:TechnologyLayerElement am:PhysicalLayerElement am:ImplementationAndMigrationLayerElement\n      }\n      { ?targetLayerType rdfs:subClassOf* ?targetLayer } UNION { GRAPH ?targetOntologyGraph { ?targetLayerType rdfs:subClassOf* ?targetLayer } }\n      { ?targetType rdfs:subClassOf* ?targetLayerType } UNION { GRAPH ?targetSpecialisationGraph { ?targetType rdfs:subClassOf* ?targetLayerType } }\n    }\n  }\n  FILTER(?sourceLayer != ?targetLayer)\n}\nGROUP BY ?sourceLayer ?relationshipType ?targetLayer\nORDER BY DESC(?relationships)",
+   "text": "SELECT ?sourceLayer ?relationshipType ?targetLayer (COUNT(DISTINCT ?pair) AS ?relationships)\nWHERE {\n  # Each relationship by its direct triple, with the type it is the unqualified form of.\n  VALUES (?predicate ?relationshipType) {\n    (am:composedOf am:Composition) (am:aggregates am:Aggregation) (am:assignedTo am:Assignment)\n    (am:realizes am:Realization) (am:serves am:Serving) (am:accesses am:Access)\n    (am:influences am:Influence) (am:associatedWith am:Association) (am:triggers am:Triggering)\n    (am:flowsTo am:Flow) (am:specializes am:Specialization)\n  }\n  ?source ?predicate ?target .\n  BIND(CONCAT(STR(?source), \" \", STR(?target)) AS ?pair)\n  ?source rdf:type ?sourceType .\n  ?target rdf:type ?targetType .\n  {\n    SELECT DISTINCT ?sourceLayer ?sourceType\n    WHERE {\n      VALUES ?sourceLayer {\n        am:StrategyLayerElement am:MotivationElement am:BusinessLayerElement am:ApplicationLayerElement\n        am:TechnologyLayerElement am:PhysicalLayerElement am:ImplementationAndMigrationLayerElement\n      }\n      { ?sourceLayerType rdfs:subClassOf* ?sourceLayer } UNION { GRAPH ?sourceOntologyGraph { ?sourceLayerType rdfs:subClassOf* ?sourceLayer } }\n      { ?sourceType rdfs:subClassOf* ?sourceLayerType } UNION { GRAPH ?sourceSpecialisationGraph { ?sourceType rdfs:subClassOf* ?sourceLayerType } }\n    }\n  }\n  {\n    SELECT DISTINCT ?targetLayer ?targetType\n    WHERE {\n      VALUES ?targetLayer {\n        am:StrategyLayerElement am:MotivationElement am:BusinessLayerElement am:ApplicationLayerElement\n        am:TechnologyLayerElement am:PhysicalLayerElement am:ImplementationAndMigrationLayerElement\n      }\n      { ?targetLayerType rdfs:subClassOf* ?targetLayer } UNION { GRAPH ?targetOntologyGraph { ?targetLayerType rdfs:subClassOf* ?targetLayer } }\n      { ?targetType rdfs:subClassOf* ?targetLayerType } UNION { GRAPH ?targetSpecialisationGraph { ?targetType rdfs:subClassOf* ?targetLayerType } }\n    }\n  }\n  FILTER(?sourceLayer != ?targetLayer)\n}\nGROUP BY ?sourceLayer ?relationshipType ?targetLayer\nORDER BY DESC(?relationships)",
    "viewpoints": [
     "https://meta.linked.archi/archimate3/viewpoints#LayeredViewpoint"
    ]
@@ -1269,7 +1285,9 @@
    ],
    "prefixes": {
     "am": "https://meta.linked.archi/archimate3/onto#",
+    "amderiv": "https://meta.linked.archi/archimate3/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -1292,6 +1310,90 @@
    ]
   },
   {
+   "answers": "One row per relationship the model states that a potential derivation rests on, with how many rest on it, the most first.",
+   "concerns": [
+    "https://meta.linked.archi/archimate3/viewpoints#Completeness"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 200,
+   "description": "The relationships the model states that the most potential derivations not confirmed rest on. A relationship drawn to a whole where one of its parts is meant gives rise to a proposal for each part; stating the part's own relationship makes the model more concrete.",
+   "does_not_prove": "That the relationship is wrong: one drawn to a whole may be meant so. Nothing is listed unless the model's derivations are loaded with it.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate/potential-derivation-premises",
+   "iri": "https://meta.linked.archi/archimate3/questions#potential-derivation-premises",
+   "label": "Which relationships give rise to the most potential derivations?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate3/onto#"
+   ],
+   "parameters": [],
+   "prefixes": {
+    "am": "https://meta.linked.archi/archimate3/onto#",
+    "amderiv": "https://meta.linked.archi/archimate3/derivation#",
+    "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "potentialDerivationPremises",
+   "set": "https://meta.linked.archi/archimate3/questions#",
+   "severity": "",
+   "stage": "quality",
+   "stakeholders": [],
+   "text": "SELECT ?relationship ?source ?sourceLabel ?relationshipType ?target ?targetLabel (COUNT(DISTINCT ?derivation) AS ?derivations)\nWHERE {\n  # Each potential derivation not confirmed, and what it was derived from that the model states: not a\n  # derivation itself.\n  ?derivation amderiv:derivationCertainty amderiv:Potential ;\n              arch:source ?proposedSource ;\n              prov:wasDerivedFrom ?relationship .\n  FILTER NOT EXISTS { ?proposedSource ?leads ?derivation }\n  FILTER NOT EXISTS { ?relationship amderiv:derivationCertainty ?anyCertainty }\n  ?relationship arch:source ?source ;\n                arch:target ?target ;\n                rdf:type ?relationshipType .\n  FILTER(?relationshipType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?relationshipType WHERE { { ?relationshipType arch:isAbstractClass true }\n                                                    UNION { GRAPH ?abstractClassGraph { ?relationshipType arch:isAbstractClass true } } } }\n  OPTIONAL { ?source skos:prefLabel ?sourceLabel . FILTER(lang(?sourceLabel) = \"\" || langMatches(lang(?sourceLabel), \"en\")) }\n  OPTIONAL { ?target skos:prefLabel ?targetLabel . FILTER(lang(?targetLabel) = \"\" || langMatches(lang(?targetLabel), \"en\")) }\n}\nGROUP BY ?relationship ?source ?sourceLabel ?relationshipType ?target ?targetLabel\nORDER BY DESC(?derivations) ?sourceLabel ?targetLabel",
+   "viewpoints": []
+  },
+  {
+   "answers": "One row per potential derivation not confirmed: its source, type and target, and the rule that proposed it.",
+   "concerns": [
+    "https://meta.linked.archi/archimate3/viewpoints#Completeness"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "The potential derivations no modeller has confirmed: relationships the derivation rules say may hold between elements the model relates only through others, each with the rule that proposed it. Each is the model's to state, or to make more precise, where a relationship drawn to a whole is meant for one of its parts.",
+   "does_not_prove": "That the relationship holds: a potential derivation may hold, depending on the model. Nothing is listed unless the model's derivations are loaded with it.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate/potential-derivations",
+   "iri": "https://meta.linked.archi/archimate3/questions#potential-derivations",
+   "label": "Where could the model be more concrete?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate3/onto#"
+   ],
+   "parameters": [],
+   "prefixes": {
+    "am": "https://meta.linked.archi/archimate3/onto#",
+    "amderiv": "https://meta.linked.archi/archimate3/derivation#",
+    "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "potentialDerivations",
+   "set": "https://meta.linked.archi/archimate3/questions#",
+   "severity": "",
+   "stage": "quality",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?derivation ?source ?sourceLabel ?relationshipType ?target ?targetLabel ?rule\nWHERE {\n  # A potential derivation not confirmed: no qualified predicate leads to it.\n  ?derivation amderiv:derivationCertainty amderiv:Potential ;\n              arch:source ?source ;\n              arch:target ?target ;\n              rdf:type ?relationshipType .\n  FILTER NOT EXISTS { ?source ?leads ?derivation }\n  FILTER(?relationshipType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?relationshipType WHERE { { ?relationshipType arch:isAbstractClass true }\n                                                    UNION { GRAPH ?abstractClassGraph { ?relationshipType arch:isAbstractClass true } } } }\n  OPTIONAL { ?derivation prov:wasGeneratedBy/prov:qualifiedAssociation/prov:hadPlan ?rule }\n  OPTIONAL { ?source skos:prefLabel ?sourceLabel . FILTER(lang(?sourceLabel) = \"\" || langMatches(lang(?sourceLabel), \"en\")) }\n  OPTIONAL { ?target skos:prefLabel ?targetLabel . FILTER(lang(?targetLabel) = \"\" || langMatches(lang(?targetLabel), \"en\")) }\n}\nORDER BY ?sourceLabel ?targetLabel ?relationshipType",
+   "viewpoints": []
+  },
+  {
    "answers": "One row per relationship between a principle and another element.",
    "concerns": [
     "https://meta.linked.archi/archimate3/viewpoints#ArchitecturePolicies",
@@ -1312,7 +1414,9 @@
    "parameters": [],
    "prefixes": {
     "am": "https://meta.linked.archi/archimate3/onto#",
+    "amderiv": "https://meta.linked.archi/archimate3/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -1341,7 +1445,7 @@
    ],
    "dataset": "model-and-metamodel",
    "default_limit": 500,
-   "description": "Principles that no requirement or constraint realises.",
+   "description": "Principles that no requirement or constraint realises. A realisation counts directly or as DR 2 derives it, through structural relationships in line.",
    "does_not_prove": "That the principle is ignored. It may be applied by review rather than through stated requirements.",
    "finding": true,
    "finding_focus": "principle",
@@ -1363,7 +1467,9 @@
    ],
    "prefixes": {
     "am": "https://meta.linked.archi/archimate3/onto#",
+    "amderiv": "https://meta.linked.archi/archimate3/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -1380,7 +1486,7 @@
    "severity": "info",
    "stage": "quality",
    "stakeholders": [],
-   "text": "SELECT DISTINCT ?principle ?label\nWHERE {\n  {\n    SELECT DISTINCT ?principleType\n    WHERE {\n      { ?asked rdfs:subClassOf* am:Principle } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:Principle } }\n      { ?principleType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?principleType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?principle rdf:type ?principleType ;\n             arch:inModel ?model .\n  FILTER NOT EXISTS {\n    {\n      SELECT DISTINCT ?requirementType\n      WHERE {\n        { ?askedRequirement rdfs:subClassOf* am:Requirement } UNION { GRAPH ?requirementGraph { ?askedRequirement rdfs:subClassOf* am:Requirement } }\n        { ?requirementType rdfs:subClassOf* ?askedRequirement } UNION { GRAPH ?requirementSpecialisationGraph { ?requirementType rdfs:subClassOf* ?askedRequirement } }\n      }\n    }\n    ?requirement am:realizes ?principle ;\n                 rdf:type ?requirementType .\n  }\n  OPTIONAL { ?principle skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?label",
+   "text": "SELECT DISTINCT ?principle ?label\nWHERE {\n  {\n    SELECT DISTINCT ?principleType\n    WHERE {\n      { ?asked rdfs:subClassOf* am:Principle } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:Principle } }\n      { ?principleType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?principleType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?principle rdf:type ?principleType ;\n             arch:inModel ?model .\n  FILTER NOT EXISTS {\n    {\n      SELECT DISTINCT ?requirementType\n      WHERE {\n        { ?askedRequirement rdfs:subClassOf* am:Requirement } UNION { GRAPH ?requirementGraph { ?askedRequirement rdfs:subClassOf* am:Requirement } }\n        { ?requirementType rdfs:subClassOf* ?askedRequirement } UNION { GRAPH ?requirementSpecialisationGraph { ?requirementType rdfs:subClassOf* ?askedRequirement } }\n      }\n    }\n    ?from am:realizes ?to .\n    ?requirement (am:composedOf|am:aggregates|am:assignedTo|am:realizes)* ?from .\n    ?to (am:composedOf|am:aggregates|am:assignedTo|am:realizes)* ?principle .\n    ?requirement rdf:type ?requirementType .\n  }\n  OPTIONAL { ?principle skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?label",
    "viewpoints": [
     "https://meta.linked.archi/archimate3/viewpoints#MotivationViewpoint"
    ]
@@ -1393,7 +1499,7 @@
    ],
    "dataset": "model-and-metamodel",
    "default_limit": 1000,
-   "description": "Requirements and constraints with what realises them, below, and the goals, outcomes and principles they realise or influence, above, as a list of links.",
+   "description": "Requirements and constraints with what realises them, below, and the goals, outcomes and principles they realise or influence, above, as a list of links. With the derivations loaded, a longer chain the valid rules derive counts too, as one hop.",
    "does_not_prove": "Verification. A realisation relationship is a design claim; it does not show the requirement is met.",
    "finding": false,
    "finding_focus": "",
@@ -1406,7 +1512,9 @@
    "parameters": [],
    "prefixes": {
     "am": "https://meta.linked.archi/archimate3/onto#",
+    "amderiv": "https://meta.linked.archi/archimate3/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -1433,14 +1541,14 @@
    ]
   },
   {
-   "answers": "One row per assignment, with both ends and their types.",
+   "answers": "One row per performer and what it is assigned to, with both types.",
    "concerns": [
     "https://meta.linked.archi/archimate3/viewpoints#CompetenciesAuthorityResponsibilities",
     "https://meta.linked.archi/archimate3/viewpoints#Responsibilities"
    ],
    "dataset": "model-and-metamodel",
    "default_limit": 500,
-   "description": "Assignment relationships: which actor, role, collaboration, component or node performs which behaviour or plays which role.",
+   "description": "Assignments, stated or as DR 2 derives them in line with compositions and aggregations: which actor, role, collaboration, component or node performs which behaviour or plays which role.",
    "does_not_prove": "Accountability in the RACI sense. An ArchiMate assignment states who performs, not who answers for the outcome.",
    "finding": false,
    "finding_focus": "",
@@ -1453,13 +1561,15 @@
    "parameters": [],
    "prefixes": {
     "am": "https://meta.linked.archi/archimate3/onto#",
+    "amderiv": "https://meta.linked.archi/archimate3/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
    },
    "reads": {
-    "direct_rel_triples": false,
+    "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
     "unqualified_forms": false,
@@ -1473,7 +1583,7 @@
     "https://meta.linked.archi/archimate3/viewpoints#Manager",
     "https://meta.linked.archi/archimate3/viewpoints#ProcessArchitect"
    ],
-   "text": "SELECT DISTINCT ?performer ?performerLabel ?performerType ?assignment ?assigned ?assignedLabel ?assignedType\nWHERE {\n  {\n    SELECT DISTINCT ?assignmentType\n    WHERE {\n      { ?asked rdfs:subClassOf* am:Assignment } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:Assignment } }\n      { ?assignmentType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?assignmentType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?assignment rdf:type ?assignmentType ;\n              arch:source ?performer ;\n              arch:target ?assigned .\n  ?performer rdf:type ?performerType .\n  ?assigned rdf:type ?assignedType .\n  FILTER(?performerType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  FILTER(?assignedType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?performerType WHERE { { ?performerType arch:isAbstractClass true }\n                                                 UNION { GRAPH ?abstractClassGraph { ?performerType arch:isAbstractClass true } } } }\n  MINUS { SELECT DISTINCT ?assignedType WHERE { { ?assignedType arch:isAbstractClass true }\n                                                UNION { GRAPH ?abstractClassGraph { ?assignedType arch:isAbstractClass true } } } }\n  OPTIONAL { ?performer skos:prefLabel ?performerLabel . FILTER(lang(?performerLabel) = \"\" || langMatches(lang(?performerLabel), \"en\")) }\n  OPTIONAL { ?assigned skos:prefLabel ?assignedLabel . FILTER(lang(?assignedLabel) = \"\" || langMatches(lang(?assignedLabel), \"en\")) }\n}\nORDER BY ?performerLabel ?assignedLabel",
+   "text": "SELECT DISTINCT ?performer ?performerLabel ?performerType ?assigned ?assignedLabel ?assignedType\nWHERE {\n  # From each assignment, back to the performer and on to what it is assigned to, in line with compositions\n  # and aggregations: DR 2 derives the weakest of the three, an assignment.\n  ?from am:assignedTo ?to .\n  ?performer (am:composedOf|am:aggregates|am:assignedTo)* ?from .\n  ?to (am:composedOf|am:aggregates|am:assignedTo)* ?assigned .\n  # The performer is active structure, as the question asks: a plateau, grouping or location gathers what is\n  # assigned through what it aggregates, it does not perform.\n  {\n    SELECT DISTINCT ?performerType\n    WHERE {\n      { ?askedPerformer rdfs:subClassOf* am:ActiveStructureElement } UNION { GRAPH ?performerGraph { ?askedPerformer rdfs:subClassOf* am:ActiveStructureElement } }\n      { ?performerType rdfs:subClassOf* ?askedPerformer } UNION { GRAPH ?performerSpecialisationGraph { ?performerType rdfs:subClassOf* ?askedPerformer } }\n    }\n  }\n  ?performer rdf:type ?performerType .\n  ?assigned rdf:type ?assignedType .\n  FILTER(?performerType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  FILTER(?assignedType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?performerType WHERE { { ?performerType arch:isAbstractClass true }\n                                                 UNION { GRAPH ?abstractClassGraph { ?performerType arch:isAbstractClass true } } } }\n  MINUS { SELECT DISTINCT ?assignedType WHERE { { ?assignedType arch:isAbstractClass true }\n                                                UNION { GRAPH ?abstractClassGraph { ?assignedType arch:isAbstractClass true } } } }\n  OPTIONAL { ?performer skos:prefLabel ?performerLabel . FILTER(lang(?performerLabel) = \"\" || langMatches(lang(?performerLabel), \"en\")) }\n  OPTIONAL { ?assigned skos:prefLabel ?assignedLabel . FILTER(lang(?assignedLabel) = \"\" || langMatches(lang(?assignedLabel), \"en\")) }\n}\nORDER BY ?performerLabel ?assignedLabel",
    "viewpoints": [
     "https://meta.linked.archi/archimate3/viewpoints#BusinessProcessCooperationViewpoint",
     "https://meta.linked.archi/archimate3/viewpoints#OrganizationViewpoint"
@@ -1500,7 +1610,9 @@
    "parameters": [],
    "prefixes": {
     "am": "https://meta.linked.archi/archimate3/onto#",
+    "amderiv": "https://meta.linked.archi/archimate3/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -1533,7 +1645,7 @@
    ],
    "dataset": "model-and-metamodel",
    "default_limit": 500,
-   "description": "Business, application and technology processes and functions that no active structure element is assigned to.",
+   "description": "Business, application and technology processes and functions that no active structure element is assigned to. An assignment counts directly or as DR 2 derives it, in line with compositions and aggregations.",
    "does_not_prove": "That nobody performs it. The performer may be assigned to an enclosing process, or the model may stop above that level of detail.",
    "finding": true,
    "finding_focus": "behaviour",
@@ -1555,7 +1667,9 @@
    ],
    "prefixes": {
     "am": "https://meta.linked.archi/archimate3/onto#",
+    "amderiv": "https://meta.linked.archi/archimate3/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -1572,7 +1686,7 @@
    "severity": "warning",
    "stage": "quality",
    "stakeholders": [],
-   "text": "SELECT DISTINCT ?behaviour ?label ?type\nWHERE {\n  {\n    SELECT DISTINCT ?type ?behaviourType\n    WHERE {\n      VALUES ?type {\n        am:BusinessProcess am:BusinessFunction am:ApplicationProcess am:ApplicationFunction\n        am:TechnologyProcess am:TechnologyFunction\n      }\n      { ?asked rdfs:subClassOf* ?type } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* ?type } }\n      { ?behaviourType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?behaviourType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?behaviour rdf:type ?behaviourType ;\n             arch:inModel ?model .\n  FILTER NOT EXISTS { ?performer am:assignedTo ?behaviour }\n  OPTIONAL { ?behaviour skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?type ?label",
+   "text": "SELECT DISTINCT ?behaviour ?label ?type\nWHERE {\n  {\n    SELECT DISTINCT ?type ?behaviourType\n    WHERE {\n      VALUES ?type {\n        am:BusinessProcess am:BusinessFunction am:ApplicationProcess am:ApplicationFunction\n        am:TechnologyProcess am:TechnologyFunction\n      }\n      { ?asked rdfs:subClassOf* ?type } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* ?type } }\n      { ?behaviourType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?behaviourType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?behaviour rdf:type ?behaviourType ;\n             arch:inModel ?model .\n  # Directly, or as DR 2 derives it in line with compositions and aggregations.\n  FILTER NOT EXISTS { ?from am:assignedTo ?to . ?to (am:composedOf|am:aggregates|am:assignedTo)* ?behaviour }\n  OPTIONAL { ?behaviour skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?type ?label",
    "viewpoints": [
     "https://meta.linked.archi/archimate3/viewpoints#BusinessProcessCooperationViewpoint",
     "https://meta.linked.archi/archimate3/viewpoints#OrganizationViewpoint"
@@ -1586,7 +1700,7 @@
    ],
    "dataset": "model-and-metamodel",
    "default_limit": 500,
-   "description": "Capabilities realised neither directly nor through any capability they are composed of or aggregate.",
+   "description": "Capabilities realised neither directly nor through any capability they are composed of or aggregate. With the derivations loaded, a longer chain the valid rules derive counts too, as one hop.",
    "does_not_prove": "That the enterprise lacks the capability; only that the model does not say what delivers it.",
    "finding": true,
    "finding_focus": "capability",
@@ -1608,7 +1722,9 @@
    ],
    "prefixes": {
     "am": "https://meta.linked.archi/archimate3/onto#",
+    "amderiv": "https://meta.linked.archi/archimate3/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -1638,7 +1754,7 @@
    ],
    "dataset": "model-and-metamodel",
    "default_limit": 500,
-   "description": "Requirements and constraints that no element outside the motivation elements realises: realisation by another motivation element does not count.",
+   "description": "Requirements and constraints that no element outside the motivation elements realises: realisation by another motivation element does not count. A realisation counts directly or as DR 2 derives it, through structural relationships in line.",
    "does_not_prove": "That the requirement is unmet; only that the model does not show what meets it.",
    "finding": true,
    "finding_focus": "requirement",
@@ -1660,7 +1776,9 @@
    ],
    "prefixes": {
     "am": "https://meta.linked.archi/archimate3/onto#",
+    "amderiv": "https://meta.linked.archi/archimate3/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -1679,7 +1797,7 @@
    "stakeholders": [
     "https://meta.linked.archi/archimate3/viewpoints#RequirementsManager"
    ],
-   "text": "SELECT DISTINCT ?requirement ?label\nWHERE {\n  {\n    SELECT DISTINCT ?requirementType\n    WHERE {\n      { ?asked rdfs:subClassOf* am:Requirement } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:Requirement } }\n      { ?requirementType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?requirementType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?requirement rdf:type ?requirementType ;\n               arch:inModel ?model .\n  # Realised by a design element: one whose own type is not a motivation element.\n  MINUS {\n    ?realizer am:realizes ?requirement ;\n              rdf:type ?realizerType .\n    FILTER(?realizerType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n    MINUS { SELECT DISTINCT ?realizerType WHERE { { ?realizerType arch:isAbstractClass true }\n                                                  UNION { GRAPH ?abstractClassGraph { ?realizerType arch:isAbstractClass true } } } }\n    MINUS {\n      SELECT DISTINCT ?realizerType\n      WHERE {\n        { ?motivationType rdfs:subClassOf* am:MotivationElement }\n        UNION { GRAPH ?motivationGraph { ?motivationType rdfs:subClassOf* am:MotivationElement } }\n        { ?realizerType rdfs:subClassOf* ?motivationType }\n        UNION { GRAPH ?motivationSpecialisationGraph { ?realizerType rdfs:subClassOf* ?motivationType } }\n      }\n    }\n  }\n  OPTIONAL { ?requirement skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?label",
+   "text": "SELECT DISTINCT ?requirement ?label\nWHERE {\n  {\n    SELECT DISTINCT ?requirementType\n    WHERE {\n      { ?asked rdfs:subClassOf* am:Requirement } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:Requirement } }\n      { ?requirementType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?requirementType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?requirement rdf:type ?requirementType ;\n               arch:inModel ?model .\n  # Realised by a design element: one whose own type is not a motivation element.\n  MINUS {\n    ?from am:realizes ?to .\n    ?realizer (am:composedOf|am:aggregates|am:assignedTo|am:realizes)* ?from .\n    ?to (am:composedOf|am:aggregates|am:assignedTo|am:realizes)* ?requirement .\n    ?realizer rdf:type ?realizerType .\n    FILTER(?realizerType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n    MINUS { SELECT DISTINCT ?realizerType WHERE { { ?realizerType arch:isAbstractClass true }\n                                                  UNION { GRAPH ?abstractClassGraph { ?realizerType arch:isAbstractClass true } } } }\n    MINUS {\n      SELECT DISTINCT ?realizerType\n      WHERE {\n        { ?motivationType rdfs:subClassOf* am:MotivationElement }\n        UNION { GRAPH ?motivationGraph { ?motivationType rdfs:subClassOf* am:MotivationElement } }\n        { ?realizerType rdfs:subClassOf* ?motivationType }\n        UNION { GRAPH ?motivationSpecialisationGraph { ?realizerType rdfs:subClassOf* ?motivationType } }\n      }\n    }\n  }\n  OPTIONAL { ?requirement skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?label",
    "viewpoints": [
     "https://meta.linked.archi/archimate3/viewpoints#RequirementsRealizationViewpoint"
    ]
@@ -1692,7 +1810,7 @@
    ],
    "dataset": "model-and-metamodel",
    "default_limit": 500,
-   "description": "Business, application and technology services that no behaviour or active structure element realises.",
+   "description": "Business, application and technology services that no behaviour or active structure element realises. A realisation counts directly or as DR 2 derives it, through structural relationships in line.",
    "does_not_prove": "That the service is not delivered: it may be bought in, or realised in a model that is not loaded.",
    "finding": true,
    "finding_focus": "service",
@@ -1714,7 +1832,9 @@
    ],
    "prefixes": {
     "am": "https://meta.linked.archi/archimate3/onto#",
+    "amderiv": "https://meta.linked.archi/archimate3/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -1731,7 +1851,7 @@
    "severity": "warning",
    "stage": "quality",
    "stakeholders": [],
-   "text": "SELECT DISTINCT ?service ?label ?type\nWHERE {\n  {\n    SELECT DISTINCT ?type ?serviceType\n    WHERE {\n      VALUES ?type { am:BusinessService am:ApplicationService am:TechnologyService }\n      { ?asked rdfs:subClassOf* ?type } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* ?type } }\n      { ?serviceType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?serviceType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?service rdf:type ?serviceType ;\n           arch:inModel ?model .\n  FILTER NOT EXISTS { ?realizer am:realizes ?service }\n  OPTIONAL { ?service skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?type ?label",
+   "text": "SELECT DISTINCT ?service ?label ?type\nWHERE {\n  {\n    SELECT DISTINCT ?type ?serviceType\n    WHERE {\n      VALUES ?type { am:BusinessService am:ApplicationService am:TechnologyService }\n      { ?asked rdfs:subClassOf* ?type } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* ?type } }\n      { ?serviceType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?serviceType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?service rdf:type ?serviceType ;\n           arch:inModel ?model .\n  # Directly, or as DR 2 derives it through structural relationships in line.\n  FILTER NOT EXISTS { ?from am:realizes ?to . ?to (am:composedOf|am:aggregates|am:assignedTo|am:realizes)* ?service }\n  OPTIONAL { ?service skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?type ?label",
    "viewpoints": [
     "https://meta.linked.archi/archimate3/viewpoints#BusinessProcessCooperationViewpoint",
     "https://meta.linked.archi/archimate3/viewpoints#ServiceRealizationViewpoint"
@@ -1745,7 +1865,7 @@
    ],
    "dataset": "model-and-metamodel",
    "default_limit": 500,
-   "description": "Work packages, the deliverables they realise, and the architecture elements those deliverables realise.",
+   "description": "Work packages, the deliverables they realise, and the architecture elements those deliverables realise. A realisation counts directly or as DR 2 derives it, through structural relationships in line.",
    "does_not_prove": "Schedule or progress. ArchiMate records what a work package produces, not when.",
    "finding": false,
    "finding_focus": "",
@@ -1758,7 +1878,9 @@
    "parameters": [],
    "prefixes": {
     "am": "https://meta.linked.archi/archimate3/onto#",
+    "amderiv": "https://meta.linked.archi/archimate3/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -1778,21 +1900,21 @@
     "https://meta.linked.archi/archimate3/viewpoints#EnterpriseArchitect",
     "https://meta.linked.archi/archimate3/viewpoints#OperationalManager"
    ],
-   "text": "SELECT DISTINCT ?workPackage ?workPackageLabel ?deliverable ?deliverableLabel ?realized ?realizedLabel ?realizedType\nWHERE {\n  {\n    SELECT DISTINCT ?workPackageType\n    WHERE {\n      { ?asked rdfs:subClassOf* am:WorkPackage } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:WorkPackage } }\n      { ?workPackageType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?workPackageType rdfs:subClassOf* ?asked } }\n    }\n  }\n  {\n    SELECT DISTINCT ?deliverableType\n    WHERE {\n      { ?askedDeliverable rdfs:subClassOf* am:Deliverable } UNION { GRAPH ?deliverableGraph { ?askedDeliverable rdfs:subClassOf* am:Deliverable } }\n      { ?deliverableType rdfs:subClassOf* ?askedDeliverable } UNION { GRAPH ?deliverableSpecialisationGraph { ?deliverableType rdfs:subClassOf* ?askedDeliverable } }\n    }\n  }\n  ?workPackage rdf:type ?workPackageType ;\n               am:realizes ?deliverable .\n  ?deliverable rdf:type ?deliverableType .\n  OPTIONAL {\n    ?deliverable am:realizes ?realized .\n    ?realized rdf:type ?realizedType .\n    FILTER(?realizedType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n    MINUS { SELECT DISTINCT ?realizedType WHERE { { ?realizedType arch:isAbstractClass true }\n                                                  UNION { GRAPH ?abstractClassGraph { ?realizedType arch:isAbstractClass true } } } }\n    OPTIONAL { ?realized skos:prefLabel ?realizedLabel . FILTER(lang(?realizedLabel) = \"\" || langMatches(lang(?realizedLabel), \"en\")) }\n  }\n  OPTIONAL { ?workPackage skos:prefLabel ?workPackageLabel . FILTER(lang(?workPackageLabel) = \"\" || langMatches(lang(?workPackageLabel), \"en\")) }\n  OPTIONAL { ?deliverable skos:prefLabel ?deliverableLabel . FILTER(lang(?deliverableLabel) = \"\" || langMatches(lang(?deliverableLabel), \"en\")) }\n}\nORDER BY ?workPackageLabel ?deliverableLabel",
+   "text": "SELECT DISTINCT ?workPackage ?workPackageLabel ?deliverable ?deliverableLabel ?realized ?realizedLabel ?realizedType\nWHERE {\n  {\n    SELECT DISTINCT ?workPackageType\n    WHERE {\n      { ?asked rdfs:subClassOf* am:WorkPackage } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am:WorkPackage } }\n      { ?workPackageType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?workPackageType rdfs:subClassOf* ?asked } }\n    }\n  }\n  {\n    SELECT DISTINCT ?deliverableType\n    WHERE {\n      { ?askedDeliverable rdfs:subClassOf* am:Deliverable } UNION { GRAPH ?deliverableGraph { ?askedDeliverable rdfs:subClassOf* am:Deliverable } }\n      { ?deliverableType rdfs:subClassOf* ?askedDeliverable } UNION { GRAPH ?deliverableSpecialisationGraph { ?deliverableType rdfs:subClassOf* ?askedDeliverable } }\n    }\n  }\n  # Each realisation directly, or as DR 2 derives it through structural relationships in line.\n  ?from am:realizes ?to .\n  ?workPackage (am:composedOf|am:aggregates|am:assignedTo|am:realizes)* ?from .\n  ?to (am:composedOf|am:aggregates|am:assignedTo|am:realizes)* ?deliverable .\n  ?workPackage rdf:type ?workPackageType .\n  ?deliverable rdf:type ?deliverableType .\n  OPTIONAL {\n    ?realizing am:realizes ?realised .\n    ?deliverable (am:composedOf|am:aggregates|am:assignedTo|am:realizes)* ?realizing .\n    ?realised (am:composedOf|am:aggregates|am:assignedTo|am:realizes)* ?realized .\n    ?realized rdf:type ?realizedType .\n    FILTER(?realizedType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n    MINUS { SELECT DISTINCT ?realizedType WHERE { { ?realizedType arch:isAbstractClass true }\n                                                  UNION { GRAPH ?abstractClassGraph { ?realizedType arch:isAbstractClass true } } } }\n    OPTIONAL { ?realized skos:prefLabel ?realizedLabel . FILTER(lang(?realizedLabel) = \"\" || langMatches(lang(?realizedLabel), \"en\")) }\n  }\n  OPTIONAL { ?workPackage skos:prefLabel ?workPackageLabel . FILTER(lang(?workPackageLabel) = \"\" || langMatches(lang(?workPackageLabel), \"en\")) }\n  OPTIONAL { ?deliverable skos:prefLabel ?deliverableLabel . FILTER(lang(?deliverableLabel) = \"\" || langMatches(lang(?deliverableLabel), \"en\")) }\n}\nORDER BY ?workPackageLabel ?deliverableLabel",
    "viewpoints": [
     "https://meta.linked.archi/archimate3/viewpoints#ImplementationAndMigrationViewpoint",
     "https://meta.linked.archi/archimate3/viewpoints#ProjectViewpoint"
    ]
   },
   {
-   "answers": "One row per dependency: the provider, how it provides, the relationship or service between, and the consumer.",
+   "answers": "One row per dependency: the provider, how it provides, the service between where there is one, and the consumer.",
    "concerns": [
     "https://meta.linked.archi/archimate4/viewpoints#ApplicationDependencies",
     "https://meta.linked.archi/archimate4/viewpoints#ServiceOrchestration"
    ],
    "dataset": "model-and-metamodel",
    "default_limit": 500,
-   "description": "Application components that serve, flow to or trigger one another, directly or through a service one realises — itself or through the function assigned to it — and the other is served by.",
+   "description": "Application components that serve, flow to or trigger one another, directly or through a service one realises — itself or through the function assigned to it — and the other is served by. With the derivations loaded, a longer chain the valid rules derive counts too, as one hop.",
    "does_not_prove": "Runtime coupling or data volume. A modelled flow says that information moves, not how much or how often.",
    "finding": false,
    "finding_focus": "",
@@ -1805,7 +1927,9 @@
    "parameters": [],
    "prefixes": {
     "am4": "https://meta.linked.archi/archimate4/onto#",
+    "am4deriv": "https://meta.linked.archi/archimate4/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -1822,7 +1946,7 @@
    "severity": "",
    "stage": "analysis",
    "stakeholders": [],
-   "text": "SELECT DISTINCT ?provider ?providerLabel ?how ?via ?consumer ?consumerLabel\nWHERE {\n  # From the relationships to their ends, each branch anchored on its relationships: never every pair of\n  # components. Both ends are then checked against the component types, read once each.\n  {\n    VALUES ?linkType { am4:Serving am4:Flow am4:Triggering }\n    ?via rdf:type ?linkType ;\n         arch:source ?provider ;\n         arch:target ?consumer .\n    BIND(REPLACE(STR(?linkType), \"^.*[#/]\", \"\") AS ?how)\n  }\n  UNION\n  {\n    {\n      SELECT DISTINCT ?serviceType\n      WHERE {\n        { ?askedService rdfs:subClassOf* am4:Service } UNION { GRAPH ?serviceOntologyGraph { ?askedService rdfs:subClassOf* am4:Service } }\n        { ?serviceType rdfs:subClassOf* ?askedService } UNION { GRAPH ?serviceSpecialisationGraph { ?serviceType rdfs:subClassOf* ?askedService } }\n      }\n    }\n    ?via rdf:type ?serviceType ;\n         am4:serves ?consumer .\n    ?provider am4:realizes|(am4:assignedTo/am4:realizes) ?via .\n    BIND(\"realises a service serving\" AS ?how)\n  }\n  ?provider rdf:type ?providerType .\n  ?consumer rdf:type ?consumerType .\n  {\n    SELECT DISTINCT ?providerType\n    WHERE {\n      { ?askedProvider rdfs:subClassOf* am4:ApplicationComponent } UNION { GRAPH ?providerGraph { ?askedProvider rdfs:subClassOf* am4:ApplicationComponent } }\n      { ?providerType rdfs:subClassOf* ?askedProvider } UNION { GRAPH ?providerSpecialisationGraph { ?providerType rdfs:subClassOf* ?askedProvider } }\n    }\n  }\n  {\n    SELECT DISTINCT ?consumerType\n    WHERE {\n      { ?askedConsumer rdfs:subClassOf* am4:ApplicationComponent } UNION { GRAPH ?consumerGraph { ?askedConsumer rdfs:subClassOf* am4:ApplicationComponent } }\n      { ?consumerType rdfs:subClassOf* ?askedConsumer } UNION { GRAPH ?consumerSpecialisationGraph { ?consumerType rdfs:subClassOf* ?askedConsumer } }\n    }\n  }\n  FILTER(?provider != ?consumer)\n  OPTIONAL { ?provider skos:prefLabel ?providerLabel . FILTER(lang(?providerLabel) = \"\" || langMatches(lang(?providerLabel), \"en\")) }\n  OPTIONAL { ?consumer skos:prefLabel ?consumerLabel . FILTER(lang(?consumerLabel) = \"\" || langMatches(lang(?consumerLabel), \"en\")) }\n}\nORDER BY ?providerLabel ?consumerLabel",
+   "text": "SELECT DISTINCT ?provider ?providerLabel ?how ?via ?consumer ?consumerLabel\nWHERE {\n  # From the direct triples to their ends, each branch anchored on its relationships: never every pair of\n  # components. Both ends are then checked against the component types, read once each.\n  {\n    VALUES (?link ?how) { (am4:serves \"Serving\") (am4:flowsTo \"Flow\") (am4:triggers \"Triggering\") }\n    ?provider ?link ?consumer .\n  }\n  UNION\n  {\n    {\n      SELECT DISTINCT ?serviceType\n      WHERE {\n        { ?askedService rdfs:subClassOf* am4:Service } UNION { GRAPH ?serviceOntologyGraph { ?askedService rdfs:subClassOf* am4:Service } }\n        { ?serviceType rdfs:subClassOf* ?askedService } UNION { GRAPH ?serviceSpecialisationGraph { ?serviceType rdfs:subClassOf* ?askedService } }\n      }\n    }\n    ?via rdf:type ?serviceType ;\n         am4:serves ?consumer .\n    ?provider am4:realizes|(am4:assignedTo/am4:realizes) ?via .\n    BIND(\"realises a service serving\" AS ?how)\n  }\n  ?provider rdf:type ?providerType .\n  ?consumer rdf:type ?consumerType .\n  {\n    SELECT DISTINCT ?providerType\n    WHERE {\n      { ?askedProvider rdfs:subClassOf* am4:ApplicationComponent } UNION { GRAPH ?providerGraph { ?askedProvider rdfs:subClassOf* am4:ApplicationComponent } }\n      { ?providerType rdfs:subClassOf* ?askedProvider } UNION { GRAPH ?providerSpecialisationGraph { ?providerType rdfs:subClassOf* ?askedProvider } }\n    }\n  }\n  {\n    SELECT DISTINCT ?consumerType\n    WHERE {\n      { ?askedConsumer rdfs:subClassOf* am4:ApplicationComponent } UNION { GRAPH ?consumerGraph { ?askedConsumer rdfs:subClassOf* am4:ApplicationComponent } }\n      { ?consumerType rdfs:subClassOf* ?askedConsumer } UNION { GRAPH ?consumerSpecialisationGraph { ?consumerType rdfs:subClassOf* ?askedConsumer } }\n    }\n  }\n  FILTER(?provider != ?consumer)\n  OPTIONAL { ?provider skos:prefLabel ?providerLabel . FILTER(lang(?providerLabel) = \"\" || langMatches(lang(?providerLabel), \"en\")) }\n  OPTIONAL { ?consumer skos:prefLabel ?consumerLabel . FILTER(lang(?consumerLabel) = \"\" || langMatches(lang(?consumerLabel), \"en\")) }\n}\nORDER BY ?providerLabel ?consumerLabel",
    "viewpoints": [
     "https://meta.linked.archi/archimate4/viewpoints#ApplicationCooperationViewpoint",
     "https://meta.linked.archi/archimate4/viewpoints#ApplicationUsageViewpoint"
@@ -1836,7 +1960,7 @@
    ],
    "dataset": "model-and-metamodel",
    "default_limit": 500,
-   "description": "Application components that no element of the technology domain serves or realises, directly or by realising a service that serves them.",
+   "description": "Application components that no element of the technology domain serves or realises, directly or by realising a service that serves them. With the derivations loaded, a longer chain the valid rules derive counts too, as one hop.",
    "does_not_prove": "That it runs nowhere. Where it is hosted may be outside the model, or recorded only in a deployment model that is not loaded.",
    "finding": true,
    "finding_focus": "application",
@@ -1858,7 +1982,9 @@
    ],
    "prefixes": {
     "am4": "https://meta.linked.archi/archimate4/onto#",
+    "am4deriv": "https://meta.linked.archi/archimate4/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -1892,7 +2018,7 @@
    ],
    "dataset": "model-and-metamodel",
    "default_limit": 500,
-   "description": "Capabilities with the behaviour, active structure or resources that realise them.",
+   "description": "Capabilities with the behaviour, active structure or resources that realise them. A realisation counts directly or as DR 2 derives it, through structural relationships in line.",
    "does_not_prove": "Maturity. That a capability is realised says it is delivered somehow, not how well.",
    "finding": false,
    "finding_focus": "",
@@ -1905,7 +2031,9 @@
    "parameters": [],
    "prefixes": {
     "am4": "https://meta.linked.archi/archimate4/onto#",
+    "am4deriv": "https://meta.linked.archi/archimate4/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -1925,21 +2053,21 @@
     "https://meta.linked.archi/archimate4/viewpoints#BusinessArchitect",
     "https://meta.linked.archi/archimate4/viewpoints#CxO"
    ],
-   "text": "SELECT DISTINCT ?capability ?capabilityLabel ?realizer ?realizerLabel ?realizerType\nWHERE {\n  {\n    SELECT DISTINCT ?capabilityType\n    WHERE {\n      { ?asked rdfs:subClassOf* am4:Capability } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am4:Capability } }\n      { ?capabilityType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?capabilityType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?capability rdf:type ?capabilityType .\n  OPTIONAL {\n    ?realizer am4:realizes ?capability ;\n              rdf:type ?realizerType .\n    FILTER(?realizerType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n    MINUS { SELECT DISTINCT ?realizerType WHERE { { ?realizerType arch:isAbstractClass true }\n                                                  UNION { GRAPH ?abstractClassGraph { ?realizerType arch:isAbstractClass true } } } }\n    OPTIONAL { ?realizer skos:prefLabel ?realizerLabel . FILTER(lang(?realizerLabel) = \"\" || langMatches(lang(?realizerLabel), \"en\")) }\n  }\n  OPTIONAL { ?capability skos:prefLabel ?capabilityLabel . FILTER(lang(?capabilityLabel) = \"\" || langMatches(lang(?capabilityLabel), \"en\")) }\n}\nORDER BY ?capabilityLabel ?realizerLabel",
+   "text": "SELECT DISTINCT ?capability ?capabilityLabel ?realizer ?realizerLabel ?realizerType\nWHERE {\n  {\n    SELECT DISTINCT ?capabilityType\n    WHERE {\n      { ?asked rdfs:subClassOf* am4:Capability } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am4:Capability } }\n      { ?capabilityType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?capabilityType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?capability rdf:type ?capabilityType .\n  OPTIONAL {\n    # From each realisation, back to the realizer and on to the capability through structural relationships\n    # in line: DR 2 derives the weakest, a realisation.\n    ?from am4:realizes ?to .\n    ?realizer (am4:composedOf|am4:aggregates|am4:assignedTo|am4:realizes)* ?from .\n    ?to (am4:composedOf|am4:aggregates|am4:assignedTo|am4:realizes)* ?capability .\n    ?realizer rdf:type ?realizerType .\n    FILTER(?realizerType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n    MINUS { SELECT DISTINCT ?realizerType WHERE { { ?realizerType arch:isAbstractClass true }\n                                                  UNION { GRAPH ?abstractClassGraph { ?realizerType arch:isAbstractClass true } } } }\n    OPTIONAL { ?realizer skos:prefLabel ?realizerLabel . FILTER(lang(?realizerLabel) = \"\" || langMatches(lang(?realizerLabel), \"en\")) }\n  }\n  OPTIONAL { ?capability skos:prefLabel ?capabilityLabel . FILTER(lang(?capabilityLabel) = \"\" || langMatches(lang(?capabilityLabel), \"en\")) }\n}\nORDER BY ?capabilityLabel ?realizerLabel",
    "viewpoints": [
     "https://meta.linked.archi/archimate4/viewpoints#CapabilityMapViewpoint",
     "https://meta.linked.archi/archimate4/viewpoints#StrategyViewpoint"
    ]
   },
   {
-   "answers": "One row per source domain, relationship type and target domain, with the number of relationships.",
+   "answers": "One row per source domain, relationship type and target domain, with the number of pairs of elements so related.",
    "concerns": [
     "https://meta.linked.archi/archimate4/viewpoints#Consistency",
     "https://meta.linked.archi/archimate4/viewpoints#ImpactOfChange"
    ],
    "dataset": "model-and-metamodel",
    "default_limit": 200,
-   "description": "Relationships whose ends are in different ArchiMate 4.0 domains, counted by pair of domains and relationship type. The domains are read from the domain classes, not from type names.",
+   "description": "Relationships whose ends are in different ArchiMate 4.0 domains, read from their direct triples and counted by pair of domains and relationship type. The domains are read from the domain classes, not from type names.",
    "does_not_prove": "Coupling. Relationships touching elements of the common domain are not counted: ArchiMate 4.0 assigns those no domain, so whether they cross one is undefined.",
    "finding": false,
    "finding_focus": "",
@@ -1952,13 +2080,15 @@
    "parameters": [],
    "prefixes": {
     "am4": "https://meta.linked.archi/archimate4/onto#",
+    "am4deriv": "https://meta.linked.archi/archimate4/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
    },
    "reads": {
-    "direct_rel_triples": false,
+    "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
     "unqualified_forms": false,
@@ -1969,7 +2099,7 @@
    "severity": "",
    "stage": "analysis",
    "stakeholders": [],
-   "text": "SELECT ?sourceDomain ?relationshipType ?targetDomain (COUNT(DISTINCT ?relationship) AS ?relationships)\nWHERE {\n  ?relationship arch:source ?source ;\n                arch:target ?target ;\n                rdf:type ?relationshipType .\n  FILTER(?relationshipType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?relationshipType WHERE { { ?relationshipType arch:isAbstractClass true }\n                                                    UNION { GRAPH ?abstractClassGraph { ?relationshipType arch:isAbstractClass true } } } }\n  ?source rdf:type ?sourceType .\n  ?target rdf:type ?targetType .\n  {\n    SELECT DISTINCT ?sourceDomain ?sourceType\n    WHERE {\n      VALUES ?sourceDomain {\n        am4:StrategyElement am4:MotivationElement am4:BusinessDomainElement\n        am4:ApplicationDomainElement am4:TechnologyDomainElement am4:ImplementationAndMigrationDomainElement\n      }\n      { ?sourceDomainType rdfs:subClassOf* ?sourceDomain } UNION { GRAPH ?sourceOntologyGraph { ?sourceDomainType rdfs:subClassOf* ?sourceDomain } }\n      { ?sourceType rdfs:subClassOf* ?sourceDomainType } UNION { GRAPH ?sourceSpecialisationGraph { ?sourceType rdfs:subClassOf* ?sourceDomainType } }\n    }\n  }\n  {\n    SELECT DISTINCT ?targetDomain ?targetType\n    WHERE {\n      VALUES ?targetDomain {\n        am4:StrategyElement am4:MotivationElement am4:BusinessDomainElement\n        am4:ApplicationDomainElement am4:TechnologyDomainElement am4:ImplementationAndMigrationDomainElement\n      }\n      { ?targetDomainType rdfs:subClassOf* ?targetDomain } UNION { GRAPH ?targetOntologyGraph { ?targetDomainType rdfs:subClassOf* ?targetDomain } }\n      { ?targetType rdfs:subClassOf* ?targetDomainType } UNION { GRAPH ?targetSpecialisationGraph { ?targetType rdfs:subClassOf* ?targetDomainType } }\n    }\n  }\n  FILTER(?sourceDomain != ?targetDomain)\n}\nGROUP BY ?sourceDomain ?relationshipType ?targetDomain\nORDER BY DESC(?relationships)",
+   "text": "SELECT ?sourceDomain ?relationshipType ?targetDomain (COUNT(DISTINCT ?pair) AS ?relationships)\nWHERE {\n  # Each relationship by its direct triple, with the type it is the unqualified form of.\n  VALUES (?predicate ?relationshipType) {\n    (am4:composedOf am4:Composition) (am4:aggregates am4:Aggregation) (am4:assignedTo am4:Assignment)\n    (am4:realizes am4:Realization) (am4:serves am4:Serving) (am4:accesses am4:Access)\n    (am4:influences am4:Influence) (am4:associatedWith am4:Association) (am4:triggers am4:Triggering)\n    (am4:flowsTo am4:Flow) (am4:specializes am4:Specialization)\n  }\n  ?source ?predicate ?target .\n  BIND(CONCAT(STR(?source), \" \", STR(?target)) AS ?pair)\n  ?source rdf:type ?sourceType .\n  ?target rdf:type ?targetType .\n  {\n    SELECT DISTINCT ?sourceDomain ?sourceType\n    WHERE {\n      VALUES ?sourceDomain {\n        am4:StrategyElement am4:MotivationElement am4:BusinessDomainElement\n        am4:ApplicationDomainElement am4:TechnologyDomainElement am4:ImplementationAndMigrationDomainElement\n      }\n      { ?sourceDomainType rdfs:subClassOf* ?sourceDomain } UNION { GRAPH ?sourceOntologyGraph { ?sourceDomainType rdfs:subClassOf* ?sourceDomain } }\n      { ?sourceType rdfs:subClassOf* ?sourceDomainType } UNION { GRAPH ?sourceSpecialisationGraph { ?sourceType rdfs:subClassOf* ?sourceDomainType } }\n    }\n  }\n  {\n    SELECT DISTINCT ?targetDomain ?targetType\n    WHERE {\n      VALUES ?targetDomain {\n        am4:StrategyElement am4:MotivationElement am4:BusinessDomainElement\n        am4:ApplicationDomainElement am4:TechnologyDomainElement am4:ImplementationAndMigrationDomainElement\n      }\n      { ?targetDomainType rdfs:subClassOf* ?targetDomain } UNION { GRAPH ?targetOntologyGraph { ?targetDomainType rdfs:subClassOf* ?targetDomain } }\n      { ?targetType rdfs:subClassOf* ?targetDomainType } UNION { GRAPH ?targetSpecialisationGraph { ?targetType rdfs:subClassOf* ?targetDomainType } }\n    }\n  }\n  FILTER(?sourceDomain != ?targetDomain)\n}\nGROUP BY ?sourceDomain ?relationshipType ?targetDomain\nORDER BY DESC(?relationships)",
    "viewpoints": [
     "https://meta.linked.archi/archimate4/viewpoints#LayeredViewpoint"
    ]
@@ -1995,7 +2125,9 @@
    "parameters": [],
    "prefixes": {
     "am4": "https://meta.linked.archi/archimate4/onto#",
+    "am4deriv": "https://meta.linked.archi/archimate4/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -2041,7 +2173,9 @@
    "parameters": [],
    "prefixes": {
     "am4": "https://meta.linked.archi/archimate4/onto#",
+    "am4deriv": "https://meta.linked.archi/archimate4/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -2093,7 +2227,9 @@
    ],
    "prefixes": {
     "am4": "https://meta.linked.archi/archimate4/onto#",
+    "am4deriv": "https://meta.linked.archi/archimate4/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -2145,7 +2281,9 @@
    ],
    "prefixes": {
     "am4": "https://meta.linked.archi/archimate4/onto#",
+    "am4deriv": "https://meta.linked.archi/archimate4/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -2211,7 +2349,9 @@
    ],
    "prefixes": {
     "am4": "https://meta.linked.archi/archimate4/onto#",
+    "am4deriv": "https://meta.linked.archi/archimate4/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -2234,6 +2374,90 @@
    ]
   },
   {
+   "answers": "One row per relationship the model states that a potential derivation rests on, with how many rest on it, the most first.",
+   "concerns": [
+    "https://meta.linked.archi/archimate4/viewpoints#Completeness"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 200,
+   "description": "The relationships the model states that the most potential derivations not confirmed rest on. A relationship drawn to a whole where one of its parts is meant gives rise to a proposal for each part; stating the part's own relationship makes the model more concrete.",
+   "does_not_prove": "That the relationship is wrong: one drawn to a whole may be meant so. Nothing is listed unless the model's derivations are loaded with it.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate4/potential-derivation-premises",
+   "iri": "https://meta.linked.archi/archimate4/questions#potential-derivation-premises",
+   "label": "Which relationships give rise to the most potential derivations?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate4/onto#"
+   ],
+   "parameters": [],
+   "prefixes": {
+    "am4": "https://meta.linked.archi/archimate4/onto#",
+    "am4deriv": "https://meta.linked.archi/archimate4/derivation#",
+    "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "potentialDerivationPremises",
+   "set": "https://meta.linked.archi/archimate4/questions#",
+   "severity": "",
+   "stage": "quality",
+   "stakeholders": [],
+   "text": "SELECT ?relationship ?source ?sourceLabel ?relationshipType ?target ?targetLabel (COUNT(DISTINCT ?derivation) AS ?derivations)\nWHERE {\n  # Each potential derivation not confirmed, and what it was derived from that the model states: not a\n  # derivation itself.\n  ?derivation am4deriv:derivationCertainty am4deriv:Potential ;\n              arch:source ?proposedSource ;\n              prov:wasDerivedFrom ?relationship .\n  FILTER NOT EXISTS { ?proposedSource ?leads ?derivation }\n  FILTER NOT EXISTS { ?relationship am4deriv:derivationCertainty ?anyCertainty }\n  ?relationship arch:source ?source ;\n                arch:target ?target ;\n                rdf:type ?relationshipType .\n  FILTER(?relationshipType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?relationshipType WHERE { { ?relationshipType arch:isAbstractClass true }\n                                                    UNION { GRAPH ?abstractClassGraph { ?relationshipType arch:isAbstractClass true } } } }\n  OPTIONAL { ?source skos:prefLabel ?sourceLabel . FILTER(lang(?sourceLabel) = \"\" || langMatches(lang(?sourceLabel), \"en\")) }\n  OPTIONAL { ?target skos:prefLabel ?targetLabel . FILTER(lang(?targetLabel) = \"\" || langMatches(lang(?targetLabel), \"en\")) }\n}\nGROUP BY ?relationship ?source ?sourceLabel ?relationshipType ?target ?targetLabel\nORDER BY DESC(?derivations) ?sourceLabel ?targetLabel",
+   "viewpoints": []
+  },
+  {
+   "answers": "One row per potential derivation not confirmed: its source, type and target, and the rule that proposed it.",
+   "concerns": [
+    "https://meta.linked.archi/archimate4/viewpoints#Completeness"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "The potential derivations no modeller has confirmed: relationships the derivation rules say may hold between elements the model relates only through others, each with the rule that proposed it. Each is the model's to state, or to make more precise, where a relationship drawn to a whole is meant for one of its parts.",
+   "does_not_prove": "That the relationship holds: a potential derivation may hold, depending on the model. Nothing is listed unless the model's derivations are loaded with it.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "notation/archimate4/potential-derivations",
+   "iri": "https://meta.linked.archi/archimate4/questions#potential-derivations",
+   "label": "Where could the model be more concrete?",
+   "metamodels": [
+    "https://meta.linked.archi/archimate4/onto#"
+   ],
+   "parameters": [],
+   "prefixes": {
+    "am4": "https://meta.linked.archi/archimate4/onto#",
+    "am4deriv": "https://meta.linked.archi/archimate4/derivation#",
+    "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": false,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "potentialDerivations",
+   "set": "https://meta.linked.archi/archimate4/questions#",
+   "severity": "",
+   "stage": "quality",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?derivation ?source ?sourceLabel ?relationshipType ?target ?targetLabel ?rule\nWHERE {\n  # A potential derivation not confirmed: no qualified predicate leads to it.\n  ?derivation am4deriv:derivationCertainty am4deriv:Potential ;\n              arch:source ?source ;\n              arch:target ?target ;\n              rdf:type ?relationshipType .\n  FILTER NOT EXISTS { ?source ?leads ?derivation }\n  FILTER(?relationshipType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?relationshipType WHERE { { ?relationshipType arch:isAbstractClass true }\n                                                    UNION { GRAPH ?abstractClassGraph { ?relationshipType arch:isAbstractClass true } } } }\n  OPTIONAL { ?derivation prov:wasGeneratedBy/prov:qualifiedAssociation/prov:hadPlan ?rule }\n  OPTIONAL { ?source skos:prefLabel ?sourceLabel . FILTER(lang(?sourceLabel) = \"\" || langMatches(lang(?sourceLabel), \"en\")) }\n  OPTIONAL { ?target skos:prefLabel ?targetLabel . FILTER(lang(?targetLabel) = \"\" || langMatches(lang(?targetLabel), \"en\")) }\n}\nORDER BY ?sourceLabel ?targetLabel ?relationshipType",
+   "viewpoints": []
+  },
+  {
    "answers": "One row per relationship between a principle and another element.",
    "concerns": [
     "https://meta.linked.archi/archimate4/viewpoints#ArchitecturePolicies",
@@ -2254,7 +2478,9 @@
    "parameters": [],
    "prefixes": {
     "am4": "https://meta.linked.archi/archimate4/onto#",
+    "am4deriv": "https://meta.linked.archi/archimate4/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -2283,7 +2509,7 @@
    ],
    "dataset": "model-and-metamodel",
    "default_limit": 500,
-   "description": "Principles that no requirement realises.",
+   "description": "Principles that no requirement realises. A realisation counts directly or as DR 2 derives it, through structural relationships in line.",
    "does_not_prove": "That the principle is ignored. It may be applied by review rather than through stated requirements.",
    "finding": true,
    "finding_focus": "principle",
@@ -2305,7 +2531,9 @@
    ],
    "prefixes": {
     "am4": "https://meta.linked.archi/archimate4/onto#",
+    "am4deriv": "https://meta.linked.archi/archimate4/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -2322,7 +2550,7 @@
    "severity": "info",
    "stage": "quality",
    "stakeholders": [],
-   "text": "SELECT DISTINCT ?principle ?label\nWHERE {\n  {\n    SELECT DISTINCT ?principleType\n    WHERE {\n      { ?asked rdfs:subClassOf* am4:Principle } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am4:Principle } }\n      { ?principleType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?principleType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?principle rdf:type ?principleType ;\n             arch:inModel ?model .\n  FILTER NOT EXISTS {\n    {\n      SELECT DISTINCT ?requirementType\n      WHERE {\n        { ?askedRequirement rdfs:subClassOf* am4:Requirement } UNION { GRAPH ?requirementGraph { ?askedRequirement rdfs:subClassOf* am4:Requirement } }\n        { ?requirementType rdfs:subClassOf* ?askedRequirement } UNION { GRAPH ?requirementSpecialisationGraph { ?requirementType rdfs:subClassOf* ?askedRequirement } }\n      }\n    }\n    ?requirement am4:realizes ?principle ;\n                 rdf:type ?requirementType .\n  }\n  OPTIONAL { ?principle skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?label",
+   "text": "SELECT DISTINCT ?principle ?label\nWHERE {\n  {\n    SELECT DISTINCT ?principleType\n    WHERE {\n      { ?asked rdfs:subClassOf* am4:Principle } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am4:Principle } }\n      { ?principleType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?principleType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?principle rdf:type ?principleType ;\n             arch:inModel ?model .\n  FILTER NOT EXISTS {\n    {\n      SELECT DISTINCT ?requirementType\n      WHERE {\n        { ?askedRequirement rdfs:subClassOf* am4:Requirement } UNION { GRAPH ?requirementGraph { ?askedRequirement rdfs:subClassOf* am4:Requirement } }\n        { ?requirementType rdfs:subClassOf* ?askedRequirement } UNION { GRAPH ?requirementSpecialisationGraph { ?requirementType rdfs:subClassOf* ?askedRequirement } }\n      }\n    }\n    ?from am4:realizes ?to .\n    ?requirement (am4:composedOf|am4:aggregates|am4:assignedTo|am4:realizes)* ?from .\n    ?to (am4:composedOf|am4:aggregates|am4:assignedTo|am4:realizes)* ?principle .\n    ?requirement rdf:type ?requirementType .\n  }\n  OPTIONAL { ?principle skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?label",
    "viewpoints": [
     "https://meta.linked.archi/archimate4/viewpoints#MotivationViewpoint"
    ]
@@ -2335,7 +2563,7 @@
    ],
    "dataset": "model-and-metamodel",
    "default_limit": 1000,
-   "description": "Requirements with what realises them, below, and the goals, outcomes and principles they realise or influence, above, as a list of links.",
+   "description": "Requirements with what realises them, below, and the goals, outcomes and principles they realise or influence, above, as a list of links. With the derivations loaded, a longer chain the valid rules derive counts too, as one hop.",
    "does_not_prove": "Verification. A realisation relationship is a design claim; it does not show the requirement is met.",
    "finding": false,
    "finding_focus": "",
@@ -2348,7 +2576,9 @@
    "parameters": [],
    "prefixes": {
     "am4": "https://meta.linked.archi/archimate4/onto#",
+    "am4deriv": "https://meta.linked.archi/archimate4/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -2375,14 +2605,14 @@
    ]
   },
   {
-   "answers": "One row per assignment, with both ends and their types.",
+   "answers": "One row per performer and what it is assigned to, with both types.",
    "concerns": [
     "https://meta.linked.archi/archimate4/viewpoints#CompetenciesAuthorityResponsibilities",
     "https://meta.linked.archi/archimate4/viewpoints#Responsibilities"
    ],
    "dataset": "model-and-metamodel",
    "default_limit": 500,
-   "description": "Assignment relationships: which actor, role, collaboration, component or node performs which behaviour or plays which role.",
+   "description": "Assignments, stated or as DR 2 derives them in line with compositions and aggregations: which actor, role, collaboration, component or node performs which behaviour or plays which role.",
    "does_not_prove": "Accountability in the RACI sense. An ArchiMate assignment states who performs, not who answers for the outcome.",
    "finding": false,
    "finding_focus": "",
@@ -2395,13 +2625,15 @@
    "parameters": [],
    "prefixes": {
     "am4": "https://meta.linked.archi/archimate4/onto#",
+    "am4deriv": "https://meta.linked.archi/archimate4/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
    },
    "reads": {
-    "direct_rel_triples": false,
+    "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
     "unqualified_forms": false,
@@ -2415,7 +2647,7 @@
     "https://meta.linked.archi/archimate4/viewpoints#Manager",
     "https://meta.linked.archi/archimate4/viewpoints#ProcessArchitect"
    ],
-   "text": "SELECT DISTINCT ?performer ?performerLabel ?performerType ?assignment ?assigned ?assignedLabel ?assignedType\nWHERE {\n  {\n    SELECT DISTINCT ?assignmentType\n    WHERE {\n      { ?asked rdfs:subClassOf* am4:Assignment } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am4:Assignment } }\n      { ?assignmentType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?assignmentType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?assignment rdf:type ?assignmentType ;\n              arch:source ?performer ;\n              arch:target ?assigned .\n  ?performer rdf:type ?performerType .\n  ?assigned rdf:type ?assignedType .\n  FILTER(?performerType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  FILTER(?assignedType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?performerType WHERE { { ?performerType arch:isAbstractClass true }\n                                                 UNION { GRAPH ?abstractClassGraph { ?performerType arch:isAbstractClass true } } } }\n  MINUS { SELECT DISTINCT ?assignedType WHERE { { ?assignedType arch:isAbstractClass true }\n                                                UNION { GRAPH ?abstractClassGraph { ?assignedType arch:isAbstractClass true } } } }\n  OPTIONAL { ?performer skos:prefLabel ?performerLabel . FILTER(lang(?performerLabel) = \"\" || langMatches(lang(?performerLabel), \"en\")) }\n  OPTIONAL { ?assigned skos:prefLabel ?assignedLabel . FILTER(lang(?assignedLabel) = \"\" || langMatches(lang(?assignedLabel), \"en\")) }\n}\nORDER BY ?performerLabel ?assignedLabel",
+   "text": "SELECT DISTINCT ?performer ?performerLabel ?performerType ?assigned ?assignedLabel ?assignedType\nWHERE {\n  # From each assignment, back to the performer and on to what it is assigned to, in line with compositions\n  # and aggregations: DR 2 derives the weakest of the three, an assignment.\n  ?from am4:assignedTo ?to .\n  ?performer (am4:composedOf|am4:aggregates|am4:assignedTo)* ?from .\n  ?to (am4:composedOf|am4:aggregates|am4:assignedTo)* ?assigned .\n  # The performer is active structure, as the question asks: a plateau, grouping or location gathers what is\n  # assigned through what it aggregates, it does not perform.\n  {\n    SELECT DISTINCT ?performerType\n    WHERE {\n      { ?askedPerformer rdfs:subClassOf* am4:ActiveStructureElement } UNION { GRAPH ?performerGraph { ?askedPerformer rdfs:subClassOf* am4:ActiveStructureElement } }\n      { ?performerType rdfs:subClassOf* ?askedPerformer } UNION { GRAPH ?performerSpecialisationGraph { ?performerType rdfs:subClassOf* ?askedPerformer } }\n    }\n  }\n  ?performer rdf:type ?performerType .\n  ?assigned rdf:type ?assignedType .\n  FILTER(?performerType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  FILTER(?assignedType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n  MINUS { SELECT DISTINCT ?performerType WHERE { { ?performerType arch:isAbstractClass true }\n                                                 UNION { GRAPH ?abstractClassGraph { ?performerType arch:isAbstractClass true } } } }\n  MINUS { SELECT DISTINCT ?assignedType WHERE { { ?assignedType arch:isAbstractClass true }\n                                                UNION { GRAPH ?abstractClassGraph { ?assignedType arch:isAbstractClass true } } } }\n  OPTIONAL { ?performer skos:prefLabel ?performerLabel . FILTER(lang(?performerLabel) = \"\" || langMatches(lang(?performerLabel), \"en\")) }\n  OPTIONAL { ?assigned skos:prefLabel ?assignedLabel . FILTER(lang(?assignedLabel) = \"\" || langMatches(lang(?assignedLabel), \"en\")) }\n}\nORDER BY ?performerLabel ?assignedLabel",
    "viewpoints": [
     "https://meta.linked.archi/archimate4/viewpoints#OrganizationViewpoint",
     "https://meta.linked.archi/archimate4/viewpoints#ProcessCooperationViewpoint"
@@ -2442,7 +2674,9 @@
    "parameters": [],
    "prefixes": {
     "am4": "https://meta.linked.archi/archimate4/onto#",
+    "am4deriv": "https://meta.linked.archi/archimate4/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -2475,7 +2709,7 @@
    ],
    "dataset": "model-and-metamodel",
    "default_limit": 500,
-   "description": "Processes and functions that no active structure element is assigned to.",
+   "description": "Processes and functions that no active structure element is assigned to. An assignment counts directly or as DR 2 derives it, in line with compositions and aggregations.",
    "does_not_prove": "That nobody performs it. The performer may be assigned to an enclosing process, or the model may stop above that level of detail.",
    "finding": true,
    "finding_focus": "behaviour",
@@ -2497,7 +2731,9 @@
    ],
    "prefixes": {
     "am4": "https://meta.linked.archi/archimate4/onto#",
+    "am4deriv": "https://meta.linked.archi/archimate4/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -2514,7 +2750,7 @@
    "severity": "warning",
    "stage": "quality",
    "stakeholders": [],
-   "text": "SELECT DISTINCT ?behaviour ?label ?type\nWHERE {\n  {\n    SELECT DISTINCT ?type ?behaviourType\n    WHERE {\n      VALUES ?type { am4:Process am4:Function }\n      { ?asked rdfs:subClassOf* ?type } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* ?type } }\n      { ?behaviourType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?behaviourType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?behaviour rdf:type ?behaviourType ;\n             arch:inModel ?model .\n  FILTER NOT EXISTS { ?performer am4:assignedTo ?behaviour }\n  OPTIONAL { ?behaviour skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?type ?label",
+   "text": "SELECT DISTINCT ?behaviour ?label ?type\nWHERE {\n  {\n    SELECT DISTINCT ?type ?behaviourType\n    WHERE {\n      VALUES ?type { am4:Process am4:Function }\n      { ?asked rdfs:subClassOf* ?type } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* ?type } }\n      { ?behaviourType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?behaviourType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?behaviour rdf:type ?behaviourType ;\n             arch:inModel ?model .\n  # Directly, or as DR 2 derives it in line with compositions and aggregations.\n  FILTER NOT EXISTS { ?from am4:assignedTo ?to . ?to (am4:composedOf|am4:aggregates|am4:assignedTo)* ?behaviour }\n  OPTIONAL { ?behaviour skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?type ?label",
    "viewpoints": [
     "https://meta.linked.archi/archimate4/viewpoints#OrganizationViewpoint",
     "https://meta.linked.archi/archimate4/viewpoints#ProcessCooperationViewpoint"
@@ -2528,7 +2764,7 @@
    ],
    "dataset": "model-and-metamodel",
    "default_limit": 500,
-   "description": "Capabilities realised neither directly nor through any capability they are composed of or aggregate.",
+   "description": "Capabilities realised neither directly nor through any capability they are composed of or aggregate. With the derivations loaded, a longer chain the valid rules derive counts too, as one hop.",
    "does_not_prove": "That the enterprise lacks the capability; only that the model does not say what delivers it.",
    "finding": true,
    "finding_focus": "capability",
@@ -2550,7 +2786,9 @@
    ],
    "prefixes": {
     "am4": "https://meta.linked.archi/archimate4/onto#",
+    "am4deriv": "https://meta.linked.archi/archimate4/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -2580,7 +2818,7 @@
    ],
    "dataset": "model-and-metamodel",
    "default_limit": 500,
-   "description": "Requirements that no element outside the motivation domain realises: realisation by another motivation element does not count.",
+   "description": "Requirements that no element outside the motivation domain realises: realisation by another motivation element does not count. A realisation counts directly or as DR 2 derives it, through structural relationships in line.",
    "does_not_prove": "That the requirement is unmet; only that the model does not show what meets it.",
    "finding": true,
    "finding_focus": "requirement",
@@ -2602,7 +2840,9 @@
    ],
    "prefixes": {
     "am4": "https://meta.linked.archi/archimate4/onto#",
+    "am4deriv": "https://meta.linked.archi/archimate4/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -2621,7 +2861,7 @@
    "stakeholders": [
     "https://meta.linked.archi/archimate4/viewpoints#RequirementsManager"
    ],
-   "text": "SELECT DISTINCT ?requirement ?label\nWHERE {\n  {\n    SELECT DISTINCT ?requirementType\n    WHERE {\n      { ?asked rdfs:subClassOf* am4:Requirement } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am4:Requirement } }\n      { ?requirementType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?requirementType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?requirement rdf:type ?requirementType ;\n               arch:inModel ?model .\n  # Realised by a design element: one whose own type is outside the motivation domain.\n  MINUS {\n    ?realizer am4:realizes ?requirement ;\n              rdf:type ?realizerType .\n    FILTER(?realizerType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n    MINUS { SELECT DISTINCT ?realizerType WHERE { { ?realizerType arch:isAbstractClass true }\n                                                  UNION { GRAPH ?abstractClassGraph { ?realizerType arch:isAbstractClass true } } } }\n    MINUS {\n      SELECT DISTINCT ?realizerType\n      WHERE {\n        { ?motivationType rdfs:subClassOf* am4:MotivationElement }\n        UNION { GRAPH ?motivationGraph { ?motivationType rdfs:subClassOf* am4:MotivationElement } }\n        { ?realizerType rdfs:subClassOf* ?motivationType }\n        UNION { GRAPH ?motivationSpecialisationGraph { ?realizerType rdfs:subClassOf* ?motivationType } }\n      }\n    }\n  }\n  OPTIONAL { ?requirement skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?label",
+   "text": "SELECT DISTINCT ?requirement ?label\nWHERE {\n  {\n    SELECT DISTINCT ?requirementType\n    WHERE {\n      { ?asked rdfs:subClassOf* am4:Requirement } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am4:Requirement } }\n      { ?requirementType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?requirementType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?requirement rdf:type ?requirementType ;\n               arch:inModel ?model .\n  # Realised by a design element: one whose own type is outside the motivation domain.\n  MINUS {\n    ?from am4:realizes ?to .\n    ?realizer (am4:composedOf|am4:aggregates|am4:assignedTo|am4:realizes)* ?from .\n    ?to (am4:composedOf|am4:aggregates|am4:assignedTo|am4:realizes)* ?requirement .\n    ?realizer rdf:type ?realizerType .\n    FILTER(?realizerType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n    MINUS { SELECT DISTINCT ?realizerType WHERE { { ?realizerType arch:isAbstractClass true }\n                                                  UNION { GRAPH ?abstractClassGraph { ?realizerType arch:isAbstractClass true } } } }\n    MINUS {\n      SELECT DISTINCT ?realizerType\n      WHERE {\n        { ?motivationType rdfs:subClassOf* am4:MotivationElement }\n        UNION { GRAPH ?motivationGraph { ?motivationType rdfs:subClassOf* am4:MotivationElement } }\n        { ?realizerType rdfs:subClassOf* ?motivationType }\n        UNION { GRAPH ?motivationSpecialisationGraph { ?realizerType rdfs:subClassOf* ?motivationType } }\n      }\n    }\n  }\n  OPTIONAL { ?requirement skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?label",
    "viewpoints": [
     "https://meta.linked.archi/archimate4/viewpoints#RequirementsRealizationViewpoint"
    ]
@@ -2634,7 +2874,7 @@
    ],
    "dataset": "model-and-metamodel",
    "default_limit": 500,
-   "description": "Services that no behaviour or active structure element realises.",
+   "description": "Services that no behaviour or active structure element realises. A realisation counts directly or as DR 2 derives it, through structural relationships in line.",
    "does_not_prove": "That the service is not delivered: it may be bought in, or realised in a model that is not loaded.",
    "finding": true,
    "finding_focus": "service",
@@ -2656,7 +2896,9 @@
    ],
    "prefixes": {
     "am4": "https://meta.linked.archi/archimate4/onto#",
+    "am4deriv": "https://meta.linked.archi/archimate4/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -2673,7 +2915,7 @@
    "severity": "warning",
    "stage": "quality",
    "stakeholders": [],
-   "text": "SELECT DISTINCT ?service ?label\nWHERE {\n  {\n    SELECT DISTINCT ?type ?serviceType\n    WHERE {\n      VALUES ?type { am4:Service }\n      { ?asked rdfs:subClassOf* ?type } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* ?type } }\n      { ?serviceType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?serviceType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?service rdf:type ?serviceType ;\n           arch:inModel ?model .\n  FILTER NOT EXISTS { ?realizer am4:realizes ?service }\n  OPTIONAL { ?service skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?label",
+   "text": "SELECT DISTINCT ?service ?label\nWHERE {\n  {\n    SELECT DISTINCT ?type ?serviceType\n    WHERE {\n      VALUES ?type { am4:Service }\n      { ?asked rdfs:subClassOf* ?type } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* ?type } }\n      { ?serviceType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?serviceType rdfs:subClassOf* ?asked } }\n    }\n  }\n  ?service rdf:type ?serviceType ;\n           arch:inModel ?model .\n  # Directly, or as DR 2 derives it through structural relationships in line.\n  FILTER NOT EXISTS { ?from am4:realizes ?to . ?to (am4:composedOf|am4:aggregates|am4:assignedTo|am4:realizes)* ?service }\n  OPTIONAL { ?service skos:prefLabel ?label . FILTER(lang(?label) = \"\" || langMatches(lang(?label), \"en\")) }\n}\nORDER BY ?label",
    "viewpoints": [
     "https://meta.linked.archi/archimate4/viewpoints#ProcessCooperationViewpoint",
     "https://meta.linked.archi/archimate4/viewpoints#ServiceRealizationViewpoint"
@@ -2714,7 +2956,9 @@
    ],
    "prefixes": {
     "am4": "https://meta.linked.archi/archimate4/onto#",
+    "am4deriv": "https://meta.linked.archi/archimate4/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -2742,7 +2986,7 @@
    ],
    "dataset": "model-and-metamodel",
    "default_limit": 500,
-   "description": "Work packages, the deliverables they realise, and the architecture elements those deliverables realise.",
+   "description": "Work packages, the deliverables they realise, and the architecture elements those deliverables realise. A realisation counts directly or as DR 2 derives it, through structural relationships in line.",
    "does_not_prove": "Schedule or progress. ArchiMate records what a work package produces, not when.",
    "finding": false,
    "finding_focus": "",
@@ -2755,7 +2999,9 @@
    "parameters": [],
    "prefixes": {
     "am4": "https://meta.linked.archi/archimate4/onto#",
+    "am4deriv": "https://meta.linked.archi/archimate4/derivation#",
     "arch": "https://meta.linked.archi/core#",
+    "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#"
@@ -2775,7 +3021,7 @@
     "https://meta.linked.archi/archimate4/viewpoints#EnterpriseArchitect",
     "https://meta.linked.archi/archimate4/viewpoints#OperationalManager"
    ],
-   "text": "SELECT DISTINCT ?workPackage ?workPackageLabel ?deliverable ?deliverableLabel ?realized ?realizedLabel ?realizedType\nWHERE {\n  {\n    SELECT DISTINCT ?workPackageType\n    WHERE {\n      { ?asked rdfs:subClassOf* am4:WorkPackage } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am4:WorkPackage } }\n      { ?workPackageType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?workPackageType rdfs:subClassOf* ?asked } }\n    }\n  }\n  {\n    SELECT DISTINCT ?deliverableType\n    WHERE {\n      { ?askedDeliverable rdfs:subClassOf* am4:Deliverable } UNION { GRAPH ?deliverableGraph { ?askedDeliverable rdfs:subClassOf* am4:Deliverable } }\n      { ?deliverableType rdfs:subClassOf* ?askedDeliverable } UNION { GRAPH ?deliverableSpecialisationGraph { ?deliverableType rdfs:subClassOf* ?askedDeliverable } }\n    }\n  }\n  ?workPackage rdf:type ?workPackageType ;\n               am4:realizes ?deliverable .\n  ?deliverable rdf:type ?deliverableType .\n  OPTIONAL {\n    ?deliverable am4:realizes ?realized .\n    ?realized rdf:type ?realizedType .\n    FILTER(?realizedType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n    MINUS { SELECT DISTINCT ?realizedType WHERE { { ?realizedType arch:isAbstractClass true }\n                                                  UNION { GRAPH ?abstractClassGraph { ?realizedType arch:isAbstractClass true } } } }\n    OPTIONAL { ?realized skos:prefLabel ?realizedLabel . FILTER(lang(?realizedLabel) = \"\" || langMatches(lang(?realizedLabel), \"en\")) }\n  }\n  OPTIONAL { ?workPackage skos:prefLabel ?workPackageLabel . FILTER(lang(?workPackageLabel) = \"\" || langMatches(lang(?workPackageLabel), \"en\")) }\n  OPTIONAL { ?deliverable skos:prefLabel ?deliverableLabel . FILTER(lang(?deliverableLabel) = \"\" || langMatches(lang(?deliverableLabel), \"en\")) }\n}\nORDER BY ?workPackageLabel ?deliverableLabel",
+   "text": "SELECT DISTINCT ?workPackage ?workPackageLabel ?deliverable ?deliverableLabel ?realized ?realizedLabel ?realizedType\nWHERE {\n  {\n    SELECT DISTINCT ?workPackageType\n    WHERE {\n      { ?asked rdfs:subClassOf* am4:WorkPackage } UNION { GRAPH ?ontologyGraph { ?asked rdfs:subClassOf* am4:WorkPackage } }\n      { ?workPackageType rdfs:subClassOf* ?asked } UNION { GRAPH ?specialisationGraph { ?workPackageType rdfs:subClassOf* ?asked } }\n    }\n  }\n  {\n    SELECT DISTINCT ?deliverableType\n    WHERE {\n      { ?askedDeliverable rdfs:subClassOf* am4:Deliverable } UNION { GRAPH ?deliverableGraph { ?askedDeliverable rdfs:subClassOf* am4:Deliverable } }\n      { ?deliverableType rdfs:subClassOf* ?askedDeliverable } UNION { GRAPH ?deliverableSpecialisationGraph { ?deliverableType rdfs:subClassOf* ?askedDeliverable } }\n    }\n  }\n  # Each realisation directly, or as DR 2 derives it through structural relationships in line.\n  ?from am4:realizes ?to .\n  ?workPackage (am4:composedOf|am4:aggregates|am4:assignedTo|am4:realizes)* ?from .\n  ?to (am4:composedOf|am4:aggregates|am4:assignedTo|am4:realizes)* ?deliverable .\n  ?workPackage rdf:type ?workPackageType .\n  ?deliverable rdf:type ?deliverableType .\n  OPTIONAL {\n    ?realizing am4:realizes ?realised .\n    ?deliverable (am4:composedOf|am4:aggregates|am4:assignedTo|am4:realizes)* ?realizing .\n    ?realised (am4:composedOf|am4:aggregates|am4:assignedTo|am4:realizes)* ?realized .\n    ?realized rdf:type ?realizedType .\n    FILTER(?realizedType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n    MINUS { SELECT DISTINCT ?realizedType WHERE { { ?realizedType arch:isAbstractClass true }\n                                                  UNION { GRAPH ?abstractClassGraph { ?realizedType arch:isAbstractClass true } } } }\n    OPTIONAL { ?realized skos:prefLabel ?realizedLabel . FILTER(lang(?realizedLabel) = \"\" || langMatches(lang(?realizedLabel), \"en\")) }\n  }\n  OPTIONAL { ?workPackage skos:prefLabel ?workPackageLabel . FILTER(lang(?workPackageLabel) = \"\" || langMatches(lang(?workPackageLabel), \"en\")) }\n  OPTIONAL { ?deliverable skos:prefLabel ?deliverableLabel . FILTER(lang(?deliverableLabel) = \"\" || langMatches(lang(?deliverableLabel), \"en\")) }\n}\nORDER BY ?workPackageLabel ?deliverableLabel",
    "viewpoints": [
     "https://meta.linked.archi/archimate4/viewpoints#ImplementationAndMigrationViewpoint",
     "https://meta.linked.archi/archimate4/viewpoints#ProjectViewpoint"
@@ -2844,6 +3090,11 @@
   "https://meta.linked.archi/bpmn-lite/onto#dataAssociation",
   "https://meta.linked.archi/bpmn-lite/onto#messageFlow",
   "https://meta.linked.archi/bpmn-lite/onto#sequenceFlow",
+  "https://meta.linked.archi/bpmn/onto#association",
+  "https://meta.linked.archi/bpmn/onto#conversationLink",
+  "https://meta.linked.archi/bpmn/onto#dataAssociation",
+  "https://meta.linked.archi/bpmn/onto#messageFlow",
+  "https://meta.linked.archi/bpmn/onto#sequenceFlow",
   "https://meta.linked.archi/c4/onto#hasComponent",
   "https://meta.linked.archi/c4/onto#hasContainer",
   "https://meta.linked.archi/c4/onto#uses",
@@ -2871,13 +3122,16 @@
   "https://meta.linked.archi/uml/onto#aggregates",
   "https://meta.linked.archi/uml/onto#associatedWith",
   "https://meta.linked.archi/uml/onto#composedOf",
+  "https://meta.linked.archi/uml/onto#controlFlowsTo",
   "https://meta.linked.archi/uml/onto#dependsOn",
   "https://meta.linked.archi/uml/onto#deployedOn",
   "https://meta.linked.archi/uml/onto#extends",
   "https://meta.linked.archi/uml/onto#generalizes",
   "https://meta.linked.archi/uml/onto#importsPackage",
   "https://meta.linked.archi/uml/onto#includes",
+  "https://meta.linked.archi/uml/onto#informationFlowsTo",
   "https://meta.linked.archi/uml/onto#mergesPackage",
+  "https://meta.linked.archi/uml/onto#objectFlowsTo",
   "https://meta.linked.archi/uml/onto#realizes",
   "https://meta.linked.archi/uml/onto#realizesInterface",
   "https://meta.linked.archi/uml/onto#uses"

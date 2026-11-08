@@ -5,17 +5,17 @@ Triggers: retire, replace, change, migrate, fail, affected by, depends on, blast
 1. Resolve the focus resource with `core/resolve-element`.
 2. Discover which relationship types this dataset actually uses
    (`core/discover-relationship-types`).
-3. `core/neighbours-qualified` before `core/dependents-qualified`. Direct evidence first.
+3. `core/neighbours` before `core/dependents`. Direct evidence first.
 4. Classify each path by element type **and relationship semantics**.
 5. Retrieve lifecycle, ownership, governance and provenance only where relevant.
 
-Templates: `core/neighbours-qualified`, `core/dependents-qualified`, `core/provenance`.
+Templates: `core/neighbours`, `core/dependents`, `core/provenance`.
 With `direct_rel_triples`, `core/dependents-direct` gives unbounded-depth traversal along a
 chosen predicate set, subject to query-owner predicate, result and execution limits. Take
 the predicates from `core/reified-predicates`, which names the one each relationship class
 stands for (`am:Serving` → `am:serves`); the classes from step 2 are not predicates, and
 following one matches nothing. A row
-cap does not bound traversal work. Prefer the bounded qualified route unless transitive
+cap does not bound traversal work. Prefer the bounded direct-triple questions unless transitive
 reachability is required and the capability is verified; the two routes do not establish
 the same depth of evidence.
 
@@ -34,3 +34,9 @@ traffic, not criticality, and not failure propagation.
   only one of them is in the graph;
 - the next hop needs data the models do not carry, such as traffic or failure history. Say
   so rather than substituting reachability for it.
+
+The first two traversals require direct triples and the metamodel. When refused, assess
+`core/neighbours-qualified` and `core/dependents-qualified` as resource-level alternatives:
+they work on older output but may include unconfirmed proposals. Record that change in
+evidence; the planner does not silently substitute them. A union query includes valid
+asserted derivations. Separate them from authored assertions using provenance or explicit scope.

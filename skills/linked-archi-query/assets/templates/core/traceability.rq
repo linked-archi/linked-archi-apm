@@ -39,6 +39,9 @@
 # both edges were. ?relType2 is unbound at one hop, which is the absence of a second
 # edge rather than a missing value.
 #
+# Qualified resources may include unconfirmed proposals when derivations are
+# loaded into the selected graphs. Endpoints alone do not assert a relationship.
+#
 # Parameters: SOURCE_TYPE, TARGET_TYPE, LIMIT
 {{PREFIXES}}
 SELECT DISTINCT ?source ?sourceLabel ?direction ?hops ?target ?targetLabel ?relType ?relType2

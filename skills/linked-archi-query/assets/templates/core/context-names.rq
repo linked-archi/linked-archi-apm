@@ -1,0 +1,28 @@
+# core/context-names - What is this concept called for each audience?
+#
+# Answers: each explicitly assigned SKOS-XL alternative name, its presentation
+# context and language, alongside the concept's canonical name. Elements and
+# relationships may both carry these names (core 0.5.0).
+#
+# Does NOT prove: what a diagram renders. A label expression may combine the name
+# with other properties; this query reads names, not expression output. An empty
+# result means no context name was found in the selected semantic graphs, not that
+# the concept has no canonical name or is absent from an audience's diagrams.
+#
+# Parameters: FOCUS_IRI, LIMIT
+{{PREFIXES}}
+SELECT DISTINCT ?concept ?canonicalName ?nameNode ?context ?name ?language
+WHERE {
+  VALUES ?concept { {{FOCUS_IRI}} }
+  {{GRAPH_OPEN:semantic}}
+    ?concept {{ROLE:context_name}} ?nameNode .
+    OPTIONAL { ?concept {{PATH:label}} ?canonicalName }
+  {{GRAPH_CLOSE}}
+  {{GRAPH_OPEN:semantic2}}
+    ?nameNode {{ROLE:presentation_context}} ?context ;
+              {{ROLE:literal_form}} ?name .
+    BIND(LANG(?name) AS ?language)
+  {{GRAPH_CLOSE}}
+}
+ORDER BY ?context ?language ?name ?canonicalName
+LIMIT {{LIMIT}}

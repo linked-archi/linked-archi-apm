@@ -1,7 +1,8 @@
 # core/reifies-audit - Is the reification bridge sound?
 #
 # Answers: which qualified relationships carry no triple term, and which carry one
-# whose subject or object disagrees with arch:source / arch:target.
+# whose subject or object disagrees with arch:source / arch:target, or whose
+# direct triple is absent despite a source link asserting the relationship.
 #
 # Does NOT prove: that a sound bridge is a *correct* bridge. This checks the two
 # halves of each relationship against each other, not against the source model. A
@@ -14,10 +15,13 @@
 # core/neighbours-reified and core/neighbours-qualified will then return different
 # neighbours for the same element and both will look right.
 #
-# `missing-term` is not automatically a defect. The converters emit no bridge at
-# all, so on converter output every relationship is reported and the finding is
-# "this dataset has no bridge" - which core/discover-relationship-types tells you
-# more cheaply. Run this on a dataset whose author added the bridge deliberately.
+# Current converters emit a bridge wherever the relationship has a published
+# direct predicate. A type without one can still have no bridge: missing-term
+# needs that vocabulary context before it is called a defect. The model-question
+# implementation checks the loaded unqualified-form mappings as well.
+# A proposition with neither a source link nor an asserted triple is not an
+# integrity violation. Tests for assertion span the selected semantic graphs,
+# since a relationship and its asserting triple can be in different partitions.
 #
 # EVERY BRANCH IS SELF-CONTAINED, and that is not stylistic. A UNION branch is a
 # group graph pattern: variables bound in the enclosing group are not available
@@ -53,6 +57,19 @@ WHERE {
       ?rel a {{ROLE:relationship_class}} ;
            {{ROLE:rel_source}} ?source ;
            {{ROLE:rel_target}} ?target ;
+           {{ROLE:reifies}} <<( ?source ?predicate ?target )>> .
+      FILTER NOT EXISTS {
+        {{GRAPH_OPEN:semantic2}}
+          ?source ?predicate ?target .
+        {{GRAPH_CLOSE}}
+      }
+      BIND("missing-direct-triple" AS ?finding)
+    }
+    UNION
+    {
+      ?rel a {{ROLE:relationship_class}} ;
+           {{ROLE:rel_source}} ?source ;
+           {{ROLE:rel_target}} ?target ;
            {{ROLE:reifies}} <<( ?termSource ?predicate ?termTarget )>> .
       FILTER(?termSource != ?source)
       BIND("subject-disagrees" AS ?finding)
@@ -75,6 +92,20 @@ WHERE {
       FILTER(?relType != {{ROLE:relationship_class}} && ?relType != {{ROLE:concept_class}})
     }
   {{GRAPH_CLOSE}}
+  FILTER (
+    EXISTS {
+      {{GRAPH_OPEN:semantic3}}
+        ?source ?leads ?rel .
+      {{GRAPH_CLOSE}}
+    } || EXISTS {
+      {{GRAPH_OPEN:semantic4}}
+        ?rel {{ROLE:reifies}} <<( ?assertedSource ?assertedPredicate ?assertedTarget )>> .
+      {{GRAPH_CLOSE}}
+      {{GRAPH_OPEN:semantic5}}
+        ?assertedSource ?assertedPredicate ?assertedTarget .
+      {{GRAPH_CLOSE}}
+    }
+  )
 }
 GROUP BY ?finding ?rel ?expected ?found
 ORDER BY ?finding ?rel

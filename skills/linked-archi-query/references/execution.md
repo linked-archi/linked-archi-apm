@@ -90,3 +90,7 @@ coverage and a class hierarchy. “Not checked” means no verdict, not a valid 
 Even a judged path is provisional: namespace presence does not prove whole documents
 were attached. Retain that caveat; profile verification reports missing assets.
 Disclose ad-hoc/adapted execution and show its final SPARQL with source provenance.
+
+For traversal semantics, derived graphs and presentation names, see
+[model questions](model-questions.md#asserted-relationships-and-derivations). `core/neighbours`
+and `core/dependents` follow asserted triples; the qualified names remain resource-level queries.

@@ -75,13 +75,13 @@ Three binding shapes, and the difference between them is behaviour, not style:
 uses `skos:notation`. `owner` is `null` because converter output records no ownership — so
 `core/coverage-gaps` asking about owners is refused with a reason, rather than run to return nothing.
 
-### The 65 roles the default profile binds
+### The 68 roles the default profile binds
 
 Grouped by what they describe. This is the whole vocabulary surface a template is allowed to touch.
 
 | Group | Roles |
 |---|---|
-| **Naming** | `label`, `alt_label`, `definition`, `native_id` |
+| **Naming** | `label`, `alt_label`, `context_name`, `literal_form`, `presentation_context`, `definition`, `native_id` |
 | **Classes** | `concept_class`, `element_class`, `relationship_class`, `model_class`, `view_class`, `diagram_class`, `folder_class` |
 | **Relationship form** | `rel_source`, `rel_target`, `rel_type`, `has_qualified_rel`, `reifies`, `unqualified_form` |
 | **Containment** | `part_of_model`, `part_of`, `has_part`, `folder_name` |

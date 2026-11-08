@@ -18,6 +18,9 @@
 # transitively. For the outgoing direction, use core/neighbours-qualified and read
 # the outgoing rows, or invert the endpoints here.
 #
+# Qualified resources may include unconfirmed proposals when derivations are
+# loaded into the selected graphs. Endpoints alone do not assert a relationship.
+#
 # Parameters: FOCUS_IRI, LIMIT
 {{PREFIXES}}
 SELECT DISTINCT ?hops ?dependent ?dependentLabel ?firstType ?secondType ?via

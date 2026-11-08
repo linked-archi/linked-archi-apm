@@ -1203,6 +1203,35 @@ def augment(store) -> list[str]:
             owners += 1
     added.append(f"{owners} arch:conceptOwner assertion(s), promoted from bs:Ownership")
 
+    # -- audience-specific naming (core 0.5.0 / SKOS-XL) --------------------
+    # Curated model data, not converter output. Keep the plain SKOS alias too,
+    # as core and la-gram do, so ordinary name resolution remains sufficient.
+    concept = NamedNode("https://example.org/la/c4/commerce-platform/element/2")
+    graph = NamedNode("https://example.org/la/c4/commerce-platform/graph/semantic")
+    name = NamedNode(concept.value + "-name-executive")
+    context = NamedNode("https://example.org/la/presentations/Executive")
+    xl = "http://www.w3.org/2008/05/skos-xl#"
+    form = Literal("Commerce application", language="en")
+    for subject, predicate, obj in (
+        (concept, xl + "altLabel", name),
+        (concept, SKOS + "altLabel", form),
+        (name, rdf_type.value, NamedNode(xl + "Label")),
+        (name, xl + "literalForm", form),
+        (name, CORE + "inPresentationContext", context),
+    ):
+        store.add(Quad(subject, NamedNode(predicate), obj, graph))
+    added.append("1 presentation-context name, with its plain SKOS alias")
+
+    # One deliberate integrity defect so an audit's nonempty-path test does not
+    # depend on old converter output lacking bridges. Its asserted direct triple
+    # and qualified source link remain, making this a broken assertion, not a proposal.
+    reifies = NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#reifies")
+    bridges = sorted(store.quads_for_pattern(None, reifies, None, graph), key=str)
+    if not bridges:
+        raise ValueError("C4 fixture has no bridge to exercise the integrity audit")
+    store.remove(bridges[0])
+    added.append(f"1 deliberate missing rdf:reifies bridge on {bridges[0].subject.value}")
+
     # -- SHACL report -------------------------------------------------------
     # A report with a violation AND a modest evaluated count, so a reader has to
     # confront coverage rather than just a verdict.
@@ -1286,6 +1315,7 @@ def write_flat(store, path: Path) -> int:
 #: meta's question examples with their expected answers, copied as they are, and the
 #: documents meta's question check loads beside them. See ``--refresh-questions``.
 QUESTION_EXAMPLES = (
+    "examples/labels-per-presentation.ttl",
     "examples/archimate4-questions-example.ttl",
     "examples/archimate4-questions-example.expected.tsv",
     "examples/archimate3.2-questions-example.ttl",

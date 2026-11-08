@@ -541,8 +541,6 @@ am:Composition a owl:Class ;
 	skos:prefLabel "Composition"@en ;
 	skos:notation "c" ;
 	skos:definition "A composition relationship indicates that an element consists of one or more other\nelements. The contained element exists only within the context of the container."@en ;
-	arch:domainIncludes arch:Element ;
-	arch:rangeIncludes arch:Element ;
 	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/rel_composition.svg" .
 am:qualifiedComposition a owl:ObjectProperty ;
 	rdfs:range am:Composition ;
@@ -562,8 +560,6 @@ am:Aggregation a owl:Class ;
 	skos:prefLabel "Aggregation"@en ;
 	skos:notation "g" ;
 	skos:definition "An aggregation relationship indicates that an element combines one or more other elements.\nUnlike composition, the aggregated element can exist independently."@en ;
-	arch:domainIncludes arch:Element ;
-	arch:rangeIncludes arch:Element ;
 	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/rel_aggregation.svg" .
 am:qualifiedAggregation a owl:ObjectProperty ;
 	rdfs:range am:Aggregation ;
@@ -584,8 +580,6 @@ am:Assignment a owl:Class ;
 	skos:prefLabel "Assignment"@en ;
 	skos:notation "i" ;
 	skos:definition "An assignment relationship indicates the allocation of responsibility, performance of\nbehavior, storage, or execution."@en ;
-	arch:domainIncludes arch:Element ;
-	arch:rangeIncludes arch:Element ;
 	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/rel_assignment.svg" .
 am:qualifiedAssignment a owl:ObjectProperty ;
 	rdfs:range am:Assignment ;
@@ -605,8 +599,6 @@ am:Realization a owl:Class ;
 	skos:prefLabel "Realization"@en ;
 	skos:notation "r" ;
 	skos:definition "A realization relationship indicates that an entity plays a critical role in the creation,\nachievement, sustenance, or operation of a more abstract entity."@en ;
-	arch:domainIncludes arch:Element ;
-	arch:rangeIncludes arch:Element ;
 	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/rel_realization.svg" .
 am:qualifiedRealization a owl:ObjectProperty ;
 	rdfs:range am:Realization ;
@@ -628,8 +620,6 @@ am:Serving a owl:Class ;
 	skos:notation "v" ;
 	skos:definition "A serving relationship indicates that an element provides its functionality to another\nelement."@en ;
 	skos:changeNote "3.0: Renamed from 'Used By'. Cross-layer relationship constraints relaxed."@en ;
-	arch:domainIncludes arch:Element ;
-	arch:rangeIncludes arch:Element ;
 	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/rel_serving.svg" .
 am:qualifiedServing a owl:ObjectProperty ;
 	rdfs:range am:Serving ;
@@ -649,8 +639,6 @@ am:Access a owl:Class ;
 	skos:prefLabel "Access"@en ;
 	skos:notation "a" ;
 	skos:definition "An access relationship indicates that a behavior element may access a business or data\nobject. Its subclasses say the kind of access — am:ReadAccess, am:WriteAccess, am:ReadWriteAccess; an\nam:Access that is none of them is unspecified."@en ;
-	arch:domainIncludes arch:Element ;
-	arch:rangeIncludes arch:Element ;
 	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/rel_access.svg" .
 am:ReadAccess a owl:Class ;
 	rdfs:subClassOf am:Access ;
@@ -689,8 +677,6 @@ am:Influence a owl:Class ;
 	skos:prefLabel "Influence"@en ;
 	skos:notation "n" ;
 	skos:definition "An influence relationship indicates that an element affects the implementation or\nachievement of some motivation element. The influenceStrength property specifies the degree."@en ;
-	arch:domainIncludes arch:Element ;
-	arch:rangeIncludes arch:Element ;
 	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/rel_influence.svg" .
 am:qualifiedInfluence a owl:ObjectProperty ;
 	rdfs:range am:Influence ;
@@ -710,8 +696,6 @@ am:Triggering a owl:Class ;
 	skos:prefLabel "Triggering"@en ;
 	skos:notation "t" ;
 	skos:definition "A triggering relationship indicates a temporal or causal relationship between\nelements."@en ;
-	arch:domainIncludes arch:Element ;
-	arch:rangeIncludes arch:Element ;
 	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/rel_triggering.svg" .
 am:qualifiedTriggering a owl:ObjectProperty ;
 	rdfs:range am:Triggering ;
@@ -731,8 +715,6 @@ am:Flow a owl:Class ;
 	skos:prefLabel "Flow"@en ;
 	skos:notation "f" ;
 	skos:definition "A flow relationship indicates transfer from one element to another."@en ;
-	arch:domainIncludes arch:Element ;
-	arch:rangeIncludes arch:Element ;
 	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/rel_flow.svg" .
 am:qualifiedFlow a owl:ObjectProperty ;
 	rdfs:range am:Flow ;
@@ -752,8 +734,6 @@ am:Specialization a owl:Class ;
 	skos:prefLabel "Specialization"@en ;
 	skos:notation "s" ;
 	skos:definition "A specialization relationship indicates that an element is a particular kind of another\nelement."@en ;
-	arch:domainIncludes arch:Element ;
-	arch:rangeIncludes arch:Element ;
 	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/rel_specialization.svg" .
 am:qualifiedSpecialization a owl:ObjectProperty ;
 	rdfs:range am:Specialization ;
@@ -773,8 +753,6 @@ am:Association a owl:Class ;
 	skos:prefLabel "Association"@en ;
 	skos:notation "o" ;
 	skos:definition "An association relationship indicates an unspecified relationship, or one that is not\nrepresented by another ArchiMate relationship."@en ;
-	arch:domainIncludes arch:Element ;
-	arch:rangeIncludes arch:Element ;
 	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/rel_association.svg" .
 am:DirectedAssociation a owl:Class ;
 	rdfs:subClassOf am:Association ;

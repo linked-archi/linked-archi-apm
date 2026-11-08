@@ -65,7 +65,7 @@
       "stage": "resolution",
       "purpose": "Explain each resource a term matches: definition, type, owning model, immediate relationships.",
       "answers": "What this dataset says a term means, and how ambiguous the term is.",
-      "does_not_prove": "That a definition is true, current or agreed. It is text somebody typed in a modelling tool.",
+      "does_not_prove": "That a definition is true, current or agreed. It is text somebody typed in a modelling tool. Qualified resources may include unconfirmed proposals when derivations are in the selected graphs; their endpoints alone do not assert a relationship.",
       "parameters": {
         "TERM": {
           "type": "string",
@@ -150,7 +150,7 @@
       "stage": "analysis",
       "purpose": "What reaches an element within two hops, via the qualified form.",
       "answers": "Bounded incoming dependency paths, with the relationship types on each.",
-      "does_not_prove": "Impact. Reachability in a model is not blast radius.",
+      "does_not_prove": "Impact. Reachability in a model is not blast radius. Qualified resources may include unconfirmed proposals when derivations are in the selected graphs; their endpoints alone do not assert a relationship.",
       "parameters": {
         "FOCUS_IRI": {
           "type": "iri",
@@ -206,7 +206,7 @@
       "stage": "discovery",
       "purpose": "Relationship types present, with counts and the endpoint types they join.",
       "answers": "Which relationship kinds this dataset actually uses.",
-      "does_not_prove": "What the metamodel permits. This is what was modelled.",
+      "does_not_prove": "What the metamodel permits. This is what was modelled. Qualified resources may include unconfirmed proposals when derivations are in the selected graphs; their endpoints alone do not assert a relationship.",
       "parameters": {
         "LIMIT": {
           "type": "integer",
@@ -542,7 +542,7 @@
       "stage": "analysis",
       "purpose": "Direct relationships touching an element, via the qualified form.",
       "answers": "What an element relates to, in both directions, with the relationship kind.",
-      "does_not_prove": "Runtime dependency, criticality or failure propagation.",
+      "does_not_prove": "Runtime dependency, criticality or failure propagation. Qualified resources may include unconfirmed proposals when derivations are in the selected graphs; their endpoints alone do not assert a relationship.",
       "parameters": {
         "FOCUS_IRI": {
           "type": "iri",
@@ -612,7 +612,7 @@
       "stage": "quality",
       "purpose": "Elements taking part in no relationship.",
       "answers": "Where the model has islands, as a data-quality reading.",
-      "does_not_prove": "That an element is unused or safe to remove.",
+      "does_not_prove": "That an element is unused or safe to remove. Qualified resources may include unconfirmed proposals when derivations are in the selected graphs; their endpoints alone do not assert a relationship.",
       "parameters": {
         "LIMIT": {
           "type": "integer",
@@ -716,9 +716,9 @@
     "core/reifies-audit": {
       "file": "core/reifies-audit.rq",
       "stage": "quality",
-      "purpose": "Qualified relationships whose triple term is missing or disagrees with arch:source/arch:target.",
+      "purpose": "Asserted qualified relationships whose bridge is missing, disagrees, or lacks its direct triple.",
       "answers": "Whether the two halves of each relationship agree with each other.",
-      "does_not_prove": "Correctness. A relationship wrong in both halves agrees with itself and passes.",
+      "does_not_prove": "Correctness. Unasserted, unlinked propositions are excluded; missing-term needs a published unqualified form before it is a defect.",
       "parameters": {
         "LIMIT": {
           "type": "integer",
@@ -768,8 +768,15 @@
         }
       },
       "requires": {
-        "roles": ["label", "alt_label", "broader", "in_scheme"],
-        "graph_roles": ["semantic"]
+        "roles": [
+          "label",
+          "alt_label",
+          "broader",
+          "in_scheme"
+        ],
+        "graph_roles": [
+          "semantic"
+        ]
       },
       "caveat": "Searches classification concepts in the semantic graph, not unattached or vocabulary-only taxonomies. Review all matching schemes before binding an IRI."
     },
@@ -780,12 +787,28 @@
       "answers": "Candidate concept IRIs, exact scheme IRIs and matching labels in the vocabulary graph.",
       "does_not_prove": "That a category classifies model instances, or that a prescribed viewpoint is used.",
       "parameters": {
-        "TERM": {"type": "string", "description": "the quoted published concept or viewpoint name"},
-        "LIMIT": {"type": "integer", "default": 25, "min": 1, "max": 100, "description": "maximum candidates"}
+        "TERM": {
+          "type": "string",
+          "description": "the quoted published concept or viewpoint name"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 25,
+          "min": 1,
+          "max": 100,
+          "description": "maximum candidates"
+        }
       },
       "requires": {
-        "roles": ["label", "alt_label", "in_scheme", "concept_scheme_class"],
-        "graph_roles": ["vocabulary"]
+        "roles": [
+          "label",
+          "alt_label",
+          "in_scheme",
+          "concept_scheme_class"
+        ],
+        "graph_roles": [
+          "vocabulary"
+        ]
       },
       "caveat": "Only attached vocabulary is searched. Review all schemes and truncation before using an IRI."
     },
@@ -868,7 +891,7 @@
       "stage": "analysis",
       "purpose": "Paths of one or two hops between two kinds of element.",
       "answers": "Which elements of one type connect to which of another, and how.",
-      "does_not_prove": "That an unlisted pair is unconnected. Deeper paths are out of scope.",
+      "does_not_prove": "That an unlisted pair is unconnected. Deeper paths are out of scope. Qualified resources may include unconfirmed proposals when derivations are in the selected graphs; their endpoints alone do not assert a relationship.",
       "parameters": {
         "SOURCE_TYPE": {
           "type": "iri",
@@ -1064,11 +1087,26 @@
       "answers": "The attached viewpoint library's options, not diagrams in a model.",
       "does_not_prove": "That a viewpoint fits a model, has been used or is conformed to by a view.",
       "parameters": {
-        "LIMIT": {"type": "integer", "default": 300, "min": 1, "max": 3000, "description": "maximum rows"}
+        "LIMIT": {
+          "type": "integer",
+          "default": 300,
+          "min": 1,
+          "max": 3000,
+          "description": "maximum rows"
+        }
       },
       "requires": {
-        "roles": ["viewpoint_class", "concept_scheme_class", "in_scheme", "label", "broader", "definition"],
-        "graph_roles": ["vocabulary"]
+        "roles": [
+          "viewpoint_class",
+          "concept_scheme_class",
+          "in_scheme",
+          "label",
+          "broader",
+          "definition"
+        ],
+        "graph_roles": [
+          "vocabulary"
+        ]
       },
       "caveat": "Prescribed viewpoints come from the attached vocabulary version; use core/views for actual view assertions."
     },
@@ -1079,12 +1117,32 @@
       "answers": "Facet/value rows for the allowed classes, stakeholders, purposes and view types of a reviewed viewpoint.",
       "does_not_prove": "That an actual diagram conforms to this viewpoint; use SHACL validation.",
       "parameters": {
-        "VIEWPOINT_IRI": {"type": "iri", "description": "a viewpoint IRI from core/viewpoint-catalog or core/resolve-vocabulary-concept"},
-        "LIMIT": {"type": "integer", "default": 300, "min": 1, "max": 3000, "description": "maximum rows"}
+        "VIEWPOINT_IRI": {
+          "type": "iri",
+          "description": "a viewpoint IRI from core/viewpoint-catalog or core/resolve-vocabulary-concept"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 300,
+          "min": 1,
+          "max": 3000,
+          "description": "maximum rows"
+        }
       },
       "requires": {
-        "roles": ["viewpoint_class", "concept_scheme_class", "in_scheme", "label", "includes_concept", "targets_stakeholder", "viewpoint_has_purpose", "view_type"],
-        "graph_roles": ["vocabulary"]
+        "roles": [
+          "viewpoint_class",
+          "concept_scheme_class",
+          "in_scheme",
+          "label",
+          "includes_concept",
+          "targets_stakeholder",
+          "viewpoint_has_purpose",
+          "view_type"
+        ],
+        "graph_roles": [
+          "vocabulary"
+        ]
       },
       "caveat": "Declared palette and audience are guidance; actual view conformance needs validation."
     },
@@ -1196,9 +1254,9 @@
       "file": "notation/archimate/layer-crossing.rq",
       "stage": "analysis",
       "notation": "archimate",
-      "purpose": "Relationships that cross ArchiMate layers, grouped by layer pair.",
-      "answers": "Where realisation and serving cross layers, and how often.",
-      "does_not_prove": "That a crossing is correct, or that a missing one is a gap. Layer is inferred from class names.",
+      "purpose": "Asserted ArchiMate source-target pairs crossing layers, grouped by type and layer pair.",
+      "answers": "Distinct pairs of concepts related across layers, including asserted derivations.",
+      "does_not_prove": "Correctness or completeness. Unconfirmed proposals are not assertions.",
       "parameters": {
         "LIMIT": {
           "type": "integer",
@@ -1209,18 +1267,18 @@
         }
       },
       "requires": {
-        "roles": [
-          "relationship_class",
-          "rel_source",
-          "rel_target",
-          "concept_class",
-          "label"
-        ],
         "graph_roles": [
-          "semantic"
-        ]
+          "semantic",
+          "vocabulary"
+        ],
+        "capabilities": {
+          "direct_rel_triples": true
+        }
       },
-      "notation_namespace": "https://meta.linked.archi/archimate3/onto#"
+      "notation_namespace": "https://meta.linked.archi/archimate3/onto#",
+      "alternatives": [
+        "core/neighbours-qualified"
+      ]
     },
     "notation/backstage/ownership": {
       "file": "notation/backstage/ownership.rq",
@@ -1228,7 +1286,7 @@
       "notation": "backstage",
       "purpose": "Backstage entities and the group or user that owns them.",
       "answers": "Who is recorded as owning what, with lifecycle state.",
-      "does_not_prove": "Accountability. spec.owner is what somebody wrote in a file.",
+      "does_not_prove": "Accountability. spec.owner is what somebody wrote in a file. Qualified resources may include unconfirmed proposals when derivations are in the selected graphs; their endpoints alone do not assert a relationship.",
       "parameters": {
         "LIMIT": {
           "type": "integer",
@@ -1296,7 +1354,7 @@
       "notation": "bpmn",
       "purpose": "Sequence flows of one BPMN process, as edges.",
       "answers": "Which steps follow which, with the flow element types.",
-      "does_not_prove": "Runtime order. Gateways branch; these are edges, not a path.",
+      "does_not_prove": "Runtime order. Gateways branch; these are edges, not a path. Qualified resources may include unconfirmed proposals when derivations are in the selected graphs; their endpoints alone do not assert a relationship.",
       "parameters": {
         "PROCESS_IRI": {
           "type": "iri",
@@ -1377,6 +1435,41 @@
         ]
       },
       "notation_namespace": "https://meta.linked.archi/leanix/onto#"
+    },
+    "core/context-names": {
+      "file": "core/context-names.rq",
+      "stage": "enrichment",
+      "purpose": "Names assigned to a concept for particular presentation contexts.",
+      "answers": "Each audience-specific name and language alongside the canonical name.",
+      "does_not_prove": "Rendered diagram text or audience membership. Label expressions are not evaluated.",
+      "parameters": {
+        "FOCUS_IRI": {
+          "type": "iri",
+          "description": "the element or relationship whose audience names to read"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 100,
+          "min": 1,
+          "max": 1000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "context_name",
+          "literal_form",
+          "presentation_context",
+          "label"
+        ],
+        "graph_roles": [
+          "semantic"
+        ]
+      },
+      "alternatives": [
+        "core/element-detail",
+        "core/resolve-element"
+      ]
     }
   }
 }

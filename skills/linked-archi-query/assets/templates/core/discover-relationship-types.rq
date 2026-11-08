@@ -14,6 +14,9 @@
 # The FILTER strips the two core classes so ?relType is the notation class that
 # carries the meaning - am:Serving, bpmn:SequenceFlow, bs:Ownership.
 #
+# Qualified resources may include unconfirmed proposals when derivations are
+# loaded into the selected graphs. Endpoints alone do not assert a relationship.
+#
 # Parameters: LIMIT
 {{PREFIXES}}
 SELECT ?relType (COUNT(DISTINCT ?rel) AS ?count) ?sourceType ?targetType

@@ -9,6 +9,7 @@
 @prefix	am4q	https://meta.linked.archi/archimate4/questions#
 @prefix	am4	https://meta.linked.archi/archimate4/onto#
 @prefix	am4vp	https://meta.linked.archi/archimate4/viewpoints#
+@prefix	am4deriv	https://meta.linked.archi/archimate4/derivation#
 *	focus=ex:server view=ex:orgView model=ex:model viewpoint=am4vp:OrganizationViewpoint conceptType=am4:ApplicationComponent from=ex:plateauA to=ex:plateauB
 
 # Core: findings. Bank (actor) and Bank (role) share a name across types: not duplicates.
@@ -56,8 +57,12 @@ am4q:responsibility-assignments	-	performer	ex:clerk ex:customer ex:bankActor
 am4q:application-dependencies	-	provider	ex:crm
 am4q:data-access	-	accessor	ex:crm
 am4q:capability-realisation	-	capability	ex:capability ex:capability2 ex:capability3
-am4q:capability-realisation	-	realizer	ex:handleClaim
+am4q:capability-realisation	-	realizer	ex:handleClaim ex:clerk ex:customer
 am4q:requirement-traceability	-	other	ex:handleClaim ex:goal ex:principle
 am4q:principle-rationale	-	other	ex:req
 am4q:work-package-deliverables	-	realized	ex:crm
 am4q:stakeholder-motivation	-	motivation	ex:goal
+am4q:potential-derivations	-	source	ex:claimService ex:server
+am4q:potential-derivations	-	target	ex:clerk ex:policyApp
+am4q:potential-derivations	-	rule	am4deriv:PDR5 am4deriv:PDR7
+am4q:potential-derivation-premises	-	relationship	ex:r2 ex:r4 ex:r5 ex:r6
