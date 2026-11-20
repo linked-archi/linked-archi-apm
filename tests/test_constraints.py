@@ -140,7 +140,7 @@ class TestDerivedConstraints(unittest.TestCase):
         untested.
         """
         forms = read_unqualified_forms(self.sparql, f"{CORE}unqualifiedForm")
-        self.assertEqual(len(forms), 96)
+        self.assertEqual(len(forms), 104)
         self.assertEqual(forms[f"{BS}Ownership"], f"{BS}ownedBy")
 
     def test_a_direct_predicate_with_no_published_shape_is_still_constrained(self):

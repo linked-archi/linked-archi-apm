@@ -17,20 +17,39 @@ faithfully it was extracted. What closes that gap is asserting the shape:
 fixture that quietly changes layout fails a test instead of silently redefining what
 the suite is testing against.
 
-## Alignment snapshot — 2026-11-08
+## Alignment snapshot — 2026-11-19
 
-Converter fixtures were regenerated with JDK 25 from local converter commit `2de154d`
-(`1.3.0-SNAPSHOT`), after building all five converter shadow JARs. The inputs were the
-committed example-architecture-project tree at `6a00bb43419fd7cbe15d1bc77c9b9f51e6932811`, extracted into a temporary
-workspace, and the converter checkout's committed ArchiSurance XML. This deliberately
-excludes unrelated uncommitted edits to the example project's LeanIX input. The partitioned
-Backstage fixture was rebuilt with the documented source-map recipe as well.
+Converter fixtures were regenerated with JDK 25 from the local converter checkout at
+`1e3e315` (`1.3.0-SNAPSHOT`: the DD-41 IRI change, with the names after a view's `#`
+joined with `-`), after building all five converter shadow JARs from it. The inputs were the committed
+example-architecture-project tree at `6a00bb43419fd7cbe15d1bc77c9b9f51e6932811`, extracted
+into a temporary workspace, and the playground's ArchiSurance conversion, made by the same
+build from the converter checkout's committed ArchiSurance XML. This deliberately excludes
+unrelated uncommitted edits to the example project's LeanIX input. The partitioned Backstage
+fixture was rebuilt with the documented source-map recipe as well.
 
-The bundled question sets and expected answers come from the local linked-archi-meta
-checkout at `3cccb1b`; the question sets match la-gram's bundled sets at `fb60d0f`.
-The presentation fixture is `examples/labels-per-presentation.ttl`, refreshed by
-`make questions`. Counts below describe the bundled fixture shapes, not a moving
-converter version label.
+What the conversions changed since the previous snapshot (converter `2de154d`):
+
+- **DD-41.** Each model is `{ns}model`, and its former IRI, the bare namespace, is recorded
+  in `graph/provenance`: `owl:sameAs` and `dct:isReplacedBy` to `{ns}model`, `dct:replaces`
+  back. `graph/model` declares the namespace with `vann:preferredNamespaceUri`. A node or a
+  link is named in its view, `{view}#node-{id}`, and its parts after it: a style,
+  `{view}#node-{id}-style`, or a route point. Any other part is under its owner,
+  `{owner}/{part}`: a LeanIX lifecycle phase, tag or subscription. No fixture holds a blank
+  node any more.
+- **The converters' own changes.** LeanIX relations carry the v4 names (`lmm:uses`,
+  `lmm:runs`, …), and the ArchiMate converter reads ArchiSurance's legacy `UsedBy` as
+  `am:Serving`.
+- **The extraction.** A kept resource keeps its parts, so LeanIX's lifecycle phases, tags
+  and subscriptions are in `base.trig` now; see the selection rules below.
+
+The bundled question sets and expected answers, `vocabulary.ttl`, `shapes.ttl` and
+`unqualified-forms.json` come from the local linked-archi-meta checkout at `0836518`, whose
+`core/`, `modelingLanguages/` and `examples/` are unchanged through `f467e53`, and every
+statement in `semantic-schemes.ttl` is still in it; the question sets match
+la-gram's bundled sets at `306fd6a`. The presentation fixture is
+`examples/labels-per-presentation.ttl`, refreshed by `make questions`. Counts below
+describe the bundled fixture shapes, not a moving converter version label.
 
 ## The version stamp proves nothing
 
@@ -70,14 +89,14 @@ Consequences, all of which the tests encode:
 
 | File | Quads | Graphs | What it is |
 |---|---|---|---|
-| `base.trig` | 3507 | 17 | Real converter output at default flags, trimmed. The default case. |
-| `augmented.trig` | 3564 | 19 | `base` plus what converters never emit. |
-| `flat.ttl` | 3507 | 0 | `base` with graph identity discarded. |
-| `converter-1.3.trig` | 308 | 4 | Real converter output, **verbatim**. The one PARTITIONED fixture. |
-| `vocabulary.ttl` | 959 | 0 | Published vocabulary: BPMN taxonomy, plus the core property axioms. |
+| `base.trig` | 3559 | 17 | Real converter output at default flags, trimmed. The default case. |
+| `augmented.trig` | 3616 | 19 | `base` plus what converters never emit. |
+| `flat.ttl` | 3559 | 0 | `base` with graph identity discarded. |
+| `converter-1.3.trig` | 313 | 4 | Real converter output, **verbatim**. The one PARTITIONED fixture. |
+| `vocabulary.ttl` | 1061 | 0 | Published vocabulary: BPMN taxonomy, plus the core property axioms. |
 | `semantic-schemes.ttl` | 30 | 0 | Selected statements from the published ArchiMate 4 taxonomy and viewpoint catalog. |
-| `shapes.ttl` | 3950 | 0 | Published SHACL: which relationship may connect which types. |
-| `unqualified-forms.json` | 96 pairs | — | Extracted `arch:unqualifiedForm` mappings. Not RDF. |
+| `shapes.ttl` | 4681 | 0 | Published SHACL: which relationship may connect which types. |
+| `unqualified-forms.json` | 104 pairs | — | Extracted `arch:unqualifiedForm` mappings. Not RDF. |
 
 Output written without the direct triples - by a converter from before they became its
 default, or with `--no-emit-direct-rel-triples` - is not committed: `support.qualified_only()`
@@ -178,20 +197,27 @@ Selection rules, all in `build_fixtures.py`:
   populated.
 - **Views are trimmed hard**, to `VIEW_NODE_BUDGET` nodes per graph, preferring
   nodes that reference a kept element. One ArchiMate model otherwise contributes
-  over a thousand nodes, each with geometry and a style blank node. A fixture
-  nobody can read is a fixture that drifts.
+  over a thousand nodes, each with geometry and a style. A fixture nobody can read
+  is a fixture that drifts.
+- **A kept resource keeps its parts.** A node's style and a link's route are joined to
+  the shape's name with `-` (DD-41), and a `-` is in ids too, so they are found by the
+  properties that lead to them: `arch-vis:style`, `arch-vis:points` and the route's
+  cells, `arch-vis:label`. A LeanIX fact sheet's lifecycle phases, tags and
+  subscriptions are named under their owner, `{owner}/{part}`. Each goes wherever its
+  owner goes. Kept without them, a resource points at something the fixture does not
+  have, which is what LeanIX's subscriptions and tags did while they were blank nodes.
 
 What the mix deliberately preserves:
 
-- Three graph roles, and models that have only two. Backstage and LeanIX output
+- Four graph roles, and models that have only three. Backstage and LeanIX output
   carries no views graph, which is why `capabilities.views_graph` is `partial` and
   why `core/view-usage` returning nothing can mean "this notation has no diagrams".
 - Both native-id spellings: `skos:notation` for most notations, `bpmn:id` for BPMN.
 - Language-tagged labels in more than one language (`@en`, and `@fr` from
   Archisurance).
-- The stale ArchiMate views shape - `arch-vis:Node` with geometry and no
-  `archvis:archElement` - alongside the current Structurizr shape, `archvis:ArchNode`
-  with `archvis:archElement` and no geometry. Both exist in the wild.
+- Views with geometry and views without it. Both notations draw `archvis:ArchNode`s
+  with `archvis:archElement`; ArchiMate's carry bounds and a style, Structurizr's
+  nothing more, which is why `capabilities.view_geometry` is `partial`.
 - Two `prov:generatedAtTime` values on the LeanIX model: the author-declared export
   date and the conversion run. A staleness signal, kept on purpose.
 
@@ -200,18 +226,21 @@ What the mix deliberately preserves:
 Written by the converters at default flags, so extracted like everything else. Each
 relationship whose class publishes an unqualified predicate has its direct triple beside
 the qualified resource, and an `rdf:reifies` bridge on that resource whose triple term
-names the predicate *and* both endpoints - 34 of the 36 relationships here. The triple term
-is what lets `verify` tell a genuine unqualified form from an unrelated edge between the
-same two resources.
+names the predicate *and* both endpoints - every one of the 36 relationships here. The
+triple term is what lets `verify` tell a genuine unqualified form from an unrelated edge
+between the same two resources.
 
 **A direct triple is kept with the relationship that reifies it.** Kept for its source
 element alone, it would point at an element the extract may not have, with no qualified
 resource to account for it - a pairing no conversion writes.
 
 Current BPMN sequence flows carry `bpmn:sequenceFlow`, the matching `rdf:reifies`
-bridge and `bpmn:qualifiedSequenceFlow`. A legacy `am:UsedBy` has no published
-unqualified form, so bridge coverage can still be partial. A missing bridge needs the
-vocabulary context before it is called a defect; the model-question audit reads that mapping.
+bridge and `bpmn:qualifiedSequenceFlow`. Bridge coverage can still be partial in other
+output: a legacy `am:UsedBy`, which the ArchiMate converter now writes as `am:Serving`, has
+no published unqualified form and so no bridge. The default profile's
+`rdf_reifies: partial` holds either way; `verify` reports full coverage as observed under
+it. A missing bridge needs the vocabulary context before it is called a defect; the
+model-question audit reads that mapping.
 
 The augmented fixture deliberately removes one C4 bridge while retaining its direct triple
 and qualified source link. This is an integrity defect, not a potential derivation, and
@@ -230,7 +259,7 @@ edge absent, the one configuration that can show it. Property paths do not trave
 terms there either.
 
 `unqualified-forms.json` holds the class-to-predicate pairs from `arch:unqualifiedForm` in
-the linked-archi-meta ontologies (`build_fixtures.py --refresh-forms`, 96 pairs from 124
+the linked-archi-meta ontologies (`build_fixtures.py --refresh-forms`, 104 pairs from 125
 ontology files). The mapping is irregular - `am:Serving` → `am:serves`, `am:Flow` →
 `am:flowsTo`, `am:Composition` → `am:composedOf` - and `tests/test_reifies.py` keeps it so,
 because a lowercase-first-letter rule would invent `am:serving` and `am:flow`.
@@ -269,7 +298,7 @@ are refused — which is the point of the additions.
 ## converter-1.3.trig
 
 Real converter output, **committed verbatim**: no trimming, no selection, no
-additions. 308 quads is small enough to read whole, so there was nothing to gain by
+additions. 313 quads is small enough to read whole, so there was nothing to gain by
 cutting it and a provenance claim to lose.
 
 Four named graphs, and the layout is the whole point:
@@ -281,8 +310,9 @@ Four named graphs, and the layout is the whole point:
 .../backstage/usl-api-registry/graph/semantic/group-payment-service/catalog-info-yaml
 ```
 
-Three things distinguish it from `base.trig`, and `build_fixtures.py --rebuild-13`
-refuses to install a file missing any of them:
+Three markers make it the final 1.3 layout, and `build_fixtures.py --rebuild-13`
+refuses to install a file missing any of them. `base.trig` has the first two as well;
+the partitioned semantic graph is what only this fixture shows:
 
 | Marker | Count here | Why it matters |
 |---|---|---|
@@ -314,7 +344,7 @@ python3 fixtures/build_fixtures.py --rebuild-13 /tmp/converter-1.3.trig
 ```
 
 The recipe is executable rather than prose, and it has been round-tripped: emitting
-the inputs and re-converting reproduces this fixture's 308 quads and identical graph
+the inputs and re-converting reproduces this fixture's 313 quads and identical graph
 set.
 
 `make fixtures` does **not** rebuild it. Producing it needs the converter jars and a
@@ -351,9 +381,14 @@ profile whose `graphs.layout` is `single`; `la-kg connect` reports the shape, an
 
 ## Deliberate non-goal: byte stability
 
-Blank nodes for folder list items and view styles are regenerated on every
-conversion, so re-running `make fixtures` produces a semantically identical file
-that does not diff cleanly. Assert on shape and counts, never on bytes.
+The converters no longer write blank nodes: every part is named after its owner
+(DD-41). So two conversions of one input differ only in their conversion run: its IRI,
+`{base}provenance/run/{id}`, and its timestamps. Rebuilding from the same conversion
+output gives byte-identical fixtures; rebuilding from a fresh conversion changes those
+lines in each provenance graph and nothing else. Measured: a rebuild from the same
+conversions was byte-identical, and fresh conversions of the BPMN and LeanIX inputs
+differed from the first only in those lines. Assert on shape and counts all the same,
+never on bytes: a new timestamp is not a regression.
 
 
 ## `vocabulary.ttl`: published, not converted
@@ -391,7 +426,7 @@ only the selection is ours, on the same terms as every other fixture here.
   `skos:prefLabel` and `rdfs:subClassOf` chain — so a query can walk the hierarchy rather
   than trust a flat list.
 
-959 triples of Turtle in the **default graph**, and both halves of that matter. Turtle
+1061 triples of Turtle in the **default graph**, and both halves of that matter. Turtle
 because that is what is published: `meta.linked.archi` serves every ontology, taxonomy and
 shape set as `text/turtle`. The default graph because that is where a Turtle file goes —
 `la-connect` loads one without naming a graph — so this is the shape an operator pairs.
@@ -404,7 +439,7 @@ published file fails is exactly the defect the top of this document describes. T
 bound to `default` now, and `test_profiles.py` asserts the pairing works in the shape a
 fetch delivers.
 
-**It also carries the whole `arch:unqualifiedForm` mapping**, all 96 pairs, because that is
+**It also carries the whole `arch:unqualifiedForm` mapping**, all 104 pairs, because that is
 the only thing constraining a direct triple outside ArchiMate. Backstage, LeanIX and C4
 publish shapes for the qualified form alone, so the rule for `bs:ownedBy` has to be derived
 — follow `arch:unqualifiedForm` from `bs:Ownership` to its predicate and reuse the qualified
@@ -463,9 +498,10 @@ Published, not converted, like `vocabulary.ttl` — and it exists because the vo
 cannot answer this. `rdfs:domain` and `rdfs:range` say that `arch:source` starts at a
 `QualifiedRelationship` and ends at a `ModelConcept`. They cannot say that a Serving from a
 Business Actor to a Value is not a thing the metamodel allows. For the **unqualified**
-(direct triple) forms they say nothing at all: `am:flowsTo`, `bs:ownedBy` and the other 73
-predicates in `unqualified-forms.json` carry no domain and no range anywhere in the
-ontologies.
+(direct triple) forms they say nothing at all: `am:flowsTo`, `bs:ownedBy` and every other
+notation predicate in `unqualified-forms.json` carry no domain and no range anywhere in the
+ontologies. Core's generic three, `arch:associatedWith`, `arch:hasPart` and `arch:refines`,
+say `arch:ModelConcept` at both ends, which rules out nothing.
 
 Which relationship may connect which element types is declared **only as SHACL**. That is
 what makes reading it new work rather than a configuration change: an Ontology-Based Query
@@ -532,10 +568,10 @@ checkout — `LINKED_ARCHI_META` if it is not a sibling.
 - Named rather than matched, so a shape that moves upstream is a **refusal**, not a quietly
   smaller fixture with a construct no longer covered.
 
-**Why it is 34 kB and not 261 kB.** A node shape is almost all blank nodes, and pyoxigraph's
-serialiser writes each as explicit `rdf:first`/`rdf:rest` statements: the same 2630 quads came
-to 261 kB, 58% list plumbing, 2603 of 2630 subjects a generated label. Correct RDF that no
-reviewer could check against the published source. `_write_nested_trig` serialises through
+**Why it is 112 kB and not 411 kB.** A node shape is almost all blank nodes, and pyoxigraph's
+serialiser writes each as explicit `rdf:first`/`rdf:rest` statements: the same 4681 quads come
+to 411 kB that way, 47% list plumbing, 2495 of 2587 subjects a generated label. Correct RDF
+that no reviewer could check against the published source. `_write_nested_turtle` serialises through
 rdflib so blank nodes nest and lists print as collections, then parses the result back and
 compares quad for quad, because the graph wrapper around it is text assembly. Blank-node
 names are content hashes — without that, two runs over identical shapes differed by 34 lines

@@ -27,7 +27,8 @@
 # read as a set, once per query, in two steps — the types under it
 # within each document, then their specialisations in any document —
 # so a subtype the language defines (am:Constraint under
-# am:Requirement, am:Device under am:Node) and a model's own
+# am:Requirement, a physical element under am:TechnologyLayerElement)
+# and a model's own
 # specialisation count where the type does.
 #
 # Relationships are followed along their direct triples. A question
@@ -79,7 +80,7 @@ concern the ArchiMate 3.2 viewpoints frame is not met. Each is executable SPARQL
     skos:prefLabel                "How is the model spread over the ArchiMate layers?"@en ;
     dcterms:description           "Elements counted by ArchiMate 3.2 layer, read from the layer classes their types specialise, so specialisations count where they belong."@en ;
     arch:answers                  "One row per layer, with the number of elements in it."@en ;
-    arch:doesNotProve             "Balance. Equipment and facilities are nodes as well as physical, so they count in both the technology and the physical layer; location, grouping and junctions belong to no layer and are not counted."@en ;
+    arch:doesNotProve             "Balance. The physical elements — equipment, facilities, distribution networks, materials — count in the technology layer, which they are part of; location, grouping and junctions belong to no layer and are not counted."@en ;
     arch:questionStage            arch:OrientationStage ;
     arch:questionAddressesConcern amvp:ReductionOfComplexity, amvp:Completeness ;
     arch:questionFitsViewpoint    amvp:LayeredViewpoint ;
@@ -100,7 +101,7 @@ concern the ArchiMate 3.2 viewpoints frame is not met. Each is executable SPARQL
             WHERE {
               VALUES ?layer {
                 am:StrategyLayerElement am:MotivationElement am:BusinessLayerElement am:ApplicationLayerElement
-                am:TechnologyLayerElement am:PhysicalLayerElement am:ImplementationAndMigrationLayerElement
+                am:TechnologyLayerElement am:ImplementationAndMigrationLayerElement
               }
               { ?layerType rdfs:subClassOf* ?layer } UNION { GRAPH ?ontologyGraph { ?layerType rdfs:subClassOf* ?layer } }
               { ?type rdfs:subClassOf* ?layerType } UNION { GRAPH ?specialisationGraph { ?type rdfs:subClassOf* ?layerType } }
@@ -122,7 +123,7 @@ concern the ArchiMate 3.2 viewpoints frame is not met. Each is executable SPARQL
     skos:prefLabel                "Which relationships cross layers, and of which kind?"@en ;
     dcterms:description           "Relationships whose ends are in different ArchiMate 3.2 layers, read from their direct triples and counted by pair of layers and relationship type. The layers are read from the layer classes, not from type names."@en ;
     arch:answers                  "One row per source layer, relationship type and target layer, with the number of pairs of elements so related."@en ;
-    arch:doesNotProve             "Coupling. A relationship to an element of no layer (location, grouping, junction) is not counted, and one between equipment and a node crosses from the physical to the technology layer though both are nodes."@en ;
+    arch:doesNotProve             "Coupling. A relationship to an element of no layer (location, grouping, junction) is not counted, and one between a physical element and another technology element stays within the technology layer, which the physical elements are part of."@en ;
     arch:questionStage            arch:AnalysisStage ;
     arch:questionAddressesConcern amvp:Consistency, amvp:ImpactOfChange ;
     arch:questionFitsViewpoint    amvp:LayeredViewpoint ;
@@ -151,7 +152,7 @@ concern the ArchiMate 3.2 viewpoints frame is not met. Each is executable SPARQL
             WHERE {
               VALUES ?sourceLayer {
                 am:StrategyLayerElement am:MotivationElement am:BusinessLayerElement am:ApplicationLayerElement
-                am:TechnologyLayerElement am:PhysicalLayerElement am:ImplementationAndMigrationLayerElement
+                am:TechnologyLayerElement am:ImplementationAndMigrationLayerElement
               }
               { ?sourceLayerType rdfs:subClassOf* ?sourceLayer } UNION { GRAPH ?sourceOntologyGraph { ?sourceLayerType rdfs:subClassOf* ?sourceLayer } }
               { ?sourceType rdfs:subClassOf* ?sourceLayerType } UNION { GRAPH ?sourceSpecialisationGraph { ?sourceType rdfs:subClassOf* ?sourceLayerType } }
@@ -162,7 +163,7 @@ concern the ArchiMate 3.2 viewpoints frame is not met. Each is executable SPARQL
             WHERE {
               VALUES ?targetLayer {
                 am:StrategyLayerElement am:MotivationElement am:BusinessLayerElement am:ApplicationLayerElement
-                am:TechnologyLayerElement am:PhysicalLayerElement am:ImplementationAndMigrationLayerElement
+                am:TechnologyLayerElement am:ImplementationAndMigrationLayerElement
               }
               { ?targetLayerType rdfs:subClassOf* ?targetLayer } UNION { GRAPH ?targetOntologyGraph { ?targetLayerType rdfs:subClassOf* ?targetLayer } }
               { ?targetType rdfs:subClassOf* ?targetLayerType } UNION { GRAPH ?targetSpecialisationGraph { ?targetType rdfs:subClassOf* ?targetLayerType } }

@@ -10,6 +10,37 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 
+The converters now name every model `{ns}model` (Linked.Archi DD-41): for a conversion
+made since, `core/models` returns `https://example.org/la/bpmn/order-fulfillment/model`
+for the BPMN example, not `…/order-fulfillment`. A node or a link in a result is named in
+its view, `{view}#node-{id}`, and its style and route points after it (`{view}#node-{id}-style`).
+Element, relationship, view and graph IRIs keep their form, so a query anchored on one of
+those is unaffected.
+
+### Fixed
+
+- **A model's former name is not an identity assertion.** Since DD-41 each converted model
+  carries its old IRI as `owl:sameAs` beside `dct:isReplacedBy`. `core/identity-audit` now
+  leaves such a pair out, and `la-profile recommend` and `verify` no longer count it, so raw
+  converter output is not reported as holding identity assertions and the recommendation
+  no longer suggests claiming `identity_assertions`.
+
+### Changed
+
+- Regenerate the converter fixtures from the converters' DD-41 build and the committed
+  example inputs: each model is `{ns}model`, with its former IRI recorded as replaced in
+  `graph/provenance`; shapes are named in their view (`{view}#node-{id}`), their parts
+  joined to them with `-` (`{view}#node-{id}-style`) and other parts under their owner
+  (`{owner}/{part}`), so no fixture holds a blank node. `base.trig` has 3559 quads,
+  `augmented.trig` 3616 and `converter-1.3.trig` 313. The extraction keeps a resource's
+  parts with it: styles and route points, found by the properties that lead to them, and
+  LeanIX lifecycle phases, tags and subscriptions, which used to be left dangling.
+- Refresh the vocabulary, shape, unqualified-form and question fixtures, and the bundled
+  question sets, to current meta: LeanIX v4 relationships and shapes, 104
+  `arch:unqualifiedForm` pairs, and ArchiMate 3.2's physical elements counted in the
+  technology layer. The question examples name their derivations
+  `urn:linked-archi:relationship/{digest}`.
+
 ## [0.11.0] - 2026-11-08
 
 ### Fixed

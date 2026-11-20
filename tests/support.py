@@ -49,8 +49,9 @@ BPMN_TASK = "https://example.org/la/bpmn/order-fulfillment/element/Task_Payment"
 BPMN_LAST_TASK = "https://example.org/la/bpmn/order-fulfillment/element/Task_Ship"
 BPMN_PROCESS = "https://example.org/la/bpmn/order-fulfillment/element/OrderFulfillment"
 #: The BPMN *model*, not the process inside it. Membership queries anchor on the model,
-#: which is what core/models and core/resolve-model return.
-BPMN_MODEL = "https://example.org/la/bpmn/order-fulfillment"
+#: which is what core/models and core/resolve-model return. Named `{ns}model` since
+#: DD-41; the bare namespace it had before is a former name, aliased in `graph/provenance`.
+BPMN_MODEL = "https://example.org/la/bpmn/order-fulfillment/model"
 ARCHIMATE_ELEMENT = "https://example.org/la/model/archisurance/element/id-861"
 C4_CONTAINER = "https://example.org/la/c4/commerce-platform/element/2"
 #: A view that really places three elements in the augmented fixture, so a floor of 3

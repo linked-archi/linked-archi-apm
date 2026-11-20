@@ -16,7 +16,7 @@
 # architects, developers and executives. What an element is CALLED for an
 # audience, and its PICTURE for an audience, are data on the element (a
 # SKOS-XL name, a schema:ImageObject; core 0.5.0); how a diagram element
-# LOOKS for an audience is its style for that context (core-vis 0.7); what
+# LOOKS for an audience is its style for that context (core-vis 0.7, 0.8); what
 # its LABEL SAYS on a diagram is a label expression (core-vis 0.7), said
 #
 #   1. on a diagram element's own style, for one context or for all;
@@ -195,10 +195,13 @@
 #               "serves Checkout"
 #   Executive:  "Card payments"               (its own for every context; {name} is the executive name)
 #
-# And it LOOKS its own way for executives: two styles — one for every context,
+# And it LOOKS its own way per audience: three styles — one for every context;
 # one for executives drawing it as its icon, so its picture for executives
-# (card-payments.png) is the figure, "Card payments" under it. For architects
-# and developers: its box, with its notation's glyph as the badge.
+# (card-payments.png) is the figure, "Card payments" under it; one for
+# developers making its own picture its badge (arch-vis:useElementPicture,
+# core-vis 0.8), gateway.svg in place of its notation's glyph. For architects:
+# its box, its own picture (gateway.svg) inside it at the top left, and its
+# notation's glyph as the badge.
 :PaymentGatewayNode
     a                    arch-vis:ArchNode ;
     arch-vis:archElement :PaymentGateway ;
@@ -207,7 +210,8 @@
     arch-vis:bounds-y    "40.0"^^xsd:double ;
     arch-vis:bounds-w    "160.0"^^xsd:double ;
     arch-vis:bounds-h    "80.0"^^xsd:double ;
-    arch-vis:style       :PaymentGatewayNodeStyle, :PaymentGatewayNodeStyleForExecutives ;
+    arch-vis:style       :PaymentGatewayNodeStyle, :PaymentGatewayNodeStyleForExecutives,
+                         :PaymentGatewayNodeStyleForDevelopers ;
 .
 
 :PaymentGatewayNodeStyle
@@ -220,6 +224,15 @@
     a                          arch-vis:Style ;
     arch:inPresentationContext :ExecutiveContext ;
     arch-vis:renderingMode     arch-vis:IconCentric ;
+.
+
+# For developers: its box, its element's picture for them (none of their own: its
+# own picture) as its badge, followed as the picture changes.
+:PaymentGatewayNodeStyleForDevelopers
+    a                          arch-vis:Style ;
+    arch:inPresentationContext :DeveloperContext ;
+    arch-vis:renderingMode     arch-vis:ShapeWithBadge ;
+    arch-vis:useElementPicture true ;
 .
 
 :GatewayForDevelopers

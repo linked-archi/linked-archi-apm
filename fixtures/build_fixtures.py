@@ -65,8 +65,8 @@ SOURCES = {
 #: two-hop traversal has somewhere to go.
 ELEMENT_BUDGET = 12
 
-#: How many view nodes to keep per views graph. Geometry and a style blank node per
-#: node add up fast, and a fixture nobody can read is a fixture that drifts.
+#: How many view nodes to keep per views graph. Geometry and a style per node add up
+#: fast, and a fixture nobody can read is a fixture that drifts.
 VIEW_NODE_BUDGET = 6
 
 #: Containers holding a kept element - a BPMN Process, a C4 system.
@@ -83,6 +83,49 @@ TAX = "https://meta.linked.archi/core-tax#"
 
 def _quads_for(store, graph):
     return [q for q in store if q.graph_name == graph]
+
+
+#: The properties that lead from a shape to its parts: its style, its route's first
+#: cell, each cell's point and next cell, its label, and a label expression on its style.
+_VIS = "https://meta.linked.archi/core-vis#"
+_RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+SHAPE_PART_PROPERTIES = frozenset(
+    [_VIS + "style", _VIS + "points", _VIS + "label", _VIS + "labelExpression"]
+    + [_RDF + "first", _RDF + "rest"]
+)
+
+
+def _parts_of(store, owner, graph) -> list:
+    """The quads describing ``owner``'s parts in ``graph``, parts of parts included.
+
+    A part has no life outside its owner: a node's style, a link's route cells and
+    points, a LeanIX fact sheet's lifecycle phases, tags and subscriptions. Kept
+    without its parts, a resource points at something the fixture does not have.
+
+    Since DD-41 a shape's parts are in its view's fragment, joined to it with ``-``
+    (``{node}-style``, ``{link}-points-0``). A ``-`` is in ids too, so they are found by
+    the properties that lead to them, :data:`SHAPE_PART_PROPERTIES`, never by their
+    names. Any other part is named under its owner, ``{owner}/{part}``. Before DD-41 a
+    part was a blank node.
+    """
+    from pyoxigraph import BlankNode, NamedNode
+
+    prefix = f"{owner.value}/"
+    found: list = []
+    pending, seen = [owner], {owner}
+    while pending:
+        for quad in store.quads_for_pattern(pending.pop(), None, None, graph):
+            part = quad.object
+            is_part = isinstance(part, BlankNode) or (
+                isinstance(part, NamedNode)
+                and part.value != _RDF + "nil"
+                and (quad.predicate.value in SHAPE_PART_PROPERTIES or part.value.startswith(prefix))
+            )
+            if is_part and part not in seen:
+                seen.add(part)
+                pending.append(part)
+                found.extend(store.quads_for_pattern(part, None, None, graph))
+    return found
 
 
 def extract(paths: dict[str, Path]) -> "tuple[object, list[str]]":
@@ -182,11 +225,16 @@ def extract(paths: dict[str, Path]) -> "tuple[object, list[str]]":
         keep_elements |= set(orphans[:ORPHAN_BUDGET])
 
         subjects = set(keep_elements) | set(keep_relationships)
-        # Any model-level triple still in the semantic graph. In the 1.3 layout the model
-        # resource itself moved to `graph/model`, kept verbatim below, so this usually adds
-        # nothing - but it costs nothing and keeps the extraction correct for output that
-        # still declares the model here.
-        subjects.add(NamedNode(model_prefix))
+        # Any model-level triple still in the semantic graph: LeanIX writes the model's
+        # architecture state there. The model is declared in `graph/model`, kept verbatim
+        # below, and is found by that declaration rather than by its IRI, which is
+        # `{ns}model` since DD-41 and was the bare namespace before it.
+        model_class = NamedNode(f"{CORE}Model")
+        for declared_in in (graph, NamedNode(f"{model_prefix}/graph/model")):
+            for quad in source_store.quads_for_pattern(
+                None, rdf_type, model_class, declared_in
+            ):
+                subjects.add(quad.subject)
 
         # A direct triple goes with the relationship that reifies it: the converter writes
         # the two together, and kept for its source element alone it would point at an
@@ -204,6 +252,8 @@ def extract(paths: dict[str, Path]) -> "tuple[object, list[str]]":
                 reified_by = reifiers.get((quad.subject, quad.predicate, quad.object))
                 if reified_by is not None and not reified_by & kept_relationships:
                     continue
+                kept.add(quad)
+            for quad in _parts_of(source_store, subject, graph):
                 kept.add(quad)
 
         # Provenance verbatim: it is a dozen quads per model and trimming it would
@@ -224,11 +274,10 @@ def extract(paths: dict[str, Path]) -> "tuple[object, list[str]]":
                 kept.add(quad)
 
         # Views trimmed, and trimmed hard. One ArchiMate model contributes over a
-        # thousand nodes with geometry and a style blank node each, which would make
-        # the fixture unreviewable - and a fixture nobody reads is a fixture that
-        # drifts. Keep the nodes that point at elements we kept, then top up so the
-        # stale ArchiMate output (which predates archvis:archElement) still
-        # contributes something.
+        # thousand nodes with geometry and a style each, which would make the fixture
+        # unreviewable - and a fixture nobody reads is a fixture that drifts. Keep the
+        # nodes that point at elements we kept, then top up so a views graph whose
+        # nodes show none of them still contributes something.
         views_iri = f"{model_prefix}/graph/views"
         if views_iri not in graphs:
             continue
@@ -255,13 +304,10 @@ def extract(paths: dict[str, Path]) -> "tuple[object, list[str]]":
                 kept.add(quad)
                 if quad.predicate == view_ref:
                     referenced_views.add(quad.object)
-                # Style is a blank node hanging off the node; without it the node
-                # keeps a dangling reference.
-                if isinstance(quad.object, BlankNode):
-                    for nested in source_store.quads_for_pattern(
-                        quad.object, None, None, views
-                    ):
-                        kept.add(nested)
+            # A shape's style and route are parts of it; without them the shape keeps
+            # a dangling reference.
+            for quad in _parts_of(source_store, node, views):
+                kept.add(quad)
 
         # The arch:View resources those nodes belong to, from the SEMANTIC graph.
         # Easy to forget, because the nodes are in the views graph and look like the

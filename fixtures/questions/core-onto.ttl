@@ -33,12 +33,12 @@ arch: a owl:Ontology ;
 	<http://purl.org/net/SMARTprotocol#IntroductionSection> "\n     Core Linked.Archi Ontology for EA modeling.\n    "@en ;
 	dct:created "2019-03-17"^^xsd:date ;
 	dct:issued "2019-03-17"^^xsd:date ;
-	dct:modified "2026-11-08"^^xsd:date ;
+	dct:modified "2026-11-16"^^xsd:date ;
 	dct:publisher "Linked.Archi"@en ;
 	<http://purl.org/ontology/bibo/status> "draft" ;
 	owl:versionIRI arch: ;
-	owl:versionInfo "0.5.0"@en ;
-	owl:priorVersion <https://meta.linked.archi/core/0.4.0#> ;
+	owl:versionInfo "0.6.0"@en ;
+	owl:priorVersion <https://meta.linked.archi/core/0.5.0#> ;
 	skos:historyNote "0.5.0 — names, labels and pictures per presentation context.\narch:inPresentationContext says which presentation context — which audience — something is for: a\nname an element is given for that audience (a SKOS-XL label, skosxl:altLabel, whose plain form is\nalso the element's skos:altLabel), a picture of it for that audience (a schema:ImageObject given as\narch:altVisNotation), or, on a diagram, what its label says there (core-vis 0.7's\narch-vis:LabelExpression) and how it looks there (an arch-vis:Style). skos:prefLabel stays the one\ncanonical name and arch:prefVisNotation the one canonical picture. arch:prefVisNotation and\narch:altVisNotation say where they apply with :domainIncludes, where an rdfs:domain of skos:Concept\nmade every element given a picture a SKOS concept. See DD-34 and DD-35.\n\n0.4.0 — membership properties reworked.\narch:inView and arch:inModel replace arch:exposedInView and arch:partOfModel, and arch:contains is\ndeprecated as an undeclared inverse of what was then partOfModel. All three old properties are\nretained and owl:deprecated; the two renamed ones are rdfs:subPropertyOf their replacements so\nexisting data still entails the current vocabulary under RDFS, while arch:contains is not, because\nno sound generalisation exists for it. See DD-30."@en ;
 	<http://schema.org/logo> <https://meta.linked.archi/favicon.svg> ;
 	<http://schema.org/image> <https://meta.linked.archi/favicon.svg> ;
@@ -276,17 +276,12 @@ arch:domainIncludes a owl:AnnotationProperty ;
 	skos:prefLabel "domainIncludes" ;
 	skos:definition "The classes a property's subject is expected to be. Guidance, not a constraint: not used for validation."@en ;
 	skos:closeMatch <http://schema.org/domainIncludes> ;
-	skos:scopeNote "On a relationship's predicate (am4:serves), the classes of its source element; on a relationship\nproposal order (:RelationshipProposalOrder), the sources it is scoped to. Unlike rdfs:domain it infers nothing about\nwhat uses the property: it guides modelling tools and readers, and restricts nothing. Restrictions, as all\nconstraints, are SHACL's."@en .
+	skos:scopeNote "On a relationship's predicate (am4:serves), the classes of its source element; on an order of\nproposal a Metamodel names (:relationshipProposalOrder), the sources it applies to. Unlike rdfs:domain it infers\nnothing about what uses the property: it guides modelling tools and readers, and restricts nothing. Restrictions, as\nall constraints, are SHACL's."@en .
 arch:rangeIncludes a owl:AnnotationProperty ;
 	skos:prefLabel "rangeIncludes" ;
 	skos:definition "The classes a property's object is expected to be. Guidance, not a constraint: not used for validation."@en ;
 	skos:closeMatch <http://schema.org/rangeIncludes> ;
-	skos:scopeNote "On a relationship's predicate (am4:serves), the classes of its target element; on a relationship\nproposal order (:RelationshipProposalOrder), the targets it is scoped to. Unlike rdfs:range it infers nothing about\nthe values: it guides modelling tools and readers, and restricts nothing. Restrictions, as all constraints, are\nSHACL's."@en .
-arch:RelationshipProposalOrder a owl:Class ;
-	rdfs:subClassOf skos:OrderedCollection ;
-	skos:prefLabel "Relationship Proposal Order"@en ;
-	skos:definition "Relationship types in the order a modelling tool proposes them when two elements are connected."@en ;
-	skos:scopeNote "Without :domainIncludes, it is a language's general order, which decides between the\nrelationships the language's metamodel draws between the two elements. With :domainIncludes, and :rangeIncludes,\nit puts its members first between the elements it names, whether the metamodel draws them or only permits them;\none that names both ends is more specific than one that names the source only. Where the metamodel draws nothing,\na tool falls back on what the language permits directly before what it permits only by derivation. Guidance, like\n:domainIncludes itself: it orders what a language permits and restricts nothing. ArchiMate 4.0's are in its\ntaxonomy."@en .
+	skos:scopeNote "On a relationship's predicate (am4:serves), the classes of its target element; on an order of\nproposal a Metamodel names (:relationshipProposalOrder), the targets it applies to. Unlike rdfs:range it infers\nnothing about the values: it guides modelling tools and readers, and restricts nothing. Restrictions, as all\nconstraints, are SHACL's."@en .
 arch:basedOnFramework a owl:ObjectProperty ;
 	rdfs:subPropertyOf prov:hadPrimarySource ;
 	skos:prefLabel "definedByFramework" ;
@@ -326,6 +321,49 @@ arch:hasPart a owl:TransitiveProperty ;
 	rdfs:domain arch:ModelConcept ;
 	rdfs:range arch:ModelConcept ;
 	owl:inverseOf arch:partOf .
+arch:associatedWith a owl:ObjectProperty , owl:SymmetricProperty ;
+	skos:prefLabel "associatedWith"@en ;
+	skos:definition "Relates two model concepts that have to do with each other, where nothing more specific\nis said. It has no direction: what holds from one to the other holds back."@en ;
+	skos:scopeNote "The weakest statement a model can make about two concepts. Use the relationship of the\nmodelling language where it has one for the two."@en ;
+	rdfs:domain arch:ModelConcept ;
+	rdfs:range arch:ModelConcept .
+arch:Association a owl:Class ;
+	rdfs:subClassOf arch:QualifiedRelationship ;
+	arch:unqualifiedForm arch:associatedWith ;
+	skos:prefLabel "Association"@en ;
+	skos:definition "A relationship between two model concepts that have to do with each other, where\nnothing more specific is said; it has no direction."@en ;
+	skos:scopeNote "A modelling tool offers it where the loaded metamodels permit no relationship between\nthe two elements — an element of one language and an element of another, or two of a metamodel that defines\nno relationship types — and draws it as a line with no arrowhead."@en ;
+	skos:example "\nex:Billing arch:associatedWith ex:LatencyRisk .\nex:Billing arch:qualifiedAssociation ex:rel-1 .\nex:rel-1 a arch:Association ;\n    arch:source ex:Billing ;\n    arch:target ex:LatencyRisk ;\n    rdf:reifies <<( ex:Billing arch:associatedWith ex:LatencyRisk )>> .\n"@en .
+arch:qualifiedAssociation a owl:ObjectProperty ;
+	skos:prefLabel "qualifiedAssociation"@en ;
+	skos:definition "Links the source of an Association to its relationship resource."@en ;
+	rdfs:domain arch:ModelConcept ;
+	rdfs:range arch:Association ;
+	arch:unqualifiedForm arch:associatedWith .
+arch:HasPart a owl:Class ;
+	rdfs:subClassOf arch:QualifiedRelationship ;
+	arch:unqualifiedForm arch:hasPart ;
+	skos:prefLabel "Has Part"@en ;
+	skos:definition "A relationship from a model concept to one that is a part of it."@en ;
+	skos:scopeNote "A modelling tool offers it where the loaded metamodels permit no relationship between\nthe two elements, and draws it from the whole to the part."@en .
+arch:qualifiedHasPart a owl:ObjectProperty ;
+	skos:prefLabel "qualifiedHasPart"@en ;
+	skos:definition "Links the source of a Has Part relationship — the whole — to its relationship resource."@en ;
+	rdfs:domain arch:ModelConcept ;
+	rdfs:range arch:HasPart ;
+	arch:unqualifiedForm arch:hasPart .
+arch:Refines a owl:Class ;
+	rdfs:subClassOf arch:QualifiedRelationship ;
+	arch:unqualifiedForm arch:refines ;
+	skos:prefLabel "Refines"@en ;
+	skos:definition "A relationship from a model concept to one it is a more concrete or more complete\nrepresentation of."@en ;
+	skos:scopeNote "A modelling tool offers it where the loaded metamodels permit no relationship between\nthe two elements, and draws it from the more concrete concept to the one it refines."@en .
+arch:qualifiedRefines a owl:ObjectProperty ;
+	skos:prefLabel "qualifiedRefines"@en ;
+	skos:definition "Links the source of a Refines relationship — the more concrete concept — to its relationship resource."@en ;
+	rdfs:domain arch:ModelConcept ;
+	rdfs:range arch:Refines ;
+	arch:unqualifiedForm arch:refines .
 arch:viewConformsToViewpoint a owl:ObjectProperty ;
 	skos:prefLabel "viewConformsToViewpoint"@en ;
 	skos:definition "\n    viewpoint property specifies the Viewpoint individual of a particular View instance\n        " ;
@@ -841,6 +879,30 @@ arch:presentationContextScheme a owl:ObjectProperty ;
 	rdfs:domain arch:Metamodel ;
 	rdfs:range skos:ConceptScheme ;
 	skos:broader arch:PresentationCategory .
+arch:paletteGrouping a owl:ObjectProperty ;
+	skos:prefLabel "paletteGrouping"@en ;
+	skos:definition "Links a Metamodel to the classification dimensions its palette groups element types by,\nthe main one first: an ordered collection whose members are the dimensions, concepts of the Metamodel's\nconceptClassification scheme whose narrower concepts are the groups."@en ;
+	skos:scopeNote "A palette makes a section of each group of the first dimension, in that dimension's order,\nand puts an element type in the section of its group there; an element type with no group in it goes in the\nsection of its group in the next dimension. Within a section, element types follow their groups' order in the\nother dimensions, then their names. A dimension's order is the ISO 25964 thesaurus array (iso-thes:ThesaurusArray,\na skos:OrderedCollection) whose iso-thes:superOrdinate is the dimension; a group the array does not list comes\nafter those it lists, and a dimension with no array orders its groups by name."@en ;
+	skos:example "\n## ArchiMate 4.0: sections by domain, each in order of aspect\nam4mm:ArchiMate4 arch:paletteGrouping am4tax:PaletteGrouping .\nam4tax:PaletteGrouping\n    a               skos:OrderedCollection ;\n    skos:memberList ( am4tax:Domain am4tax:Aspect ) .\nam4tax:DomainOrder\n    a                      skos:OrderedCollection, iso-thes:ThesaurusArray ;\n    iso-thes:superOrdinate am4tax:Domain ;\n    skos:memberList        ( am4tax:CommonDomain am4tax:BusinessDomain am4tax:ApplicationDomain\n                             am4tax:TechnologyDomain am4tax:StrategyDomain am4tax:MotivationDomain\n                             am4tax:ImplementationAndMigrationDomain ) .\n"@en ;
+	rdfs:domain arch:Metamodel ;
+	rdfs:range skos:OrderedCollection ;
+	skos:broader arch:PresentationCategory .
+arch:diagramGroupOrder a owl:ObjectProperty ;
+	skos:prefLabel "diagramGroupOrder"@en ;
+	skos:definition "Links a Metamodel to the groups of its conceptClassification scheme that a diagram keeps\nin bands, first band first: an ordered collection of groups, which may come from different classification\ndimensions."@en ;
+	skos:scopeNote "A layout that keeps elements in bands puts an element in the band of the first listed\ngroup it is classified under, at any depth. An element of no listed group is placed by the elements it is\nrelated to. The order is the arrangement a diagram of the language follows, which need not be the order of the\ngroups in their own dimension or in the palette."@en ;
+	skos:example "\n## ArchiMate 4.0: motivation and strategy above the core domains; the Common Domain, used in all of them, not listed\nam4mm:ArchiMate4 arch:diagramGroupOrder am4tax:DiagramGroupOrder .\nam4tax:DiagramGroupOrder\n    a               skos:OrderedCollection ;\n    skos:memberList ( am4tax:MotivationDomain am4tax:StrategyDomain am4tax:BusinessDomain\n                      am4tax:ApplicationDomain am4tax:TechnologyDomain\n                      am4tax:ImplementationAndMigrationDomain ) .\n"@en ;
+	rdfs:domain arch:Metamodel ;
+	rdfs:range skos:OrderedCollection ;
+	skos:broader arch:PresentationCategory .
+arch:relationshipProposalOrder a owl:ObjectProperty ;
+	skos:prefLabel "relationshipProposalOrder"@en ;
+	skos:definition "Links a Metamodel to an order in which a modelling tool proposes relationship types when two\nelements are connected: an ordered collection of relationship types."@en ;
+	skos:scopeNote "One with no :domainIncludes or :rangeIncludes is the language's general order, which applies\nto every pair; a Metamodel names one. One with :domainIncludes, :rangeIncludes or both applies where the source, the\ntarget, or both are of a class it names, or of a subclass of one: an order between behaviour elements applies to two\nprocesses. For two elements, a tool proposes the relationships the language permits between them in three groups:\nthose a modeller may draw directly; then those the language permits only as the conclusion of a derivation; then\nthose it permits between any two elements, to use where no other fits — ArchiMate's association — unless an order\nthat names either element lists one. Within a group, each relationship takes the place the most specific order that\nlists it gives it. An order that names both elements is more specific than one that names one, and that than the\ngeneral order; between two that name the same ends, the one whose classes are subclasses of the other's is. A\nrelationship's place in an order is that of its own class, or else of the first superclass the order lists: a read\naccess takes the place of access. So within a group the most specific order's members come first, in its order, and\nwhat it does not list follows in the order of the next, down to the general one. Guidance, like :domainIncludes\nitself: it orders what a language permits and restricts nothing."@en ;
+	skos:example "\n## ArchiMate 4.0: between behaviour elements, triggering and flow first; elsewhere, the strongest first\nam4mm:ArchiMate4 arch:relationshipProposalOrder am4tax:ProposalOrder, am4tax:BehaviorProposalOrder .\nam4tax:ProposalOrder\n    a               skos:OrderedCollection ;\n    skos:memberList ( am4:Composition am4:Aggregation am4:Assignment am4:Realization am4:Serving am4:Access\n                      am4:Influence am4:Triggering am4:Flow am4:Specialization am4:Association ) .\nam4tax:BehaviorProposalOrder\n    a                   skos:OrderedCollection ;\n    arch:domainIncludes am4:BehaviorElement ;\n    arch:rangeIncludes  am4:BehaviorElement ;\n    skos:memberList     ( am4:Triggering am4:Flow am4:Composition am4:Aggregation am4:Serving\n                          am4:Specialization ) .\n"@en ;
+	rdfs:domain arch:Metamodel ;
+	rdfs:range skos:OrderedCollection ;
+	skos:broader arch:ModelingCategory .
 arch:laKB a owl:AnnotationProperty ;
 	rdfs:subPropertyOf rdfs:seeAlso ;
 	skos:definition "\nA reference to the Linked.Archi Knowledge base section that describes this concept."@en .

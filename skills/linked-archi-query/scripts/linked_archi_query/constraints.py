@@ -14,8 +14,8 @@ that, and they answer it for different relationship forms:
 
 SHACL node shapes
     The **unqualified** (direct triple) forms have no domain and no range anywhere in the
-    ontologies. ``am:flowsTo``, ``bs:ownedBy`` and the other 73 predicates carrying an
-    ``arch:unqualifiedForm`` mapping are constrained only as shapes. Reading them is what
+    ontologies. ``am:flowsTo``, ``bs:ownedBy`` and every other notation predicate carrying
+    an ``arch:unqualifiedForm`` mapping are constrained only as shapes. Reading them is what
     the paper does not do, and it is the form most estates query most.
 
 Both reduce to the same table, which is what this module produces:

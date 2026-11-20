@@ -125,14 +125,14 @@ $ python3 scripts/la-query query run core/provenance \
     --profile linked-archi-default --data fixtures/base.trig \
     --set FOCUS_IRI="<https://example.org/la/backstage/commerce-catalog/element/component/default/order-service>"
 model	source	generated	startedAt	agentName	agentVersion	title	creator
-https://example.org/la/backstage/commerce-catalog	catalog-info.yaml	2026-10-30T09:32:11.388196+01:00	2026-10-30T09:32:11.320955+01:00	backstage2linkedarchi	1.3.0-SNAPSHOT	Commerce Platform Catalog	Commerce Team
+https://example.org/la/backstage/commerce-catalog/model	catalog-info.yaml	2026-11-19T15:06:59.187609+01:00	2026-11-19T15:06:59.134005+01:00	backstage2linkedarchi	1.3.0-SNAPSHOT	Commerce Platform Catalog	Commerce Team
 #
 # 1 row(s)
-# core/provenance | query 3eb6f38cd3b2 | dataset base.trig | profile linked-archi-default v3 | 2026-10-30T08:47:22.436250+00:00 | 1 row(s)
+# core/provenance | query 8a23f3bc3c3b | dataset base.trig | profile linked-archi-default v3 | 2026-11-19T14:42:28.684077+00:00 | 1 row(s)
 ```
 
 The three relationships come from `catalog-info.yaml`, converted by `backstage2linkedarchi`
-1.3.0-SNAPSHOT on 2026-10-30. A reader who disputes the answer now knows which file to open.
+1.3.0-SNAPSHOT on 2026-11-19. A reader who disputes the answer now knows which file to open.
 
 Note what provenance does **not** establish: that `catalog-info.yaml` is current, correct or
 approved. A conversion timestamp is not an as-at date.

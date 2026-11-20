@@ -85,7 +85,7 @@ not evidence.
   "schema_version": 1,
   "form": "SELECT",
   "variables": ["s"],
-  "rows": [{"s": "https://example.org/la/bpmn/order-fulfillment"}],
+  "rows": [{"s": "https://example.org/la/bpmn/order-fulfillment/model"}],
   "boolean": null,
   "triples": null,
   "elapsed_ms": 4,

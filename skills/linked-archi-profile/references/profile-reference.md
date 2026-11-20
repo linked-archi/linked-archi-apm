@@ -214,7 +214,7 @@ about one should not have templates depending on it silently.
 | `rdf_reifies` | `partial` | Two claims in one flag: the dataset carries the RDF 1.2 bridge, **and** the engine parses `<<( s p o )>>`. The converters write the bridge with each direct triple, so it covers the relationships that have one and not the rest (BPMN's flows among them) - hence `partial`, which `verify` measures. On a SPARQL 1.1 endpoint the syntax is a parse error rather than an empty result, so set it `false` there and the three reified templates are refused at render time. Do not set it true to "try": a triple term is not an asserted triple, so it cannot stand in for `direct_rel_triples`. |
 | `views_graph` | `partial` | Absent entirely for Backstage and LeanIX output. |
 | `view_geometry` | `partial` | ArchiMate carries bounds; Structurizr and PlantUML emit topology without them. |
-| `identity_assertions` | `false` | Authored, so absent from raw output. |
+| `identity_assertions` | `false` | Authored, so absent from raw output. The `owl:sameAs` every conversion carries for its model's former name, beside `dct:isReplacedBy`, does not count. |
 | `element_lifecycle` | `partial` | Notation-specific and sparse. |
 | `concept_owner` | `false` | Not emitted by any converter. |
 | `validation_in_graph` | `false` | The report is a document, not a graph. |

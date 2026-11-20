@@ -168,36 +168,36 @@
 # (DD-28). Neither is confirmed: no direct triple, no qualified predicate
 # leading to it. The questions that follow direct triples do not see them.
 
-<urn:linked-archi:derivation-d451b725313ab40d31cf62e771db45735d3dd851>
+<urn:linked-archi:relationship/5fa6827b2e127bd09def>
     a                            am:Serving ;
     arch:source                  :claimService ;
     arch:target                  :clerk ;
     rdf:reifies                  <<( :claimService am:serves :clerk )>> ;
     amderiv:derivationCertainty  amderiv:Potential ;
     prov:wasDerivedFrom          :r2 , :r4 ;
-    prov:wasGeneratedBy          <urn:linked-archi:derivation-activity-d451b725313ab40d31cf62e771db45735d3dd851> .
+    prov:wasGeneratedBy          <urn:linked-archi:relationship/5fa6827b2e127bd09def/activity> .
 
-<urn:linked-archi:derivation-activity-d451b725313ab40d31cf62e771db45735d3dd851>
+<urn:linked-archi:relationship/5fa6827b2e127bd09def/activity>
     a                            prov:Activity ;
-    prov:qualifiedAssociation    <urn:linked-archi:derivation-activity-d451b725313ab40d31cf62e771db45735d3dd851-association> .
+    prov:qualifiedAssociation    <urn:linked-archi:relationship/5fa6827b2e127bd09def/activity/association> .
 
-<urn:linked-archi:derivation-activity-d451b725313ab40d31cf62e771db45735d3dd851-association>
+<urn:linked-archi:relationship/5fa6827b2e127bd09def/activity/association>
     a                            prov:Association ;
     prov:hadPlan                 amderiv:PDR5 .
 
-<urn:linked-archi:derivation-3c1f9c7103b2dc4f0f3ca641eadf1ba22d127d24>
+<urn:linked-archi:relationship/d21e83c36e6642431b5d>
     a                            am:Serving ;
     arch:source                  :server ;
     arch:target                  :crmFunction ;
     rdf:reifies                  <<( :server am:serves :crmFunction )>> ;
     amderiv:derivationCertainty  amderiv:Potential ;
     prov:wasDerivedFrom          :r5 , :r6 ;
-    prov:wasGeneratedBy          <urn:linked-archi:derivation-activity-3c1f9c7103b2dc4f0f3ca641eadf1ba22d127d24> .
+    prov:wasGeneratedBy          <urn:linked-archi:relationship/d21e83c36e6642431b5d/activity> .
 
-<urn:linked-archi:derivation-activity-3c1f9c7103b2dc4f0f3ca641eadf1ba22d127d24>
+<urn:linked-archi:relationship/d21e83c36e6642431b5d/activity>
     a                            prov:Activity ;
-    prov:qualifiedAssociation    <urn:linked-archi:derivation-activity-3c1f9c7103b2dc4f0f3ca641eadf1ba22d127d24-association> .
+    prov:qualifiedAssociation    <urn:linked-archi:relationship/d21e83c36e6642431b5d/activity/association> .
 
-<urn:linked-archi:derivation-activity-3c1f9c7103b2dc4f0f3ca641eadf1ba22d127d24-association>
+<urn:linked-archi:relationship/d21e83c36e6642431b5d/activity/association>
     a                            prov:Association ;
     prov:hadPlan                 amderiv:PDR5 .

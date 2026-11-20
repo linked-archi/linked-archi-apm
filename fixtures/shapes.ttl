@@ -1037,11 +1037,12 @@ templates. Reference data and presentation contexts can be added later."""@en ;
     owl:versionInfo "4"@en ;
     skos:prefLabel "LeanIX Meta Model v4 Metamodel"@en ;
     skos:scopeNote """owl:versionInfo "4" is the meta model version — what a model
-conforms to. The 0.1.0 on the ontology header above is this document's own version. DD-25 puts the
+conforms to. The 0.2.0 on the ontology header above is this document's own version. DD-25 puts the
 language version on the arch:Metamodel individual for exactly this reason."""@en ;
     arch:architectureViewpoints <https://meta.linked.archi/leanix/viewpoints#> ;
     arch:basedOnFramework <https://meta.linked.archi/leanix/metamodel#LeanIXFramework> ;
-    arch:conceptClassification <https://meta.linked.archi/leanix/tax#> ;
+    arch:conceptClassification <https://meta.linked.archi/arch-processes/tax#>,
+        <https://meta.linked.archi/leanix/tax#> ;
     arch:crossLanguageMappings <https://meta.linked.archi/leanix/crossmappings#> ;
     arch:formalRules lxsh: ;
     arch:hasDeliverableTemplate <https://meta.linked.archi/leanix/deliverable-templates#ApplicationPortfolioReport>,
@@ -1056,97 +1057,110 @@ language version on the arch:Metamodel individual for exactly this reason."""@en
         <https://meta.linked.archi/core-viewpoints#EnterpriseArchitect> ;
     arch:modelConcepts lmm: ;
     arch:notationSet <https://meta.linked.archi/leanix/notation#LeanIXStandardNotation> ;
+    arch:paletteGrouping <https://meta.linked.archi/leanix/tax#PaletteGrouping> ;
     arch:viewpointLibrary <https://meta.linked.archi/leanix/viewpoints#ViewpointCatalog> .
 
-lxsh:CapabilityTargetingEndpointsShape a sh:NodeShape ;
-    sh:property [ sh:class lmm:BusinessCapability ;
-            sh:message "A lmm:CapabilityTargeting must run to a BusinessCapability."@en ;
-            sh:path arch:target ],
-        [ sh:class lmm:Objective ;
-            sh:message "A lmm:CapabilityTargeting must run from an Objective."@en ;
-            sh:path arch:source ] ;
-    sh:targetClass lmm:CapabilityTargeting .
+lxsh:AffectsEndpointsShape a sh:NodeShape ;
+    sh:message "A lmm:Affects (Affects) runs only between the fact sheet types SAP's meta model draws it between: Initiative → Platform, Application, Business Context, Data Object, Interface, IT Component, Tech Category, System."@en ;
+    sh:or ( [ sh:and ( [ sh:property [ sh:class lmm:Initiative ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:Platform ] [ sh:class lmm:Application ] [ sh:class lmm:BusinessContext ] [ sh:class lmm:DataObject ] [ sh:class lmm:Interface ] [ sh:class lmm:ITComponent ] [ sh:class lmm:TechCategory ] [ sh:class lmm:System ] ) ;
+                                    sh:path arch:target ] ] ) ] ) ;
+    sh:targetClass lmm:Affects .
 
-lxsh:CategorizationEndpointsShape a sh:NodeShape ;
-    sh:property [ sh:class lmm:TechCategory ;
-            sh:message "A lmm:Categorization must run to a TechCategory."@en ;
-            sh:path arch:target ],
-        [ sh:class lmm:ITComponent ;
-            sh:message "A lmm:Categorization must run from an ITComponent."@en ;
-            sh:path arch:source ] ;
-    sh:targetClass lmm:Categorization .
+lxsh:BelongsToEndpointsShape a sh:NodeShape ;
+    sh:message "A lmm:BelongsTo (Belongs To) runs only between the fact sheet types SAP's meta model draws it between: IT Component → Tech Category."@en ;
+    sh:or ( [ sh:and ( [ sh:property [ sh:class lmm:ITComponent ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:TechCategory ] ) ;
+                                    sh:path arch:target ] ] ) ] ) ;
+    sh:targetClass lmm:BelongsTo .
 
-lxsh:ContextRealizationEndpointsShape a sh:NodeShape ;
-    sh:property [ sh:class lmm:BusinessContext ;
-            sh:message "A lmm:ContextRealization must run from a BusinessContext."@en ;
-            sh:path arch:source ],
-        [ sh:class lmm:BusinessCapability ;
-            sh:message "A lmm:ContextRealization must run to a BusinessCapability."@en ;
-            sh:path arch:target ] ;
-    sh:targetClass lmm:ContextRealization .
+lxsh:ConsumesEndpointsShape a sh:NodeShape ;
+    sh:message "A lmm:Consumes (Consumes) runs only between the fact sheet types SAP's meta model draws it between: Application → Interface, Data Product."@en ;
+    sh:or ( [ sh:and ( [ sh:property [ sh:class lmm:Application ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:Interface ] [ sh:class lmm:DataProduct ] ) ;
+                                    sh:path arch:target ] ] ) ] ) ;
+    sh:targetClass lmm:Consumes .
 
-lxsh:ContextSupportEndpointsShape a sh:NodeShape ;
-    sh:property [ sh:class lmm:Application ;
-            sh:message "A lmm:ContextSupport must run from an Application."@en ;
-            sh:path arch:source ],
-        [ sh:class lmm:BusinessContext ;
-            sh:message "A lmm:ContextSupport must run to a BusinessContext — a Process, Product or ValueStream satisfies this."@en ;
-            sh:path arch:target ] ;
-    sh:targetClass lmm:ContextSupport .
+lxsh:CrudEndpointsShape a sh:NodeShape ;
+    sh:message "A lmm:Crud (CRUD) runs only between the fact sheet types SAP's meta model draws it between: Application → Data Object."@en ;
+    sh:or ( [ sh:and ( [ sh:property [ sh:class lmm:Application ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:DataObject ] ) ;
+                                    sh:path arch:target ] ] ) ] ) ;
+    sh:targetClass lmm:Crud .
 
-lxsh:DataUsageEndpointsShape a sh:NodeShape ;
-    sh:property [ sh:class lmm:DataObject ;
-            sh:message "A lmm:DataUsage must run to a DataObject."@en ;
-            sh:path arch:target ],
-        [ sh:message "A lmm:DataUsage must run from an Application or an Interface."@en ;
-            sh:or ( [ sh:class lmm:Application ] [ sh:class lmm:Interface ] ) ;
-            sh:path arch:source ] ;
-    sh:targetClass lmm:DataUsage .
-
-lxsh:DrivingEndpointsShape a sh:NodeShape ;
-    sh:property [ sh:class lmm:Initiative ;
-            sh:message "A lmm:Driving must run to an Initiative."@en ;
-            sh:path arch:target ],
-        [ sh:class lmm:Objective ;
-            sh:message "A lmm:Driving must run from an Objective."@en ;
-            sh:path arch:source ] ;
-    sh:targetClass lmm:Driving .
+lxsh:DerivesFromEndpointsShape a sh:NodeShape ;
+    sh:message "A lmm:DerivesFrom (Derives From) runs only between the fact sheet types SAP's meta model draws it between: Data Product → Data Product."@en ;
+    sh:or ( [ sh:and ( [ sh:property [ sh:class lmm:DataProduct ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:DataProduct ] ) ;
+                                    sh:path arch:target ] ] ) ] ) ;
+    sh:targetClass lmm:DerivesFrom .
 
 lxsh:FactSheetHierarchyEndpointsShape a sh:NodeShape ;
-    sh:property [ sh:class lmm:FactSheet ;
-            sh:message "A lmm:FactSheetHierarchy must run from a fact sheet."@en ;
-            sh:path arch:source ],
-        [ sh:class lmm:FactSheet ;
-            sh:message "A lmm:FactSheetHierarchy must run to a fact sheet of the same type as its parent."@en ;
-            sh:path arch:target ] ;
+    sh:message "A lmm:FactSheetHierarchy must run from a parent fact sheet to a child of the same fact sheet type. Includes optional Data Product and Contract fact sheets."@en ;
+    sh:or ( [ sh:and ( [ sh:property [ sh:class lmm:Objective ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:Objective ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:Initiative ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:Initiative ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:Platform ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:Platform ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:BusinessCapability ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:BusinessCapability ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:Organization ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:Organization ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:BusinessContext ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:BusinessContext ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:Application ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:Application ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:Interface ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:Interface ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:DataObject ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:DataObject ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:ITComponent ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:ITComponent ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:TechCategory ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:TechCategory ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:Provider ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:Provider ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:System ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:System ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:DataProduct ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:DataProduct ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:Contract ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:Contract ] ) ;
+                                    sh:path arch:target ] ] ) ] ) ;
     sh:targetClass lmm:FactSheetHierarchy .
 
-lxsh:ImpactEndpointsShape a sh:NodeShape ;
-    sh:property [ sh:message "A lmm:Impact must run to an Application or a Platform."@en ;
-            sh:or ( [ sh:class lmm:Application ] [ sh:class lmm:Platform ] ) ;
-            sh:path arch:target ],
-        [ sh:class lmm:Initiative ;
-            sh:message "A lmm:Impact must run from an Initiative."@en ;
-            sh:path arch:source ] ;
-    sh:targetClass lmm:Impact .
+lxsh:ImplementsEndpointsShape a sh:NodeShape ;
+    sh:message "A lmm:Implements (Implements) runs only between the fact sheet types SAP's meta model draws it between: IT Component → Platform."@en ;
+    sh:or ( [ sh:and ( [ sh:property [ sh:class lmm:ITComponent ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:Platform ] ) ;
+                                    sh:path arch:target ] ] ) ] ) ;
+    sh:targetClass lmm:Implements .
 
-lxsh:InterfaceConsumptionEndpointsShape a sh:NodeShape ;
-    sh:property [ sh:class lmm:Application ;
-            sh:message "A lmm:InterfaceConsumption must run from the consuming Application."@en ;
-            sh:path arch:source ],
-        [ sh:class lmm:Interface ;
-            sh:message "A lmm:InterfaceConsumption must run to an Interface."@en ;
-            sh:path arch:target ] ;
-    sh:targetClass lmm:InterfaceConsumption .
+lxsh:ImprovesEndpointsShape a sh:NodeShape ;
+    sh:message "A lmm:Improves (Improves) runs only between the fact sheet types SAP's meta model draws it between: Objective → Business Capability, ESG Capability; Initiative → Business Capability."@en ;
+    sh:or ( [ sh:and ( [ sh:property [ sh:class lmm:Objective ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:BusinessCapability ] [ sh:class lmm:ESGCapability ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:Initiative ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:BusinessCapability ] ) ;
+                                    sh:path arch:target ] ] ) ] ) ;
+    sh:targetClass lmm:Improves .
 
-lxsh:InterfaceOwnershipEndpointsShape a sh:NodeShape ;
-    sh:property [ sh:class lmm:Interface ;
-            sh:message "A lmm:InterfaceOwnership must run to an Interface."@en ;
-            sh:path arch:target ],
-        [ sh:class lmm:Application ;
-            sh:message "A lmm:InterfaceOwnership must run from the providing Application."@en ;
-            sh:path arch:source ] ;
-    sh:targetClass lmm:InterfaceOwnership .
+lxsh:IsAssociatedWithEndpointsShape a sh:NodeShape ;
+    sh:message "A lmm:IsAssociatedWith (Is Associated With) runs only between the fact sheet types SAP's meta model draws it between: Business Context → Business Capability; Business Capability → ESG Capability."@en ;
+    sh:or ( [ sh:and ( [ sh:property [ sh:class lmm:BusinessContext ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:BusinessCapability ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:BusinessCapability ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:ESGCapability ] ) ;
+                                    sh:path arch:target ] ] ) ] ) ;
+    sh:targetClass lmm:IsAssociatedWith .
+
+lxsh:IsAttachedToEndpointsShape a sh:NodeShape ;
+    sh:message "A lmm:IsAttachedTo (Is Attached To) runs only between the fact sheet types SAP's meta model draws it between: Contract → Application."@en ;
+    sh:or ( [ sh:and ( [ sh:property [ sh:class lmm:Contract ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:Application ] ) ;
+                                    sh:path arch:target ] ] ) ] ) ;
+    sh:targetClass lmm:IsAttachedTo .
 
 lxsh:LeanIXFactSheetAttributeShape a sh:NodeShape ;
     rdfs:comment """Value-set and cardinality rules for the v4 fact sheet attributes. Says nothing
@@ -1175,7 +1189,7 @@ endOfLife — so an unrecognised stage means the phase token was not resolved.""
 
 lxsh:LeanIXFactSheetLabelShape a sh:NodeShape ;
     rdfs:comment """Requires a language-tagged skos:prefLabel on every LeanIX fact sheet, in both
-the v4 and v3 namespaces. Reaches all 34 fact sheet classes via the FactSheet roots."""@en ;
+the v4 and v3 namespaces. Reaches all fact sheet classes via the FactSheet roots."""@en ;
     sh:property [ sh:datatype rdf:langString ;
             sh:message """Every LeanIX fact sheet must have at least one skos:prefLabel, and it must
 be language-tagged (rdf:langString), e.g. "Payments Platform"@en."""@en ;
@@ -1242,59 +1256,106 @@ required. The group is not: LeanIX permits ungrouped tags."""@en ;
             sh:path lmm:tagGroup ] ;
     sh:targetClass lmm:Tag .
 
-lxsh:OrganizationalUsageEndpointsShape a sh:NodeShape ;
-    sh:property [ sh:class lmm:Organization ;
-            sh:message "A lmm:OrganizationalUsage must run from an Organization."@en ;
-            sh:path arch:source ],
-        [ sh:class lmm:Application ;
-            sh:message "A lmm:OrganizationalUsage must run to an Application."@en ;
-            sh:path arch:target ] ;
-    sh:targetClass lmm:OrganizationalUsage .
+lxsh:OffersEndpointsShape a sh:NodeShape ;
+    sh:message "A lmm:Offers (Offers) runs only between the fact sheet types SAP's meta model draws it between: Provider → IT Component."@en ;
+    sh:or ( [ sh:and ( [ sh:property [ sh:class lmm:Provider ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:ITComponent ] ) ;
+                                    sh:path arch:target ] ] ) ] ) ;
+    sh:targetClass lmm:Offers .
 
-lxsh:PlatformMembershipEndpointsShape a sh:NodeShape ;
-    sh:property [ sh:class lmm:Platform ;
-            sh:message "A lmm:PlatformMembership must run to a Platform — the direction is member to platform."@en ;
-            sh:path arch:target ],
-        [ sh:message "A lmm:PlatformMembership must run from an Application, a BusinessCapability or an ITComponent."@en ;
-            sh:or ( [ sh:class lmm:Application ] [ sh:class lmm:BusinessCapability ] [ sh:class lmm:ITComponent ] ) ;
-            sh:path arch:source ] ;
-    sh:targetClass lmm:PlatformMembership .
+lxsh:OwnsEndpointsShape a sh:NodeShape ;
+    sh:message "A lmm:Owns (Owns) runs only between the fact sheet types SAP's meta model draws it between: Organization → Objective, Initiative, Business Context, IT Component. Also optional Team → Microservice."@en ;
+    sh:or ( [ sh:and ( [ sh:property [ sh:class lmm:Organization ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:Objective ] [ sh:class lmm:Initiative ] [ sh:class lmm:BusinessContext ] [ sh:class lmm:ITComponent ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:Team ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:Microservice ] ) ;
+                                    sh:path arch:target ] ] ) ] ) ;
+    sh:targetClass lmm:Owns .
 
-lxsh:ProvisionEndpointsShape a sh:NodeShape ;
-    sh:property [ sh:class lmm:Provider ;
-            sh:message "A lmm:Provision must run to a Provider."@en ;
-            sh:path arch:target ],
-        [ sh:class lmm:ITComponent ;
-            sh:message "A lmm:Provision must run from an ITComponent."@en ;
-            sh:path arch:source ] ;
-    sh:targetClass lmm:Provision .
+lxsh:PowersEndpointsShape a sh:NodeShape ;
+    sh:message "A lmm:Powers runs from an Extension to a Business Application."@en ;
+    sh:or ( [ sh:and ( [ sh:property [ sh:class lmm:Extension ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:BusinessApplication ] ) ;
+                                    sh:path arch:target ] ] ) ] ) ;
+    sh:targetClass lmm:Powers .
 
-lxsh:RequiringEndpointsShape a sh:NodeShape ;
-    sh:property [ sh:class lmm:Application ;
-            sh:message "A lmm:Requiring must run from an Application."@en ;
-            sh:path arch:source ],
-        [ sh:class lmm:ITComponent ;
-            sh:message "A lmm:Requiring must run to an ITComponent."@en ;
-            sh:path arch:target ] ;
-    sh:targetClass lmm:Requiring .
+lxsh:ProducesEndpointsShape a sh:NodeShape ;
+    sh:message "A lmm:Produces (Produces) runs only between the fact sheet types SAP's meta model draws it between: Application → Data Product."@en ;
+    sh:or ( [ sh:and ( [ sh:property [ sh:class lmm:Application ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:DataProduct ] ) ;
+                                    sh:path arch:target ] ] ) ] ) ;
+    sh:targetClass lmm:Produces .
 
-lxsh:SupportingEndpointsShape a sh:NodeShape ;
-    sh:property [ sh:class lmm:Application ;
-            sh:message "A lmm:Supporting must run from an Application."@en ;
-            sh:path arch:source ],
-        [ sh:class lmm:BusinessCapability ;
-            sh:message "A lmm:Supporting must run to a BusinessCapability."@en ;
-            sh:path arch:target ] ;
-    sh:targetClass lmm:Supporting .
+lxsh:ProvidesEndpointsShape a sh:NodeShape ;
+    sh:message "A lmm:Provides (Provides) runs only between the fact sheet types SAP's meta model draws it between: Application → Interface; Provider → Contract."@en ;
+    sh:or ( [ sh:and ( [ sh:property [ sh:class lmm:Application ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:Interface ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:Provider ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:Contract ] ) ;
+                                    sh:path arch:target ] ] ) ] ) ;
+    sh:targetClass lmm:Provides .
 
-lxsh:SystemCompositionEndpointsShape a sh:NodeShape ;
-    sh:property [ sh:message "A lmm:SystemComposition must run to an Application or an ITComponent."@en ;
-            sh:or ( [ sh:class lmm:Application ] [ sh:class lmm:ITComponent ] ) ;
-            sh:path arch:target ],
-        [ sh:class lmm:System ;
-            sh:message "A lmm:SystemComposition must run from a System."@en ;
-            sh:path arch:source ] ;
-    sh:targetClass lmm:SystemComposition .
+lxsh:RealizesEndpointsShape a sh:NodeShape ;
+    sh:message "A lmm:Realizes (Realizes) runs only between the fact sheet types SAP's meta model draws it between: Data Product → Data Object."@en ;
+    sh:or ( [ sh:and ( [ sh:property [ sh:class lmm:DataProduct ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:DataObject ] ) ;
+                                    sh:path arch:target ] ] ) ] ) ;
+    sh:targetClass lmm:Realizes .
+
+lxsh:RunsEndpointsShape a sh:NodeShape ;
+    sh:message "A lmm:Runs (Runs) runs only between the fact sheet types SAP's meta model draws it between: Platform → Application."@en ;
+    sh:or ( [ sh:and ( [ sh:property [ sh:class lmm:Platform ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:Application ] ) ;
+                                    sh:path arch:target ] ] ) ] ) ;
+    sh:targetClass lmm:Runs .
+
+lxsh:RunsOnEndpointsShape a sh:NodeShape ;
+    sh:message "A lmm:RunsOn (Runs On) runs only between the fact sheet types SAP's meta model draws it between: Application → System. Also optional AI Agent → Business Application."@en ;
+    sh:or ( [ sh:and ( [ sh:property [ sh:class lmm:Application ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:System ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:AIAgent ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:BusinessApplication ] ) ;
+                                    sh:path arch:target ] ] ) ] ) ;
+    sh:targetClass lmm:RunsOn .
+
+lxsh:SupportsEndpointsShape a sh:NodeShape ;
+    sh:message "A lmm:Supports (Supports) runs only between the fact sheet types SAP's meta model draws it between: Application → Business Capability, Business Context; Platform → Objective; Initiative → Objective; Business Capability → Platform; Data Product → Initiative, Business Capability. Also Provider → Initiative; optional Microservice → Business Application, Extension."@en ;
+    sh:or ( [ sh:and ( [ sh:property [ sh:class lmm:Application ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:BusinessCapability ] [ sh:class lmm:BusinessContext ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:Platform ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:Objective ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:Initiative ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:Objective ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:BusinessCapability ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:Platform ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:DataProduct ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:Initiative ] [ sh:class lmm:BusinessCapability ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:Provider ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:Initiative ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:Microservice ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:BusinessApplication ] [ sh:class lmm:Extension ] ) ;
+                                    sh:path arch:target ] ] ) ] ) ;
+    sh:targetClass lmm:Supports .
+
+lxsh:TransfersEndpointsShape a sh:NodeShape ;
+    sh:message "A lmm:Transfers (Transfers) runs only between the fact sheet types SAP's meta model draws it between: Interface → Data Object."@en ;
+    sh:or ( [ sh:and ( [ sh:property [ sh:class lmm:Interface ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:DataObject ] ) ;
+                                    sh:path arch:target ] ] ) ] ) ;
+    sh:targetClass lmm:Transfers .
+
+lxsh:UsesEndpointsShape a sh:NodeShape ;
+    sh:message "A lmm:Uses (Uses) runs only between the fact sheet types SAP's meta model draws it between: Application → IT Component; Organization → Application, Data Product; Interface → IT Component; System → IT Component."@en ;
+    sh:or ( [ sh:and ( [ sh:property [ sh:class lmm:Application ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:ITComponent ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:Organization ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:Application ] [ sh:class lmm:DataProduct ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:Interface ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:ITComponent ] ) ;
+                                    sh:path arch:target ] ] ) ] [ sh:and ( [ sh:property [ sh:class lmm:System ;
+                                    sh:path arch:source ] ] [ sh:property [ sh:or ( [ sh:class lmm:ITComponent ] ) ;
+                                    sh:path arch:target ] ] ) ] ) ;
+    sh:targetClass lmm:Uses .
 
 c4sh: a owl:Ontology ;
     dct:modified "2026-10-10"^^xsd:date ;
@@ -1309,10 +1370,10 @@ c4sh: a owl:Ontology ;
     owl:versionInfo "0.1.0"@en .
 
 lxsh: a owl:Ontology ;
-    dct:modified "2026-08-16"^^xsd:date ;
+    dct:modified "2026-11-16"^^xsd:date ;
     dct:title "Linked.Archi LeanIX SHACL Shapes"@en ;
-    owl:versionIRI <https://meta.linked.archi/leanix/shapes/0.1.0#> ;
-    owl:versionInfo "0.1.0"@en .
+    owl:versionIRI <https://meta.linked.archi/leanix/shapes/0.3.0#> ;
+    owl:versionInfo "0.3.0"@en .
 
 bssh: a owl:Ontology ;
     dct:modified "2026-08-24"^^xsd:date ;

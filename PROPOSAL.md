@@ -266,11 +266,11 @@ match the queries, so a template suite passing against one proves the author was
 self-consistent and nothing about the graph — which is exactly how a wrong vocabulary
 survives a green build.
 
-Four converter-data fixtures: `base.trig` (3507 quads, 17 graphs, default converter flags),
-`augmented.trig` (3564 quads, 19 graphs, plus enrichment and one deliberate bridge defect),
-`flat.ttl` (3507 triples, no graph identity — what Turtle output collapses to, and
+Four converter-data fixtures: `base.trig` (3559 quads, 17 graphs, default converter flags),
+`augmented.trig` (3616 quads, 19 graphs, plus enrichment and one deliberate bridge defect),
+`flat.ttl` (3559 triples, no graph identity — what Turtle output collapses to, and
 the shape in which a scoped query silently returns nothing), and
-`converter-1.3.trig` (308 quads, 4 graphs, real output committed verbatim).
+`converter-1.3.trig` (313 quads, 4 graphs, real output committed verbatim).
 
 The last one is a second graph *layout*, not a newer version of the first: model
 resources in their own `graph/model`, membership as a direct `arch:inModel` edge,
@@ -437,7 +437,7 @@ verification plus query execution from copied sibling skills.
   only, and `core/dependents-direct` still requires `direct_rel_triples`. Measured,
   and asserted in `tests/test_reifies.py`.
 - **`arch:unqualifiedForm` is read from a committed extract, not live.**
-  `fixtures/unqualified-forms.json` holds 96 pairs harvested from the ontologies;
+  `fixtures/unqualified-forms.json` holds 104 pairs harvested from the ontologies;
   refresh it with `build_fixtures.py --refresh-forms` when the ontologies change.
   Nothing detects staleness automatically.
 

@@ -151,7 +151,8 @@ readable. Reach for the `OPTIONAL` form when the candidate set is large or unkno
     a arch:Element, arch:ModelConcept, am:ApplicationComponent ;
     skos:notation "id-861" ;
     skos:prefLabel "Gestion de données de polices"@fr ;
-    dct:isPartOf <.../model/archisurance> .
+    arch:inModel <.../model/archisurance/model> ;
+    dct:isPartOf <.../model/archisurance/model> .
 ```
 
 - **Labels are `skos:prefLabel`**, language-tagged, with `skos:altLabel` for
@@ -170,7 +171,10 @@ Element IRIs are derived from the source, so they are stable across rebuilds and
 no registry: the same input always produces the same IRI. Cross-tool equivalence is the
 opposite. It cannot be derived — the same application in ArchiMate and in Backstage
 produces two IRIs by construction — so it is **asserted deliberately** and reviewed by
-a human. No converter emits it.
+a human. No converter emits it. The one `owl:sameAs` a converter writes is a model's
+former name: its old IRI, the bare namespace, beside `dct:isReplacedBy` to `{ns}model` in
+`graph/provenance`. That is one model under two names, and `core/identity-audit` leaves it
+out.
 
 Four things that are not interchangeable:
 

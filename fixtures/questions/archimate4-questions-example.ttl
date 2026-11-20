@@ -146,36 +146,36 @@
 # (DD-28). Neither is confirmed: no direct triple, no qualified predicate
 # leading to it. The questions that follow direct triples do not see them.
 
-<urn:linked-archi:derivation-92970a85b88f8ef62ad655067dc606239928d406>
+<urn:linked-archi:relationship/e74ca11c49ec66e7945d>
     a                            am4:Serving ;
     arch:source                  :claimService ;
     arch:target                  :clerk ;
     rdf:reifies                  <<( :claimService am4:serves :clerk )>> ;
     am4deriv:derivationCertainty am4deriv:Potential ;
     prov:wasDerivedFrom          :r2 , :r4 ;
-    prov:wasGeneratedBy          <urn:linked-archi:derivation-activity-92970a85b88f8ef62ad655067dc606239928d406> .
+    prov:wasGeneratedBy          <urn:linked-archi:relationship/e74ca11c49ec66e7945d/activity> .
 
-<urn:linked-archi:derivation-activity-92970a85b88f8ef62ad655067dc606239928d406>
+<urn:linked-archi:relationship/e74ca11c49ec66e7945d/activity>
     a                            prov:Activity ;
-    prov:qualifiedAssociation    <urn:linked-archi:derivation-activity-92970a85b88f8ef62ad655067dc606239928d406-association> .
+    prov:qualifiedAssociation    <urn:linked-archi:relationship/e74ca11c49ec66e7945d/activity/association> .
 
-<urn:linked-archi:derivation-activity-92970a85b88f8ef62ad655067dc606239928d406-association>
+<urn:linked-archi:relationship/e74ca11c49ec66e7945d/activity/association>
     a                            prov:Association ;
     prov:hadPlan                 am4deriv:PDR5 .
 
-<urn:linked-archi:derivation-490d00c2d771b627ced94a20f2c491008b873441>
+<urn:linked-archi:relationship/dc6aa15d829b79f44f98>
     a                            am4:Serving ;
     arch:source                  :server ;
     arch:target                  :policyApp ;
     rdf:reifies                  <<( :server am4:serves :policyApp )>> ;
     am4deriv:derivationCertainty am4deriv:Potential ;
     prov:wasDerivedFrom          :r5 , :r6 ;
-    prov:wasGeneratedBy          <urn:linked-archi:derivation-activity-490d00c2d771b627ced94a20f2c491008b873441> .
+    prov:wasGeneratedBy          <urn:linked-archi:relationship/dc6aa15d829b79f44f98/activity> .
 
-<urn:linked-archi:derivation-activity-490d00c2d771b627ced94a20f2c491008b873441>
+<urn:linked-archi:relationship/dc6aa15d829b79f44f98/activity>
     a                            prov:Activity ;
-    prov:qualifiedAssociation    <urn:linked-archi:derivation-activity-490d00c2d771b627ced94a20f2c491008b873441-association> .
+    prov:qualifiedAssociation    <urn:linked-archi:relationship/dc6aa15d829b79f44f98/activity/association> .
 
-<urn:linked-archi:derivation-activity-490d00c2d771b627ced94a20f2c491008b873441-association>
+<urn:linked-archi:relationship/dc6aa15d829b79f44f98/activity/association>
     a                            prov:Association ;
     prov:hadPlan                 am4deriv:PDR7 .

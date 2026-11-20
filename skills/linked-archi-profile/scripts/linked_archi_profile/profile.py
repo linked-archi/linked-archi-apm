@@ -66,6 +66,19 @@ DEFAULT_GRAPH = "default"
 #: carries a warning, because a thin result may reflect coverage, not absence.
 TRISTATE = frozenset({True, False, "partial"})
 
+#: What keeps a former name out of an identity probe on ``?s`` and ``?o``. The converters
+#: record that a model's old IRI is replaced by its new one with ``owl:sameAs`` beside
+#: ``dct:isReplacedBy`` (Linked.Archi DD-41), so every conversion made since carries one:
+#: one model from one source under two names, not an authored cross-source assertion.
+#: ``core/identity-audit`` leaves it out the same way. A negative test names its own
+#: scope, any named graph or the default one, rather than inheriting the probe's.
+_REPLACED_BY = "<http://purl.org/dc/terms/isReplacedBy>"
+NOT_A_FORMER_NAME = (
+    f"FILTER NOT EXISTS {{ "
+    f"{{ GRAPH ?formerNameGraph {{ ?s {_REPLACED_BY}|^{_REPLACED_BY} ?o }} }} "
+    f"UNION {{ ?s {_REPLACED_BY}|^{_REPLACED_BY} ?o }} }}"
+)
+
 #: Roles every profile must bind. Deliberately short: these are the terms without
 #: which no template in the catalogue can do anything at all.
 REQUIRED_ROLES = (
@@ -1618,7 +1631,8 @@ def _verify_capabilities(profile: Profile, adapter) -> list[Finding]:
         ]
         probes.append((
             "identity_assertions",
-            ask(" UNION ".join(f"{{ ?s <{i}> ?o }}" for i in identity)),
+            ask(" UNION ".join(f"{{ ?s <{i}> ?o }}" for i in identity)
+                + f" {NOT_A_FORMER_NAME}"),
         ))
     if profile.has_role("element_lifecycle"):
         probes.append((
@@ -1875,7 +1889,7 @@ def _observe_dataset(adapter) -> tuple[Observation, ...]:
     ))
     identity = scoped(
         "{ ?s <http://www.w3.org/2004/02/skos/core#exactMatch> ?o } UNION "
-        "{ ?s <http://www.w3.org/2002/07/owl#sameAs> ?o }"
+        f"{{ ?s <http://www.w3.org/2002/07/owl#sameAs> ?o }} {NOT_A_FORMER_NAME}"
     )
     observations.append(Observation(
         "identity assertions", "present" if identity else "absent",

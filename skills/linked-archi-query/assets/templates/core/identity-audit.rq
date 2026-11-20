@@ -9,9 +9,15 @@
 # human-reviewed. An absent assertion means nobody has made it yet.
 #
 # REQUIRES capabilities.identity_assertions, which is false for raw converter
-# output: the converters never emit identity. Under the default profile this is
-# refused, and that refusal is the correct answer to "join these two models" - the
-# work is a reconciliation step, not a cleverer query.
+# output: the converters emit no cross-source identity. Under the default profile
+# this is refused, and that refusal is the correct answer to "join these two models" -
+# the work is a reconciliation step, not a cleverer query.
+#
+# A former name is left out. The converters record that a model's old IRI is replaced
+# by its new one with `owl:sameAs` beside `dct:isReplacedBy` (Linked.Archi DD-41
+# renamed every converted model to `{ns}model`). That is one model from one source
+# under two names, not two records joined. Without the filter, every conversion made
+# since lists its own model here, with no labels.
 #
 # The two predicates differ in force and the distinction is expensive to get wrong.
 # skos:exactMatch asserts correspondence between records; owl:sameAs asserts the
@@ -56,6 +62,11 @@ WHERE {
       BIND("exactMatch (asserts correspondence between records)" AS ?kind)
     }
   {{GRAPH_CLOSE}}
+  FILTER NOT EXISTS {
+    {{GRAPH_OPEN:any2}}
+      { ?element dct:isReplacedBy ?counterpart } UNION { ?counterpart dct:isReplacedBy ?element }
+    {{GRAPH_CLOSE}}
+  }
   OPTIONAL {
     {{GRAPH_OPEN:semantic}}
       ?element {{PATH:label}} ?elementLabel .

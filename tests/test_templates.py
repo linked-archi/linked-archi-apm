@@ -483,7 +483,7 @@ class TestAgainstAugmentedFixture(unittest.TestCase):
         )
         self.assertEqual(
             [row["element"] for row in envelope.rows],
-            ["https://example.org/la/model/archisurance"],
+            ["https://example.org/la/model/archisurance/model"],
             "expected exactly the one model with no dct:source anywhere",
         )
 
@@ -541,14 +541,14 @@ class TestAgainstAugmentedFixture(unittest.TestCase):
         generated = {
             row["model"]: row["generated"] for row in envelope.rows if row["generated"]
         }
-        self.assertIn("https://example.org/la/model/archisurance", generated)
+        self.assertIn("https://example.org/la/model/archisurance/model", generated)
         models = [row["model"] for row in envelope.rows]
         self.assertEqual(
             len(models), len(set(models)),
             "one row per model: repetition here reads as more models than exist",
         )
         self.assertIn(
-            ", ", generated.get("https://example.org/la/leanix/leanix-inventory", ""),
+            ", ", generated.get("https://example.org/la/leanix/leanix-inventory/model", ""),
             "the export and conversion timestamps belong in one cell, not two rows",
         )
 

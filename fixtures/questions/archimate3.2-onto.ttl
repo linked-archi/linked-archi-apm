@@ -1,4 +1,4 @@
-# modelingLanguages/archimate/3.2/archimate3.2-onto.ttl from linked-archi-meta, every statement but the 104 citing a source elsewhere.
+# modelingLanguages/archimate/3.2/archimate3.2-onto.ttl from linked-archi-meta, every statement but the 105 citing a source elsewhere.
 # Written by `make questions`; do not edit.
 
 @prefix am4vp: <https://meta.linked.archi/archimate4/viewpoints#> .
@@ -143,12 +143,12 @@ am:TechnologyLayerElement a owl:Class ;
 	rdfs:subClassOf am:CoreLayerElement ;
 	arch:isAbstractClass true ;
 	skos:prefLabel "TechnologyLayerElement"@en ;
-	skos:scopeNote "Layer marker for technology and infrastructure elements. Realizes Application layer elements."@en .
+	skos:scopeNote "Layer marker for technology and infrastructure elements, the physical elements among them (PhysicalLayerElement). Realizes Application layer elements."@en .
 am:PhysicalLayerElement a owl:Class ;
-	rdfs:subClassOf am:CoreLayerElement ;
+	rdfs:subClassOf am:TechnologyLayerElement ;
 	arch:isAbstractClass true ;
 	skos:prefLabel "PhysicalLayerElement"@en ;
-	skos:scopeNote "Layer marker for physical assets — equipment, facilities, distribution networks, and materials."@en .
+	skos:scopeNote "Marker for the physical elements — equipment, facilities, distribution networks, and materials. They extend the Technology Layer to the physical world and are part of it, not a layer of their own: a kind of technology layer element, so that what holds for the Technology Layer holds for them, and this class tells them from the other technology elements."@en .
 am:StrategyLayerElement a owl:Class ;
 	rdfs:subClassOf arch:Element ;
 	arch:isAbstractClass true ;
@@ -386,14 +386,14 @@ am:Node a owl:Class ;
 	skos:definition "A node represents a computational or physical resource that hosts, manipulates, or\ninteracts with other computational or physical resources."@en ;
 	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/tech_node.svg" .
 am:Device a owl:Class ;
-	rdfs:subClassOf am:Node ;
+	rdfs:subClassOf am:InternalActiveStructureElement , am:TechnologyLayerElement ;
 	skos:prefLabel "Device"@en ;
 	skos:altLabel "Hardware"@en , "Physical Server"@en ;
 	skos:definition "A device is a physical IT resource upon which system software and artifacts may be stored\nor deployed for execution."@en ;
 	skos:changeNote "3.2: No longer a subtype of Node; now a subtype of technology internal active structure element, with composition and aggregation relationships to Node."@en ;
 	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/tech_device.svg" .
 am:SystemSoftware a owl:Class ;
-	rdfs:subClassOf am:Node ;
+	rdfs:subClassOf am:InternalActiveStructureElement , am:TechnologyLayerElement ;
 	skos:prefLabel "System Software"@en ;
 	skos:altLabel "Platform Software"@en , "Middleware"@en , "Operating System"@en ;
 	skos:definition "System software represents software that provides or contributes to an environment for\nstoring, executing, and using software or data deployed within it."@en ;
@@ -459,30 +459,30 @@ am:Artifact a owl:Class ;
 	skos:definition "An artifact represents a piece of data that is used or produced in a software development\nprocess, or by deployment and operation of an IT system."@en ;
 	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/tech_artifact.svg" .
 am:Equipment a owl:Class ;
-	rdfs:subClassOf am:Node , am:PhysicalLayerElement ;
+	rdfs:subClassOf am:InternalActiveStructureElement , am:PhysicalLayerElement ;
 	skos:prefLabel "Equipment"@en ;
 	skos:altLabel "Machine"@en , "Physical Device"@en ;
 	skos:definition "Equipment represents one or more physical machines, tools, or instruments that can create,\nuse, store, move, or transform materials."@en ;
-	skos:changeNote "3.0: Introduced as part of the new Physical layer. 3.2: No longer a subtype of Node; now a subtype of technology internal active structure element, with composition and aggregation relationships to Node."@en ;
+	skos:changeNote "3.0: Introduced with the physical elements, an extension of the Technology Layer. 3.2: No longer a subtype of Node; now a subtype of technology internal active structure element, with composition and aggregation relationships to Node."@en ;
 	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/tech_equipment.svg" .
 am:Facility a owl:Class ;
-	rdfs:subClassOf am:Node , am:PhysicalLayerElement ;
+	rdfs:subClassOf am:InternalActiveStructureElement , am:PhysicalLayerElement ;
 	skos:prefLabel "Facility"@en ;
 	skos:altLabel "Building"@en , "Data Center"@en , "Site"@en ;
 	skos:definition "A facility represents a physical structure or environment."@en ;
-	skos:changeNote "3.0: Introduced as part of the new Physical layer. 3.2: No longer a subtype of Node; now a subtype of technology internal active structure element, with composition and aggregation relationships to Node."@en ;
+	skos:changeNote "3.0: Introduced with the physical elements, an extension of the Technology Layer. 3.2: No longer a subtype of Node; now a subtype of technology internal active structure element, with composition and aggregation relationships to Node."@en ;
 	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/tech_facility.svg" .
 am:DistributionNetwork a owl:Class ;
 	rdfs:subClassOf am:ActiveStructureElement , am:PhysicalLayerElement ;
 	skos:prefLabel "Distribution Network"@en ;
 	skos:definition "A distribution network represents a physical network used to transport materials or\nenergy."@en ;
-	skos:changeNote "3.0: Introduced as part of the new Physical layer."@en ;
+	skos:changeNote "3.0: Introduced with the physical elements, an extension of the Technology Layer."@en ;
 	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/tech_distribution_network.svg" .
 am:Material a owl:Class ;
 	rdfs:subClassOf am:PassiveStructureElement , am:PhysicalLayerElement ;
 	skos:prefLabel "Material"@en ;
 	skos:definition "Material represents tangible physical matter or physical elements."@en ;
-	skos:changeNote "3.0: Introduced as part of the new Physical layer. 3.2: Realization from Material to Equipment added."@en ;
+	skos:changeNote "3.0: Introduced with the physical elements, an extension of the Technology Layer. 3.2: Realization from Material to Equipment added."@en ;
 	arch:prefVisNotation "https://meta.linked.archi/archimate/v3/img/tech_material.svg" .
 am:WorkPackage a owl:Class ;
 	rdfs:subClassOf am:InternalBehaviorElement , am:ImplementationAndMigrationLayerElement ;
