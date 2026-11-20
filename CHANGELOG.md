@@ -10,12 +10,16 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 
-The converters now name every model `{ns}model` (Linked.Archi DD-41): for a conversion
-made since, `core/models` returns `https://example.org/la/bpmn/order-fulfillment/model`
-for the BPMN example, not `…/order-fulfillment`. A node or a link in a result is named in
-its view, `{view}#node-{id}`, and its style and route points after it (`{view}#node-{id}-style`).
+## [0.12.0] - 2026-11-20
+
+Ready for the converters' next release, which names every model `{ns}model`
+(Linked.Archi DD-41). It is in their development build, `1.3.0-SNAPSHOT` from `main`, and
+not yet released. For a conversion made with it, `core/models` returns
+`https://example.org/la/bpmn/order-fulfillment/model` for the BPMN example, not
+`…/order-fulfillment`. A node or a link in a result is named in its view,
+`{view}#node-{id}`, and its style and route points after it (`{view}#node-{id}-style`).
 Element, relationship, view and graph IRIs keep their form, so a query anchored on one of
-those is unaffected.
+those is unaffected, and output of earlier converters is read as before.
 
 ### Fixed
 
@@ -823,7 +827,8 @@ converters against the meta.linked.archi ontologies.
   for SHACL validation, and `git` for Git acquisition. Endpoint and HTTPS transport use
   the standard library. No mandatory MCP server.
 
-[Unreleased]: https://github.com/linked-archi/linked-archi-apm/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/linked-archi/linked-archi-apm/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/linked-archi/linked-archi-apm/compare/v0.9.1...v0.10.0
 [0.9.1]: https://github.com/linked-archi/linked-archi-apm/compare/v0.9.0...v0.9.1
