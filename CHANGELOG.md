@@ -35,6 +35,12 @@ those is unaffected.
   `augmented.trig` 3616 and `converter-1.3.trig` 313. The extraction keeps a resource's
   parts with it: styles and route points, found by the properties that lead to them, and
   LeanIX lifecycle phases, tags and subscriptions, which used to be left dangling.
+- The query skill's `graph-shape.md` describes current converter output: four graphs per
+  model, `graph/model` among them; the `rdf:reifies` bridge written by default, so
+  `rdf_reifies` is `partial`; provenance resources under `{base}provenance/`; shapes named in
+  their view, with their parts after them and read from the triples; and no blank nodes, which
+  only output from before DD-41 has, as `troubleshooting.md` now says too. `docs/concepts/profile.md` gives the default profile's
+  `direct_rel_triples` and `rdf_reifies` as it sets them, `true` and `partial`.
 - Refresh the vocabulary, shape, unqualified-form and question fixtures, and the bundled
   question sets, to current meta: LeanIX v4 relationships and shapes, 104
   `arch:unqualifiedForm` pairs, and ArchiMate 3.2's physical elements counted in the

@@ -84,7 +84,9 @@ graphs, so they need independent scopes.
 ## Results include something that looks like an id but is not
 
 `_:id` is a blank node. Its identifier is generated per parse and means nothing outside
-the document. Folder list items and view styles are blank nodes.
+the document. Current converter output has none: folder list items and view styles are
+named after their owner ([graph-shape.md](graph-shape.md#shapes-and-parts)). Output from a
+converter before Linked.Archi DD-41 has them as blank nodes.
 
 ## An element appears twice with different labels
 

@@ -245,8 +245,8 @@ carries a warning.
 | `part_of_model_edge` | `true` | A direct membership edge exists. |
 | `graph_bundles` | `true` | Named graphs are described as `prov:Bundle`. |
 | `partitioned_semantic_graphs` | `true` | One semantic graph per input. |
-| `direct_rel_triples` | `false` | The direct source-predicate-target triple exists beside the qualified form. |
-| `rdf_reifies` | `false` | The RDF 1.2 reification bridge is present. |
+| `direct_rel_triples` | `true` | The direct source-predicate-target triple exists beside the qualified form. |
+| `rdf_reifies` | `partial` | The RDF 1.2 reification bridge is present, and the engine reads SPARQL 1.2. |
 | `views_graph` | `partial` | Diagrams are present, for some notations. |
 | `provenance_graph` | `true` | A provenance graph is present. |
 | `view_geometry` | `partial` | Node bounds are recorded. |

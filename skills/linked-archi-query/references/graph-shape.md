@@ -54,15 +54,19 @@ resource with a triple term that names the **unqualified** predicate:
     rdf:reifies <<( <.../element/AppSvc1> am:serves <.../element/BizProc1> )>> .
 ```
 
-It is the only way to recover the unqualified predicate from the data: the qualified
-form carries the *class* (`am:Serving`) and nothing else. Three templates use it —
-`core/reified-predicates`, `core/neighbours-reified`, `core/reifies-audit`.
+It is the only link in the data from the qualified resource to the unqualified predicate:
+the qualified form carries the *class* (`am:Serving`) and nothing else. Three templates
+use it — `core/reified-predicates`, `core/neighbours-reified`, `core/reifies-audit`.
 
-No converter emits it, so `capabilities.rdf_reifies` is false and those three are
-refused by default. Two things to know before setting it true:
+The converters write it with each direct triple, so it covers the relationships whose
+class has an unqualified form and not the rest, and output from a converter older than
+that default has none. The default profile therefore sets `capabilities.rdf_reifies` to
+`partial`: the three run, with the caveat that a short answer may be coverage rather than
+absence. Two things to know about the flag:
 
 - **It also claims your engine speaks SPARQL 1.2.** `<<( s p o )>>` is a parse error
-  on a 1.1 endpoint, not an empty result.
+  on a 1.1 endpoint, not an empty result. Set it false there, and the three are refused
+  at render time.
 - **A triple term is not an asserted triple.** `?s am:serves ?o` matches nothing even
   when 30 triple terms name `am:serves`, and property paths do not traverse terms. So
   the bridge cannot substitute for `direct_rel_triples`, and `core/neighbours-reified`
@@ -70,9 +74,10 @@ refused by default. Two things to know before setting it true:
 
 ## Named graphs, and what lives where
 
-Each model contributes up to three graphs:
+Each model contributes up to four graphs:
 
 ```
+{base}{notation}/{modelId}/graph/model
 {base}{notation}/{modelId}/graph/semantic
 {base}{notation}/{modelId}/graph/views
 {base}{notation}/{modelId}/graph/provenance
@@ -80,9 +85,13 @@ Each model contributes up to three graphs:
 
 | Graph | Holds |
 |---|---|
-| `semantic` | Elements, relationships, folders, **and the `arch:View` resources themselves** |
+| `model` | The `arch:Model`, with its namespace and metamodel, and the folder tree |
+| `semantic` | Elements, relationships, **and the `arch:View` resources themselves** |
 | `views` | Presentation only: nodes, links, points, bounds, styles |
 | `provenance` | Source file, conversion activity, agent, editorial metadata |
+
+Where a model has more than one input, its semantic graph is split into one per input,
+under `graph/semantic/`, and no graph ends in `graph/semantic` itself.
 
 Two traps in that table. The split is around **geometry, not diagrams** — a view's
 label, viewpoint and model membership are semantic facts; only its layout is in the
@@ -191,19 +200,23 @@ SPARQL.
 
 ## Provenance
 
-Provenance is asserted about the **model**, in its own graph, with hash IRIs on the
-graph IRI: `#run` for the activity, `#agent` for the converter, `#source-{slug}` for
-the input file.
+Provenance is asserted about the **model**, in its own graph. The conversion run, the
+converter and each input file are resources of their own: `{base}provenance/run/{id}` for
+the activity, `{base}provenance/agent/{id}` for the converter,
+`{base}provenance/source/{slug}` for the input file. Templates reach them by predicate,
+never by IRI.
 
 Two shapes differ between converters, which is why `core/provenance` looks more
 complicated than it should:
 
-- **Where the source filename lives.** BPMN, Structurizr and Backstage put
+- **Where the source filename lives.** BPMN, Structurizr, Backstage and LeanIX put
   `dct:source` on the model; ArchiMate puts it only on the `prov:Entity` the model was
   derived from.
-- **How to reach the model from an element.** Folder-to-model membership via
-  `dct:isPartOf` is emitted by some converters and not others, so walking it works for
-  BPMN and fails for C4. `core/provenance` finds the model by co-location in the same
+- **How to reach the model from an element.** Current output states it on every
+  element, relationship and view as `arch:inModel`, and the default profile follows that
+  one hop. Older output has no such edge. Folder-to-model membership via `dct:isPartOf`
+  is emitted by some converters and not others, so walking it works for BPMN and fails
+  for C4, and a profile for that output finds the model by co-location in the same
   semantic graph instead.
 
 More than one provenance row for one element is not a fault. A model can carry two
@@ -234,12 +247,23 @@ casing returns fewer rows with no error. When a result looks suspiciously small,
 spelling. `core/discover-predicates` shows the same problem in aggregate: two casings
 appear as two rows with split counts.
 
-## Blank nodes
+## Shapes and parts
 
-Folder list items and view styles are blank nodes, regenerated on every conversion.
-They mean nothing outside the document, so results render them as `_:id` rather than as
-a bare string that reads like data. Never treat one as an identifier, and never assert
-anything about one across runs.
+A node or a link is named in its view, `{view}#node-{id}` or `{view}#link-{id}`. A part
+— a style, a route's cells and points, a label, a folder's list entry, a LeanIX fact
+sheet's lifecycle phase — is named after its owner and keeps its name across
+conversions: joined with `-` after a view's `#` (`{view}#node-{id}-style`,
+`{view}#link-{id}-points-0`), and with `/` elsewhere (`{folder}/item/{digest}`,
+`{element}/phase/active`). An id may hold a `-` too, so read a shape's parts from the
+triples that lead to them — `arch-vis:style`, `arch-vis:points` and the list's
+`rdf:first` and `rdf:rest`, `arch-vis:label` — never from the name. Everything after a
+`#` is in the view before it.
+
+Output from a converter older than that layout (Linked.Archi DD-41) has blank nodes for
+folder list items and view styles, regenerated on every conversion. They mean nothing
+outside the document, so results render them as `_:id` rather than as a bare string that
+reads like data. Never treat one as an identifier, and never assert anything about one
+across runs.
 
 ## Presentation names and diagram text
 
