@@ -1250,6 +1250,84 @@
         "membership": true
       }
     },
+    "core/what-depends-on-it": {
+      "file": "core/what-depends-on-it.rq",
+      "stage": "analysis",
+      "purpose": "What depends on an element, two steps out, along the dependencies the vocabulary aligns with the core's.",
+      "answers": "Each concept that depends on the element, one or two steps away, with the concept between and the predicates followed, each read the way it runs.",
+      "does_not_prove": "That nothing else depends on it. Only stated triples of predicates a metamodel aligns with arch:dependsOn or arch:dependencyOf are followed, two steps at most; an unaligned relationship type, such as an ArchiMate access, is absent.",
+      "parameters": {
+        "FOCUS_IRI": {
+          "type": "iri",
+          "description": "the element to examine"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 500,
+          "min": 1,
+          "max": 5000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "depends_on",
+          "dependency_of",
+          "subproperty_of",
+          "label"
+        ],
+        "graph_roles": [
+          "vocabulary",
+          "semantic"
+        ],
+        "capabilities": {
+          "direct_rel_triples": true
+        }
+      },
+      "alternatives": [
+        "core/dependents-direct",
+        "core/dependents-qualified"
+      ]
+    },
+    "core/what-it-depends-on": {
+      "file": "core/what-it-depends-on.rq",
+      "stage": "analysis",
+      "purpose": "What an element depends on, two steps out, along the dependencies the vocabulary aligns with the core's.",
+      "answers": "Each concept the element depends on, one or two steps away, with the concept between and the predicates followed, each read the way it runs.",
+      "does_not_prove": "That the element needs nothing else. Only stated triples of predicates a metamodel aligns with arch:dependsOn or arch:dependencyOf are followed, two steps at most; an unaligned relationship type, such as an ArchiMate access, is absent.",
+      "parameters": {
+        "FOCUS_IRI": {
+          "type": "iri",
+          "description": "the element to examine"
+        },
+        "LIMIT": {
+          "type": "integer",
+          "default": 500,
+          "min": 1,
+          "max": 5000,
+          "description": "maximum rows"
+        }
+      },
+      "requires": {
+        "roles": [
+          "depends_on",
+          "dependency_of",
+          "subproperty_of",
+          "label"
+        ],
+        "graph_roles": [
+          "vocabulary",
+          "semantic"
+        ],
+        "capabilities": {
+          "direct_rel_triples": true
+        }
+      },
+      "alternatives": [
+        "core/dependents-direct",
+        "core/neighbours-qualified"
+      ]
+    },
     "notation/archimate/layer-crossing": {
       "file": "notation/archimate/layer-crossing.rq",
       "stage": "analysis",

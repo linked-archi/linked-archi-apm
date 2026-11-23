@@ -71,6 +71,7 @@ catalogue-wide work. Keep availability, caveats and “does not prove” with ea
 | Published taxonomy category | `core/resolve-vocabulary-concept`, then `core/elements-by-category` |
 | Prescribed viewpoint | `core/viewpoint-catalog`, then `core/viewpoint-detail` |
 | Detail / asserted neighbours / dependents | `core/element-detail`, `core/neighbours`, `core/dependents` |
+| What depends on it / what it depends on, every language's dependencies | `core/what-depends-on-it`, `core/what-it-depends-on` |
 | Names for a presentation audience | `core/context-names` after resolving the concept |
 | Traceability / gaps | `core/traceability`, `core/coverage-gaps` |
 | Diagram usage / contents | `core/view-usage`, `core/view-contents`; inspect semantic alternatives if refused |
@@ -142,7 +143,9 @@ when using those modes. Do not switch store mode blindly to save parsing cost.
   `core/dependents` require `direct_rel_triples` and the metamodel. Use the qualified
   counterparts when resource identity or older output is the question; their endpoints
   can describe unconfirmed proposals. Never union the two readings as distinct facts.
-  Direction matters. See [model-questions.md](references/model-questions.md) for derivations.
+  Direction matters: the dependency questions read each predicate the way its ontology aligns
+  it with `arch:dependsOn`, so a serving counts for what is served. See
+  [model-questions.md](references/model-questions.md) for derivations.
 - Scope by the profile's graph roles: default graph is not a union. In ad-hoc negative
   tests, `NOT EXISTS`, `MINUS` and `EXISTS` need their own intended graph scope; a test
   inside one model graph does not establish absence across the dataset.

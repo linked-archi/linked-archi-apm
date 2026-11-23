@@ -10,6 +10,30 @@ workflow publishes exactly this text, so what is written here is what a consumer
 
 ## [Unreleased]
 
+### Added
+
+- Two model questions with templates of the same name: `core/what-depends-on-it` and
+  `core/what-it-depends-on`. Each follows, two hops out, every predicate the metamodel
+  declares `rdfs:subPropertyOf arch:dependsOn`, and each of `arch:dependencyOf` read the other
+  way, as linked-archi-meta now aligns every language's dependencies with the core's (DD-44):
+  ArchiMate's `serves`, TOGAF's `usedBy` and `dependsOn`, UML's, Backstage's, LeanIX's and the
+  decision extension's. The bundled question sets are refreshed from meta: 61 questions.
+- Asked as a question, a query following a property through `rdfs:subPropertyOf` checks when
+  it runs that some predicate is declared a subproperty of it, and is refused, naming the
+  ontology to load, rather than answering from the property alone, which reads as "nothing
+  depends on it". The templates need the vocabulary graph role for the same reason.
+- Profile roles `depends_on`, `dependency_of` and `subproperty_of`, bound in
+  `linked-archi-default` to `arch:dependsOn`, `arch:dependencyOf` and `rdfs:subPropertyOf`.
+
+### Changed
+
+- The default profile counts a reference to another view among a view's nodes:
+  `view_node_class` lists `archvis:ViewReferenceNode`, which core-vis 0.9 adds and the ArchiMate
+  converter writes for a reference to another view, where it wrote a `LabelNode` before.
+  The converter also states the referenced view's `arch:inView` the referencing view:
+  `core/view-contents-semantic` still returns elements only, and `core/view-usage-semantic`
+  given a view as its focus now answers which views reference it.
+
 ## [0.12.0] - 2026-11-20
 
 Ready for the converters' next release, which names every model `{ns}model`

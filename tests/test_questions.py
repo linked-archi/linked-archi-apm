@@ -164,10 +164,10 @@ class TestTheIndexIsTheTurtle(unittest.TestCase):
             self.assertTrue(entry["iri"].startswith("https://meta.linked.archi/"), entry)
             self.assertTrue(entry["published"].endswith("/ontology.ttl"), entry)
 
-    def test_fifty_nine_questions_core_archimate_4_and_3_2(self):
+    def test_sixty_one_questions_core_archimate_4_and_3_2(self):
         identifiers = [q.identifier for q in load_index().questions]
-        self.assertEqual(len(identifiers), 59)
-        self.assertEqual(sum(i.startswith("core/") for i in identifiers), 16)
+        self.assertEqual(len(identifiers), 61)
+        self.assertEqual(sum(i.startswith("core/") for i in identifiers), 18)
         self.assertEqual(sum(i.startswith("notation/archimate4/") for i in identifiers), 22)
         self.assertEqual(sum(i.startswith("notation/archimate/") for i in identifiers), 21)
 
@@ -221,13 +221,14 @@ class TestTheCatalogue(unittest.TestCase):
 
     def test_questions_join_the_catalogue(self):
         entries = list(self.catalog)
-        self.assertEqual(sum(1 for e in entries if e.question), 59)
-        self.assertEqual(sum(1 for e in entries if e.file), 44)
+        self.assertEqual(sum(1 for e in entries if e.question), 61)
+        self.assertEqual(sum(1 for e in entries if e.file), 46)
         both = sorted(e.name for e in entries if e.file and e.question)
         self.assertEqual(both, [
             "core/element-detail", "core/elements-by-type",
             "core/orphans", "core/reifies-audit",
             "core/view-contents-semantic", "core/view-usage-semantic",
+            "core/what-depends-on-it", "core/what-it-depends-on",
             "notation/archimate/layer-crossing",
         ])
 
@@ -346,6 +347,24 @@ class TestWhichImplementationRuns(unittest.TestCase):
         render("notation/archimate/unrealised-services", direct, {},
                catalog=self.catalog, transport="local")
 
+    def test_a_dependency_question_checks_the_alignment_its_template_needs_attached(self):
+        # The template reads the alignment in the vocabulary graph, which converter output
+        # has none of; the question reads it from the one graph, and checks when it runs
+        # that some predicate is declared a subproperty of the core's dependency.
+        focus = {"FOCUS_IRI": "https://example.org/la/x"}
+        for name in ("core/what-depends-on-it", "core/what-it-depends-on"):
+            with self.subTest(name):
+                with self.assertRaises(UnsupportedTemplate) as refused:
+                    render(name, self.default, focus, catalog=self.catalog, implementation="template")
+                self.assertIn("vocabulary", str(refused.exception))
+                rendered = render(name, self.default, focus, catalog=self.catalog, transport="local")
+                self.assertEqual(rendered.implementation, "question")
+                probes = " ".join(probe.query for probe in rendered.probes)
+                self.assertIn("http://www.w3.org/2000/01/rdf-schema#subPropertyOf>+", probes)
+                self.assertIn("https://meta.linked.archi/core#dependencyOf", probes)
+                with self.assertRaises(UnsupportedTemplate):
+                    render(name, self.default, focus, catalog=self.catalog, transport="endpoint")
+
     def test_an_endpoint_declared_to_read_its_graphs_as_one_takes_the_question_unchanged(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "union.yaml"
@@ -446,6 +465,65 @@ class TestTheExamplesAnswerAsMetaChecks(unittest.TestCase):
                                   q.notation == ("archimate4" if version == "archimate4" else "archimate"))
             }
             self.assertEqual(findings - asked, set(), version)
+
+
+class TestTheDependencyTemplatesAnswerAsTheirQuestions(unittest.TestCase):
+    """The template of each dependency question gives meta's expected answers.
+
+    The model in converter graphs with its ontologies attached beside it in the default graph,
+    and NOT read as one graph: the layout an endpoint has, where the template answers.
+    """
+
+    NAMES = ("core/what-depends-on-it", "core/what-it-depends-on")
+
+    @classmethod
+    def setUpClass(cls):
+        try:
+            import pyoxigraph  # noqa: F401
+        except ModuleNotFoundError:  # pragma: no cover - environment dependent
+            raise unittest.SkipTest("pyoxigraph is not installed")
+        cls.tmp = tempfile.TemporaryDirectory()
+        path = Path(cls.tmp.name) / "with-vocabulary.yaml"
+        path.write_text(
+            f"extends: {(PROFILES / 'examples' / 'with-vocabulary.yaml').as_posix()}\n"
+            "profile: questions-with-vocabulary\nversion: 1\ndescription: >-\n"
+            "  meta's question examples, their ontologies beside them.\n",
+            encoding="utf-8",
+        )
+        cls.profile = support.load_resolved_profile(str(path))
+        cls.catalog = load_catalog()
+        cls.by_iri = {q.iri: q for q in load_index().questions}
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def test_every_case_of_both_examples(self):
+        from linked_archi_connect.adapters import open_adapter
+
+        checked = 0
+        wrong = []
+        for example, documents in EXAMPLES.values():
+            model = Path(self.tmp.name) / f"{example}.trig"
+            _converter_graphs(QUESTIONS / f"{example}.ttl", model)
+            adapter = open_adapter(data=[str(model)] + [str(QUESTIONS / d) for d in documents])
+            defaults, cases = _expected(example)
+            for question_iri, bindings, column, expected, line in cases:
+                name = self.by_iri[question_iri].identifier
+                if name not in self.NAMES:
+                    continue
+                rendered = render(
+                    name, self.profile, {"FOCUS_IRI": {**defaults, **bindings}["focus"]},
+                    catalog=self.catalog, implementation="template",
+                )
+                got = _column(adapter.execute(rendered.query).rows, column)
+                checked += 1
+                if got != expected:
+                    wrong.append(f"{example} line {line} {name}: ?{column} is {sorted(got)}, "
+                                 f"expected {sorted(expected)}")
+        # Two steps among them: the policy application depends on the server through the CRM.
+        self.assertGreaterEqual(checked, 6)
+        self.assertEqual(wrong, [], "\n".join(wrong))
 
 
 class TestOneGraph(unittest.TestCase):

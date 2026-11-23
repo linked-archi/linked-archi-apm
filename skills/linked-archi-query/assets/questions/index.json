@@ -145,6 +145,7 @@
     "direct_rel_triples": false,
     "part_of_model_edge": true,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -191,6 +192,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": true,
     "viewpoints": false
    },
@@ -237,6 +239,7 @@
     "direct_rel_triples": false,
     "part_of_model_edge": true,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -281,6 +284,7 @@
     "direct_rel_triples": false,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -333,6 +337,7 @@
     "direct_rel_triples": false,
     "part_of_model_edge": true,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -387,6 +392,7 @@
     "direct_rel_triples": false,
     "part_of_model_edge": true,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -431,6 +437,7 @@
     "direct_rel_triples": false,
     "part_of_model_edge": true,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -477,6 +484,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": true,
     "viewpoints": false
    },
@@ -523,6 +531,7 @@
     "direct_rel_triples": false,
     "part_of_model_edge": true,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -560,6 +569,7 @@
     "direct_rel_triples": false,
     "part_of_model_edge": false,
     "rdf_reifies": true,
+    "subproperties": false,
     "unqualified_forms": true,
     "viewpoints": false
    },
@@ -598,6 +608,7 @@
     "direct_rel_triples": false,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": true
    },
@@ -644,6 +655,7 @@
     "direct_rel_triples": false,
     "part_of_model_edge": true,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -688,6 +700,7 @@
     "direct_rel_triples": false,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -732,6 +745,7 @@
     "direct_rel_triples": false,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": true
    },
@@ -779,6 +793,7 @@
     "direct_rel_triples": false,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": true
    },
@@ -831,6 +846,7 @@
     "direct_rel_triples": false,
     "part_of_model_edge": true,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": true
    },
@@ -840,6 +856,100 @@
    "stage": "views",
    "stakeholders": [],
    "text": "SELECT ?element (SAMPLE(?anyLabel) AS ?label) ?type (SAMPLE(?anyDefinition) AS ?definition)\n       (GROUP_CONCAT(DISTINCT ?link; separator = \"; \") AS ?outgoing)\nWHERE {\n  # What each viewpoint admits: the types it names and their specialisations.\n  {\n    SELECT DISTINCT ?viewpoint ?type\n    WHERE {\n      { ?viewpoint arch:includesConcept ?admitted }\n      UNION\n      { GRAPH ?admittingGraph { ?viewpoint arch:includesConcept ?admitted } }\n      { ?type rdfs:subClassOf* ?admitted }\n      UNION\n      { GRAPH ?hierarchyGraph { ?type rdfs:subClassOf* ?admitted } }\n    }\n  }\n  ?element rdf:type ?type ;\n           arch:inModel ?model .\n  FILTER NOT EXISTS { ?element arch:source ?anySource }\n  OPTIONAL { ?element skos:prefLabel ?anyLabel . FILTER(lang(?anyLabel) = \"\" || langMatches(lang(?anyLabel), \"en\")) }\n  OPTIONAL { ?element skos:definition ?anyDefinition . FILTER(lang(?anyDefinition) = \"\" || langMatches(lang(?anyDefinition), \"en\")) }\n  OPTIONAL {\n    ?relationship arch:source ?element ;\n                  arch:target ?other ;\n                  rdf:type ?relationshipType .\n    FILTER(?relationshipType NOT IN (arch:ModelConcept, arch:Element, arch:QualifiedRelationship))\n    MINUS { SELECT DISTINCT ?relationshipType WHERE { { ?relationshipType arch:isAbstractClass true }\n                                                      UNION { GRAPH ?abstractClassGraph { ?relationshipType arch:isAbstractClass true } } } }\n    OPTIONAL { ?other skos:prefLabel ?otherLabel . FILTER(lang(?otherLabel) = \"\" || langMatches(lang(?otherLabel), \"en\")) }\n    BIND(CONCAT(REPLACE(STR(?relationshipType), \"^.*[#/]\", \"\"), \" → \",\n                COALESCE(STR(?otherLabel), STR(?other))) AS ?link)\n  }\n}\nGROUP BY ?element ?type\nORDER BY ?type ?label",
+   "viewpoints": []
+  },
+  {
+   "answers": "One row per path: its length, the concept that depends on the element, the concept between, and the predicates followed.",
+   "concerns": [
+    "https://meta.linked.archi/core-viewpoints#DependencyConcern"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Concepts that depend on the element, directly or through one concept between, along the dependencies the metamodels align with the core's: arch:dependsOn and its subproperties, and arch:dependencyOf and its subproperties read the other way, as ArchiMate's serving is.",
+   "does_not_prove": "That nothing else depends on the element. Only what the model states is followed, along the predicates a metamodel aligns with arch:dependsOn or arch:dependencyOf, two steps at most.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "core/what-depends-on-it",
+   "iri": "https://meta.linked.archi/core-questions#what-depends-on-it",
+   "label": "What depends on this element?",
+   "metamodels": [],
+   "parameters": [
+    {
+     "description": "The element the question is about. A modelling tool binds the selected element.",
+     "name": "focus",
+     "optional": false,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#focus",
+     "variable": "focus"
+    }
+   ],
+   "prefixes": {
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "subproperties": true,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "dependents",
+   "set": "https://meta.linked.archi/core-questions#",
+   "severity": "",
+   "stage": "analysis",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?hops ?dependent ?dependentLabel ?firstPredicate ?via ?secondPredicate\nWHERE {\n  {\n    {\n      SELECT DISTINCT ?firstPredicate ?firstNeeds\n      WHERE {\n        {\n          { ?firstPredicate rdfs:subPropertyOf* arch:dependsOn }\n          UNION\n          { GRAPH ?firstNeedsGraph { ?firstPredicate rdfs:subPropertyOf* arch:dependsOn } }\n          BIND(true AS ?firstNeeds)\n        }\n        UNION\n        {\n          { ?firstPredicate rdfs:subPropertyOf* arch:dependencyOf }\n          UNION\n          { GRAPH ?firstNeededGraph { ?firstPredicate rdfs:subPropertyOf* arch:dependencyOf } }\n          BIND(false AS ?firstNeeds)\n        }\n      }\n    }\n    { ?dependent ?firstPredicate ?focus . BIND(true AS ?firstRead) }\n    UNION\n    { ?focus ?firstPredicate ?dependent . BIND(false AS ?firstRead) }\n    FILTER(?firstRead = ?firstNeeds)\n    BIND(1 AS ?hops)\n  }\n  UNION\n  {\n    {\n      SELECT DISTINCT ?firstPredicate ?firstNeeds\n      WHERE {\n        {\n          { ?firstPredicate rdfs:subPropertyOf* arch:dependsOn }\n          UNION\n          { GRAPH ?firstNeedsGraph { ?firstPredicate rdfs:subPropertyOf* arch:dependsOn } }\n          BIND(true AS ?firstNeeds)\n        }\n        UNION\n        {\n          { ?firstPredicate rdfs:subPropertyOf* arch:dependencyOf }\n          UNION\n          { GRAPH ?firstNeededGraph { ?firstPredicate rdfs:subPropertyOf* arch:dependencyOf } }\n          BIND(false AS ?firstNeeds)\n        }\n      }\n    }\n    { ?via ?firstPredicate ?focus . BIND(true AS ?firstRead) }\n    UNION\n    { ?focus ?firstPredicate ?via . BIND(false AS ?firstRead) }\n    FILTER(?firstRead = ?firstNeeds)\n    {\n      SELECT DISTINCT ?secondPredicate ?secondNeeds\n      WHERE {\n        {\n          { ?secondPredicate rdfs:subPropertyOf* arch:dependsOn }\n          UNION\n          { GRAPH ?secondNeedsGraph { ?secondPredicate rdfs:subPropertyOf* arch:dependsOn } }\n          BIND(true AS ?secondNeeds)\n        }\n        UNION\n        {\n          { ?secondPredicate rdfs:subPropertyOf* arch:dependencyOf }\n          UNION\n          { GRAPH ?secondNeededGraph { ?secondPredicate rdfs:subPropertyOf* arch:dependencyOf } }\n          BIND(false AS ?secondNeeds)\n        }\n      }\n    }\n    { ?dependent ?secondPredicate ?via . BIND(true AS ?secondRead) }\n    UNION\n    { ?via ?secondPredicate ?dependent . BIND(false AS ?secondRead) }\n    FILTER(?secondRead = ?secondNeeds)\n    FILTER(?dependent != ?focus)\n    BIND(2 AS ?hops)\n  }\n  OPTIONAL { ?dependent skos:prefLabel ?dependentLabel . FILTER(lang(?dependentLabel) = \"\" || langMatches(lang(?dependentLabel), \"en\")) }\n}\nORDER BY ?hops ?dependentLabel",
+   "viewpoints": []
+  },
+  {
+   "answers": "One row per path: its length, the concept the element depends on, the concept between, and the predicates followed.",
+   "concerns": [
+    "https://meta.linked.archi/core-viewpoints#DependencyConcern"
+   ],
+   "dataset": "model-and-metamodel",
+   "default_limit": 500,
+   "description": "Concepts the element depends on, directly or through one concept between, along the dependencies the metamodels align with the core's: arch:dependsOn and its subproperties, and arch:dependencyOf and its subproperties read the other way, as ArchiMate's serving is.",
+   "does_not_prove": "That the element needs nothing else. Only what the model states is followed, along the predicates a metamodel aligns with arch:dependsOn or arch:dependencyOf, two steps at most.",
+   "finding": false,
+   "finding_focus": "",
+   "identifier": "core/what-it-depends-on",
+   "iri": "https://meta.linked.archi/core-questions#what-it-depends-on",
+   "label": "What does this element depend on?",
+   "metamodels": [],
+   "parameters": [
+    {
+     "description": "The element the question is about. A modelling tool binds the selected element.",
+     "name": "focus",
+     "optional": false,
+     "order": 1.0,
+     "path": "https://meta.linked.archi/core#focus",
+     "variable": "focus"
+    }
+   ],
+   "prefixes": {
+    "arch": "https://meta.linked.archi/core#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+   },
+   "reads": {
+    "direct_rel_triples": true,
+    "part_of_model_edge": false,
+    "rdf_reifies": false,
+    "subproperties": true,
+    "unqualified_forms": false,
+    "viewpoints": false
+   },
+   "result_key": "dependencies",
+   "set": "https://meta.linked.archi/core-questions#",
+   "severity": "",
+   "stage": "analysis",
+   "stakeholders": [],
+   "text": "SELECT DISTINCT ?hops ?dependency ?dependencyLabel ?firstPredicate ?via ?secondPredicate\nWHERE {\n  {\n    {\n      SELECT DISTINCT ?firstPredicate ?firstNeeds\n      WHERE {\n        {\n          { ?firstPredicate rdfs:subPropertyOf* arch:dependsOn }\n          UNION\n          { GRAPH ?firstNeedsGraph { ?firstPredicate rdfs:subPropertyOf* arch:dependsOn } }\n          BIND(true AS ?firstNeeds)\n        }\n        UNION\n        {\n          { ?firstPredicate rdfs:subPropertyOf* arch:dependencyOf }\n          UNION\n          { GRAPH ?firstNeededGraph { ?firstPredicate rdfs:subPropertyOf* arch:dependencyOf } }\n          BIND(false AS ?firstNeeds)\n        }\n      }\n    }\n    { ?focus ?firstPredicate ?dependency . BIND(true AS ?firstRead) }\n    UNION\n    { ?dependency ?firstPredicate ?focus . BIND(false AS ?firstRead) }\n    FILTER(?firstRead = ?firstNeeds)\n    BIND(1 AS ?hops)\n  }\n  UNION\n  {\n    {\n      SELECT DISTINCT ?firstPredicate ?firstNeeds\n      WHERE {\n        {\n          { ?firstPredicate rdfs:subPropertyOf* arch:dependsOn }\n          UNION\n          { GRAPH ?firstNeedsGraph { ?firstPredicate rdfs:subPropertyOf* arch:dependsOn } }\n          BIND(true AS ?firstNeeds)\n        }\n        UNION\n        {\n          { ?firstPredicate rdfs:subPropertyOf* arch:dependencyOf }\n          UNION\n          { GRAPH ?firstNeededGraph { ?firstPredicate rdfs:subPropertyOf* arch:dependencyOf } }\n          BIND(false AS ?firstNeeds)\n        }\n      }\n    }\n    { ?focus ?firstPredicate ?via . BIND(true AS ?firstRead) }\n    UNION\n    { ?via ?firstPredicate ?focus . BIND(false AS ?firstRead) }\n    FILTER(?firstRead = ?firstNeeds)\n    {\n      SELECT DISTINCT ?secondPredicate ?secondNeeds\n      WHERE {\n        {\n          { ?secondPredicate rdfs:subPropertyOf* arch:dependsOn }\n          UNION\n          { GRAPH ?secondNeedsGraph { ?secondPredicate rdfs:subPropertyOf* arch:dependsOn } }\n          BIND(true AS ?secondNeeds)\n        }\n        UNION\n        {\n          { ?secondPredicate rdfs:subPropertyOf* arch:dependencyOf }\n          UNION\n          { GRAPH ?secondNeededGraph { ?secondPredicate rdfs:subPropertyOf* arch:dependencyOf } }\n          BIND(false AS ?secondNeeds)\n        }\n      }\n    }\n    { ?via ?secondPredicate ?dependency . BIND(true AS ?secondRead) }\n    UNION\n    { ?dependency ?secondPredicate ?via . BIND(false AS ?secondRead) }\n    FILTER(?secondRead = ?secondNeeds)\n    FILTER(?dependency != ?focus)\n    BIND(2 AS ?hops)\n  }\n  OPTIONAL { ?dependency skos:prefLabel ?dependencyLabel . FILTER(lang(?dependencyLabel) = \"\" || langMatches(lang(?dependencyLabel), \"en\")) }\n}\nORDER BY ?hops ?dependencyLabel",
    "viewpoints": []
   },
   {
@@ -874,6 +984,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -929,6 +1040,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": true,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -978,6 +1090,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -1027,6 +1140,7 @@
     "direct_rel_triples": false,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -1075,6 +1189,7 @@
     "direct_rel_triples": false,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -1129,6 +1244,7 @@
     "direct_rel_triples": false,
     "part_of_model_edge": true,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -1183,6 +1299,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -1234,6 +1351,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -1296,6 +1414,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -1340,6 +1459,7 @@
     "direct_rel_triples": false,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -1382,6 +1502,7 @@
     "direct_rel_triples": false,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -1425,6 +1546,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -1478,6 +1600,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": true,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -1523,6 +1646,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -1572,6 +1696,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -1621,6 +1746,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -1678,6 +1804,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": true,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -1733,6 +1860,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": true,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -1787,6 +1915,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": true,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -1843,6 +1972,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": true,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -1889,6 +2019,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -1938,6 +2069,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -1993,6 +2125,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": true,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -2042,6 +2175,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -2091,6 +2225,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -2136,6 +2271,7 @@
     "direct_rel_triples": false,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -2184,6 +2320,7 @@
     "direct_rel_triples": false,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -2238,6 +2375,7 @@
     "direct_rel_triples": false,
     "part_of_model_edge": true,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -2292,6 +2430,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -2360,6 +2499,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -2404,6 +2544,7 @@
     "direct_rel_triples": false,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -2446,6 +2587,7 @@
     "direct_rel_triples": false,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -2489,6 +2631,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -2542,6 +2685,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": true,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -2587,6 +2731,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -2636,6 +2781,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -2685,6 +2831,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -2742,6 +2889,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": true,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -2797,6 +2945,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": true,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -2851,6 +3000,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": true,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -2907,6 +3057,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": true,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -2967,6 +3118,7 @@
     "direct_rel_triples": false,
     "part_of_model_edge": true,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": true
    },
@@ -3010,6 +3162,7 @@
     "direct_rel_triples": true,
     "part_of_model_edge": false,
     "rdf_reifies": false,
+    "subproperties": false,
     "unqualified_forms": false,
     "viewpoints": false
    },
@@ -3100,6 +3253,7 @@
   "https://meta.linked.archi/c4/onto#uses",
   "https://meta.linked.archi/c4/structurizr#deployedOn",
   "https://meta.linked.archi/core#associatedWith",
+  "https://meta.linked.archi/core#dependsOn",
   "https://meta.linked.archi/core#hasPart",
   "https://meta.linked.archi/core#refines",
   "https://meta.linked.archi/edgy/onto#flowsTo",

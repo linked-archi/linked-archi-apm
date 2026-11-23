@@ -241,7 +241,10 @@ How the catalogue reads one:
   `part_of_model_edge`. A refusal names what lifts it. A question declaring
   `arch:ModelAndMetamodelDataset` is also checked when it runs, with an ASK per thing it
   reads: each `arch:requiresMetamodel` ontology, a viewpoint catalogue where it reads
-  viewpoints, unqualified forms where it reads them.
+  viewpoints, unqualified forms where it reads them, and - where it follows a property
+  through `rdfs:subPropertyOf`, as the dependency questions follow `arch:dependsOn` - some
+  predicate declared a subproperty of it. Without that declaration the question would
+  answer from the property alone, which reads as an answer.
 - **Notation.** `notation/<slug>/...` makes it a notation entry, gated on the vocabulary of
   its one `arch:requiresMetamodel`, as a notation template is on `notation_namespace`.
 

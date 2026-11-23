@@ -33,7 +33,7 @@ am4: a owl:Ontology ;
 	dct:description "Linked.Archi ArchiMate ontology aligned to the ArchiMate 4.0 specification\n(the \"Hexagonion\"). ArchiMate 4.0 replaces the layer-based structure of 3.x with a\ndomain-based organization (Common, Business, Application, Technology, Strategy,\nMotivation, Implementation & Migration). Behavior elements that were previously\nduplicated per layer (e.g., BusinessProcess, ApplicationProcess, TechnologyProcess) are\nmerged into single cross-domain elements (Process, Function, Event, Service). New Common\nDomain elements (Role, Collaboration, Path) are introduced as generic, domain-independent\nconcepts. Each relationship class has as its skos:notation the letter the relationship tables of\nthe specification write it with (g aggregation, r realization, v serving …); composition, which\nthe 4.0 tables write as g too, keeps the c of the 3.2 tables. This is not an official Open Group\ndocument."@en ;
 	dct:created "2026-04-19"^^xsd:date ;
 	dct:issued "2026-04-29"^^xsd:date ;
-	dct:modified "2026-10-10"^^xsd:date ;
+	dct:modified "2026-11-22"^^xsd:date ;
 	dct:publisher "Linked.Archi"@en ;
 	<http://purl.org/ontology/bibo/status> "draft" ;
 	owl:versionIRI <https://meta.linked.archi/archimate4/onto/4.0#> ;
@@ -41,7 +41,7 @@ am4: a owl:Ontology ;
 	owl:priorVersion <https://meta.linked.archi/archimate3/onto/3.2#> ;
 	<http://schema.org/citation> "Linked.Archi ArchiMate 4.0 Ontology" ;
 	skos:historyNote "4.0.0: Major revision from ArchiMate 3.2 to 4.0. Layers replaced by domains\n(Common, Business, Application, Technology, Strategy, Motivation, Implementation &\nMigration). Per-layer behavior elements (BusinessProcess, ApplicationProcess,\nTechnologyProcess, etc.) merged into single cross-domain elements (Process, Function,\nEvent, Service). Per-layer collaborations and roles merged into Common Domain. Removed\nelements: Interaction, Contract, Representation, Gap, ImplementationEvent, Constraint.\nNew namespace archimate4/onto# introduced for breaking metamodel changes. Aligned to\nLinked.Archi core ontology conventions and the qualified relationship pattern."@en ;
-	skos:changeNote "2026-10-10: the kinds of access are subclasses of Access — ReadAccess, WriteAccess and\nReadWriteAccess, an Access that is none of them being unspecified — and a directed association is a\nDirectedAssociation, so each has a notation of its own (DD-31). accessType is deprecated."@en ;
+	skos:changeNote "2026-11-22: serves is a subproperty of the core's arch:dependencyOf (core 0.7.0):\nwhat an element serves depends on it (DD-44).\n\n2026-10-10: the kinds of access are subclasses of Access — ReadAccess, WriteAccess and\nReadWriteAccess, an Access that is none of them being unspecified — and a directed association is a\nDirectedAssociation, so each has a notation of its own (DD-31). accessType is deprecated."@en ;
 	skos:scopeNote "This namespace (archimate4/onto#) covers ArchiMate 4.x. It is separate\nfrom archimate3/onto# because the 3.2→4.0 transition introduced breaking metamodel\nchanges: layers were replaced by domains, many per-layer elements were merged into\ncross-domain equivalents, and several elements were removed entirely. The two namespaces\ncan coexist for migration purposes."@en ;
 	rdfs:seeAlso <https://www.w3.org/TR/rdf12-concepts/> .
 am4:BehaviorElement a owl:Class ;
@@ -398,8 +398,8 @@ am4:composedOf a owl:ObjectProperty ;
 	rdfs:subPropertyOf am4:aggregates ;
 	skos:prefLabel "Composed Of"@en ;
 	skos:definition "Indicates that an element combines one or more other concepts, where the existence of those concepts depends on that of the element."@en ;
-	arch:domainIncludes arch:Element ;
-	arch:rangeIncludes arch:Element .
+	arch:domainIncludes am4:BehaviorElement , am4:CompositeElement , am4:MotivationElement , am4:StructureElement ;
+	arch:rangeIncludes am4:BehaviorElement , am4:CompositeElement , am4:MotivationElement , am4:StructureElement .
 am4:Composition a owl:Class ;
 	rdfs:subClassOf am4:Aggregation ;
 	arch:unqualifiedForm am4:composedOf ;
@@ -411,14 +411,14 @@ am4:Composition a owl:Class ;
 am4:qualifiedComposition a owl:ObjectProperty ;
 	rdfs:range am4:Composition ;
 	arch:unqualifiedForm am4:composedOf ;
-	arch:domainIncludes arch:Element ;
+	arch:domainIncludes am4:BehaviorElement , am4:CompositeElement , am4:MotivationElement , am4:StructureElement ;
 	skos:prefLabel "qualified Composition"@en ;
 	skos:definition "Navigates from a source element to a Composition qualified relationship\nresource."@en .
 am4:aggregates a owl:ObjectProperty ;
 	skos:prefLabel "Aggregates"@en ;
 	skos:definition "Indicates that an element combines one or more other concepts."@en ;
-	arch:domainIncludes arch:Element ;
-	arch:rangeIncludes arch:Element .
+	arch:domainIncludes am4:BehaviorElement , am4:CompositeElement , am4:MotivationElement , am4:StructureElement ;
+	arch:rangeIncludes am4:BehaviorElement , am4:CompositeElement , am4:MotivationElement , am4:StructureElement .
 am4:Aggregation a owl:Class ;
 	rdfs:subClassOf arch:QualifiedRelationship ;
 	arch:unqualifiedForm am4:aggregates ;
@@ -429,7 +429,7 @@ am4:Aggregation a owl:Class ;
 am4:qualifiedAggregation a owl:ObjectProperty ;
 	rdfs:range am4:Aggregation ;
 	arch:unqualifiedForm am4:aggregates ;
-	arch:domainIncludes arch:Element ;
+	arch:domainIncludes am4:BehaviorElement , am4:CompositeElement , am4:MotivationElement , am4:StructureElement ;
 	skos:prefLabel "qualified Aggregation"@en ;
 	skos:definition "Navigates from a source element to an Aggregation qualified relationship\nresource."@en .
 am4:assignedTo a owl:ObjectProperty ;
@@ -470,8 +470,10 @@ am4:qualifiedRealization a owl:ObjectProperty ;
 	skos:prefLabel "qualified Realization"@en ;
 	skos:definition "Navigates from a source element to a Realization qualified relationship\nresource."@en .
 am4:serves a owl:ObjectProperty ;
+	rdfs:subPropertyOf arch:dependencyOf ;
 	skos:prefLabel "Serves"@en ;
 	skos:definition "Indicates that an element provides its functionality to another element."@en ;
+	skos:scopeNote "A serving element is a dependency of the one it serves: A serves B says that B depends\non A (arch:dependencyOf, core 0.7.0), so a question about what depends on an element follows serving with the\ncore's dependencies (DD-44)."@en ;
 	arch:domainIncludes am4:ActiveStructureElement , am4:BehaviorElement ;
 	arch:rangeIncludes am4:ActiveStructureElement , am4:BehaviorElement .
 am4:Serving a owl:Class ;
@@ -581,8 +583,8 @@ am4:qualifiedFlow a owl:ObjectProperty ;
 am4:specializes a owl:ObjectProperty ;
 	skos:prefLabel "Specializes"@en ;
 	skos:definition "Indicates that an element is a particular kind of another element."@en ;
-	arch:domainIncludes arch:Element ;
-	arch:rangeIncludes arch:Element .
+	arch:domainIncludes am4:BehaviorElement , am4:CompositeElement , am4:MotivationElement , am4:StructureElement ;
+	arch:rangeIncludes am4:BehaviorElement , am4:CompositeElement , am4:MotivationElement , am4:StructureElement .
 am4:Specialization a owl:Class ;
 	rdfs:subClassOf arch:QualifiedRelationship ;
 	arch:unqualifiedForm am4:specializes ;
@@ -593,14 +595,14 @@ am4:Specialization a owl:Class ;
 am4:qualifiedSpecialization a owl:ObjectProperty ;
 	rdfs:range am4:Specialization ;
 	arch:unqualifiedForm am4:specializes ;
-	arch:domainIncludes arch:Element ;
+	arch:domainIncludes am4:BehaviorElement , am4:CompositeElement , am4:MotivationElement , am4:StructureElement ;
 	skos:prefLabel "qualified Specialization"@en ;
 	skos:definition "Navigates from a source element to a Specialization qualified relationship\nresource."@en .
 am4:associatedWith a owl:ObjectProperty ;
 	skos:prefLabel "Associated With"@en ;
 	skos:definition "Indicates an unspecified relationship, or one that is not represented by another\nArchiMate relationship."@en ;
-	arch:domainIncludes arch:Element ;
-	arch:rangeIncludes arch:Element .
+	arch:domainIncludes am4:BehaviorElement , am4:CompositeElement , am4:MotivationElement , am4:StructureElement ;
+	arch:rangeIncludes am4:BehaviorElement , am4:CompositeElement , am4:MotivationElement , am4:StructureElement .
 am4:Association a owl:Class ;
 	rdfs:subClassOf arch:QualifiedRelationship ;
 	arch:unqualifiedForm am4:associatedWith ;
@@ -617,7 +619,7 @@ am4:DirectedAssociation a owl:Class ;
 am4:qualifiedAssociation a owl:ObjectProperty ;
 	rdfs:range am4:Association ;
 	arch:unqualifiedForm am4:associatedWith ;
-	arch:domainIncludes arch:Element ;
+	arch:domainIncludes am4:BehaviorElement , am4:CompositeElement , am4:MotivationElement , am4:StructureElement ;
 	skos:prefLabel "qualified Association"@en ;
 	skos:definition "Navigates from a source element to an Association qualified relationship\nresource."@en .
 am4:accessType a owl:DatatypeProperty ;

@@ -33,13 +33,13 @@ arch: a owl:Ontology ;
 	<http://purl.org/net/SMARTprotocol#IntroductionSection> "\n     Core Linked.Archi Ontology for EA modeling.\n    "@en ;
 	dct:created "2019-03-17"^^xsd:date ;
 	dct:issued "2019-03-17"^^xsd:date ;
-	dct:modified "2026-11-16"^^xsd:date ;
+	dct:modified "2026-11-22"^^xsd:date ;
 	dct:publisher "Linked.Archi"@en ;
 	<http://purl.org/ontology/bibo/status> "draft" ;
 	owl:versionIRI arch: ;
-	owl:versionInfo "0.6.0"@en ;
-	owl:priorVersion <https://meta.linked.archi/core/0.5.0#> ;
-	skos:historyNote "0.5.0 — names, labels and pictures per presentation context.\narch:inPresentationContext says which presentation context — which audience — something is for: a\nname an element is given for that audience (a SKOS-XL label, skosxl:altLabel, whose plain form is\nalso the element's skos:altLabel), a picture of it for that audience (a schema:ImageObject given as\narch:altVisNotation), or, on a diagram, what its label says there (core-vis 0.7's\narch-vis:LabelExpression) and how it looks there (an arch-vis:Style). skos:prefLabel stays the one\ncanonical name and arch:prefVisNotation the one canonical picture. arch:prefVisNotation and\narch:altVisNotation say where they apply with :domainIncludes, where an rdfs:domain of skos:Concept\nmade every element given a picture a SKOS concept. See DD-34 and DD-35.\n\n0.4.0 — membership properties reworked.\narch:inView and arch:inModel replace arch:exposedInView and arch:partOfModel, and arch:contains is\ndeprecated as an undeclared inverse of what was then partOfModel. All three old properties are\nretained and owl:deprecated; the two renamed ones are rdfs:subPropertyOf their replacements so\nexisting data still entails the current vocabulary under RDFS, while arch:contains is not, because\nno sound generalisation exists for it. See DD-30."@en ;
+	owl:versionInfo "0.7.0"@en ;
+	owl:priorVersion <https://meta.linked.archi/core/0.6.0#> ;
+	skos:historyNote "0.7.0 — a dependency type of the core's own.\narch:DependsOn, with its predicate arch:dependsOn and the inverse arch:dependencyOf: from a model\nconcept to one it needs, so that a change to the second may affect the first. Like the core's other\nrelationship types, it is offered between two concepts no loaded language relates. It is not\ntransitive. See DD-40.\n\n0.6.0 — relationship types of the core's own.\narch:Association (arch:associatedWith, symmetric), arch:HasPart (arch:hasPart) and arch:Refines\n(arch:refines), each a qualified relationship class with its qualified property, for two concepts no\nloaded language relates: elements of different metamodels, or of one that defines no relationship\ntypes. See DD-40.\n\n0.5.0 — names, labels and pictures per presentation context.\narch:inPresentationContext says which presentation context — which audience — something is for: a\nname an element is given for that audience (a SKOS-XL label, skosxl:altLabel, whose plain form is\nalso the element's skos:altLabel), a picture of it for that audience (a schema:ImageObject given as\narch:altVisNotation), or, on a diagram, what its label says there (core-vis 0.7's\narch-vis:LabelExpression) and how it looks there (an arch-vis:Style). skos:prefLabel stays the one\ncanonical name and arch:prefVisNotation the one canonical picture. arch:prefVisNotation and\narch:altVisNotation say where they apply with :domainIncludes, where an rdfs:domain of skos:Concept\nmade every element given a picture a SKOS concept. See DD-34 and DD-35.\n\n0.4.0 — membership properties reworked.\narch:inView and arch:inModel replace arch:exposedInView and arch:partOfModel, and arch:contains is\ndeprecated as an undeclared inverse of what was then partOfModel. All three old properties are\nretained and owl:deprecated; the two renamed ones are rdfs:subPropertyOf their replacements so\nexisting data still entails the current vocabulary under RDFS, while arch:contains is not, because\nno sound generalisation exists for it. See DD-30."@en ;
 	<http://schema.org/logo> <https://meta.linked.archi/favicon.svg> ;
 	<http://schema.org/image> <https://meta.linked.archi/favicon.svg> ;
 	<http://schema.org/citation> "Core Linked.Archi Ontology" .
@@ -340,6 +340,32 @@ arch:qualifiedAssociation a owl:ObjectProperty ;
 	rdfs:domain arch:ModelConcept ;
 	rdfs:range arch:Association ;
 	arch:unqualifiedForm arch:associatedWith .
+arch:dependsOn a owl:ObjectProperty ;
+	skos:prefLabel "dependsOn"@en ;
+	skos:definition "Relates a model concept to one it needs — to work, or to be specified or built — so that a\nchange to the second may affect the first."@en ;
+	skos:scopeNote "Not transitive: a chain of dependencies is a path (arch:dependsOn+), so a dependency a model\nstates stays apart from one that only follows from others. Use the relationship of the modelling language where it\nhas one for the two."@en ;
+	rdfs:domain arch:ModelConcept ;
+	rdfs:range arch:ModelConcept ;
+	owl:inverseOf arch:dependencyOf .
+arch:dependencyOf a owl:ObjectProperty ;
+	skos:prefLabel "dependencyOf"@en ;
+	skos:definition "Relates a model concept to one that depends on it: arch:dependsOn read the other way, as a\nquestion about the impact of a change reads it."@en ;
+	rdfs:domain arch:ModelConcept ;
+	rdfs:range arch:ModelConcept ;
+	owl:inverseOf arch:dependsOn .
+arch:DependsOn a owl:Class ;
+	rdfs:subClassOf arch:QualifiedRelationship ;
+	arch:unqualifiedForm arch:dependsOn ;
+	skos:prefLabel "Depends On"@en ;
+	skos:definition "A relationship from a model concept to one it needs — to work, or to be specified or\nbuilt — so that a change to the second may affect the first."@en ;
+	skos:scopeNote "A modelling tool offers it where the loaded metamodels permit no relationship between\nthe two elements, and draws it from the dependent concept to the one it depends on."@en ;
+	skos:example "\nex:Billing arch:dependsOn ex:PaymentsApi .\nex:Billing arch:qualifiedDependsOn ex:rel-2 .\nex:rel-2 a arch:DependsOn ;\n    arch:source ex:Billing ;\n    arch:target ex:PaymentsApi ;\n    rdf:reifies <<( ex:Billing arch:dependsOn ex:PaymentsApi )>> .\n"@en .
+arch:qualifiedDependsOn a owl:ObjectProperty ;
+	skos:prefLabel "qualifiedDependsOn"@en ;
+	skos:definition "Links the source of a Depends On relationship — the dependent concept — to its relationship resource."@en ;
+	rdfs:domain arch:ModelConcept ;
+	rdfs:range arch:DependsOn ;
+	arch:unqualifiedForm arch:dependsOn .
 arch:HasPart a owl:Class ;
 	rdfs:subClassOf arch:QualifiedRelationship ;
 	arch:unqualifiedForm arch:hasPart ;

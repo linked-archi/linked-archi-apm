@@ -394,9 +394,10 @@ class TestGating(unittest.TestCase):
         )
 
     def test_output_without_direct_triples_refuses_what_follows_them(self):
-        """The default's refusals, and the four templates that read the direct triple or
-        its rdf:reifies bridge: an older converter, or --no-emit-direct-rel-triples, wrote
-        neither."""
+        """The default's refusals, and the templates that read the direct triple or its
+        rdf:reifies bridge: an older converter, or --no-emit-direct-rel-triples, wrote
+        neither. The dependency questions follow direct triples too, so neither of their
+        implementations is left."""
         default = {
             entry.name
             for entry, _ in self.catalog.refused(load_profile("linked-archi-default"))
@@ -413,6 +414,8 @@ class TestGating(unittest.TestCase):
             "core/neighbours-reified",
             "core/reified-predicates",
             "core/reifies-audit",
+            "core/what-depends-on-it",
+            "core/what-it-depends-on",
         })
         self.assertLessEqual(default, refused)
 

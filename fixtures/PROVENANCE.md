@@ -115,7 +115,7 @@ off a version stamp either, since every `.trig` here says
 `schema:softwareVersion "1.3.0-SNAPSHOT"`. See
 [The version stamp proves nothing](#the-version-stamp-proves-nothing).
 
-All 44 catalogued templates return rows against `augmented.trig` under the
+All 46 catalogued templates return rows against `augmented.trig` under the
 `curated-store` profile committed at
 `skills/linked-archi-profile/assets/profiles/examples/curated-store.yaml` — with one
 pairing: vocabulary-backed templates read published vocabulary, which no conversion
@@ -292,7 +292,7 @@ correspondence between records over a claim that two resources are one thing.
 
 Use it with the `curated-store` profile at
 `skills/linked-archi-profile/assets/profiles/examples/curated-store.yaml`, which is
-the profile these additions describe. All 44 templates are available under it, and none
+the profile these additions describe. All 46 templates are available under it, and none
 are refused — which is the point of the additions.
 
 ## converter-1.3.trig
@@ -595,4 +595,13 @@ directory holds what that check loads, refreshed by `make questions`:
 The test asks each example twice: flattened, as meta checks it, and with the model moved
 into converter-style named graphs, read as one graph the way `query run` reads converter
 output.
+
+The ontologies also say which predicates are dependencies: each ArchiMate version's `serves`
+is `rdfs:subPropertyOf arch:dependencyOf` (meta DD-44). The dependency templates read that
+from them twice over - `questions/archimate3.2-onto.ttl` attached beside `augmented.trig`,
+where an ArchiSurance channel serves a client, and each example's ontologies beside its model
+in converter graphs, not read as one graph, where the templates must give the answers the
+expected files hold for the questions of the same name. Refreshed on 2026-11-22 from the
+linked-archi-meta checkout at `66591c8`, which adds the dependency alignment and questions;
+`vocabulary.ttl`, `shapes.ttl` and `unqualified-forms.json` were not refreshed.
 

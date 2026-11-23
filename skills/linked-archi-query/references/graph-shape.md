@@ -274,7 +274,13 @@ alias, then use `core/context-names` to retain context and language.
 
 `arch-vis:LabelExpression` controls rendered text and is not a second canonical name.
 Notes (`LabelNode`) and visual groups (`ContainerNode`) have their own labels but no
-`arch-vis:archElement`; their text does not create model elements. View membership queries
-continue to follow `archElement` or `arch:inView`. A Link may end on another Link, and
+`arch-vis:archElement`; their text does not create model elements. A reference to another
+view (`ViewReferenceNode`, core-vis 0.9) has no `archElement` either: its
+`arch-vis:referencesView` names the view it opens, and the converters also state that view's
+`arch:inView` the view holding the reference, so an index view's entries survive output
+published without a views graph. View membership queries continue to follow `archElement` or
+`arch:inView`. The `arch:inView` edges of a view now include the views it references:
+`core/view-contents-semantic` keeps to elements through `element_class`, and
+`core/view-usage-semantic` given a view as its focus answers which views reference it. A Link may end on another Link, and
 several nodes may place the same element: count concept IRIs for concepts, node IRIs for
 placements. APM queries these facts without rendering styles or label expressions.

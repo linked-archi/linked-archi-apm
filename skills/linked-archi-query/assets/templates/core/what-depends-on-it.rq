@@ -1,0 +1,80 @@
+# core/what-depends-on-it - What depends on this element?
+#
+# Answers: concepts that depend on the focus, one or two steps out, along every
+# predicate the attached vocabulary aligns with the core's dependency - a subproperty of
+# depends_on, read from the concept that needs to the one needed, or of dependency_of,
+# read the other way, as ArchiMate's serving and TOGAF's usedBy are (meta DD-44).
+#
+# Does NOT prove: that nothing else depends on the focus. Only what the model states
+# is followed, along the predicates a metamodel aligns, two steps at most. A dependency
+# recorded by an unaligned relationship type - an ArchiMate access, a C4 uses - is
+# absent, and a modelled dependency is a statement, not an observed call.
+#
+# The template of the model question of the same name. `query run` asks the question
+# where the dataset can be read as one graph; this answers elsewhere - an endpoint whose
+# default graph is not the union of its graphs, or `query render` on named graphs.
+#
+# REQUIRES the vocabulary graph role. The alignment is declared in the published
+# ontologies, and converter output carries none of them: attach them beside the data
+# (examples/with-vocabulary). Without them this is refused, rather than answering from
+# the core's two predicates alone, which reads as "nothing depends on it".
+# core/dependents-direct follows predicates you name instead.
+#
+# Two steps, as the question goes. A predicate set read at query time cannot be
+# followed to any depth: a SPARQL path takes no variable. Each step reads the predicates
+# and the way each runs in the vocabulary, matches its triple both ways, and keeps the
+# way the predicate reads. The second step has scopes of its own (vocabulary2,
+# semantic2), because its predicate and its triple may sit in other graphs.
+#
+# Parameters: FOCUS_IRI, LIMIT
+{{PREFIXES}}
+SELECT DISTINCT ?hops ?dependent ?dependentLabel ?firstPredicate ?via ?secondPredicate
+WHERE {
+  {
+    {{GRAPH_OPEN:vocabulary}}
+      { ?firstPredicate {{ROLE:subproperty_of}}* {{ROLE:depends_on}} . BIND(true AS ?firstNeeds) }
+      UNION
+      { ?firstPredicate {{ROLE:subproperty_of}}* {{ROLE:dependency_of}} . BIND(false AS ?firstNeeds) }
+    {{GRAPH_CLOSE}}
+    {{GRAPH_OPEN:semantic}}
+      VALUES ?focus { {{FOCUS_IRI}} }
+      { ?dependent ?firstPredicate ?focus . BIND(true AS ?firstRead) }
+      UNION
+      { ?focus ?firstPredicate ?dependent . BIND(false AS ?firstRead) }
+      OPTIONAL { ?dependent {{PATH:label}} ?dependentLabel }
+    {{GRAPH_CLOSE}}
+    FILTER(?firstRead = ?firstNeeds)
+    BIND(1 AS ?hops)
+  }
+  UNION
+  {
+    {{GRAPH_OPEN:vocabulary}}
+      { ?firstPredicate {{ROLE:subproperty_of}}* {{ROLE:depends_on}} . BIND(true AS ?firstNeeds) }
+      UNION
+      { ?firstPredicate {{ROLE:subproperty_of}}* {{ROLE:dependency_of}} . BIND(false AS ?firstNeeds) }
+    {{GRAPH_CLOSE}}
+    {{GRAPH_OPEN:semantic}}
+      VALUES ?focus { {{FOCUS_IRI}} }
+      { ?via ?firstPredicate ?focus . BIND(true AS ?firstRead) }
+      UNION
+      { ?focus ?firstPredicate ?via . BIND(false AS ?firstRead) }
+    {{GRAPH_CLOSE}}
+    FILTER(?firstRead = ?firstNeeds)
+    {{GRAPH_OPEN:vocabulary2}}
+      { ?secondPredicate {{ROLE:subproperty_of}}* {{ROLE:depends_on}} . BIND(true AS ?secondNeeds) }
+      UNION
+      { ?secondPredicate {{ROLE:subproperty_of}}* {{ROLE:dependency_of}} . BIND(false AS ?secondNeeds) }
+    {{GRAPH_CLOSE}}
+    {{GRAPH_OPEN:semantic2}}
+      { ?dependent ?secondPredicate ?via . BIND(true AS ?secondRead) }
+      UNION
+      { ?via ?secondPredicate ?dependent . BIND(false AS ?secondRead) }
+      OPTIONAL { ?dependent {{PATH:label}} ?dependentLabel }
+    {{GRAPH_CLOSE}}
+    FILTER(?secondRead = ?secondNeeds)
+    FILTER(?dependent != ?focus)
+    BIND(2 AS ?hops)
+  }
+}
+ORDER BY ?hops ?dependentLabel ?dependent
+LIMIT {{LIMIT}}

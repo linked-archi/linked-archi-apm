@@ -73,7 +73,7 @@ The terms that exist, against the ones an author reasonably reaches for first:
 **How it is enforced:** no template names a vocabulary term at all. Templates name roles, and
 `skills/linked-archi-profile/assets/profiles/linked-archi-default.yaml` binds each role to a
 verified term. `tests/test_render.py::test_no_template_carries_its_own_prefixes` asserts it
-across all 44 templates, so a term cannot creep back into one.
+across all 46 templates, so a term cannot creep back into one.
 
 ### F2. Graph scoping has to be a profile decision, not a constant
 
@@ -280,7 +280,7 @@ identified by shape and `tests/test_fixtures.py` asserts the shape of each one.
 Extraction proves a fixture was true of *some* build; only an assertion pins which.
 
 Every selection rule in `fixtures/build_fixtures.py` exists because a template
-returned zero rows without it. All 44 templates return rows against `augmented.trig`
+returned zero rows without it. All 46 templates return rows against `augmented.trig`
 paired with the published vocabulary fixtures: a template returning nothing is one the
 suite cannot distinguish from a broken one. Details in
 [fixtures/PROVENANCE.md](fixtures/PROVENANCE.md).
@@ -521,8 +521,8 @@ Counts and fixture shapes from earlier audits in the appendices remain historica
 | `query batch` against separate `query run` commands | identical `rows`, `query_id`, `truncated` and `row_count`; load paid once |
 | Store modes `memory`, `cached`, `readonly`, `refresh` | same quad and named-graph counts from each; a changed input rebuilds rather than serving a stale store |
 | `la-query catalog list --profile linked-archi-default` | 44 templates plus bundled model questions; availability and refusal reasons are profile-specific |
-| `la-query catalog list --profile curated-store` | All 44 templates available; bundled question requirements are checked separately |
-| All 44 templates against `augmented.trig` and paired vocabulary fixtures | every one returns rows |
+| `la-query catalog list --profile curated-store` | All 46 templates available; bundled question requirements are checked separately |
+| All 46 templates against `augmented.trig` and paired vocabulary fixtures | every one returns rows |
 | Exit-code contracts | 9 of 9 |
 | Owner skills copied alone to temp directories | independent commands run with `PYTHONPATH` scrubbed; combined siblings execute |
 
@@ -1573,3 +1573,26 @@ both implementations now count distinct asserted pairs by the ontology's layers.
 Audience names are an independent enrichment (`core/context-names`). Canonical labels and
 existing name resolution retain their meanings. Core-vis label expressions and pictures
 are presentation data, not additional semantic relationships or executable instructions.
+
+**D35. A dependency is read from the vocabulary's alignment, the way each predicate runs.**
+Recorded 2026-11-22, with linked-archi-meta's DD-44: each language declares its dependency
+predicates subproperties of the core's `arch:dependsOn`, or of `arch:dependencyOf` when they
+run from what is needed to what needs it, as ArchiMate's `serves` does. Meta's
+`core/what-depends-on-it` and `core/what-it-depends-on` read that alignment, and this package
+bundles them with templates of the same name, one entry with two implementations (D34's
+rule): the question on local data read as one graph, the template on graphs that are not -
+reading the alignment from the vocabulary graph role and the triples from the semantic one,
+each step with scopes of its own. Both stop at two hops, because a predicate set read at
+query time cannot be followed to any depth: a SPARQL path takes no variable.
+
+Without the alignment the question would answer from the core's two predicates alone, which
+converter output rarely states, and an empty result would read as "nothing depends on it".
+So a question that follows a property through `rdfs:subPropertyOf` is checked when it runs
+for some predicate declared a subproperty of it, and refused otherwise; the template requires
+the vocabulary graph role. An unrelated `rdfs:subPropertyOf` statement - core's own
+deprecations - does not satisfy the check. The roles `depends_on`, `dependency_of` and
+`subproperty_of` name the terms, so no template names a vocabulary term.
+
+Not done here: the impact pattern of linked-archi-analyse still plans `core/neighbours` and
+`core/dependents`; planning the dependency questions instead, where the vocabulary is
+attached, is a change to the planner.

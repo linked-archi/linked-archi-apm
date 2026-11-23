@@ -18,7 +18,10 @@ What a question needs from a dataset is read from what its query reads, by the s
 both sources: a direct relationship triple (any published ``arch:unqualifiedForm``) needs
 ``direct_rel_triples``, ``rdf:reifies`` needs ``rdf_reifies``, ``arch:inModel`` needs
 ``part_of_model_edge``. A question that declares ``arch:ModelAndMetamodelDataset`` also needs
-the metamodel loaded beside the data, which is checked when it runs (:func:`metamodel_probes`).
+the metamodel loaded beside the data, which is checked when it runs (:func:`metamodel_probes`):
+its ontologies, its viewpoints, its unqualified forms, and - for one that follows a property
+through ``rdfs:subPropertyOf``, as the dependency questions follow ``arch:dependsOn`` - some
+predicate declared a subproperty of it.
 """
 
 from __future__ import annotations
@@ -43,6 +46,7 @@ BUNDLED_SETS: Mapping[str, str] = {
 ARCH = "https://meta.linked.archi/core#"
 SH = "http://www.w3.org/ns/shacl#"
 RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+RDFS = "http://www.w3.org/2000/01/rdf-schema#"
 SKOS = "http://www.w3.org/2004/02/skos/core#"
 DCTERMS = "http://purl.org/dc/terms/"
 OWL = "http://www.w3.org/2002/07/owl#"
@@ -258,7 +262,53 @@ def metamodel_probes(question: Question) -> tuple[Probe, ...]:
             query=f"ASK {{ ?relationshipClass <{ARCH}unqualifiedForm> ?predicate }}",
             needs="the ontology of the model's language (each relationship's arch:unqualifiedForm)",
         ))
+    if question.reads.get("subproperties"):
+        # A question following a property's subproperties - every language's dependency
+        # predicates under arch:dependsOn - answers from the property alone without them,
+        # which reads as "nothing depends on it". Some subproperty of what it follows must
+        # be declared; any other rdfs:subPropertyOf statement does not count.
+        followed = subproperty_targets(question.text, question.prefixes)
+        if followed:
+            values = " ".join(f"<{iri}>" for iri in followed)
+            probes.append(Probe(
+                query=(
+                    f"ASK {{ VALUES ?property {{ {values} }} "
+                    f"?predicate <{RDFS}subPropertyOf>+ ?property }}"
+                ),
+                needs=(
+                    "the ontology of the model's language (the predicates it declares "
+                    "rdfs:subPropertyOf " + " or ".join(_short(iri) for iri in followed) + ")"
+                ),
+            ))
     return tuple(probes)
+
+
+def _short(iri: str) -> str:
+    return f"arch:{iri[len(ARCH):]}" if iri.startswith(ARCH) else f"<{iri}>"
+
+
+def subproperty_targets(text: str, prefixes: Mapping[str, str]) -> tuple[str, ...]:
+    """The properties a query follows through ``rdfs:subPropertyOf``: the object of each
+    ``rdfs:subPropertyOf``, ``*`` or ``+`` path it names, prefixed names expanded."""
+    stripped = _without_literals_and_comments(text)
+    names = [re.escape(f"<{RDFS}subPropertyOf>")] + [
+        re.escape(f"{prefix}:subPropertyOf") for prefix, iri in prefixes.items() if iri == RDFS
+    ]
+    found: list[str] = []
+    for match in re.finditer(
+        r"(?:" + "|".join(names) + r")[*+]?\s+(<[^<>\s]+>|[A-Za-z][\w-]*:[\w-]+)", stripped
+    ):
+        term = match.group(1)
+        if term.startswith("<"):
+            iri = term[1:-1]
+        else:
+            prefix, _, local = term.partition(":")
+            if prefix not in prefixes:
+                continue
+            iri = prefixes[prefix] + local
+        if iri not in found:
+            found.append(iri)
+    return tuple(found)
 
 
 def _viewpoint_catalogue(question: Question) -> str:
@@ -394,6 +444,7 @@ def reads(text: str, prefixes: Mapping[str, str], unqualified_forms: Iterable[st
         "part_of_model_edge": f"{ARCH}inModel" in terms,
         "viewpoints": bool(terms & {f"{ARCH}includesConcept", f"{ARCH}viewConformsToViewpoint"}),
         "unqualified_forms": f"{ARCH}unqualifiedForm" in terms,
+        "subproperties": f"{RDFS}subPropertyOf" in terms,
     }
 
 

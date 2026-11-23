@@ -1,0 +1,68 @@
+# core/what-it-depends-on - What does this element depend on?
+#
+# Answers: concepts the focus depends on, one or two steps out, along every predicate
+# the attached vocabulary aligns with the core's dependency - a subproperty of
+# depends_on, read from the concept that needs to the one needed, or of dependency_of,
+# read the other way, as ArchiMate's serving and TOGAF's usedBy are (meta DD-44).
+#
+# Does NOT prove: that the focus needs nothing else. Only what the model states is
+# followed, along the predicates a metamodel aligns, two steps at most. A dependency
+# recorded by an unaligned relationship type - an ArchiMate access, a C4 uses - is
+# absent, and a modelled dependency is a statement, not an observed call.
+#
+# The template of the model question of the same name, and core/what-depends-on-it read
+# the other way: see that header for when this runs rather than the question, why it
+# needs the vocabulary graph role, and why it stops at two steps.
+#
+# Parameters: FOCUS_IRI, LIMIT
+{{PREFIXES}}
+SELECT DISTINCT ?hops ?dependency ?dependencyLabel ?firstPredicate ?via ?secondPredicate
+WHERE {
+  {
+    {{GRAPH_OPEN:vocabulary}}
+      { ?firstPredicate {{ROLE:subproperty_of}}* {{ROLE:depends_on}} . BIND(true AS ?firstNeeds) }
+      UNION
+      { ?firstPredicate {{ROLE:subproperty_of}}* {{ROLE:dependency_of}} . BIND(false AS ?firstNeeds) }
+    {{GRAPH_CLOSE}}
+    {{GRAPH_OPEN:semantic}}
+      VALUES ?focus { {{FOCUS_IRI}} }
+      { ?focus ?firstPredicate ?dependency . BIND(true AS ?firstRead) }
+      UNION
+      { ?dependency ?firstPredicate ?focus . BIND(false AS ?firstRead) }
+      OPTIONAL { ?dependency {{PATH:label}} ?dependencyLabel }
+    {{GRAPH_CLOSE}}
+    FILTER(?firstRead = ?firstNeeds)
+    BIND(1 AS ?hops)
+  }
+  UNION
+  {
+    {{GRAPH_OPEN:vocabulary}}
+      { ?firstPredicate {{ROLE:subproperty_of}}* {{ROLE:depends_on}} . BIND(true AS ?firstNeeds) }
+      UNION
+      { ?firstPredicate {{ROLE:subproperty_of}}* {{ROLE:dependency_of}} . BIND(false AS ?firstNeeds) }
+    {{GRAPH_CLOSE}}
+    {{GRAPH_OPEN:semantic}}
+      VALUES ?focus { {{FOCUS_IRI}} }
+      { ?focus ?firstPredicate ?via . BIND(true AS ?firstRead) }
+      UNION
+      { ?via ?firstPredicate ?focus . BIND(false AS ?firstRead) }
+    {{GRAPH_CLOSE}}
+    FILTER(?firstRead = ?firstNeeds)
+    {{GRAPH_OPEN:vocabulary2}}
+      { ?secondPredicate {{ROLE:subproperty_of}}* {{ROLE:depends_on}} . BIND(true AS ?secondNeeds) }
+      UNION
+      { ?secondPredicate {{ROLE:subproperty_of}}* {{ROLE:dependency_of}} . BIND(false AS ?secondNeeds) }
+    {{GRAPH_CLOSE}}
+    {{GRAPH_OPEN:semantic2}}
+      { ?via ?secondPredicate ?dependency . BIND(true AS ?secondRead) }
+      UNION
+      { ?dependency ?secondPredicate ?via . BIND(false AS ?secondRead) }
+      OPTIONAL { ?dependency {{PATH:label}} ?dependencyLabel }
+    {{GRAPH_CLOSE}}
+    FILTER(?secondRead = ?secondNeeds)
+    FILTER(?dependency != ?focus)
+    BIND(2 AS ?hops)
+  }
+}
+ORDER BY ?hops ?dependencyLabel ?dependency
+LIMIT {{LIMIT}}

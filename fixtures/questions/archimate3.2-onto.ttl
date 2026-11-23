@@ -34,7 +34,7 @@ am: a owl:Ontology ;
 	dct:abstract "Linked.Archi ArchiMate ontology based on the ArchiMate 3.2 specification.\nRepresents ArchiMate elements, relationship types (using the three-declaration qualified\nrelationship pattern), and composite/connector concepts as RDF/OWL. Version 3.2 modernizes\nthe ontology to current Linked.Archi conventions and RDF 1.2 rdf:reifies."@en ;
 	dct:created "2019-03-17"^^xsd:date ;
 	dct:issued "2019-03-17"^^xsd:date ;
-	dct:modified "2026-10-10"^^xsd:date ;
+	dct:modified "2026-11-22"^^xsd:date ;
 	dct:publisher "Linked.Archi"@en ;
 	<http://purl.org/ontology/bibo/status> "draft" ;
 	owl:versionIRI <https://meta.linked.archi/archimate3/onto/3.2#> ;
@@ -42,7 +42,7 @@ am: a owl:Ontology ;
 	owl:priorVersion <https://meta.linked.archi/archimate3/onto/3.1#> ;
 	<http://schema.org/citation> "Linked.Archi ArchiMate Ontology" ;
 	skos:historyNote "3.2.0: Modernized to current Linked.Archi conventions. Replaced legacy\nrelationship declarations with three-declaration qualified relationship pattern. Added\nqualified relationship classes (: namespace) and qualified properties. Replaced rdfs:label\nwith skos:prefLabel, arch:specURL with dcterms:source. Added RDF 1.2 rdf:reifies bridge in\nrelationship examples. Updated license to CC-BY 4.0. Aligned all elements with\narchimate-tax ontology (:)."@en ;
-	skos:changeNote "2026-10-10: the kinds of access are subclasses of Access — ReadAccess, WriteAccess and\nReadWriteAccess, an Access that is none of them being unspecified — and a directed association is a\nDirectedAssociation, so each has a notation of its own (DD-31). accessType is deprecated."@en ;
+	skos:changeNote "2026-11-22: serves is a subproperty of the core's arch:dependencyOf (core 0.7.0):\nwhat an element serves depends on it (DD-44).\n\n2026-10-10: the kinds of access are subclasses of Access — ReadAccess, WriteAccess and\nReadWriteAccess, an Access that is none of them being unspecified — and a directed association is a\nDirectedAssociation, so each has a notation of its own (DD-31). accessType is deprecated."@en ;
 	rdfs:seeAlso <https://www.w3.org/TR/rdf12-concepts/> ;
 	skos:scopeNote "This namespace (archimate/onto#) covers ArchiMate 3.x (versions 3.0,\n3.1, 3.2). ArchiMate 2.x used a substantially different metamodel (different element\nnames, relationship rules, and layer structure) and is not represented here. A future\nArchiMate 4.x major revision may introduce a separate namespace if the metamodel\nchanges are breaking."@en .
 am:BehaviorElement a owl:Class ;
@@ -533,8 +533,8 @@ am:Junction_Or a owl:Class ;
 am:composedOf a owl:ObjectProperty ;
 	skos:prefLabel "Composed Of"@en ;
 	skos:definition "Indicates that an element consists of one or more other elements."@en ;
-	arch:domainIncludes arch:Element ;
-	arch:rangeIncludes arch:Element .
+	arch:domainIncludes am:BehaviorElement , am:CompositeElement , am:MotivationElement , am:StructureElement ;
+	arch:rangeIncludes am:BehaviorElement , am:CompositeElement , am:MotivationElement , am:StructureElement .
 am:Composition a owl:Class ;
 	rdfs:subClassOf arch:QualifiedRelationship ;
 	arch:unqualifiedForm am:composedOf ;
@@ -545,15 +545,15 @@ am:Composition a owl:Class ;
 am:qualifiedComposition a owl:ObjectProperty ;
 	rdfs:range am:Composition ;
 	arch:unqualifiedForm am:composedOf ;
-	arch:domainIncludes arch:Element ;
+	arch:domainIncludes am:BehaviorElement , am:CompositeElement , am:MotivationElement , am:StructureElement ;
 	skos:prefLabel "qualified Composition"@en ;
 	skos:definition "Navigates from a source element to a Composition qualified relationship\nresource. Use this to reach the full relationship object with metadata, provenance, and\nlifecycle state."@en ;
 	skos:example "ex:System1 am:qualifiedComposition ex:qr-001 .\nex:qr-001 a am:Composition ;\n    arch:source ex:System1 ;\n    arch:target ex:Module1 ."@en .
 am:aggregates a owl:ObjectProperty ;
 	skos:prefLabel "Aggregates"@en ;
 	skos:definition "Indicates that an element combines one or more other elements."@en ;
-	arch:domainIncludes arch:Element ;
-	arch:rangeIncludes arch:Element .
+	arch:domainIncludes am:BehaviorElement , am:CompositeElement , am:MotivationElement , am:StructureElement ;
+	arch:rangeIncludes am:BehaviorElement , am:CompositeElement , am:MotivationElement , am:StructureElement .
 am:Aggregation a owl:Class ;
 	rdfs:subClassOf arch:QualifiedRelationship ;
 	arch:unqualifiedForm am:aggregates ;
@@ -564,7 +564,7 @@ am:Aggregation a owl:Class ;
 am:qualifiedAggregation a owl:ObjectProperty ;
 	rdfs:range am:Aggregation ;
 	arch:unqualifiedForm am:aggregates ;
-	arch:domainIncludes arch:Element ;
+	arch:domainIncludes am:BehaviorElement , am:CompositeElement , am:MotivationElement , am:StructureElement ;
 	skos:prefLabel "qualified Aggregation"@en ;
 	skos:definition "Navigates from a source element to an Aggregation qualified relationship\nresource."@en ;
 	skos:example "ex:Department1 am:qualifiedAggregation ex:qr-002 .\nex:qr-002 a am:Aggregation ;\n    arch:source ex:Department1 ;\n    arch:target ex:Team1 ."@en .
@@ -572,8 +572,8 @@ am:assignedTo a owl:ObjectProperty ;
 	skos:prefLabel "Assigned To"@en ;
 	skos:definition "Indicates the allocation of responsibility, performance of behavior, storage, or\nexecution."@en ;
 	skos:changeNote "3.0: Directional notation introduced (arrow replaces black circle at 'to' end)."@en ;
-	arch:domainIncludes arch:Element ;
-	arch:rangeIncludes arch:Element .
+	arch:domainIncludes am:ActiveStructureElement , am:Resource ;
+	arch:rangeIncludes am:ActiveStructureElement , am:BehaviorElement , am:PassiveStructureElement , am:Stakeholder .
 am:Assignment a owl:Class ;
 	rdfs:subClassOf arch:QualifiedRelationship ;
 	arch:unqualifiedForm am:assignedTo ;
@@ -584,15 +584,15 @@ am:Assignment a owl:Class ;
 am:qualifiedAssignment a owl:ObjectProperty ;
 	rdfs:range am:Assignment ;
 	arch:unqualifiedForm am:assignedTo ;
-	arch:domainIncludes arch:Element ;
+	arch:domainIncludes am:ActiveStructureElement , am:Resource ;
 	skos:prefLabel "qualified Assignment"@en ;
 	skos:definition "Navigates from a source element to an Assignment qualified relationship\nresource. Assignment links active structure elements with behavior they perform, or actors\nwith roles they fulfill."@en ;
 	skos:example "ex:DevTeam am:qualifiedAssignment ex:qr-003 .\nex:qr-003 a am:Assignment ;\n    arch:source ex:DevTeam ;\n    arch:target ex:DeploymentProcess ."@en .
 am:realizes a owl:ObjectProperty ;
 	skos:prefLabel "Realizes"@en ;
 	skos:definition "Indicates that an entity plays a critical role in the creation, achievement, sustenance,\nor operation of a more abstract entity."@en ;
-	arch:domainIncludes arch:Element ;
-	arch:rangeIncludes arch:Element .
+	arch:domainIncludes am:ActiveStructureElement , am:BehaviorElement , am:ImplementationAndMigrationLayerElement , am:PassiveStructureElement , am:StrategyLayerElement ;
+	arch:rangeIncludes am:ActiveStructureElement , am:BehaviorElement , am:MotivationElement , am:PassiveStructureElement , am:StrategyLayerElement .
 am:Realization a owl:Class ;
 	rdfs:subClassOf arch:QualifiedRelationship ;
 	arch:unqualifiedForm am:realizes ;
@@ -603,16 +603,18 @@ am:Realization a owl:Class ;
 am:qualifiedRealization a owl:ObjectProperty ;
 	rdfs:range am:Realization ;
 	arch:unqualifiedForm am:realizes ;
-	arch:domainIncludes arch:Element ;
+	arch:domainIncludes am:ActiveStructureElement , am:BehaviorElement , am:ImplementationAndMigrationLayerElement , am:PassiveStructureElement , am:StrategyLayerElement ;
 	skos:prefLabel "qualified Realization"@en ;
 	skos:definition "Navigates from a source element to a Realization qualified relationship\nresource. Realization links a concrete element with a more abstract element it realizes."@en ;
 	skos:example "ex:PaymentSvc am:qualifiedRealization ex:qr-004 .\nex:qr-004 a am:Realization ;\n    arch:source ex:PaymentSvc ;\n    arch:target ex:PaymentCapability ."@en .
 am:serves a owl:ObjectProperty ;
+	rdfs:subPropertyOf arch:dependencyOf ;
 	skos:prefLabel "Serves"@en ;
 	skos:definition "Indicates that an element provides its functionality to another element."@en ;
+	skos:scopeNote "A serving element is a dependency of the one it serves: A serves B says that B depends\non A (arch:dependencyOf, core 0.7.0), so a question about what depends on an element follows serving with the\ncore's dependencies (DD-44)."@en ;
 	skos:changeNote "3.0: Renamed from 'Used By' to 'Serves', in line with the other active names of relationships."@en ;
-	arch:domainIncludes arch:Element ;
-	arch:rangeIncludes arch:Element .
+	arch:domainIncludes am:ActiveStructureElement , am:BehaviorElement ;
+	arch:rangeIncludes am:ActiveStructureElement , am:BehaviorElement .
 am:Serving a owl:Class ;
 	rdfs:subClassOf arch:QualifiedRelationship ;
 	arch:unqualifiedForm am:serves ;
@@ -624,15 +626,15 @@ am:Serving a owl:Class ;
 am:qualifiedServing a owl:ObjectProperty ;
 	rdfs:range am:Serving ;
 	arch:unqualifiedForm am:serves ;
-	arch:domainIncludes arch:Element ;
+	arch:domainIncludes am:ActiveStructureElement , am:BehaviorElement ;
 	skos:prefLabel "qualified Serving"@en ;
 	skos:definition "Navigates from a source element to a Serving qualified relationship\nresource. Serving indicates that an element provides its functionality to another."@en ;
 	skos:example "ex:AppSvc1 am:qualifiedServing ex:qr-005 .\nex:qr-005 a am:Serving ;\n    arch:source ex:AppSvc1 ;\n    arch:target ex:BizProc1 ;\n    rdf:reifies <<( ex:AppSvc1 am:serves ex:BizProc1 )>> ;\n    prov:wasDerivedFrom ex:diagramEdge-81 ."@en .
 am:accesses a owl:ObjectProperty ;
 	skos:prefLabel "Accesses"@en ;
 	skos:definition "Indicates that a behavior element may access a business or data object."@en ;
-	arch:domainIncludes arch:Element ;
-	arch:rangeIncludes arch:Element .
+	arch:domainIncludes am:ActiveStructureElement , am:BehaviorElement ;
+	arch:rangeIncludes am:PassiveStructureElement .
 am:Access a owl:Class ;
 	rdfs:subClassOf arch:QualifiedRelationship ;
 	arch:unqualifiedForm am:accesses ;
@@ -661,7 +663,7 @@ am:ReadWriteAccess a owl:Class ;
 am:qualifiedAccess a owl:ObjectProperty ;
 	rdfs:range am:Access ;
 	arch:unqualifiedForm am:accesses ;
-	arch:domainIncludes arch:Element ;
+	arch:domainIncludes am:ActiveStructureElement , am:BehaviorElement ;
 	skos:prefLabel "qualified Access"@en ;
 	skos:definition "Navigates from a source element to an Access qualified relationship\nresource. The resource's class says the kind of access: am:ReadAccess, am:WriteAccess or\nam:ReadWriteAccess, or am:Access when it is unspecified."@en ;
 	skos:example "ex:OrderProcess am:qualifiedAccess ex:qr-006 .\nex:qr-006 a am:ReadWriteAccess ;\n    arch:source ex:OrderProcess ;\n    arch:target ex:CustomerData ."@en .
@@ -669,8 +671,8 @@ am:influences a owl:ObjectProperty ;
 	skos:prefLabel "Influences"@en ;
 	skos:definition "Indicates that an element affects the implementation or achievement of some motivation\nelement."@en ;
 	skos:changeNote "3.0: Notation changed for consistency with other dependency relationships (access and serving)."@en ;
-	arch:domainIncludes arch:Element ;
-	arch:rangeIncludes arch:Element .
+	arch:domainIncludes am:ActiveStructureElement , am:BehaviorElement , am:MotivationElement , am:PassiveStructureElement , am:StrategyLayerElement ;
+	arch:rangeIncludes am:MotivationElement .
 am:Influence a owl:Class ;
 	rdfs:subClassOf arch:QualifiedRelationship ;
 	arch:unqualifiedForm am:influences ;
@@ -681,15 +683,15 @@ am:Influence a owl:Class ;
 am:qualifiedInfluence a owl:ObjectProperty ;
 	rdfs:range am:Influence ;
 	arch:unqualifiedForm am:influences ;
-	arch:domainIncludes arch:Element ;
+	arch:domainIncludes am:ActiveStructureElement , am:BehaviorElement , am:MotivationElement , am:PassiveStructureElement , am:StrategyLayerElement ;
 	skos:prefLabel "qualified Influence"@en ;
 	skos:definition "Navigates from a source element to an Influence qualified relationship\nresource. The Influence resource carries the influenceStrength (+, ++, -, --)."@en ;
 	skos:example "ex:CostReduction am:qualifiedInfluence ex:qr-007 .\nex:qr-007 a am:Influence ;\n    arch:source ex:CostReduction ;\n    arch:target ex:Profitability ;\n    am:influenceStrength \"++\" ."@en .
 am:triggers a owl:ObjectProperty ;
 	skos:prefLabel "Triggers"@en ;
 	skos:definition "Indicates a temporal or causal relationship between elements."@en ;
-	arch:domainIncludes arch:Element ;
-	arch:rangeIncludes arch:Element .
+	arch:domainIncludes am:BehaviorElement , am:StrategyLayerElement ;
+	arch:rangeIncludes am:BehaviorElement , am:StrategyLayerElement .
 am:Triggering a owl:Class ;
 	rdfs:subClassOf arch:QualifiedRelationship ;
 	arch:unqualifiedForm am:triggers ;
@@ -700,15 +702,15 @@ am:Triggering a owl:Class ;
 am:qualifiedTriggering a owl:ObjectProperty ;
 	rdfs:range am:Triggering ;
 	arch:unqualifiedForm am:triggers ;
-	arch:domainIncludes arch:Element ;
+	arch:domainIncludes am:BehaviorElement , am:StrategyLayerElement ;
 	skos:prefLabel "qualified Triggering"@en ;
 	skos:definition "Navigates from a source element to a Triggering qualified relationship\nresource. Triggering indicates a temporal or causal dependency."@en ;
 	skos:example "ex:OrderReceived am:qualifiedTriggering ex:qr-008 .\nex:qr-008 a am:Triggering ;\n    arch:source ex:OrderReceived ;\n    arch:target ex:FulfillmentProcess ."@en .
 am:flowsTo a owl:ObjectProperty ;
 	skos:prefLabel "Flows To"@en ;
 	skos:definition "Indicates transfer from one element to another."@en ;
-	arch:domainIncludes arch:Element ;
-	arch:rangeIncludes arch:Element .
+	arch:domainIncludes am:BehaviorElement , am:StrategyLayerElement ;
+	arch:rangeIncludes am:BehaviorElement , am:StrategyLayerElement .
 am:Flow a owl:Class ;
 	rdfs:subClassOf arch:QualifiedRelationship ;
 	arch:unqualifiedForm am:flowsTo ;
@@ -719,15 +721,15 @@ am:Flow a owl:Class ;
 am:qualifiedFlow a owl:ObjectProperty ;
 	rdfs:range am:Flow ;
 	arch:unqualifiedForm am:flowsTo ;
-	arch:domainIncludes arch:Element ;
+	arch:domainIncludes am:BehaviorElement , am:StrategyLayerElement ;
 	skos:prefLabel "qualified Flow"@en ;
 	skos:definition "Navigates from a source element to a Flow qualified relationship\nresource. Flow indicates transfer of information, goods, or money."@en ;
 	skos:example "ex:Invoicing am:qualifiedFlow ex:qr-009 .\nex:qr-009 a am:Flow ;\n    arch:source ex:Invoicing ;\n    arch:target ex:Payment ;\n    skos:prefLabel \"Invoice data flow\"@en ."@en .
 am:specializes a owl:ObjectProperty ;
 	skos:prefLabel "Specializes"@en ;
 	skos:definition "Indicates that an element is a particular kind of another element."@en ;
-	arch:domainIncludes arch:Element ;
-	arch:rangeIncludes arch:Element .
+	arch:domainIncludes am:BehaviorElement , am:CompositeElement , am:MotivationElement , am:StructureElement ;
+	arch:rangeIncludes am:BehaviorElement , am:CompositeElement , am:MotivationElement , am:StructureElement .
 am:Specialization a owl:Class ;
 	rdfs:subClassOf arch:QualifiedRelationship ;
 	arch:unqualifiedForm am:specializes ;
@@ -738,15 +740,15 @@ am:Specialization a owl:Class ;
 am:qualifiedSpecialization a owl:ObjectProperty ;
 	rdfs:range am:Specialization ;
 	arch:unqualifiedForm am:specializes ;
-	arch:domainIncludes arch:Element ;
+	arch:domainIncludes am:BehaviorElement , am:CompositeElement , am:MotivationElement , am:StructureElement ;
 	skos:prefLabel "qualified Specialization"@en ;
 	skos:definition "Navigates from a source element to a Specialization qualified relationship\nresource. Specialization indicates that an element is a particular kind of another."@en ;
 	skos:example "ex:OnlineBanking am:qualifiedSpecialization ex:qr-010 .\nex:qr-010 a am:Specialization ;\n    arch:source ex:OnlineBanking ;\n    arch:target ex:BankingService ."@en .
 am:associatedWith a owl:ObjectProperty ;
 	skos:prefLabel "Associated With"@en ;
 	skos:definition "Indicates an unspecified relationship, or one that is not represented by another\nArchiMate relationship."@en ;
-	arch:domainIncludes arch:Element ;
-	arch:rangeIncludes arch:Element .
+	arch:domainIncludes am:BehaviorElement , am:CompositeElement , am:MotivationElement , am:StructureElement ;
+	arch:rangeIncludes am:BehaviorElement , am:CompositeElement , am:MotivationElement , am:StructureElement .
 am:Association a owl:Class ;
 	rdfs:subClassOf arch:QualifiedRelationship ;
 	arch:unqualifiedForm am:associatedWith ;
@@ -763,7 +765,7 @@ am:DirectedAssociation a owl:Class ;
 am:qualifiedAssociation a owl:ObjectProperty ;
 	rdfs:range am:Association ;
 	arch:unqualifiedForm am:associatedWith ;
-	arch:domainIncludes arch:Element ;
+	arch:domainIncludes am:BehaviorElement , am:CompositeElement , am:MotivationElement , am:StructureElement ;
 	skos:prefLabel "qualified Association"@en ;
 	skos:definition "Navigates from a source element to an Association qualified relationship\nresource. Association is the most generic relationship — used when no more specific type\napplies."@en ;
 	skos:example "ex:Stakeholder1 am:qualifiedAssociation ex:qr-011 .\nex:qr-011 a am:Association ;\n    arch:source ex:Stakeholder1 ;\n    arch:target ex:Driver1 ."@en .

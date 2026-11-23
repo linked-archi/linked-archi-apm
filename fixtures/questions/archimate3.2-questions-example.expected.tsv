@@ -29,6 +29,9 @@ archq:views-with-unknown-viewpoint	-	view	ex:legacyView
 # Core: listings.
 archq:elements-of-type	-	element	ex:crm ex:crmDup ex:policyApp ex:newApp ex:brokerPortal
 archq:neighbours	focus=ex:crm	other	ex:server ex:crmFunction ex:customerData ex:policyData ex:deliv ex:plateauA ex:plateauB
+# Dependencies, read along serving: the server serves the CRM. The data the CRM accesses is no dependency.
+archq:what-depends-on-it	-	dependent	ex:crm
+archq:what-it-depends-on	focus=ex:crm	dependency	ex:server
 archq:views-showing	focus=ex:customer	view	ex:orgView
 archq:view-contents	-	concept	ex:customer ex:clerk ex:server
 archq:viewpoint-scope	-	element	ex:customer ex:clerk ex:bankActor ex:bankRole

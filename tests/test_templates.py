@@ -69,6 +69,10 @@ CASES: dict[str, tuple[dict, int]] = {
     "core/dependents-direct": (
         {"FOCUS_IRI": support.ARCHIMATE_FLOW_SOURCE,
          "PREDICATE_PATH": support.ARCHIMATE_FLOWS_TO}, 1),
+    # An asserted am:serves, read through the ArchiMate 3.2 ontology attached beside the
+    # data: serving is a subproperty of arch:dependencyOf, so the served depends on it.
+    "core/what-depends-on-it": ({"FOCUS_IRI": support.ARCHIMATE_SERVING_SOURCE}, 1),
+    "core/what-it-depends-on": ({"FOCUS_IRI": support.ARCHIMATE_SERVED}, 1),
     "core/traceability": (
         {"SOURCE_TYPE": "https://meta.linked.archi/bpmn/onto#UserTask",
          "TARGET_TYPE": "https://meta.linked.archi/bpmn/onto#ServiceTask"}, 1),
@@ -149,6 +153,35 @@ class TestAgainstAugmentedFixture(unittest.TestCase):
                     "A template returning nothing is one the suite cannot tell from "
                     "broken - fix the fixture rather than the floor.",
                 )
+
+    def test_a_serving_is_a_dependency_read_the_other_way(self):
+        """``am:serves`` runs from what serves to what is served; the dependency the other way.
+
+        The ontology says which way: serving is a subproperty of ``arch:dependencyOf``, so the
+        client the channel serves depends on the channel, and the channel on nothing here.
+        """
+        serves = "https://meta.linked.archi/archimate3/onto#serves"
+        for name, focus, column, expected in (
+            ("core/what-depends-on-it", support.ARCHIMATE_SERVING_SOURCE, "dependent",
+             support.ARCHIMATE_SERVED),
+            ("core/what-it-depends-on", support.ARCHIMATE_SERVED, "dependency",
+             support.ARCHIMATE_SERVING_SOURCE),
+        ):
+            with self.subTest(name):
+                rendered = render(name, self.profile, {"FOCUS_IRI": focus}, catalog=self.catalog)
+                self.assertEqual(rendered.implementation, "template")
+                envelope = self.adapter.execute(
+                    rendered.query, template=name, profile_id=self.profile.name,
+                    profile_version=self.profile.profile_version, limit=200,
+                )
+                self.assertEqual(
+                    [(row["hops"], row[column], row["firstPredicate"]) for row in envelope.rows],
+                    [("1", expected, serves)],
+                )
+        rendered = render("core/what-it-depends-on", self.profile,
+                          {"FOCUS_IRI": support.ARCHIMATE_SERVING_SOURCE}, catalog=self.catalog)
+        envelope = self.adapter.execute(rendered.query, profile_id=self.profile.name, limit=200)
+        self.assertEqual(envelope.rows, [], "the serving channel was read as depending on its client")
 
     def test_qualified_traversal_finds_the_expected_neighbours(self):
         """A concrete assertion about real converter output, not just a count."""
@@ -923,6 +956,8 @@ class TestAgainstOutputWithoutDirectTriples(unittest.TestCase):
         "core/dependents-direct", "notation/archimate/layer-crossing",
         # The RDF 1.2 bridge, written with the direct triple and left out with it.
         "core/reified-predicates", "core/neighbours-reified", "core/reifies-audit",
+        # Both implementations follow direct triples: the question as the template does.
+        "core/what-depends-on-it", "core/what-it-depends-on",
     }
 
     def test_gated_templates_are_refused(self):

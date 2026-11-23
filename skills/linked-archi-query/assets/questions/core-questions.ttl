@@ -32,8 +32,9 @@
 #    of a union that needs it;
 #  - relationships are followed along their direct triples, which tell a
 #    relationship predicate by the arch:unqualifiedForm a relationship
-#    type declares; a question about the relationship itself, its
-#    resource, reads the qualified relationship.
+#    type declares, and a dependency by its rdfs:subPropertyOf
+#    arch:dependsOn or arch:dependencyOf (DD-44); a question about the
+#    relationship itself, its resource, reads the qualified relationship.
 #
 # dcterms:identifier names the question in the linked-archi-query
 # catalogue; a template there with the same identifier asks the same
@@ -51,7 +52,7 @@
 what it contains, what an element is related to, which views show what, and how sound the description
 is. Each is executable SPARQL bound to the concerns it informs (see arch:ModelQuestion).'''@en ;
     dcterms:created               "2026-10-27"^^xsd:date ;
-    dcterms:modified              "2026-10-27"^^xsd:date ;
+    dcterms:modified              "2026-11-22"^^xsd:date ;
     dcterms:publisher             "Linked.Archi"@en, <https://linked.archi> ;
     bibo:status                   "draft" ;
     owl:versionInfo               "0.1.0" ;
@@ -311,6 +312,209 @@ is. Each is executable SPARQL bound to the concerns it informs (see arch:ModelQu
           OPTIONAL { ?dependent skos:prefLabel ?dependentLabel . FILTER(lang(?dependentLabel) = "" || langMatches(lang(?dependentLabel), "en")) }
         }
         ORDER BY ?hops ?dependentLabel
+    """ ;
+.
+
+# A dependency step reads a predicate from the concept that needs to the one needed when the predicate is
+# arch:dependsOn or a subproperty of it, and the other way when it is arch:dependencyOf or a subproperty of it, as
+# ArchiMate's serving is (DD-44). Each step reads the predicates and their way from the metamodel in a sub-select,
+# and matches its triple both ways, keeping the way the predicate reads.
+
+:what-depends-on-it
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "core/what-depends-on-it" ;
+    skos:prefLabel                "What depends on this element?"@en ;
+    dcterms:description           "Concepts that depend on the element, directly or through one concept between, along the dependencies the metamodels align with the core's: arch:dependsOn and its subproperties, and arch:dependencyOf and its subproperties read the other way, as ArchiMate's serving is."@en ;
+    arch:answers                  "One row per path: its length, the concept that depends on the element, the concept between, and the predicates followed."@en ;
+    arch:doesNotProve             "That nothing else depends on the element. Only what the model states is followed, along the predicates a metamodel aligns with arch:dependsOn or arch:dependencyOf, two steps at most."@en ;
+    arch:questionStage            arch:AnalysisStage ;
+    arch:questionAddressesConcern archvp:DependencyConcern ;
+    arch:resultIsFinding          false ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
+    arch:resultKey                "dependents" ;
+    arch:defaultLimit             500 ;
+    sh:parameter [ sh:path arch:focus ; sh:name "focus" ; sh:nodeKind sh:IRI ; sh:optional false ; sh:order 1 ;
+                   sh:description "The element the question is about. A modelling tool binds the selected element."@en ] ;
+    sh:prefixes                   <https://meta.linked.archi/core-questions#> ;
+    sh:select """
+        SELECT DISTINCT ?hops ?dependent ?dependentLabel ?firstPredicate ?via ?secondPredicate
+        WHERE {
+          {
+            {
+              SELECT DISTINCT ?firstPredicate ?firstNeeds
+              WHERE {
+                {
+                  { ?firstPredicate rdfs:subPropertyOf* arch:dependsOn }
+                  UNION
+                  { GRAPH ?firstNeedsGraph { ?firstPredicate rdfs:subPropertyOf* arch:dependsOn } }
+                  BIND(true AS ?firstNeeds)
+                }
+                UNION
+                {
+                  { ?firstPredicate rdfs:subPropertyOf* arch:dependencyOf }
+                  UNION
+                  { GRAPH ?firstNeededGraph { ?firstPredicate rdfs:subPropertyOf* arch:dependencyOf } }
+                  BIND(false AS ?firstNeeds)
+                }
+              }
+            }
+            { ?dependent ?firstPredicate ?focus . BIND(true AS ?firstRead) }
+            UNION
+            { ?focus ?firstPredicate ?dependent . BIND(false AS ?firstRead) }
+            FILTER(?firstRead = ?firstNeeds)
+            BIND(1 AS ?hops)
+          }
+          UNION
+          {
+            {
+              SELECT DISTINCT ?firstPredicate ?firstNeeds
+              WHERE {
+                {
+                  { ?firstPredicate rdfs:subPropertyOf* arch:dependsOn }
+                  UNION
+                  { GRAPH ?firstNeedsGraph { ?firstPredicate rdfs:subPropertyOf* arch:dependsOn } }
+                  BIND(true AS ?firstNeeds)
+                }
+                UNION
+                {
+                  { ?firstPredicate rdfs:subPropertyOf* arch:dependencyOf }
+                  UNION
+                  { GRAPH ?firstNeededGraph { ?firstPredicate rdfs:subPropertyOf* arch:dependencyOf } }
+                  BIND(false AS ?firstNeeds)
+                }
+              }
+            }
+            { ?via ?firstPredicate ?focus . BIND(true AS ?firstRead) }
+            UNION
+            { ?focus ?firstPredicate ?via . BIND(false AS ?firstRead) }
+            FILTER(?firstRead = ?firstNeeds)
+            {
+              SELECT DISTINCT ?secondPredicate ?secondNeeds
+              WHERE {
+                {
+                  { ?secondPredicate rdfs:subPropertyOf* arch:dependsOn }
+                  UNION
+                  { GRAPH ?secondNeedsGraph { ?secondPredicate rdfs:subPropertyOf* arch:dependsOn } }
+                  BIND(true AS ?secondNeeds)
+                }
+                UNION
+                {
+                  { ?secondPredicate rdfs:subPropertyOf* arch:dependencyOf }
+                  UNION
+                  { GRAPH ?secondNeededGraph { ?secondPredicate rdfs:subPropertyOf* arch:dependencyOf } }
+                  BIND(false AS ?secondNeeds)
+                }
+              }
+            }
+            { ?dependent ?secondPredicate ?via . BIND(true AS ?secondRead) }
+            UNION
+            { ?via ?secondPredicate ?dependent . BIND(false AS ?secondRead) }
+            FILTER(?secondRead = ?secondNeeds)
+            FILTER(?dependent != ?focus)
+            BIND(2 AS ?hops)
+          }
+          OPTIONAL { ?dependent skos:prefLabel ?dependentLabel . FILTER(lang(?dependentLabel) = "" || langMatches(lang(?dependentLabel), "en")) }
+        }
+        ORDER BY ?hops ?dependentLabel
+    """ ;
+.
+
+:what-it-depends-on
+    a                             arch:ModelQuestion, sh:SPARQLSelectExecutable ;
+    dcterms:identifier            "core/what-it-depends-on" ;
+    skos:prefLabel                "What does this element depend on?"@en ;
+    dcterms:description           "Concepts the element depends on, directly or through one concept between, along the dependencies the metamodels align with the core's: arch:dependsOn and its subproperties, and arch:dependencyOf and its subproperties read the other way, as ArchiMate's serving is."@en ;
+    arch:answers                  "One row per path: its length, the concept the element depends on, the concept between, and the predicates followed."@en ;
+    arch:doesNotProve             "That the element needs nothing else. Only what the model states is followed, along the predicates a metamodel aligns with arch:dependsOn or arch:dependencyOf, two steps at most."@en ;
+    arch:questionStage            arch:AnalysisStage ;
+    arch:questionAddressesConcern archvp:DependencyConcern ;
+    arch:resultIsFinding          false ;
+    arch:requiresDataset          arch:ModelAndMetamodelDataset ;
+    arch:resultKey                "dependencies" ;
+    arch:defaultLimit             500 ;
+    sh:parameter [ sh:path arch:focus ; sh:name "focus" ; sh:nodeKind sh:IRI ; sh:optional false ; sh:order 1 ;
+                   sh:description "The element the question is about. A modelling tool binds the selected element."@en ] ;
+    sh:prefixes                   <https://meta.linked.archi/core-questions#> ;
+    sh:select """
+        SELECT DISTINCT ?hops ?dependency ?dependencyLabel ?firstPredicate ?via ?secondPredicate
+        WHERE {
+          {
+            {
+              SELECT DISTINCT ?firstPredicate ?firstNeeds
+              WHERE {
+                {
+                  { ?firstPredicate rdfs:subPropertyOf* arch:dependsOn }
+                  UNION
+                  { GRAPH ?firstNeedsGraph { ?firstPredicate rdfs:subPropertyOf* arch:dependsOn } }
+                  BIND(true AS ?firstNeeds)
+                }
+                UNION
+                {
+                  { ?firstPredicate rdfs:subPropertyOf* arch:dependencyOf }
+                  UNION
+                  { GRAPH ?firstNeededGraph { ?firstPredicate rdfs:subPropertyOf* arch:dependencyOf } }
+                  BIND(false AS ?firstNeeds)
+                }
+              }
+            }
+            { ?focus ?firstPredicate ?dependency . BIND(true AS ?firstRead) }
+            UNION
+            { ?dependency ?firstPredicate ?focus . BIND(false AS ?firstRead) }
+            FILTER(?firstRead = ?firstNeeds)
+            BIND(1 AS ?hops)
+          }
+          UNION
+          {
+            {
+              SELECT DISTINCT ?firstPredicate ?firstNeeds
+              WHERE {
+                {
+                  { ?firstPredicate rdfs:subPropertyOf* arch:dependsOn }
+                  UNION
+                  { GRAPH ?firstNeedsGraph { ?firstPredicate rdfs:subPropertyOf* arch:dependsOn } }
+                  BIND(true AS ?firstNeeds)
+                }
+                UNION
+                {
+                  { ?firstPredicate rdfs:subPropertyOf* arch:dependencyOf }
+                  UNION
+                  { GRAPH ?firstNeededGraph { ?firstPredicate rdfs:subPropertyOf* arch:dependencyOf } }
+                  BIND(false AS ?firstNeeds)
+                }
+              }
+            }
+            { ?focus ?firstPredicate ?via . BIND(true AS ?firstRead) }
+            UNION
+            { ?via ?firstPredicate ?focus . BIND(false AS ?firstRead) }
+            FILTER(?firstRead = ?firstNeeds)
+            {
+              SELECT DISTINCT ?secondPredicate ?secondNeeds
+              WHERE {
+                {
+                  { ?secondPredicate rdfs:subPropertyOf* arch:dependsOn }
+                  UNION
+                  { GRAPH ?secondNeedsGraph { ?secondPredicate rdfs:subPropertyOf* arch:dependsOn } }
+                  BIND(true AS ?secondNeeds)
+                }
+                UNION
+                {
+                  { ?secondPredicate rdfs:subPropertyOf* arch:dependencyOf }
+                  UNION
+                  { GRAPH ?secondNeededGraph { ?secondPredicate rdfs:subPropertyOf* arch:dependencyOf } }
+                  BIND(false AS ?secondNeeds)
+                }
+              }
+            }
+            { ?via ?secondPredicate ?dependency . BIND(true AS ?secondRead) }
+            UNION
+            { ?dependency ?secondPredicate ?via . BIND(false AS ?secondRead) }
+            FILTER(?secondRead = ?secondNeeds)
+            FILTER(?dependency != ?focus)
+            BIND(2 AS ?hops)
+          }
+          OPTIONAL { ?dependency skos:prefLabel ?dependencyLabel . FILTER(lang(?dependencyLabel) = "" || langMatches(lang(?dependencyLabel), "en")) }
+        }
+        ORDER BY ?hops ?dependencyLabel
     """ ;
 .
 

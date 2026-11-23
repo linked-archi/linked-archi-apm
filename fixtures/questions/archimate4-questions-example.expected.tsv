@@ -30,6 +30,12 @@ archq:views-with-unknown-viewpoint	-	view	ex:legacyView
 archq:elements-of-type	-	element	ex:crm ex:crmDup ex:policyApp ex:newApp ex:brokerPortal
 archq:neighbours	focus=ex:crm	other	ex:server ex:policyApp ex:customerData ex:deliv ex:plateauA ex:plateauB
 archq:reaches-in-two-hops	focus=ex:clerk	dependent	ex:customer ex:claimService
+# Dependencies, read along serving: the server serves the CRM, which serves the policy application. The customer
+# assigned to the clerk reaches it, and does not depend on it.
+archq:what-depends-on-it	-	dependent	ex:crm ex:policyApp
+archq:what-depends-on-it	focus=ex:clerk	dependent	-
+archq:what-it-depends-on	focus=ex:policyApp	dependency	ex:crm ex:server
+archq:what-it-depends-on	focus=ex:crm	dependency	ex:server
 archq:views-showing	focus=ex:customer	view	ex:orgView
 archq:view-contents	-	concept	ex:customer ex:clerk ex:server
 archq:viewpoint-scope	-	element	ex:customer ex:clerk ex:bankActor ex:bankRole

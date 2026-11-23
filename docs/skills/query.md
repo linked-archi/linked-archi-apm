@@ -308,11 +308,15 @@ dataset is attached, report that rather than looking for one.
 
 ## Asserted relationships and derivations
 
-The catalogue bundles 59 model questions. `core/neighbours` and `core/dependents` follow
+The catalogue bundles 61 model questions. `core/neighbours` and `core/dependents` follow
 asserted direct triples using the metamodel's `arch:unqualifiedForm` mappings. They need
 `direct_rel_triples` and the relevant ontology, including when the query follows a variable
 predicate. `core/dependents` is bounded to two hops; `core/dependents-direct` follows a
-chosen predicate path at any depth. The `-qualified` queries keep their names and resource-level
+chosen predicate path at any depth. `core/what-depends-on-it` and `core/what-it-depends-on`
+follow dependencies rather than every relationship: each predicate the metamodel declares
+`rdfs:subPropertyOf arch:dependsOn`, and each of `arch:dependencyOf` read the other way, as
+ArchiMate's `serves` is, two hops out. Asked as questions they check that such a declaration
+is loaded; their templates read it from the vocabulary graph role. The `-qualified` queries keep their names and resource-level
 meaning: endpoints can describe an unconfirmed proposal, so those rows alone are not assertions.
 
 A local question reads the union of the loaded graphs, including a model's derived graph.

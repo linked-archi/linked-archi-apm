@@ -75,6 +75,10 @@ TAX_ROOT = "https://meta.linked.archi/core-tax#ArchComponent"
 ARCHIMATE_FLOWS_TO = "https://meta.linked.archi/archimate3/onto#flowsTo"
 #: An element with an outgoing ``am:flowsTo`` edge in the augmented fixture.
 ARCHIMATE_FLOW_SOURCE = "https://example.org/la/model/archisurance/element/id-528"
+#: An asserted ``am:serves`` in the augmented fixture - "Courriel" serves "Client" - which the
+#: bundled ArchiMate 3.2 ontology aligns with ``arch:dependencyOf``: the client depends on it.
+ARCHIMATE_SERVING_SOURCE = "https://example.org/la/model/archisurance/element/id-1538"
+ARCHIMATE_SERVED = "https://example.org/la/model/archisurance/element/id-521"
 
 
 def requires_pyshacl(test: unittest.TestCase) -> None:

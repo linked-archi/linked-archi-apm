@@ -213,6 +213,16 @@ roles:
   # am:Serving), and uses this one only for a type that has none, or one a type
   # mapping retyped without naming a qualified predicate for it.
   has_qualified_rel: arch:hasQualifiedRelationship
+  # The core's dependency, since core 0.7.0: depends_on reads from the concept that needs
+  # to the one needed, dependency_of the other way. Each language declares its own
+  # dependency predicates subproperties of one or the other - am:serves and am4:serves
+  # under dependency_of, togaf:dependsOn under depends_on (meta DD-44) - and
+  # core/what-depends-on-it and core/what-it-depends-on follow every one of them by
+  # reading subproperty_of in the vocabulary. Converter output states the languages'
+  # predicates and rarely these two, so `verify` usually reports them unused: the
+  # alignment is in the vocabulary, not the data.
+  depends_on: arch:dependsOn
+  dependency_of: arch:dependencyOf
 
   # --- RDF 1.2 reification bridge ------------------------------------------
   # The core ontology's three-declaration pattern pairs the qualified resource
@@ -315,7 +325,9 @@ roles:
   # route, and it is the one that survives a graph published with no views graph.
   # The view templates use the visual route; in_view is bound so a profile
   # describes the data accurately and so a query can reach it. See core DD-30.
-  view_node_class: [archvis:ArchNode, archvis:Node, archvis:ContainerNode, archvis:LabelNode]
+  # A reference to another view is a ViewReferenceNode since core-vis 0.9: a node of its own
+  # kind, not a LabelNode, so it is listed here to be counted among a view's nodes.
+  view_node_class: [archvis:ArchNode, archvis:Node, archvis:ContainerNode, archvis:LabelNode, archvis:ViewReferenceNode]
   view_link_class: archvis:Link
   view_ref: archvis:view
   node_element: archvis:archElement
@@ -348,6 +360,9 @@ roles:
   # Schema-level, like unqualified_form: present when published vocabulary is loaded
   # beside the data, absent from converter output, which carries instances only.
   subclass_of: rdfs:subClassOf
+  # Schema-level, like subclass_of: what the dependency templates read the languages'
+  # alignment with the core's dependency through.
+  subproperty_of: rdfs:subPropertyOf
 
   # --- Governance and lifecycle -------------------------------------------
   # Model-level status. Verified present, on the model, in the provenance graph.

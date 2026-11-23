@@ -22,9 +22,10 @@ $ python3 scripts/la-profile verify --profile linked-archi-default --data fixtur
 local store: 1 file(s), 3471 quad(s), 17 named graph(s)
   store: parsed into memory in 8 ms (mode memory)
 warn roles.subclass_of                  bound to http://www.w3.org/2000/01/rdf-schema#subClassOf but unused in this dataset
+warn roles.subproperty_of               bound to http://www.w3.org/2000/01/rdf-schema#subPropertyOf but unused in this dataset
 warn roles.unqualified_form             bound to https://meta.linked.archi/core#unqualifiedForm but unused in this dataset
 warn notations.present                  declared by the profile with no model conforming to them in this dataset: plantuml. Questions about them can only ever come back empty. Recording notations.<name>.present false turns that empty answer into a refusal that says which dataset to ask instead.
-76 check(s): 0 error(s), 17 warning(s), 59 confirmed (--all to show)
+82 check(s): 0 error(s), 24 warning(s), 58 confirmed (--all to show)
 ```
 
 Zero errors, so the profile fits. Two of the confirmed claims (`--all` shows them) matter further
@@ -32,9 +33,9 @@ down: `direct_rel_triples`, and `rdf_reifies` as `partial`. This dataset has the
 converters write by default, each with its RDF 1.2 bridge, on every relationship whose class
 publishes an unqualified predicate - BPMN's sequence flows have neither.
 
-The `roles.unqualified_form`, `roles.subclass_of` and `roles.narrower` warnings say
-something duller: those are schema-level predicates, and no ontology or taxonomy is attached to this
-dataset. `examples/with-vocabulary` is the profile for when they are.
+The `roles.unqualified_form`, `roles.subclass_of`, `roles.subproperty_of` and `roles.narrower`
+warnings say something duller: those are schema-level predicates, and no ontology or taxonomy is
+attached to this dataset. `examples/with-vocabulary` is the profile for when they are.
 
 !!! warning "Skipping this step is not neutral"
     Without it every later result carries `profile 'linked-archi-default' has not been verified
@@ -190,11 +191,15 @@ paragraph is not hedging; it is the part that keeps the answer honest when someo
 
 ## Asserted relationships and derivations
 
-The catalogue bundles 59 model questions. `core/neighbours` and `core/dependents` follow
+The catalogue bundles 61 model questions. `core/neighbours` and `core/dependents` follow
 asserted direct triples using the metamodel's `arch:unqualifiedForm` mappings. They need
 `direct_rel_triples` and the relevant ontology, including when the query follows a variable
 predicate. `core/dependents` is bounded to two hops; `core/dependents-direct` follows a
-chosen predicate path at any depth. The `-qualified` queries keep their names and resource-level
+chosen predicate path at any depth. `core/what-depends-on-it` and `core/what-it-depends-on`
+follow dependencies rather than every relationship: each predicate the metamodel declares
+`rdfs:subPropertyOf arch:dependsOn`, and each of `arch:dependencyOf` read the other way, as
+ArchiMate's `serves` is, two hops out. Asked as questions they check that such a declaration
+is loaded; their templates read it from the vocabulary graph role. The `-qualified` queries keep their names and resource-level
 meaning: endpoints can describe an unconfirmed proposal, so those rows alone are not assertions.
 
 A local question reads the union of the loaded graphs, including a model's derived graph.

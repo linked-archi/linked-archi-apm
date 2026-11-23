@@ -84,7 +84,7 @@ class TestCurrentModelData(unittest.TestCase):
                 results.append({tuple(sorted(row.items())) for row in rows})
             self.assertEqual(*results)
 
-    def test_notes_and_groups_are_detected_as_views_but_not_model_elements(self):
+    def test_notes_groups_and_view_references_are_detected_as_views_but_not_model_elements(self):
         from linked_archi_profile.profile import load_profile, verify_against_dataset
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "figures.ttl"
@@ -96,6 +96,9 @@ class TestCurrentModelData(unittest.TestCase):
               x:view a arch:View, arch:Diagram ; skos:prefLabel "A sketch"@en .
               x:group a vis:ContainerNode ; vis:view x:view ; skos:prefLabel "Group"@en .
               x:note a vis:LabelNode ; vis:view x:view ; skos:prefLabel "A note"@en .
+              x:detail a arch:View, arch:Diagram ; skos:prefLabel "In detail"@en ; arch:inView x:view .
+              x:reference a vis:ViewReferenceNode ; vis:view x:view ;
+                  vis:referencesView x:detail ; skos:prefLabel "In detail"@en .
             ''')
             adapter = open_adapter(data=[str(path)])
             findings = verify_against_dataset(load_profile("flattened-turtle"), adapter)

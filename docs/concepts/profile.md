@@ -75,7 +75,7 @@ Three binding shapes, and the difference between them is behaviour, not style:
 uses `skos:notation`. `owner` is `null` because converter output records no ownership — so
 `core/coverage-gaps` asking about owners is refused with a reason, rather than run to return nothing.
 
-### The 68 roles the default profile binds
+### The 71 roles the default profile binds
 
 Grouped by what they describe. This is the whole vocabulary surface a template is allowed to touch.
 
@@ -84,12 +84,13 @@ Grouped by what they describe. This is the whole vocabulary surface a template i
 | **Naming** | `label`, `alt_label`, `context_name`, `literal_form`, `presentation_context`, `definition`, `native_id` |
 | **Classes** | `concept_class`, `element_class`, `relationship_class`, `model_class`, `view_class`, `diagram_class`, `folder_class` |
 | **Relationship form** | `rel_source`, `rel_target`, `rel_type`, `has_qualified_rel`, `reifies`, `unqualified_form` |
+| **Dependency** | `depends_on`, `dependency_of` |
 | **Containment** | `part_of_model`, `part_of`, `has_part`, `folder_name` |
 | **Source description** | `bundle_class`, `qualified_derivation`, `source_path`, `source_repo`, `source_digest`, `source_alternate`, `source_url`, `source_email` |
 | **Conformance and viewpoints** | `conforms_to_metamodel`, `conforms_to_viewpoint`, `viewpoint_class`, `includes_concept`, `targets_stakeholder`, `viewpoint_has_purpose`, `view_type` |
 | **Views and geometry** | `view_node_class`, `view_link_class`, `view_ref`, `node_element`, `in_view`, `link_relationship`, `link_source`, `link_target`, `bounds_x`, `bounds_y` |
 | **Provenance** | `derived_from`, `generated_by`, `generated_at`, `attributed_to`, `source_file`, `agent_name`, `agent_version` |
-| **Taxonomy and schema** | `concept_scheme_class`, `broader`, `narrower`, `in_scheme`, `keywords`, `subclass_of` |
+| **Taxonomy and schema** | `concept_scheme_class`, `broader`, `narrower`, `in_scheme`, `keywords`, `subclass_of`, `subproperty_of` |
 | **Lifecycle** | `model_status`, `element_lifecycle`, `architecture_state` |
 | **Unbound by default** | `owner`, `same_as`, `exact_match` |
 

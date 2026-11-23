@@ -1,6 +1,6 @@
 # Template catalogue
 
-Forty-four tested templates. Each one declares what it answers, what it does **not** prove, what it
+Forty-six tested templates. Each one declares what it answers, what it does **not** prove, what it
 needs from the profile, and which templates to use instead when it is refused.
 
 `la-query catalog show <name>` is the authoritative parameter list — read it rather than the `.rq`
@@ -20,12 +20,12 @@ python3 scripts/la-query catalog dump --profile linked-archi-default \
 | [orientation](#orientation) | 4 | Run these first, every session. They establish what is actually loaded, so an empty later result can be told from a partial export. |
 | [resolution](#resolution) | 7 | Turn a name a user typed into an IRI. Never construct an IRI from a label. |
 | [discovery](#discovery) | 3 | Find out what predicates and relationship types this dataset actually uses, before assuming one. |
-| [analysis](#analysis) | 10 | The questions people actually ask: what depends on what, what realises what, what crosses a layer. |
+| [analysis](#analysis) | 12 | The questions people actually ask: what depends on what, what realises what, what crosses a layer. |
 | [views](#views) | 8 | Prescribed viewpoints and actual diagrams: what is offered, drawn, and different. |
 | [enrichment](#enrichment) | 4 | Attributes only some notations carry, such as lifecycle and ownership. |
 | [quality](#quality) | 8 | Whether the model can be trusted to answer at all: gaps, orphans, provenance, identity, conformance. |
 
-Thirty-eight are cross-notation. Six are notation-specific: one each for ArchiMate, C4, Backstage and LeanIX, and two for BPMN. A notation template is gated on the vocabulary IRI it is written against, never on a notation label.
+Forty are cross-notation. Six are notation-specific: one each for ArchiMate, C4, Backstage and LeanIX, and two for BPMN. A notation template is gated on the vocabulary IRI it is written against, never on a notation label.
 
 ## Which one to reach for
 
@@ -44,6 +44,7 @@ then cite its sources. Analyse owns that orchestration. Render-only work needs m
 | "which viewpoint fits a capability map?" | `core/viewpoint-catalog`, then `core/viewpoint-detail` | a published viewpoint library describes permitted classes and intended audience; `core/views` reports actual diagrams |
 | "what does X relate to?" | `core/neighbours` | asserted direct triples, with the metamodel loaded |
 | "what breaks if X changes?" | `core/dependents` | bounded to two hops, and answers reachability rather than impact |
+| "what depends on X?", "what does X depend on?" | `core/what-depends-on-it`, `core/what-it-depends-on` | every language's own dependency predicates, aligned with the core's in its ontology, each read the way it runs |
 | "what connects capabilities to applications?" | `core/traceability` | the question is about two *types*, not two named things |
 | "which predicate should I even use?" | `core/discover-relationship-types` | what was modelled, as against what the metamodel permits |
 | "who owns this?" | `notation/backstage/ownership`, `core/lifecycle` | ownership is notation-specific, so a cross-notation template would under-report |
@@ -61,7 +62,9 @@ fresh orientation; its two independent queries can share one batch.
 are model questions following asserted direct triples, with the metamodel loaded; dependents
 is bounded to two hops. Their `-qualified` counterparts retain relationship resources and
 work on older qualified-only output, but can include unconfirmed proposals. `core/dependents-direct`
-follows a chosen predicate set at any depth; `core/neighbours-reified` reads triple terms,
+follows a chosen predicate set at any depth; `core/what-depends-on-it` and `core/what-it-depends-on`
+follow only dependencies, two hops out, each predicate the way its ontology says it runs;
+`core/neighbours-reified` reads triple terms,
 which describe relationships without asserting them. Never union these readings as distinct facts.
 
 **A refusal is an answer.** If the profile cannot support a template, `la-query` says so and
@@ -551,6 +554,47 @@ Paths of one or two hops between two kinds of element.
 **Requires.** graphs `semantic`
 
 **Instead, when refused.** `core/coverage-gaps`
+
+### `core/what-depends-on-it`
+
+What depends on an element, two steps out, along the dependencies the vocabulary aligns with the core's.
+
+**Answers.** Each concept that depends on the element, one or two steps away, with the concept between and the predicates followed, each read the way it runs.
+
+!!! warning "Does not prove"
+    That nothing else depends on it. Only stated triples of predicates a metamodel aligns with arch:dependsOn or arch:dependencyOf are followed, two steps at most; an unaligned relationship type, such as an ArchiMate access, is absent.
+
+| Parameter | Type | Default |
+|---|---|---|
+| `FOCUS_IRI` | iri | required |
+| `LIMIT` | integer (range 1..5000) | `500` |
+
+**Requires.** graphs `vocabulary`, `semantic`; `direct_rel_triples: true`
+
+**Instead, when refused.** `core/dependents-direct`, `core/dependents-qualified`
+
+Also a model question of the same name, which `query run` asks on local data. The template
+answers where the dataset cannot be read as one graph, from the ontologies attached as the
+vocabulary: each declares its own dependency predicates subproperties of `arch:dependsOn`,
+or of `arch:dependencyOf` when they run the other way, as ArchiMate's `serves` does.
+
+### `core/what-it-depends-on`
+
+What an element depends on, two steps out, along the dependencies the vocabulary aligns with the core's.
+
+**Answers.** Each concept the element depends on, one or two steps away, with the concept between and the predicates followed, each read the way it runs.
+
+!!! warning "Does not prove"
+    That the element needs nothing else. Only stated triples of predicates a metamodel aligns with arch:dependsOn or arch:dependencyOf are followed, two steps at most; an unaligned relationship type, such as an ArchiMate access, is absent.
+
+| Parameter | Type | Default |
+|---|---|---|
+| `FOCUS_IRI` | iri | required |
+| `LIMIT` | integer (range 1..5000) | `500` |
+
+**Requires.** graphs `vocabulary`, `semantic`; `direct_rel_triples: true`
+
+**Instead, when refused.** `core/dependents-direct`, `core/neighbours-qualified`
 
 ### `notation/archimate/layer-crossing`
 

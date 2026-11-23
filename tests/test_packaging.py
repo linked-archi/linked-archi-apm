@@ -144,7 +144,7 @@ class TestStrictOwnership(unittest.TestCase):
             "examples/flattened-turtle.yaml", "examples/with-vocabulary.yaml",
         })
         template_files = {path.relative_to(QUERY / "assets" / "templates").as_posix() for path in (QUERY / "assets" / "templates").rglob("*.rq")}
-        self.assertEqual(len(template_files), 44)
+        self.assertEqual(len(template_files), 46)
         for skill in (CONNECT, ANALYSE, VALIDATE):
             self.assertFalse((skill / "assets" / "profiles").exists())
             self.assertFalse((skill / "assets" / "templates").exists())
@@ -217,7 +217,7 @@ class TestIsolatedOwners(unittest.TestCase):
             script = skill / "scripts" / "la-query"
             catalog = _run(script, "catalog", "list", cwd=root)
             self.assertEqual(catalog.returncode, 0, catalog.stderr)
-            self.assertIn("44 template(s)", catalog.stdout)
+            self.assertIn("46 template(s)", catalog.stdout)
             shown = _run(script, "catalog", "show", "core/dependents-qualified", cwd=root)
             self.assertEqual(shown.returncode, 0, shown.stderr)
             self.assertIn("parameters", shown.stdout)
